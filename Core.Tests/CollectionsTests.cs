@@ -1769,305 +1769,163 @@ public sealed class CollectionsTests
 
 	#region GetCombinations Tests
 
-	[Fact]
-	public void GetCombinations_GeneratesAllPossibleCombinations()
+	public enum CombinationMethodType
 	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
-
-		// Act
-		HashSet<string> result = sources.GetCombinations();
-
-		// Assert
-		result.Count.ShouldBe(4);
-		result.ShouldContain("A|1");
-		result.ShouldContain("A|2");
-		result.ShouldContain("B|1");
-		result.ShouldContain("B|2");
+		GetCombinations,
+		GetRandomCombinations,
+		GetEnumeratedCombinations
 	}
 
-	[Fact]
-	public void GetRandomCombinations_GeneratesAllPossibleCombinations()
+	public enum CombinationScenario
 	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
-
-		// Act
-		HashSet<string> result = sources.GetRandomCombinations();
-
-		// Assert
-		result.Count.ShouldBe(4);
-		result.ShouldContain("A|1");
-		result.ShouldContain("A|2");
-		result.ShouldContain("B|1");
-		result.ShouldContain("B|2");
+		GeneratesAllPossibleCombinations,
+		WithCustomSeparator_UsesCorrectSeparator,
+		WithNullReplacement_HandlesNullValues,
+		WithMaxCombinations_LimitsResults,
+		WithEmptySource_ReturnsEmptySet,
+		WithEmptyInnerList_HandlesCorrectly
 	}
 
-	[Fact]
-	public void GetEnumeratedCombinations_GeneratesAllPossibleCombinations()
+	[Theory]
+	[InlineData(CombinationMethodType.GetCombinations, CombinationScenario.GeneratesAllPossibleCombinations)]
+	[InlineData(CombinationMethodType.GetRandomCombinations, CombinationScenario.GeneratesAllPossibleCombinations)]
+	[InlineData(CombinationMethodType.GetEnumeratedCombinations, CombinationScenario.GeneratesAllPossibleCombinations)]
+	[InlineData(CombinationMethodType.GetCombinations, CombinationScenario.WithCustomSeparator_UsesCorrectSeparator)]
+	[InlineData(CombinationMethodType.GetRandomCombinations, CombinationScenario.WithCustomSeparator_UsesCorrectSeparator)]
+	[InlineData(CombinationMethodType.GetEnumeratedCombinations, CombinationScenario.WithCustomSeparator_UsesCorrectSeparator)]
+	[InlineData(CombinationMethodType.GetCombinations, CombinationScenario.WithNullReplacement_HandlesNullValues)]
+	[InlineData(CombinationMethodType.GetRandomCombinations, CombinationScenario.WithNullReplacement_HandlesNullValues)]
+	[InlineData(CombinationMethodType.GetEnumeratedCombinations, CombinationScenario.WithNullReplacement_HandlesNullValues)]
+	[InlineData(CombinationMethodType.GetCombinations, CombinationScenario.WithMaxCombinations_LimitsResults)]
+	[InlineData(CombinationMethodType.GetRandomCombinations, CombinationScenario.WithMaxCombinations_LimitsResults)]
+	[InlineData(CombinationMethodType.GetEnumeratedCombinations, CombinationScenario.WithMaxCombinations_LimitsResults)]
+	[InlineData(CombinationMethodType.GetCombinations, CombinationScenario.WithEmptySource_ReturnsEmptySet)]
+	[InlineData(CombinationMethodType.GetRandomCombinations, CombinationScenario.WithEmptySource_ReturnsEmptySet)]
+	[InlineData(CombinationMethodType.GetEnumeratedCombinations, CombinationScenario.WithEmptySource_ReturnsEmptySet)]
+	[InlineData(CombinationMethodType.GetCombinations, CombinationScenario.WithEmptyInnerList_HandlesCorrectly)]
+	[InlineData(CombinationMethodType.GetRandomCombinations, CombinationScenario.WithEmptyInnerList_HandlesCorrectly)]
+	[InlineData(CombinationMethodType.GetEnumeratedCombinations, CombinationScenario.WithEmptyInnerList_HandlesCorrectly)]
+	public void GetCombinations_VariousScenarios_WorkCorrectly(CombinationMethodType methodType, CombinationScenario scenario)
 	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
-
-		// Act
-		IEnumerable<string> result = sources.GetEnumeratedCombinations();
-
-		// Assert
-		result.Count().ShouldBe(4);
-		result.ShouldContain("A|1");
-		result.ShouldContain("A|2");
-		result.ShouldContain("B|1");
-		result.ShouldContain("B|2");
+		// Arrange & Act & Assert
+		switch (scenario)
+		{
+			case CombinationScenario.GeneratesAllPossibleCombinations:
+				{
+					List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
+					IEnumerable<string> result = methodType switch
+					{
+						CombinationMethodType.GetCombinations => sources.GetCombinations(),
+						CombinationMethodType.GetRandomCombinations => sources.GetRandomCombinations(),
+						CombinationMethodType.GetEnumeratedCombinations => sources.GetEnumeratedCombinations(),
+						_ => throw new ArgumentOutOfRangeException(nameof(methodType))
+					};
+					result.Count().ShouldBe(4);
+					result.ShouldContain("A|1");
+					result.ShouldContain("A|2");
+					result.ShouldContain("B|1");
+					result.ShouldContain("B|2");
+					break;
+				}
+			case CombinationScenario.WithCustomSeparator_UsesCorrectSeparator:
+				{
+					List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
+					IEnumerable<string> result = methodType switch
+					{
+						CombinationMethodType.GetCombinations => sources.GetCombinations(separator: "-"),
+						CombinationMethodType.GetRandomCombinations => sources.GetRandomCombinations(separator: "-"),
+						CombinationMethodType.GetEnumeratedCombinations => sources.GetEnumeratedCombinations(separator: "-"),
+						_ => throw new ArgumentOutOfRangeException(nameof(methodType))
+					};
+					result.Count().ShouldBe(4);
+					result.ShouldContain("A-1");
+					result.ShouldContain("A-2");
+					result.ShouldContain("B-1");
+					result.ShouldContain("B-2");
+					break;
+				}
+			case CombinationScenario.WithNullReplacement_HandlesNullValues:
+				{
+					List<List<string?>> sources = new() { new List<string?> { "A", null }, new List<string?> { "1", "2" } };
+					IEnumerable<string> result = methodType switch
+					{
+						CombinationMethodType.GetCombinations => sources.GetCombinations(nullReplacement: "NULL"),
+						CombinationMethodType.GetRandomCombinations => sources.GetRandomCombinations(nullReplacement: "NULL"),
+						CombinationMethodType.GetEnumeratedCombinations => sources.GetEnumeratedCombinations(nullReplacement: "NULL"),
+						_ => throw new ArgumentOutOfRangeException(nameof(methodType))
+					};
+					result.Count().ShouldBe(4);
+					result.ShouldContain("A|1");
+					result.ShouldContain("A|2");
+					result.ShouldContain("NULL|1");
+					result.ShouldContain("NULL|2");
+					break;
+				}
+			case CombinationScenario.WithMaxCombinations_LimitsResults:
+				{
+					List<List<string>> sources = new() { new List<string> { "A", "B", "C" }, new List<string> { "1", "2", "3" } };
+					IEnumerable<string> result = methodType switch
+					{
+						CombinationMethodType.GetCombinations => sources.GetCombinations(maxCombinations: 5),
+						CombinationMethodType.GetRandomCombinations => sources.GetRandomCombinations(maxCombinations: 5),
+						CombinationMethodType.GetEnumeratedCombinations => sources.GetEnumeratedCombinations(maxCombinations: 5),
+						_ => throw new ArgumentOutOfRangeException(nameof(methodType))
+					};
+					result.Count().ShouldBe(5);
+					result.ShouldBeSubsetOf(["A|1", "A|2", "A|3", "B|1", "B|2", "B|3", "C|1", "C|2", "C|3"]);
+					break;
+				}
+			case CombinationScenario.WithEmptySource_ReturnsEmptySet:
+				{
+					List<List<string>> sources = new();
+					IEnumerable<string> result = methodType switch
+					{
+						CombinationMethodType.GetCombinations => sources.GetCombinations(),
+						CombinationMethodType.GetRandomCombinations => sources.GetRandomCombinations(),
+						CombinationMethodType.GetEnumeratedCombinations => sources.GetEnumeratedCombinations(),
+						_ => throw new ArgumentOutOfRangeException(nameof(methodType))
+					};
+					result.Count().ShouldBe(0);
+					break;
+				}
+			case CombinationScenario.WithEmptyInnerList_HandlesCorrectly:
+				{
+					List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string>() };
+					IEnumerable<string> result = methodType switch
+					{
+						CombinationMethodType.GetCombinations => sources.GetCombinations(nullReplacement: "EMPTY"),
+						CombinationMethodType.GetRandomCombinations => sources.GetRandomCombinations(nullReplacement: "EMPTY"),
+						CombinationMethodType.GetEnumeratedCombinations => sources.GetEnumeratedCombinations(nullReplacement: "EMPTY"),
+						_ => throw new ArgumentOutOfRangeException(nameof(methodType))
+					};
+					result.Count().ShouldBe(2);
+					result.ShouldContain("A|EMPTY");
+					result.ShouldContain("B|EMPTY");
+					break;
+				}
+		}
 	}
 
-	[Fact]
-	public void GetCombinations_WithCustomSeparator_UsesCorrectSeparator()
-	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
-
-		// Act
-		HashSet<string> result = sources.GetCombinations(separator: "-");
-
-		// Assert
-		result.Count.ShouldBe(4);
-		result.ShouldContain("A-1");
-		result.ShouldContain("A-2");
-		result.ShouldContain("B-1");
-		result.ShouldContain("B-2");
-	}
-
-	[Fact]
-	public void GetRandomCombinations_WithCustomSeparator_UsesCorrectSeparator()
-	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
-
-		// Act
-		HashSet<string> result = sources.GetRandomCombinations(separator: "-");
-
-		// Assert
-		result.Count.ShouldBe(4);
-		result.ShouldContain("A-1");
-		result.ShouldContain("A-2");
-		result.ShouldContain("B-1");
-		result.ShouldContain("B-2");
-	}
-
-	[Fact]
-	public void GetEnumeratedCombinations_WithCustomSeparator_UsesCorrectSeparator()
-	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
-
-		// Act
-		IEnumerable<string> result = sources.GetEnumeratedCombinations(separator: "-");
-
-		// Assert
-		result.Count().ShouldBe(4);
-		result.ShouldContain("A-1");
-		result.ShouldContain("A-2");
-		result.ShouldContain("B-1");
-		result.ShouldContain("B-2");
-	}
-
-	[Fact]
-	public void GetCombinations_WithNullReplacement_HandlesNullValues()
-	{
-		// Arrange
-		List<List<string?>> sources = new() { new List<string?> { "A", null }, new List<string?> { "1", "2" } };
-
-		// Act
-		HashSet<string> result = sources.GetCombinations(nullReplacement: "NULL");
-
-		// Assert
-		result.Count.ShouldBe(4);
-		result.ShouldContain("A|1");
-		result.ShouldContain("A|2");
-		result.ShouldContain("NULL|1");
-		result.ShouldContain("NULL|2");
-	}
-
-	[Fact]
-	public void GetRandomCombinations_WithNullReplacement_HandlesNullValues()
-	{
-		// Arrange
-		List<List<string?>> sources = new() { new List<string?> { "A", null }, new List<string?> { "1", "2" } };
-
-		// Act
-		HashSet<string> result = sources.GetRandomCombinations(nullReplacement: "NULL");
-
-		// Assert
-		result.Count.ShouldBe(4);
-		result.ShouldContain("A|1");
-		result.ShouldContain("A|2");
-		result.ShouldContain("NULL|1");
-		result.ShouldContain("NULL|2");
-	}
-
-	[Fact]
-	public void GetEnumeratedCombinations_WithNullReplacement_HandlesNullValues()
-	{
-		// Arrange
-		List<List<string?>> sources = new() { new List<string?> { "A", null }, new List<string?> { "1", "2" } };
-
-		// Act
-		IEnumerable<string> result = sources.GetEnumeratedCombinations(nullReplacement: "NULL");
-
-		// Assert
-		result.Count().ShouldBe(4);
-		result.ShouldContain("A|1");
-		result.ShouldContain("A|2");
-		result.ShouldContain("NULL|1");
-		result.ShouldContain("NULL|2");
-	}
-
-	[Fact]
-	public void GetCombinations_WithMaxCombinations_LimitsResults()
-	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B", "C" }, new List<string> { "1", "2", "3" } };
-
-		// Act
-		IEnumerable<string> result = sources.GetCombinations(maxCombinations: 5);
-
-		// Assert
-		result.Count().ShouldBe(5);
-		result.ShouldBeSubsetOf(["A|1", "A|2", "A|3", "B|1", "B|2", "B|3", "C|1", "C|2", "C|3"]);
-	}
-
-	[Fact]
-	public void GetRandomCombinations_WithMaxCombinations_LimitsResults()
-	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B", "C" }, new List<string> { "1", "2", "3" } };
-
-		// Act
-		IEnumerable<string> result = sources.GetRandomCombinations(maxCombinations: 5);
-
-		// Assert
-		result.Count().ShouldBe(5);
-		result.ShouldBeSubsetOf(["A|1", "A|2", "A|3", "B|1", "B|2", "B|3", "C|1", "C|2", "C|3"]);
-	}
-
-	[Fact]
-	public void GetEnumeratedCombinations_WithMaxCombinations_LimitsResults()
-	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B", "C" }, new List<string> { "1", "2", "3" } };
-
-		// Act
-		IEnumerable<string> result = sources.GetEnumeratedCombinations(maxCombinations: 5);
-
-		// Assert
-		result.Count().ShouldBe(5);
-		result.ShouldBeSubsetOf(["A|1", "A|2", "A|3", "B|1", "B|2", "B|3", "C|1", "C|2", "C|3"]);
-	}
-
-	[Fact]
-	public void GetCombinations_WithEmptySource_ReturnsEmptySet()
-	{
-		// Arrange
-		List<List<string>> sources = new();
-
-		// Act
-		HashSet<string> result = sources.GetCombinations();
-
-		// Assert
-		result.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void GetRandomCombinations_WithEmptySource_ReturnsEmptySet()
-	{
-		// Arrange
-		List<List<string>> sources = new();
-
-		// Act
-		HashSet<string> result = sources.GetRandomCombinations();
-
-		// Assert
-		result.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void GetEnumeratedCombinations_WithEmptySource_ReturnsEmptySet()
-	{
-		// Arrange
-		List<List<string>> sources = new();
-
-		// Act
-		IEnumerable<string> result = sources.GetEnumeratedCombinations();
-
-		// Assert
-		result.Count().ShouldBe(0);
-	}
-
-	[Fact]
-	public void GetCombinations_WithEmptyInnerList_HandlesCorrectly()
-	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string>() };
-
-		// Act
-		HashSet<string> result = sources.GetCombinations(nullReplacement: "EMPTY");
-
-		// Assert
-		result.Count.ShouldBe(2);
-		result.ShouldContain("A|EMPTY");
-		result.ShouldContain("B|EMPTY");
-	}
-
-	[Fact]
-	public void GetRandomCombinations_WithEmptyInnerList_HandlesCorrectly()
-	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string>() };
-
-		// Act
-		HashSet<string> result = sources.GetRandomCombinations(nullReplacement: "EMPTY");
-
-		// Assert
-		result.Count.ShouldBe(2);
-		result.ShouldContain("A|EMPTY");
-		result.ShouldContain("B|EMPTY");
-	}
-
-	[Fact]
-	public void GetEnumeratedCombinations_WithEmptyInnerList_HandlesCorrectly()
-	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string>() };
-
-		// Act
-		IEnumerable<string> result = sources.GetEnumeratedCombinations(nullReplacement: "EMPTY");
-
-		// Assert
-		result.Count().ShouldBe(2);
-		result.ShouldContain("A|EMPTY");
-		result.ShouldContain("B|EMPTY");
-	}
-
-	[Fact]
-	public void GetCombinations_WithInvalidMaxCombinations_ThrowsArgumentException()
+	[Theory]
+	[InlineData(CombinationMethodType.GetCombinations)]
+	[InlineData(CombinationMethodType.GetRandomCombinations)]
+	public void GetCombinations_WithInvalidMaxCombinations_ThrowsArgumentException(CombinationMethodType methodType)
 	{
 		// Arrange
 		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
 
 		// Act & Assert
-		Should.Throw<ArgumentException>(() => sources.GetCombinations(maxCombinations: 0));
-		Should.Throw<ArgumentException>(() => sources.GetCombinations(maxCombinations: -1));
-	}
-
-	[Fact]
-	public void GetRandomCombinations_WithInvalidMaxCombinations_ThrowsArgumentException()
-	{
-		// Arrange
-		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
-
-		// Act & Assert
-		Should.Throw<ArgumentException>(() => sources.GetRandomCombinations(maxCombinations: 0));
-		Should.Throw<ArgumentException>(() => sources.GetRandomCombinations(maxCombinations: -1));
+		switch (methodType)
+		{
+			case CombinationMethodType.GetCombinations:
+				Should.Throw<ArgumentException>(() => sources.GetCombinations(maxCombinations: 0));
+				Should.Throw<ArgumentException>(() => sources.GetCombinations(maxCombinations: -1));
+				break;
+			case CombinationMethodType.GetRandomCombinations:
+				Should.Throw<ArgumentException>(() => sources.GetRandomCombinations(maxCombinations: 0));
+				Should.Throw<ArgumentException>(() => sources.GetRandomCombinations(maxCombinations: -1));
+				break;
+		}
 	}
 
 	#endregion

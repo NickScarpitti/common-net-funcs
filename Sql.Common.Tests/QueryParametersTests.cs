@@ -2,6 +2,27 @@
 
 namespace Sql.Common.Tests;
 
+public enum IListCleanScenario
+{
+	NullInput,
+	EmptyList,
+	ValidList,
+	MultipleItems
+}
+
+public enum SanitizeSqlParameterScenario
+{
+	OnlyAlphanumericWithNonAlphanumeric,
+	OnlyAlphaCharsWithNumbers,
+	OnlyNumberCharsWithLetters,
+	MaxLengthExactMatch,
+	MinLengthExactMatch,
+	WithCustomDefaultValue,
+	NullParameterWithDefaultValue,
+	OnlyAlphanumericOverridesFlags,
+	OnlyAlphaCharsOverridesNumberChars
+}
+
 public sealed class QueryParametersTests
 {
 	[Theory]
@@ -91,75 +112,59 @@ public sealed class QueryParametersTests
 		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void CleanQueryParam_IList_ShouldHandleNullInput()
+	[Theory]
+	[InlineData(IListCleanScenario.NullInput)]
+	[InlineData(IListCleanScenario.EmptyList)]
+	[InlineData(IListCleanScenario.ValidList)]
+	[InlineData(IListCleanScenario.MultipleItems)]
+	public void CleanQueryParam_IList_ShouldHandleVariousScenarios(IListCleanScenario scenario)
 	{
-		// Arrange
-		IList<string>? input = null;
+		// Arrange, Act & Assert
+		switch (scenario)
+		{
+			case IListCleanScenario.NullInput:
+				IList<string>? nullInput = null;
+				List<string>? nullResult = nullInput.CleanQueryParam();
+				nullResult.ShouldBeNull();
+				break;
 
-		// Act
-		List<string>? result = input.CleanQueryParam();
+			case IListCleanScenario.EmptyList:
+				IList<string> emptyInput = new List<string>();
+				List<string>? emptyResult = emptyInput.CleanQueryParam();
+				emptyResult.ShouldNotBeNull();
+				emptyResult.ShouldBeEmpty();
+				break;
 
-		// Assert
-		result.ShouldBeNull();
-	}
+			case IListCleanScenario.ValidList:
+				IList<string> validInput = new List<string> { "test\n", " value ", "null", "  clean\nthis  " };
+				List<string>? validResult = validInput.CleanQueryParam();
+				validResult.ShouldNotBeNull();
+				validResult.Count.ShouldBe(3);
+				validResult.ShouldContain("test");
+				validResult.ShouldContain("value");
+				validResult.ShouldContain("cleanthis");
+				break;
 
-	[Fact]
-	public void CleanQueryParam_IList_ShouldHandleEmptyList()
-	{
-		// Arrange
-		IList<string> input = new List<string>();
-
-		// Act
-		List<string>? result = input.CleanQueryParam();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.ShouldBeEmpty();
-	}
-
-	[Fact]
-	public void CleanQueryParam_IList_ShouldCleanValidList()
-	{
-		// Arrange
-		IList<string> input = new List<string> { "test\n", " value ", "null", "  clean\nthis  " };
-
-		// Act
-		List<string>? result = input.CleanQueryParam();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Count.ShouldBe(3);
-		result.ShouldContain("test");
-		result.ShouldContain("value");
-		result.ShouldContain("cleanthis");
-	}
-
-	[Fact]
-	public void CleanQueryParam_IList_ShouldHandleListWithMultipleItems()
-	{
-		// Arrange
-		IList<string> input = new List<string>
+			case IListCleanScenario.MultipleItems:
+				IList<string> multiInput = new List<string>
 				{
-						"item1\n",
-						"  item2  ",
-						"item3\n\n",
-						" \nitem4 ",
-						"null",
-						"item5"
+					"item1\n",
+					"  item2  ",
+					"item3\n\n",
+					" \nitem4 ",
+					"null",
+					"item5"
 				};
-
-		// Act
-		List<string>? result = input.CleanQueryParam();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Count.ShouldBe(5);
-		result.ShouldContain("item1");
-		result.ShouldContain("item2");
-		result.ShouldContain("item3");
-		result.ShouldContain("item4");
-		result.ShouldContain("item5");
+				List<string>? multiResult = multiInput.CleanQueryParam();
+				multiResult.ShouldNotBeNull();
+				multiResult.Count.ShouldBe(5);
+				multiResult.ShouldContain("item1");
+				multiResult.ShouldContain("item2");
+				multiResult.ShouldContain("item3");
+				multiResult.ShouldContain("item4");
+				multiResult.ShouldContain("item5");
+				break;
+		}
 	}
 
 	[Theory]
@@ -176,123 +181,69 @@ public sealed class QueryParametersTests
 		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void SanitizeSqlParameter_OnlyAlphanumeric_WithNonAlphanumeric_ShouldReturnDefault()
+	[Theory]
+	[InlineData(SanitizeSqlParameterScenario.OnlyAlphanumericWithNonAlphanumeric)]
+	[InlineData(SanitizeSqlParameterScenario.OnlyAlphaCharsWithNumbers)]
+	[InlineData(SanitizeSqlParameterScenario.OnlyNumberCharsWithLetters)]
+	[InlineData(SanitizeSqlParameterScenario.MaxLengthExactMatch)]
+	[InlineData(SanitizeSqlParameterScenario.MinLengthExactMatch)]
+	[InlineData(SanitizeSqlParameterScenario.WithCustomDefaultValue)]
+	[InlineData(SanitizeSqlParameterScenario.NullParameterWithDefaultValue)]
+	[InlineData(SanitizeSqlParameterScenario.OnlyAlphanumericOverridesFlags)]
+	[InlineData(SanitizeSqlParameterScenario.OnlyAlphaCharsOverridesNumberChars)]
+	public void SanitizeSqlParameter_VariousScenarios_ShouldHandleCorrectly(SanitizeSqlParameterScenario scenario)
 	{
-		// Arrange
-		string input = "test@name";
+		// Arrange, Act & Assert
+		switch (scenario)
+		{
+			case SanitizeSqlParameterScenario.OnlyAlphanumericWithNonAlphanumeric:
+				string result1 = "test@name".SanitizeSqlParameter(onlyAlphanumeric: true);
+				result1.ShouldBe(string.Empty);
+				break;
 
-		// Act
-		string result = input.SanitizeSqlParameter(onlyAlphanumeric: true);
+			case SanitizeSqlParameterScenario.OnlyAlphaCharsWithNumbers:
+				string result2 = "test123".SanitizeSqlParameter(onlyAlphaChars: true);
+				result2.ShouldBe(string.Empty);
+				break;
 
-		// Assert
-		result.ShouldBe(string.Empty);
-	}
+			case SanitizeSqlParameterScenario.OnlyNumberCharsWithLetters:
+				string result3 = "123abc".SanitizeSqlParameter(onlyNumberChars: true);
+				result3.ShouldBe(string.Empty);
+				break;
 
-	[Fact]
-	public void SanitizeSqlParameter_OnlyAlphaChars_WithNumbers_ShouldReturnDefault()
-	{
-		// Arrange
-		string input = "test123";
+			case SanitizeSqlParameterScenario.MaxLengthExactMatch:
+				string result4 = "test".SanitizeSqlParameter(maxLength: 4);
+				result4.ShouldBe("test");
+				break;
 
-		// Act
-		string result = input.SanitizeSqlParameter(onlyAlphaChars: true);
+			case SanitizeSqlParameterScenario.MinLengthExactMatch:
+				string result5 = "test".SanitizeSqlParameter(minLength: 4);
+				result5.ShouldBe("test");
+				break;
 
-		// Assert
-		result.ShouldBe(string.Empty);
-	}
+			case SanitizeSqlParameterScenario.WithCustomDefaultValue:
+				string customDefault = "SAFE_DEFAULT";
+				string result6 = "test;malicious".SanitizeSqlParameter(defaultValue: customDefault);
+				result6.ShouldBe(customDefault);
+				break;
 
-	[Fact]
-	public void SanitizeSqlParameter_OnlyNumberChars_WithLetters_ShouldReturnDefault()
-	{
-		// Arrange
-		string input = "123abc";
+			case SanitizeSqlParameterScenario.NullParameterWithDefaultValue:
+				string? nullInput = null;
+				string nullDefault = "NULL_DEFAULT";
+				string result7 = nullInput.SanitizeSqlParameter(defaultValue: nullDefault);
+				result7.ShouldBe(nullDefault);
+				break;
 
-		// Act
-		string result = input.SanitizeSqlParameter(onlyNumberChars: true);
+			case SanitizeSqlParameterScenario.OnlyAlphanumericOverridesFlags:
+				string result8 = "test123".SanitizeSqlParameter(onlyAlphanumeric: true, onlyAlphaChars: true);
+				result8.ShouldBe("test123");
+				break;
 
-		// Assert
-		result.ShouldBe(string.Empty);
-	}
-
-	[Fact]
-	public void SanitizeSqlParameter_MaxLength_ExactMatch_ShouldPass()
-	{
-		// Arrange
-		string input = "test";
-
-		// Act
-		string result = input.SanitizeSqlParameter(maxLength: 4);
-
-		// Assert
-		result.ShouldBe("test");
-	}
-
-	[Fact]
-	public void SanitizeSqlParameter_MinLength_ExactMatch_ShouldPass()
-	{
-		// Arrange
-		string input = "test";
-
-		// Act
-		string result = input.SanitizeSqlParameter(minLength: 4);
-
-		// Assert
-		result.ShouldBe("test");
-	}
-
-	[Fact]
-	public void SanitizeSqlParameter_WithCustomDefaultValue_ShouldReturnDefault()
-	{
-		// Arrange
-		string input = "test;malicious";
-		string customDefault = "SAFE_DEFAULT";
-
-		// Act
-		string result = input.SanitizeSqlParameter(defaultValue: customDefault);
-
-		// Assert
-		result.ShouldBe(customDefault);
-	}
-
-	[Fact]
-	public void SanitizeSqlParameter_NullParameter_WithDefaultValue_ShouldReturnDefault()
-	{
-		// Arrange
-		string? input = null;
-		string customDefault = "NULL_DEFAULT";
-
-		// Act
-		string result = input.SanitizeSqlParameter(defaultValue: customDefault);
-
-		// Assert
-		result.ShouldBe(customDefault);
-	}
-
-	[Fact]
-	public void SanitizeSqlParameter_OnlyAlphanumeric_OverridesOtherFlags()
-	{
-		// Arrange - alphanumeric string
-		string input = "test123";
-
-		// Act - onlyAlphanumeric should override onlyAlphaChars
-		string result = input.SanitizeSqlParameter(onlyAlphanumeric: true, onlyAlphaChars: true);
-
-		// Assert - should pass because onlyAlphanumeric allows both
-		result.ShouldBe("test123");
-	}
-
-	[Fact]
-	public void SanitizeSqlParameter_OnlyAlphaChars_OverridesOnlyNumberChars()
-	{
-		// Arrange - alpha only string
-		string input = "test";
-
-		// Act - onlyAlphaChars should override onlyNumberChars
-		string result = input.SanitizeSqlParameter(onlyAlphaChars: true, onlyNumberChars: true);
-
-		// Assert - should pass because onlyAlphaChars takes precedence
-		result.ShouldBe("test");
+			case SanitizeSqlParameterScenario.OnlyAlphaCharsOverridesNumberChars:
+				string result9 = "test".SanitizeSqlParameter(onlyAlphaChars: true, onlyNumberChars: true);
+				result9.ShouldBe("test");
+				break;
+		}
 	}
 
 	[Theory]

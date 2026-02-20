@@ -6,6 +6,18 @@ using static Xunit.TestContext;
 
 namespace Sql.Common.Tests;
 
+public enum ExecutionMode
+{
+	Asynchronous,
+	Synchronous
+}
+
+public enum CacheMode
+{
+	WithCache,
+	WithoutCache
+}
+
 public sealed class DirectQueryTests : IDisposable
 {
 	private readonly SqliteConnection connection;
@@ -61,32 +73,42 @@ public sealed class DirectQueryTests : IDisposable
 		createCommand.ExecuteNonQuery();
 	}
 
-	[Fact]
-	public async Task GetDataTable_ShouldReturnPopulatedDataTable_WhenQuerySucceeds()
+	[Theory]
+	[InlineData(ExecutionMode.Asynchronous)]
+	[InlineData(ExecutionMode.Synchronous)]
+	public async Task GetDataTable_ShouldReturnPopulatedDataTable_WhenQuerySucceeds(ExecutionMode mode)
 	{
-		await using SqliteCommand cmd = connection.CreateCommand();
-		cmd.CommandText = "SELECT * FROM TestTable";
+		DataTable result;
 
-		using DataTable result = await DirectQuery.GetDataTable(connection, cmd, cancellationToken: Current.CancellationToken);
+		switch (mode)
+		{
+			case ExecutionMode.Asynchronous:
+				await using (SqliteCommand cmd = connection.CreateCommand())
+				{
+					cmd.CommandText = "SELECT * FROM TestTable";
+					result = await DirectQuery.GetDataTable(connection, cmd, cancellationToken: Current.CancellationToken);
+				}
+				break;
 
-		result.ShouldNotBeNull();
-		result.Rows.Count.ShouldBe(5);
-		result.Columns.Contains("Id").ShouldBeTrue();
-		result.Columns.Contains("Name").ShouldBeTrue();
-	}
+			case ExecutionMode.Synchronous:
+				using (SqliteCommand cmd = connection.CreateCommand())
+				{
+					cmd.CommandText = "SELECT * FROM TestTable";
+					result = DirectQuery.GetDataTableSynchronous(connection, cmd);
+				}
+				break;
 
-	[Fact]
-	public void GetDataTableSynchronous_ShouldReturnPopulatedDataTable_WhenQuerySucceeds()
-	{
-		using SqliteCommand cmd = connection.CreateCommand();
-		cmd.CommandText = "SELECT * FROM TestTable";
+			default:
+				throw new InvalidOperationException($"Unknown mode: {mode}");
+		}
 
-		using DataTable result = DirectQuery.GetDataTableSynchronous(connection, cmd);
-
-		result.ShouldNotBeNull();
-		result.Rows.Count.ShouldBe(5);
-		result.Columns.Contains("Id").ShouldBeTrue();
-		result.Columns.Contains("Name").ShouldBeTrue();
+		using (result)
+		{
+			result.ShouldNotBeNull();
+			result.Rows.Count.ShouldBe(5);
+			result.Columns.Contains("Id").ShouldBeTrue();
+			result.Columns.Contains("Name").ShouldBeTrue();
+		}
 	}
 
 	[Fact]
@@ -127,25 +149,34 @@ public sealed class DirectQueryTests : IDisposable
 		result.Dispose();
 	}
 
-	[Fact]
-	public async Task RunUpdateQuery_ShouldReturnSuccessResult_WhenUpdateSucceeds()
+	[Theory]
+	[InlineData(ExecutionMode.Asynchronous)]
+	[InlineData(ExecutionMode.Synchronous)]
+	public async Task RunUpdateQuery_ShouldReturnSuccessResult_WhenUpdateSucceeds(ExecutionMode mode)
 	{
-		await using SqliteCommand cmd = connection.CreateCommand();
-		cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
+		UpdateResult result;
 
-		UpdateResult result = await DirectQuery.RunUpdateQuery(connection, cmd, cancellationToken: Current.CancellationToken);
+		switch (mode)
+		{
+			case ExecutionMode.Asynchronous:
+				await using (SqliteCommand cmd = connection.CreateCommand())
+				{
+					cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
+					result = await DirectQuery.RunUpdateQuery(connection, cmd, cancellationToken: Current.CancellationToken);
+				}
+				break;
 
-		result.Success.ShouldBeTrue();
-		result.RecordsChanged.ShouldBe(5);
-	}
+			case ExecutionMode.Synchronous:
+				using (SqliteCommand cmd = connection.CreateCommand())
+				{
+					cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
+					result = DirectQuery.RunUpdateQuerySynchronous(connection, cmd);
+				}
+				break;
 
-	[Fact]
-	public void RunUpdateQuerySynchronous_ShouldReturnSuccessResult_WhenUpdateSucceeds()
-	{
-		using SqliteCommand cmd = connection.CreateCommand();
-		cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
-
-		UpdateResult result = DirectQuery.RunUpdateQuerySynchronous(connection, cmd);
+			default:
+				throw new InvalidOperationException($"Unknown mode: {mode}");
+		}
 
 		result.Success.ShouldBeTrue();
 		result.RecordsChanged.ShouldBe(5);
@@ -377,25 +408,34 @@ public sealed class DirectQueryTests : IDisposable
 		results.Count.ShouldBeLessThanOrEqualTo(2);
 	}
 
-	[Fact]
-	public async Task RunUpdateQuery_ShouldRetryOnFailure()
+	[Theory]
+	[InlineData(ExecutionMode.Asynchronous)]
+	[InlineData(ExecutionMode.Synchronous)]
+	public async Task RunUpdateQuery_ShouldRetryOnFailure(ExecutionMode mode)
 	{
-		await using SqliteCommand cmd = connection.CreateCommand();
-		cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name = 'Test1'";
+		UpdateResult result;
 
-		UpdateResult result = await DirectQuery.RunUpdateQuery(connection, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
+		switch (mode)
+		{
+			case ExecutionMode.Asynchronous:
+				await using (SqliteCommand cmd = connection.CreateCommand())
+				{
+					cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name = 'Test1'";
+					result = await DirectQuery.RunUpdateQuery(connection, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
+				}
+				break;
 
-		result.Success.ShouldBeTrue();
-		result.RecordsChanged.ShouldBe(1);
-	}
+			case ExecutionMode.Synchronous:
+				using (SqliteCommand cmd = connection.CreateCommand())
+				{
+					cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name = 'Test1'";
+					result = DirectQuery.RunUpdateQuerySynchronous(connection, cmd, maxRetry: 3);
+				}
+				break;
 
-	[Fact]
-	public void RunUpdateQuerySynchronous_ShouldRetryOnFailure()
-	{
-		using SqliteCommand cmd = connection.CreateCommand();
-		cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name = 'Test1'";
-
-		UpdateResult result = DirectQuery.RunUpdateQuerySynchronous(connection, cmd, maxRetry: 3);
+			default:
+				throw new InvalidOperationException($"Unknown mode: {mode}");
+		}
 
 		result.Success.ShouldBeTrue();
 		result.RecordsChanged.ShouldBe(1);

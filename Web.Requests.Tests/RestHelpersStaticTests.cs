@@ -14,6 +14,9 @@ public sealed class RestHelpersStaticTests
 	public enum ExceptionType { TaskCanceledExpected, TaskCanceledUnexpected, GeneralException }
 	public enum TimeoutValue { Null, Zero }
 	public enum CompressionType { GZip, Brotli }
+	public enum HeaderScenario { DefaultNoHeaders, NullHeaders, ReplacesNonJsonAcceptHeader }
+	public enum StreamingObjectHeaderScenario { NullHeaders, KeepsJsonAcceptHeader, ReplacesNonJsonAcceptHeader }
+	public enum SerializationFormat { MemoryPack, MessagePack }
 	[Theory]
 	[InlineData("GET", null)]
 	[InlineData("POST", "body")]
@@ -137,29 +140,11 @@ public sealed class RestHelpersStaticTests
 		}
 	}
 
-	[Fact]
-	public async Task StreamingRestRequest_YieldsResults()
-	{
-		FakeHttpMessageHandler handler = new();
-		HttpClient client = new(handler);
-		RequestOptions<string> options = new() { Url = "http://test", HttpMethod = HttpMethod.Get };
-
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json")
-		};
-
-		List<string?> results = new();
-		await foreach (string? item in client.StreamingRestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
-		{
-			results.Add(item);
-		}
-
-		results.ShouldBe(["a", "b"]);
-	}
-
-	[Fact]
-	public async Task StreamingRestRequest_HandlesNullHeaders()
+	[Theory]
+	[InlineData(HeaderScenario.DefaultNoHeaders)]
+	[InlineData(HeaderScenario.NullHeaders)]
+	[InlineData(HeaderScenario.ReplacesNonJsonAcceptHeader)]
+	public async Task StreamingRestRequest_HandlesHeaderScenarios(HeaderScenario scenario)
 	{
 		FakeHttpMessageHandler handler = new();
 		HttpClient client = new(handler);
@@ -167,33 +152,12 @@ public sealed class RestHelpersStaticTests
 		{
 			Url = "http://test",
 			HttpMethod = HttpMethod.Get,
-			HttpHeaders = null
-		};
-
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json")
-		};
-
-		List<string?> results = new();
-		await foreach (string? item in client.StreamingRestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
-		{
-			results.Add(item);
-		}
-
-		results.ShouldBe(["a", "b"]);
-	}
-
-	[Fact]
-	public async Task StreamingRestRequest_ReplacesAcceptHeader()
-	{
-		FakeHttpMessageHandler handler = new();
-		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			HttpHeaders = new Dictionary<string, string> { { "Accept", "text/xml" } }
+			HttpHeaders = scenario switch
+			{
+				HeaderScenario.NullHeaders => null,
+				HeaderScenario.ReplacesNonJsonAcceptHeader => new Dictionary<string, string> { { "Accept", "text/xml" } },
+				_ => null
+			}
 		};
 
 		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
@@ -263,8 +227,11 @@ public sealed class RestHelpersStaticTests
 		items.ShouldBe(["a", "b"]);
 	}
 
-	[Fact]
-	public async Task StreamingRestObjectRequest_HandlesNullHeaders()
+	[Theory]
+	[InlineData(StreamingObjectHeaderScenario.NullHeaders)]
+	[InlineData(StreamingObjectHeaderScenario.KeepsJsonAcceptHeader)]
+	[InlineData(StreamingObjectHeaderScenario.ReplacesNonJsonAcceptHeader)]
+	public async Task StreamingRestObjectRequest_HandlesHeaderScenarios(StreamingObjectHeaderScenario scenario)
 	{
 		FakeHttpMessageHandler handler = new();
 		HttpClient client = new(handler);
@@ -272,51 +239,13 @@ public sealed class RestHelpersStaticTests
 		{
 			Url = "http://test",
 			HttpMethod = HttpMethod.Get,
-			HttpHeaders = null
-		};
-
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("[\"a\"]", Encoding.UTF8, "application/json")
-		};
-
-		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
-
-		result.Response.ShouldNotBeNull();
-	}
-
-	[Fact]
-	public async Task StreamingRestObjectRequest_KeepsJsonAcceptHeader()
-	{
-		FakeHttpMessageHandler handler = new();
-		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			HttpHeaders = new Dictionary<string, string> { { "Accept", "application/json" } }
-		};
-
-		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
-		{
-			Content = new StringContent("[\"a\"]", Encoding.UTF8, "application/json")
-		};
-
-		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
-
-		result.Response.ShouldNotBeNull();
-	}
-
-	[Fact]
-	public async Task StreamingRestObjectRequest_ReplacesNonJsonAcceptHeader()
-	{
-		FakeHttpMessageHandler handler = new();
-		HttpClient client = new(handler);
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get,
-			HttpHeaders = new Dictionary<string, string> { { "Accept", "text/xml" } }
+			HttpHeaders = scenario switch
+			{
+				StreamingObjectHeaderScenario.NullHeaders => null,
+				StreamingObjectHeaderScenario.KeepsJsonAcceptHeader => new Dictionary<string, string> { { "Accept", "application/json" } },
+				StreamingObjectHeaderScenario.ReplacesNonJsonAcceptHeader => new Dictionary<string, string> { { "Accept", "text/xml" } },
+				_ => null
+			}
 		};
 
 		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
@@ -478,46 +407,22 @@ public sealed class RestHelpersStaticTests
 		results.ShouldBe(["a", "b"]);
 	}
 
-	[Fact]
-	public async Task HandleResponseAsync_HandlesGZipEncoding()
+	[Theory]
+	[InlineData(CompressionType.GZip)]
+	[InlineData(CompressionType.Brotli)]
+	public async Task HandleResponseAsync_HandlesCompression(CompressionType compressionType)
 	{
 		byte[] jsonBytes = Encoding.UTF8.GetBytes("[\"a\",\"b\"]");
 		MemoryStream compressedStream = new();
-		await using (System.IO.Compression.GZipStream gzip = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true))
+
+		if (compressionType == CompressionType.GZip)
 		{
+			await using System.IO.Compression.GZipStream gzip = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
 			await gzip.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
 		}
-		compressedStream.Position = 0;
-
-		HttpResponseMessage response = new(HttpStatusCode.OK)
+		else
 		{
-			Content = new StreamContent(compressedStream)
-		};
-		response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-		response.Content.Headers.ContentEncoding.Add("gzip");
-
-		RequestOptions<string> options = new()
-		{
-			Url = "http://test",
-			HttpMethod = HttpMethod.Get
-		};
-
-		List<string?> results = new();
-		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
-		{
-			results.Add(item);
-		}
-
-		results.ShouldBe(["a", "b"]);
-	}
-
-	[Fact]
-	public async Task HandleResponseAsync_HandlesBrotliEncoding()
-	{
-		byte[] jsonBytes = Encoding.UTF8.GetBytes("[\"a\",\"b\"]");
-		MemoryStream compressedStream = new();
-		await using (System.IO.Compression.BrotliStream brotli = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true))
-		{
+			await using System.IO.Compression.BrotliStream brotli = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
 			await brotli.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
@@ -527,7 +432,7 @@ public sealed class RestHelpersStaticTests
 			Content = new StreamContent(compressedStream)
 		};
 		response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-		response.Content.Headers.ContentEncoding.Add("br");
+		response.Content.Headers.ContentEncoding.Add(compressionType == CompressionType.GZip ? "gzip" : "br");
 
 		RequestOptions<string> options = new()
 		{
@@ -878,30 +783,19 @@ public sealed class RestHelpersStaticTests
 		}
 	}
 
-	[Fact]
-	public void AddContent_HandlesMemoryPack()
+	[Theory]
+	[InlineData(SerializationFormat.MemoryPack, "application/x-memorypack")]
+	[InlineData(SerializationFormat.MessagePack, "application/x-msgpack")]
+	public void AddContent_HandlesSerializationFormats(SerializationFormat format, string expectedMediaType)
 	{
 		HttpRequestMessage request = new(HttpMethod.Post, "http://test");
-		Dictionary<string, string> headers = new() { { "Content-Type", "application/x-memorypack" } };
+		Dictionary<string, string> headers = new() { { "Content-Type", expectedMediaType } };
 		TestModel model = new() { Name = "Test", Value = 42 };
 
 		request.AddContent(HttpMethod.Post, headers, model, null);
 
 		request.Content.ShouldNotBeNull();
-		request.Content!.Headers.ContentType?.MediaType.ShouldBe("application/x-memorypack");
-	}
-
-	[Fact]
-	public void AddContent_HandlesMessagePack()
-	{
-		HttpRequestMessage request = new(HttpMethod.Post, "http://test");
-		Dictionary<string, string> headers = new() { { "Content-Type", "application/x-msgpack" } };
-		TestModel model = new() { Name = "Test", Value = 42 };
-
-		request.AddContent(HttpMethod.Post, headers, model, null);
-
-		request.Content.ShouldNotBeNull();
-		request.Content!.Headers.ContentType?.MediaType.ShouldBe("application/x-msgpack");
+		request.Content!.Headers.ContentType?.MediaType.ShouldBe(expectedMediaType);
 	}
 
 	[Theory]

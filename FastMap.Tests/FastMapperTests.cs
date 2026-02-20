@@ -544,52 +544,63 @@ public sealed class FastMapperTests
 		result3.IntProp.ShouldBe(source.IntProp);
 	}
 
-	[Fact]
-	public void FasterMap_WithListOfComplexObjects_MapsCorrectly()
+	public enum ComplexCollectionType
 	{
-		// Arrange
-		List<SimpleSource> source =
-		[
-			new() { StringProp = "A", IntProp = 1, DateProp = DateTime.Now },
-			new() { StringProp = "B", IntProp = 2, DateProp = DateTime.Now.AddDays(1) },
-			new() { StringProp = "C", IntProp = 3, DateProp = DateTime.Now.AddDays(2) }
-		];
-
-		// Act
-		List<SimpleDestination> result = source.FastMap<List<SimpleSource>, List<SimpleDestination>>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Count.ShouldBe(3);
-		for (int i = 0; i < source.Count; i++)
-		{
-			result[i].StringProp.ShouldBe(source[i].StringProp);
-			result[i].IntProp.ShouldBe(source[i].IntProp);
-			result[i].DateProp.ShouldBe(source[i].DateProp);
-		}
+		List,
+		Array
 	}
 
-	[Fact]
-	public void FasterMap_WithArrayOfComplexObjects_MapsCorrectly()
+	[Theory]
+	[InlineData(ComplexCollectionType.List)]
+	[InlineData(ComplexCollectionType.Array)]
+	public void FasterMap_WithComplexObjectCollections_MapsCorrectly(ComplexCollectionType collectionType)
 	{
-		// Arrange
-		SimpleSource[] source =
-		[
-			new() { StringProp = "X", IntProp = 10, DateProp = DateTime.Now },
-			new() { StringProp = "Y", IntProp = 20, DateProp = DateTime.Now.AddHours(1) }
-		];
-
-		// Act
-		SimpleDestination[] result = source.FastMap<SimpleSource[], SimpleDestination[]>();
-
-		// Assert
-		result.ShouldNotBeNull();
-		result.Length.ShouldBe(2);
-		for (int i = 0; i < source.Length; i++)
+		switch (collectionType)
 		{
-			result[i].StringProp.ShouldBe(source[i].StringProp);
-			result[i].IntProp.ShouldBe(source[i].IntProp);
-			result[i].DateProp.ShouldBe(source[i].DateProp);
+			case ComplexCollectionType.List:
+				// Arrange
+				List<SimpleSource> listSource =
+				[
+					new() { StringProp = "A", IntProp = 1, DateProp = DateTime.Now },
+					new() { StringProp = "B", IntProp = 2, DateProp = DateTime.Now.AddDays(1) },
+					new() { StringProp = "C", IntProp = 3, DateProp = DateTime.Now.AddDays(2) }
+				];
+
+				// Act
+				List<SimpleDestination> listResult = listSource.FastMap<List<SimpleSource>, List<SimpleDestination>>();
+
+				// Assert
+				listResult.ShouldNotBeNull();
+				listResult.Count.ShouldBe(3);
+				for (int i = 0; i < listSource.Count; i++)
+				{
+					listResult[i].StringProp.ShouldBe(listSource[i].StringProp);
+					listResult[i].IntProp.ShouldBe(listSource[i].IntProp);
+					listResult[i].DateProp.ShouldBe(listSource[i].DateProp);
+				}
+				break;
+
+			case ComplexCollectionType.Array:
+				// Arrange
+				SimpleSource[] arraySource =
+				[
+					new() { StringProp = "X", IntProp = 10, DateProp = DateTime.Now },
+					new() { StringProp = "Y", IntProp = 20, DateProp = DateTime.Now.AddHours(1) }
+				];
+
+				// Act
+				SimpleDestination[] arrayResult = arraySource.FastMap<SimpleSource[], SimpleDestination[]>();
+
+				// Assert
+				arrayResult.ShouldNotBeNull();
+				arrayResult.Length.ShouldBe(2);
+				for (int i = 0; i < arraySource.Length; i++)
+				{
+					arrayResult[i].StringProp.ShouldBe(arraySource[i].StringProp);
+					arrayResult[i].IntProp.ShouldBe(arraySource[i].IntProp);
+					arrayResult[i].DateProp.ShouldBe(arraySource[i].DateProp);
+				}
+				break;
 		}
 	}
 

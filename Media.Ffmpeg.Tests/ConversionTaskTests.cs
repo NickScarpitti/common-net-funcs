@@ -49,7 +49,7 @@ public sealed class ConversionTaskTests : IDisposable
 			if (disposing)
 			{
 				// Cleanup temporary files after tests
-				Thread.Sleep(5000);
+				Task.Delay(5000).Wait();
 				if (Directory.Exists(workingDir))
 				{
 					try

@@ -1,6 +1,6 @@
-﻿using CommonNetFuncs.FastMap;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.ObjectModel;
+using CommonNetFuncs.FastMap;
 
 namespace FastMap.Tests;
 
@@ -299,7 +299,7 @@ public sealed class FastMapperTests
 	[Theory]
 	[InlineData("Test1", new[] { "one", "two" }, "key1", 1, "Nested", 1, new[] { 1, 2 }, "first", 1.0)]
 	[InlineData(null, null, null, null, null, null, null, null, null)]
-	public void FasterMap_WithComplexNullableProperties_MapsCorrectly(string? name, string[]? stringList, string? dictKey, int? dictValue,
+	public void FastMap_WithComplexNullableProperties_MapsCorrectly(string? name, string[]? stringList, string? dictKey, int? dictValue,
 		string? nestedString, int? nestedInt, int[]? numberSet, string? queueItem, double? stackItem)
 	{
 		// Arrange
@@ -333,6 +333,19 @@ public sealed class FastMapperTests
 		result.NestedObject?.StringProp.ShouldBe(source.NestedObject.StringProp);
 		result.NestedObject?.IntProp.ShouldBe(source.NestedObject.IntProp);
 		result.NestedObject?.DateProp.ShouldBe(source.NestedObject.DateProp);
+	}
+
+	[Fact]
+	public void FastMap_WithNullObjects_MapsCorrectly()
+	{
+		// Arrange
+		SimpleSource? source = null;
+
+		// Act
+		SimpleDestination? result = source!.FastMap<SimpleSource?, SimpleDestination?>();
+
+		// Assert
+		result.ShouldBeNull();
 	}
 
 	[Theory]

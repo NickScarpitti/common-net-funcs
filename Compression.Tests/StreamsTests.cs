@@ -413,25 +413,39 @@ public sealed class StreamsTests
 		compressionStream.CanWrite.ShouldBeTrue(); // Compression streams are write-only
 	}
 
-	[Fact]
-	public void CompressStream_Should_Throw_NotSupportedException_For_Unreadable_Stream()
+	public enum CompressStreamExceptionType
 	{
-		// Arrange
-		using MemoryStream stream = new([], false);
-		stream.Close();
-
-		// Act & Assert
-		Should.Throw<NotSupportedException>(() => stream.Compress(ECompressionType.Gzip));
+		UnreadableStream,
+		NoneCompressionType
 	}
 
-	[Fact]
-	public void CompressStream_Should_Throw_NotImplementedException_For_None_CompressionType()
+	[Theory]
+	[InlineData(CompressStreamExceptionType.UnreadableStream)]
+	[InlineData(CompressStreamExceptionType.NoneCompressionType)]
+	public void CompressStream_Should_Throw_Exception_ForInvalidScenarios(CompressStreamExceptionType exceptionType)
 	{
-		// Arrange
-		using MemoryStream stream = new(smallData);
+		switch (exceptionType)
+		{
+			case CompressStreamExceptionType.UnreadableStream:
+				// Arrange
+				using (MemoryStream stream = new([], false))
+				{
+					stream.Close();
 
-		// Act & Assert
-		Should.Throw<NotImplementedException>(() => stream.Compress(ECompressionType.None));
+					// Act & Assert
+					Should.Throw<NotSupportedException>(() => stream.Compress(ECompressionType.Gzip));
+				}
+				break;
+
+			case CompressStreamExceptionType.NoneCompressionType:
+				// Arrange
+				using (MemoryStream stream = new(smallData))
+				{
+					// Act & Assert
+					Should.Throw<NotImplementedException>(() => stream.Compress(ECompressionType.None));
+				}
+				break;
+		}
 	}
 
 	// Tests for Decompress(Stream) method
@@ -460,25 +474,39 @@ public sealed class StreamsTests
 		resultStream.ToArray().ShouldBe(originalData);
 	}
 
-	[Fact]
-	public void DecompressStream_Should_Throw_NotSupportedException_For_Unreadable_Stream()
+	public enum DecompressStreamExceptionType
 	{
-		// Arrange
-		using MemoryStream stream = new([], false);
-		stream.Close();
-
-		// Act & Assert
-		Should.Throw<NotSupportedException>(() => stream.Decompress(ECompressionType.Gzip));
+		UnreadableStream,
+		NoneCompressionType
 	}
 
-	[Fact]
-	public void DecompressStream_Should_Throw_NotImplementedException_For_None_CompressionType()
+	[Theory]
+	[InlineData(DecompressStreamExceptionType.UnreadableStream)]
+	[InlineData(DecompressStreamExceptionType.NoneCompressionType)]
+	public void DecompressStream_Should_Throw_Exception_ForInvalidScenarios(DecompressStreamExceptionType exceptionType)
 	{
-		// Arrange
-		using MemoryStream stream = new(smallData);
+		switch (exceptionType)
+		{
+			case DecompressStreamExceptionType.UnreadableStream:
+				// Arrange
+				using (MemoryStream stream = new([], false))
+				{
+					stream.Close();
 
-		// Act & Assert
-		Should.Throw<NotImplementedException>(() => stream.Decompress(ECompressionType.None));
+					// Act & Assert
+					Should.Throw<NotSupportedException>(() => stream.Decompress(ECompressionType.Gzip));
+				}
+				break;
+
+			case DecompressStreamExceptionType.NoneCompressionType:
+				// Arrange
+				using (MemoryStream stream = new(smallData))
+				{
+					// Act & Assert
+					Should.Throw<NotImplementedException>(() => stream.Decompress(ECompressionType.None));
+				}
+				break;
+		}
 	}
 
 	// Tests for DetectCompressionType with seekable streams
@@ -501,43 +529,57 @@ public sealed class StreamsTests
 		compressedStream.Position.ShouldBe(0); // Position should be restored
 	}
 
-	[Fact]
-	public async Task DetectCompressionType_Should_Return_None_For_Null_Stream()
+	public enum DetectCompressionTypeNoneScenario
 	{
-		// Act
-		ECompressionType detectedType = await Streams.DetectCompressionType(null);
-
-		// Assert
-		detectedType.ShouldBe(ECompressionType.None);
+		NullStream,
+		UnreadableStream,
+		NonCompressedData
 	}
 
-	[Fact]
-	public async Task DetectCompressionType_Should_Return_None_For_Unreadable_Stream()
+	[Theory]
+	[InlineData(DetectCompressionTypeNoneScenario.NullStream)]
+	[InlineData(DetectCompressionTypeNoneScenario.UnreadableStream)]
+	[InlineData(DetectCompressionTypeNoneScenario.NonCompressedData)]
+	public async Task DetectCompressionType_Should_Return_None_ForVariousScenarios(DetectCompressionTypeNoneScenario scenario)
 	{
-		// Arrange
-		await using MemoryStream stream = new();
-		stream.Close();
+		switch (scenario)
+		{
+			case DetectCompressionTypeNoneScenario.NullStream:
+				// Act
+				ECompressionType detectedType = await Streams.DetectCompressionType(null);
 
-		// Act
-		ECompressionType detectedType = await stream.DetectCompressionType();
+				// Assert
+				detectedType.ShouldBe(ECompressionType.None);
+				break;
 
-		// Assert
-		detectedType.ShouldBe(ECompressionType.None);
-	}
+			case DetectCompressionTypeNoneScenario.UnreadableStream:
+				// Arrange
+				await using (MemoryStream stream = new())
+				{
+					stream.Close();
 
-	[Fact]
-	public async Task DetectCompressionType_Should_Return_None_For_Non_Compressed_Data()
-	{
-		// Arrange - Use predictable ASCII text data that won't match compression signatures
-		byte[] nonCompressedData = "This is plain text data that should not match any compression signature."u8.ToArray();
-		await using MemoryStream stream = new(nonCompressedData);
+					// Act
+					ECompressionType detectedType2 = await stream.DetectCompressionType();
 
-		// Act
-		ECompressionType detectedType = await stream.DetectCompressionType();
+					// Assert
+					detectedType2.ShouldBe(ECompressionType.None);
+				}
+				break;
 
-		// Assert
-		detectedType.ShouldBe(ECompressionType.None);
-		stream.Position.ShouldBe(0);
+			case DetectCompressionTypeNoneScenario.NonCompressedData:
+				// Arrange - Use predictable ASCII text data that won't match compression signatures
+				byte[] nonCompressedData = "This is plain text data that should not match any compression signature."u8.ToArray();
+				await using (MemoryStream stream = new(nonCompressedData))
+				{
+					// Act
+					ECompressionType detectedType3 = await stream.DetectCompressionType();
+
+					// Assert
+					detectedType3.ShouldBe(ECompressionType.None);
+					stream.Position.ShouldBe(0);
+				}
+				break;
+		}
 	}
 
 	[Theory]
@@ -557,44 +599,55 @@ public sealed class StreamsTests
 	}
 
 	// Tests for IsDeflateCompressed
-	[Fact]
-	public async Task IsDeflateCompressed_Should_Return_True_For_Deflate_Compressed_Data()
+	public enum IsDeflateCompressedScenario
 	{
-		// Arrange
-		byte[] originalData = smallData;
-		byte[] compressedData = await originalData.Compress(ECompressionType.Deflate, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Act
-		bool isDeflate = await IsDeflateCompressed(compressedData);
-
-		// Assert
-		isDeflate.ShouldBeTrue();
+		DeflateCompressedData,
+		NonDeflateData,
+		EmptyData
 	}
 
-	[Fact]
-	public async Task IsDeflateCompressed_Should_Return_False_For_Non_Deflate_Data()
+	[Theory]
+	[InlineData(IsDeflateCompressedScenario.DeflateCompressedData)]
+	[InlineData(IsDeflateCompressedScenario.NonDeflateData)]
+	[InlineData(IsDeflateCompressedScenario.EmptyData)]
+	public async Task IsDeflateCompressed_Should_Work_ForVariousScenarios(IsDeflateCompressedScenario scenario)
 	{
-		// Arrange - Use predictable ASCII text data that's clearly not deflate-compressed
-		byte[] originalData = "Hello, World! This is not compressed data."u8.ToArray();
+		switch (scenario)
+		{
+			case IsDeflateCompressedScenario.DeflateCompressedData:
+				// Arrange
+				byte[] originalData = smallData;
+				byte[] compressedData = await originalData.Compress(ECompressionType.Deflate, cancellationToken: TestContext.Current.CancellationToken);
 
-		// Act
-		bool isDeflate = await IsDeflateCompressed(originalData);
+				// Act
+				bool isDeflate = await IsDeflateCompressed(compressedData);
 
-		// Assert
-		isDeflate.ShouldBeFalse();
-	}
+				// Assert
+				isDeflate.ShouldBeTrue();
+				break;
 
-	[Fact]
-	public async Task IsDeflateCompressed_Should_Return_False_For_Empty_Data()
-	{
-		// Arrange
-		byte[] emptyData = [];
+			case IsDeflateCompressedScenario.NonDeflateData:
+				// Arrange - Use predictable ASCII text data that's clearly not deflate-compressed
+				byte[] nonDeflateData = "Hello, World! This is not compressed data."u8.ToArray();
 
-		// Act
-		bool isDeflate = await IsDeflateCompressed(emptyData);
+				// Act
+				bool isDeflate2 = await IsDeflateCompressed(nonDeflateData);
 
-		// Assert
-		isDeflate.ShouldBeFalse();
+				// Assert
+				isDeflate2.ShouldBeFalse();
+				break;
+
+			case IsDeflateCompressedScenario.EmptyData:
+				// Arrange
+				byte[] emptyData = [];
+
+				// Act
+				bool isDeflate3 = await IsDeflateCompressed(emptyData);
+
+				// Assert
+				isDeflate3.ShouldBeFalse();
+				break;
+		}
 	}
 
 	// Tests for DetectCompressionTypeAndReset
@@ -645,79 +698,111 @@ public sealed class StreamsTests
 	}
 
 	// Tests for CopyWithLimit
-	[Fact]
-	public void CopyWithLimit_Should_Copy_Data_Within_Limit()
+	public enum CopyWithLimitScenario
 	{
-		// Arrange
-		byte[] data = smallData;
-		using MemoryStream source = new(data);
-		using MemoryStream destination = new();
-		long maxBytes = data.Length;
-
-		// Act
-		source.CopyWithLimit(destination, maxBytes, cancellationToken: TestContext.Current.CancellationToken);
-
-		// Assert
-		destination.ToArray().ShouldBe(data);
+		WithinLimit,
+		LimitExceeded,
+		CancellationToken
 	}
 
-	[Fact]
-	public void CopyWithLimit_Should_Throw_When_Limit_Exceeded()
+	[Theory]
+	[InlineData(CopyWithLimitScenario.WithinLimit)]
+	[InlineData(CopyWithLimitScenario.LimitExceeded)]
+	[InlineData(CopyWithLimitScenario.CancellationToken)]
+	public void CopyWithLimit_Should_Handle_Scenarios(CopyWithLimitScenario scenario)
 	{
-		// Arrange
-		byte[] data = smallData;
-		using MemoryStream source = new(data);
-		using MemoryStream destination = new();
-		long maxBytes = data.Length - 10;
+		switch (scenario)
+		{
+			case CopyWithLimitScenario.WithinLimit:
+				// Arrange
+				byte[] data = smallData;
+				using (MemoryStream source = new(data))
+				using (MemoryStream destination = new())
+				{
+					long maxBytes = data.Length;
 
-		// Act & Assert
-		Should.Throw<CompressionLimitExceededException>(() => source.CopyWithLimit(destination, maxBytes));
-	}
+					// Act
+					source.CopyWithLimit(destination, maxBytes, cancellationToken: TestContext.Current.CancellationToken);
 
-	[Fact]
-	public void CopyWithLimit_Should_Respect_Cancellation_Token()
-	{
-		// Arrange
-		byte[] reallyLargeData = fixture.CreateMany<byte>(5 * 1024 * 1024).ToArray(); // 5 MB
-		using MemoryStream source = new(reallyLargeData);
-		using MemoryStream destination = new();
-		using CancellationTokenSource cts = new();
-		cts.Cancel();
-		long maxBytes = reallyLargeData.Length;
+					// Assert
+					destination.ToArray().ShouldBe(data);
+				}
+				break;
 
-		// Act & Assert
-		Should.Throw<OperationCanceledException>(() => source.CopyWithLimit(destination, maxBytes, cts.Token));
+			case CopyWithLimitScenario.LimitExceeded:
+				// Arrange
+				byte[] limitData = smallData;
+				using (MemoryStream limitSource = new(limitData))
+				using (MemoryStream limitDestination = new())
+				{
+					long maxBytes = limitData.Length - 10;
+
+					// Act & Assert
+					Should.Throw<CompressionLimitExceededException>(() => limitSource.CopyWithLimit(limitDestination, maxBytes));
+				}
+				break;
+
+			case CopyWithLimitScenario.CancellationToken:
+				// Arrange
+				byte[] reallyLargeData = fixture.CreateMany<byte>(5 * 1024 * 1024).ToArray(); // 5 MB
+				using (MemoryStream cancelSource = new(reallyLargeData))
+				using (MemoryStream cancelDestination = new())
+				using (CancellationTokenSource cts = new())
+				{
+					cts.Cancel();
+					long maxBytes = reallyLargeData.Length;
+
+					// Act & Assert
+					Should.Throw<OperationCanceledException>(() => cancelSource.CopyWithLimit(cancelDestination, maxBytes, cts.Token));
+				}
+				break;
+		}
 	}
 
 	// Tests for CopyWithLimitAsync
-	[Fact]
-	public async Task CopyWithLimitAsync_Should_Copy_Data_Within_Limit()
+	public enum CopyWithLimitAsyncScenario
 	{
-		// Arrange
-		byte[] data = smallData;
-		await using MemoryStream source = new(data);
-		await using MemoryStream destination = new();
-		long maxBytes = data.Length;
-
-		// Act
-		await source.CopyWithLimitAsync(destination, maxBytes, TestContext.Current.CancellationToken);
-
-		// Assert
-		destination.ToArray().ShouldBe(data);
+		WithinLimit,
+		LimitExceeded
 	}
 
-	[Fact]
-	public async Task CopyWithLimitAsync_Should_Throw_When_Limit_Exceeded()
+	[Theory]
+	[InlineData(CopyWithLimitAsyncScenario.WithinLimit)]
+	[InlineData(CopyWithLimitAsyncScenario.LimitExceeded)]
+	public async Task CopyWithLimitAsync_Should_Handle_Scenarios(CopyWithLimitAsyncScenario scenario)
 	{
-		// Arrange
-		byte[] data = smallData;
-		await using MemoryStream source = new(data);
-		await using MemoryStream destination = new();
-		long maxBytes = data.Length - 10;
+		switch (scenario)
+		{
+			case CopyWithLimitAsyncScenario.WithinLimit:
+				// Arrange
+				byte[] data = smallData;
+				await using (MemoryStream source = new(data))
+				await using (MemoryStream destination = new())
+				{
+					long maxBytes = data.Length;
 
-		// Act & Assert
-		await Should.ThrowAsync<CompressionLimitExceededException>(
-			source.CopyWithLimitAsync(destination, maxBytes, TestContext.Current.CancellationToken));
+					// Act
+					await source.CopyWithLimitAsync(destination, maxBytes, TestContext.Current.CancellationToken);
+
+					// Assert
+					destination.ToArray().ShouldBe(data);
+				}
+				break;
+
+			case CopyWithLimitAsyncScenario.LimitExceeded:
+				// Arrange
+				byte[] limitData = smallData;
+				await using (MemoryStream limitSource = new(limitData))
+				await using (MemoryStream limitDestination = new())
+				{
+					long maxBytes = limitData.Length - 10;
+
+					// Act & Assert
+					await Should.ThrowAsync<CompressionLimitExceededException>(
+						limitSource.CopyWithLimitAsync(limitDestination, maxBytes, TestContext.Current.CancellationToken));
+				}
+				break;
+		}
 	}
 
 	// Tests for CompressionLimitExceededException

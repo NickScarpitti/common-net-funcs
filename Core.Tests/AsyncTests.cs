@@ -1387,61 +1387,61 @@ public sealed class AsyncTests
 		List<Func<Task<int>>> tasks =
 		[
 				async () =>
+					{
+						lock (lockObj)
 						{
-								lock (lockObj)
-								{
-										executionCount++;
-										maxConcurrent = Math.Max(maxConcurrent, executionCount);
-								}
-								await Task.Delay(100);
-								lock (lockObj)
-								{
-										executionCount--;
-								}
-								return 1;
-						},
-						async () =>
-						{
-								lock (lockObj)
-								{
-										executionCount++;
-										maxConcurrent = Math.Max(maxConcurrent, executionCount);
-								}
-								await Task.Delay(100);
-								lock (lockObj)
-								{
-										executionCount--;
-								}
-								return 2;
-						},
-						async () =>
-						{
-								lock (lockObj)
-								{
-										executionCount++;
-										maxConcurrent = Math.Max(maxConcurrent, executionCount);
-								}
-								await Task.Delay(100);
-								lock (lockObj)
-								{
-										executionCount--;
-								}
-								return 3;
-						},
-						async () =>
-						{
-								lock (lockObj)
-								{
-										executionCount++;
-										maxConcurrent = Math.Max(maxConcurrent, executionCount);
-								}
-								await Task.Delay(100);
-								lock (lockObj)
-								{
-										executionCount--;
-								}
-								return 4;
+							executionCount++;
+							maxConcurrent = Math.Max(maxConcurrent, executionCount);
 						}
+						await Task.Delay(100);
+						lock (lockObj)
+						{
+							executionCount--;
+						}
+						return 1;
+					},
+				async () =>
+					{
+						lock (lockObj)
+						{
+							executionCount++;
+							maxConcurrent = Math.Max(maxConcurrent, executionCount);
+						}
+						await Task.Delay(100);
+						lock (lockObj)
+						{
+							executionCount--;
+						}
+						return 2;
+					},
+				async () =>
+					{
+						lock (lockObj)
+						{
+							executionCount++;
+							maxConcurrent = Math.Max(maxConcurrent, executionCount);
+						}
+						await Task.Delay(100);
+						lock (lockObj)
+						{
+							executionCount--;
+						}
+						return 3;
+					},
+				async () =>
+					{
+						lock (lockObj)
+						{
+							executionCount++;
+							maxConcurrent = Math.Max(maxConcurrent, executionCount);
+						}
+						await Task.Delay(100);
+						lock (lockObj)
+						{
+							executionCount--;
+						}
+						return 4;
+					}
 				];
 
 		ConcurrentBag<int> results = await tasks.RunAll(semaphore);
@@ -1456,9 +1456,9 @@ public sealed class AsyncTests
 	{
 		List<Func<Task<int>>> tasks =
 		[
-				() => Task.FromResult(1),
-						() => Task.FromException<int>(new InvalidOperationException("Test exception")),
-						() => Task.FromResult(3)
+			() => Task.FromResult(1),
+			() => Task.FromException<int>(new InvalidOperationException("Test exception")),
+			() => Task.FromResult(3)
 		];
 
 		ConcurrentBag<int> results = await tasks.RunAll();
@@ -1475,25 +1475,25 @@ public sealed class AsyncTests
 
 		List<Func<Task<int>>> tasks =
 		[
-				async () =>
-						{
-								Interlocked.Increment(ref executedTasks);
-								await Task.Delay(50);
-								return 1;
-						},
-						async () =>
-						{
-								Interlocked.Increment(ref executedTasks);
-								await Task.Delay(100);
-								throw new InvalidOperationException("Test exception");
-						},
-						async () =>
-						{
-								Interlocked.Increment(ref executedTasks);
-								await Task.Delay(10000);
-								return 3;
-						}
-				];
+			async () =>
+				{
+					Interlocked.Increment(ref executedTasks);
+					await Task.Delay(50);
+					return 1;
+				},
+			async () =>
+				{
+					Interlocked.Increment(ref executedTasks);
+					await Task.Delay(100);
+					throw new InvalidOperationException("Test exception");
+				},
+			async () =>
+				{
+					Interlocked.Increment(ref executedTasks);
+					await Task.Delay(10000);
+					return 3;
+				}
+		];
 
 		//await Should.ThrowAsync<Exception>(async () => await tasks.RunAll(null, cts, true));
 		await tasks.RunAll(null, cts, true);
@@ -1505,11 +1505,11 @@ public sealed class AsyncTests
 	{
 		List<Func<Task<int>>> tasks =
 		[
-				() => Task.FromResult(1),
-						() => Task.FromException<int>(new InvalidOperationException("First exception")),
-						() => Task.FromResult(3),
-						() => Task.FromException<int>(new InvalidOperationException("Second exception")),
-						() => Task.FromResult(5)
+			() => Task.FromResult(1),
+			() => Task.FromException<int>(new InvalidOperationException("First exception")),
+			() => Task.FromResult(3),
+			() => Task.FromException<int>(new InvalidOperationException("Second exception")),
+			() => Task.FromResult(5)
 		];
 
 		ConcurrentBag<int> results = await tasks.RunAll();
@@ -1634,9 +1634,9 @@ public sealed class AsyncTests
 	{
 		List<Task<int>> tasks =
 		[
-				Task.FromResult(1),
-						Task.FromResult(2),
-						Task.FromResult(3)
+			Task.FromResult(1),
+			Task.FromResult(2),
+			Task.FromResult(3)
 		];
 		ResultTaskGroup<int> group = new(tasks);
 
@@ -1728,7 +1728,7 @@ public sealed class AsyncTests
 		List<Task<int>> tasks =
 		[
 				Task.FromResult(1),
-						tcs.Task // This task will never complete
+				tcs.Task // This task will never complete
 		];
 		ResultTaskGroup<int> group = new(tasks);
 
@@ -1743,7 +1743,7 @@ public sealed class AsyncTests
 		List<Task<int>> tasks =
 		[
 				Task.FromResult(1),
-						Task.FromException<int>(new InvalidOperationException("fail"))
+				Task.FromException<int>(new InvalidOperationException("fail"))
 		];
 		ResultTaskGroup<int> group = new(tasks);
 
@@ -1759,11 +1759,11 @@ public sealed class AsyncTests
 	{
 		int executed = 0;
 		List<Task> tasks = Enumerable.Range(0, 4)
-				.Select(_ => new Task(() =>
-				{
-					Task.Delay(10).GetAwaiter().GetResult();
-					Interlocked.Increment(ref executed);
-				})).ToList();
+			.Select(_ => new Task(() =>
+			{
+				Task.Delay(10).GetAwaiter().GetResult();
+				Interlocked.Increment(ref executed);
+			})).ToList();
 
 		TaskGroup group = new(tasks);
 
@@ -1789,21 +1789,21 @@ public sealed class AsyncTests
 		using SemaphoreSlim semaphore = new(2, 2);
 
 		List<Task> tasks = Enumerable.Range(0, 6)
-				.Select(_ => new Task(() =>
+			.Select(_ => new Task(() =>
+			{
+				lock (lockObj)
 				{
-					lock (lockObj)
-					{
-						concurrent++;
-						maxConcurrent = Math.Max(maxConcurrent, concurrent);
-					}
-					//await Task.Delay(50);
-					Task.Delay(50).GetAwaiter().GetResult();
-					lock (lockObj)
-					{
-						concurrent--;
-					}
-				}))
-				.ToList();
+					concurrent++;
+					maxConcurrent = Math.Max(maxConcurrent, concurrent);
+				}
+				//await Task.Delay(50);
+				Task.Delay(50).GetAwaiter().GetResult();
+				lock (lockObj)
+				{
+					concurrent--;
+				}
+			}))
+			.ToList();
 
 		TaskGroup group = new(tasks, semaphore);
 
@@ -1818,7 +1818,7 @@ public sealed class AsyncTests
 		List<Task> tasks =
 		[
 				Task.CompletedTask,
-						Task.FromException(new InvalidOperationException("fail"))
+				Task.FromException(new InvalidOperationException("fail"))
 		];
 		TaskGroup group = new(tasks);
 
@@ -1831,7 +1831,6 @@ public sealed class AsyncTests
 		// Arrange
 		HashSet<string> collection = ["initial"];
 		using SemaphoreSlim semaphore = new(1, 1);
-		int releaseCount = 0;
 
 		// Wrap semaphore to track releases
 		static async Task<HashSet<string>> func()
@@ -1842,7 +1841,6 @@ public sealed class AsyncTests
 
 		// Act
 		await semaphore.WaitAsync(Current.CancellationToken);
-		int beforeCount = semaphore.CurrentCount;
 		semaphore.Release();
 
 		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
@@ -1867,7 +1865,6 @@ public sealed class AsyncTests
 
 		// Act
 		await semaphore.WaitAsync(Current.CancellationToken);
-		int beforeCount = semaphore.CurrentCount;
 		semaphore.Release();
 
 		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
@@ -2073,7 +2070,7 @@ public sealed class AsyncTests
 		ConcurrentBag<int> collection = [1, 2];
 		using SemaphoreSlim semaphore = new(1, 1);
 
-		Task<List<int>> func() => Task.FromResult<List<int>>([3, 4, 5]);
+		static Task<List<int>> func() => Task.FromResult<List<int>>([3, 4, 5]);
 
 		// Act
 		await collection.ObjectFill(func, semaphore, Current.CancellationToken);
@@ -2090,7 +2087,7 @@ public sealed class AsyncTests
 		ConcurrentBag<string> collection = ["a", "b"];
 		using SemaphoreSlim semaphore = new(1, 1);
 
-		Task<ConcurrentBag<string>> func() => Task.FromResult<ConcurrentBag<string>>(new(["c", "d", "e"]));
+		static Task<ConcurrentBag<string>> func() => Task.FromResult<ConcurrentBag<string>>(new(["c", "d", "e"]));
 
 		// Act
 		await collection.ObjectFill(func, semaphore, Current.CancellationToken);

@@ -30,7 +30,7 @@ public sealed class ManipulationTests : IDisposable
 		{
 			if (disposing)
 			{
-				Thread.Sleep(2000);
+				Task.Delay(2000).Wait();
 			}
 			disposed = true;
 		}

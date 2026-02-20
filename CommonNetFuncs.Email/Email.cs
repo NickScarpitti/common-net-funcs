@@ -407,7 +407,7 @@ public static class Email
 							success = false; //Sets success to false when the email send fails on the last attempt
 						}
 					}
-					Thread.Sleep(500);
+					await Task.Delay(500, cancellationToken).WaitAsync(cancellationToken); //Delay with wait to ensure delay happens even if cancellation is requested, but will still throw if cancellation is requested
 				}
 			}
 		}

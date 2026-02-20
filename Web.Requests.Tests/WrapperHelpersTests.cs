@@ -98,46 +98,57 @@ public sealed class WrapperHelpersTests
 		headers["Content-Type"].ShouldBe(expectedContentType);
 	}
 
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnJsonNoEncodeHeaders_WhenStreaming()
+	public enum SetCompressionHttpHeadersScenario
 	{
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, null, isStreaming: true);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(Json);
+		Streaming,
+		PreserveExisting,
+		NoOverride
 	}
 
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldPreserveExistingHeaders()
+	[Theory]
+	[InlineData(SetCompressionHttpHeadersScenario.Streaming)]
+	[InlineData(SetCompressionHttpHeadersScenario.PreserveExisting)]
+	[InlineData(SetCompressionHttpHeadersScenario.NoOverride)]
+	public void SetCompressionHttpHeaders_Should_Handle_Scenarios(SetCompressionHttpHeadersScenario scenario)
 	{
-		Dictionary<string, string> existingHeaders = new()
+		switch (scenario)
 		{
-			["X-Custom"] = "value"
-		};
+			case SetCompressionHttpHeadersScenario.Streaming:
+				Dictionary<string, string> streamingHeaders = WrapperHelpers.SetCompressionHttpHeaders(null, null, isStreaming: true);
 
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(existingHeaders, null);
+				streamingHeaders.ShouldContainKey("Content-Type");
+				streamingHeaders["Content-Type"].ShouldBe(Json);
+				break;
 
-		headers.ShouldContainKey("X-Custom");
-		headers["X-Custom"].ShouldBe("value");
-	}
+			case SetCompressionHttpHeadersScenario.PreserveExisting:
+				Dictionary<string, string> existingHeaders = new()
+				{
+					["X-Custom"] = "value"
+				};
 
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldNotOverrideExistingHeaders()
-	{
-		Dictionary<string, string> existingHeaders = new()
-		{
-			["Content-Type"] = "custom-type"
-		};
+				Dictionary<string, string> preservedHeaders = WrapperHelpers.SetCompressionHttpHeaders(existingHeaders, null);
 
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = ECompressionType.Gzip
-		};
+				preservedHeaders.ShouldContainKey("X-Custom");
+				preservedHeaders["X-Custom"].ShouldBe("value");
+				break;
 
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(existingHeaders, options);
+			case SetCompressionHttpHeadersScenario.NoOverride:
+				Dictionary<string, string> customHeaders = new()
+				{
+					["Content-Type"] = "custom-type"
+				};
 
-		headers["Content-Type"].ShouldBe("custom-type");
+				CompressionOptions options = new()
+				{
+					UseCompression = true,
+					CompressionType = ECompressionType.Gzip
+				};
+
+				Dictionary<string, string> noOverrideHeaders = WrapperHelpers.SetCompressionHttpHeaders(customHeaders, options);
+
+				noOverrideHeaders["Content-Type"].ShouldBe("custom-type");
+				break;
+		}
 	}
 
 	#endregion
@@ -201,33 +212,54 @@ public sealed class WrapperHelpersTests
 
 	#region PopulateBearerToken Tests
 
-	[Fact]
-	public async Task PopulateBearerToken_ShouldReturnProvidedToken_OnFirstAttempt()
+	public enum PopulateBearerTokenScenario
 	{
-		RestHelperOptions options = new("test", "api", BearerToken: "provided-token");
-
-		string? token = await WrapperHelpers.PopulateBearerToken(options, attempts: 0, null, null);
-
-		token.ShouldBe("provided-token");
+		ProvidedToken,
+		CallGetTokenFunc,
+		NoFuncAndNoToken
 	}
 
-	[Fact]
-	public async Task PopulateBearerToken_ShouldCallGetBearerTokenFunc_WhenNoTokenProvided()
+	[Theory]
+	[InlineData(PopulateBearerTokenScenario.ProvidedToken)]
+	[InlineData(PopulateBearerTokenScenario.CallGetTokenFunc)]
+	[InlineData(PopulateBearerTokenScenario.NoFuncAndNoToken)]
+	public async Task PopulateBearerToken_Should_Handle_Scenarios(PopulateBearerTokenScenario scenario)
 	{
-		bool funcCalled = false;
-		RestHelperOptions options = new("test", "api", ResilienceOptions: new ResilienceOptions
+		switch (scenario)
 		{
-			GetBearerTokenFunc = (apiName, refresh) =>
-			{
-				funcCalled = true;
-				return ValueTask.FromResult("fetched-token");
-			}
-		});
+			case PopulateBearerTokenScenario.ProvidedToken:
+				RestHelperOptions providedOptions = new("test", "api", BearerToken: "provided-token");
 
-		string? token = await WrapperHelpers.PopulateBearerToken(options, attempts: 0, null, null);
+				string? providedToken = await WrapperHelpers.PopulateBearerToken(providedOptions, attempts: 0, null, null);
 
-		funcCalled.ShouldBeTrue();
-		token.ShouldBe("fetched-token");
+				providedToken.ShouldBe("provided-token");
+				break;
+
+			case PopulateBearerTokenScenario.CallGetTokenFunc:
+				bool funcCalled = false;
+				RestHelperOptions funcOptions = new("test", "api", ResilienceOptions: new ResilienceOptions
+				{
+					GetBearerTokenFunc = (apiName, refresh) =>
+					{
+						funcCalled = true;
+						return ValueTask.FromResult("fetched-token");
+					}
+				});
+
+				string? fetchedToken = await WrapperHelpers.PopulateBearerToken(funcOptions, attempts: 0, null, null);
+
+				funcCalled.ShouldBeTrue();
+				fetchedToken.ShouldBe("fetched-token");
+				break;
+
+			case PopulateBearerTokenScenario.NoFuncAndNoToken:
+				RestHelperOptions noFuncOptions = new("test", "api");
+
+				string? currentToken = await WrapperHelpers.PopulateBearerToken(noFuncOptions, attempts: 1, null, "current-token");
+
+				currentToken.ShouldBe("current-token");
+				break;
+		}
 	}
 
 	[Theory]
@@ -256,16 +288,6 @@ public sealed class WrapperHelpersTests
 
 		refreshCalled.ShouldBeTrue();
 		token.ShouldBe("refreshed-token");
-	}
-
-	[Fact]
-	public async Task PopulateBearerToken_ShouldReturnCurrentToken_WhenNoFuncAndNoToken()
-	{
-		RestHelperOptions options = new("test", "api");
-
-		string? token = await WrapperHelpers.PopulateBearerToken(options, attempts: 1, null, "current-token");
-
-		token.ShouldBe("current-token");
 	}
 
 	#endregion
@@ -301,64 +323,85 @@ public sealed class WrapperHelpersTests
 
 	#region ShouldRetry Tests
 
-	[Fact]
-	public void ShouldRetry_ShouldReturnFalse_WhenCustomFuncReturnsTrue()
+	public enum ShouldRetryScenario
 	{
-		ResilienceOptions options = new()
+		CustomFuncReturnsTrue,
+		RunOnceAndNotUnauthorized,
+		ResponseIsSuccessful,
+		UseCustomStatusFunc,
+		NullResponseAndNullOk
+	}
+
+	[Theory]
+	[InlineData(ShouldRetryScenario.CustomFuncReturnsTrue)]
+	[InlineData(ShouldRetryScenario.RunOnceAndNotUnauthorized)]
+	[InlineData(ShouldRetryScenario.ResponseIsSuccessful)]
+	[InlineData(ShouldRetryScenario.UseCustomStatusFunc)]
+	[InlineData(ShouldRetryScenario.NullResponseAndNullOk)]
+	public void ShouldRetry_Should_Handle_Scenarios(ShouldRetryScenario scenario)
+	{
+		switch (scenario)
 		{
-			ShouldRetryFunc = (response, opts) => true
-		};
+			case ShouldRetryScenario.CustomFuncReturnsTrue:
+				ResilienceOptions customFuncOptions = new()
+				{
+					ShouldRetryFunc = (response, opts) => true
+				};
 
-		HttpResponseMessage response = new(HttpStatusCode.InternalServerError);
+				HttpResponseMessage customFuncResponse = new(HttpStatusCode.InternalServerError);
 
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
+				bool customFuncResult = WrapperHelpers.ShouldRetry(customFuncResponse, customFuncOptions);
 
-		shouldRetry.ShouldBeFalse();
-	}
+				customFuncResult.ShouldBeFalse();
+				break;
 
-	[Fact]
-	public void ShouldRetry_ShouldReturnFalse_WhenRunOnceAndNotUnauthorized()
-	{
-		ResilienceOptions options = new() { RunOnce = true };
+			case ShouldRetryScenario.RunOnceAndNotUnauthorized:
+				ResilienceOptions runOnceOptions = new() { RunOnce = true };
 
-		HttpResponseMessage response = new(HttpStatusCode.OK);
+				HttpResponseMessage runOnceResponse = new(HttpStatusCode.OK);
 
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
+				bool runOnceResult = WrapperHelpers.ShouldRetry(runOnceResponse, runOnceOptions);
 
-		shouldRetry.ShouldBeFalse();
-	}
+				runOnceResult.ShouldBeFalse();
+				break;
 
-	[Fact]
-	public void ShouldRetry_ShouldReturnFalse_WhenResponseIsSuccessful()
-	{
-		ResilienceOptions options = new();
+			case ShouldRetryScenario.ResponseIsSuccessful:
+				ResilienceOptions successOptions = new();
 
-		HttpResponseMessage response = new(HttpStatusCode.OK);
+				HttpResponseMessage successResponse = new(HttpStatusCode.OK);
 
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
+				bool successResult = WrapperHelpers.ShouldRetry(successResponse, successOptions);
 
-		shouldRetry.ShouldBeFalse();
-	}
+				successResult.ShouldBeFalse();
+				break;
 
-	[Fact]
-	public void ShouldRetry_ShouldUseCustomStatusFunc_WhenProvided()
-	{
-		bool funcCalled = false;
-		ResilienceOptions options = new()
-		{
-			ShouldRetryByStatusFunc = (statusCode) =>
-			{
-				funcCalled = true;
-				return statusCode == HttpStatusCode.BadRequest;
-			}
-		};
+			case ShouldRetryScenario.UseCustomStatusFunc:
+				bool funcCalled = false;
+				ResilienceOptions statusFuncOptions = new()
+				{
+					ShouldRetryByStatusFunc = (statusCode) =>
+					{
+						funcCalled = true;
+						return statusCode == HttpStatusCode.BadRequest;
+					}
+				};
 
-		HttpResponseMessage response = new(HttpStatusCode.BadRequest);
+				HttpResponseMessage badRequestResponse = new(HttpStatusCode.BadRequest);
 
-		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
+				bool statusFuncResult = WrapperHelpers.ShouldRetry(badRequestResponse, statusFuncOptions);
 
-		funcCalled.ShouldBeTrue();
-		shouldRetry.ShouldBeTrue();
+				funcCalled.ShouldBeTrue();
+				statusFuncResult.ShouldBeTrue();
+				break;
+
+			case ShouldRetryScenario.NullResponseAndNullOk:
+				ResilienceOptions nullOkOptions = new() { NullOk = true };
+
+				bool nullResult = WrapperHelpers.ShouldRetry(null, nullOkOptions);
+
+				nullResult.ShouldBeFalse();
+				break;
+		}
 	}
 
 	[Theory]
@@ -392,16 +435,6 @@ public sealed class WrapperHelpersTests
 		HttpResponseMessage response = new(statusCode);
 
 		bool shouldRetry = WrapperHelpers.ShouldRetry(response, options);
-
-		shouldRetry.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void ShouldRetry_ShouldReturnFalse_WhenNullResponseAndNullOk()
-	{
-		ResilienceOptions options = new() { NullOk = true };
-
-		bool shouldRetry = WrapperHelpers.ShouldRetry(null, options);
 
 		shouldRetry.ShouldBeFalse();
 	}

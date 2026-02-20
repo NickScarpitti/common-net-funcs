@@ -1,6 +1,6 @@
-﻿using System.Collections;
+﻿using CommonNetFuncs.FastMap;
+using System.Collections;
 using System.Collections.ObjectModel;
-using CommonNetFuncs.FastMap;
 
 namespace FastMap.Tests;
 

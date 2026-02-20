@@ -542,10 +542,12 @@ public sealed class RestHelpersStaticTests
 	{
 		// For JSON, the test data should be a JSON string (with quotes)
 		// For text/plain, the test data should be plain text (without quotes)
+
 		string testData = contentType.Contains("json") ? "\"test data\"" : "test data";
 		MemoryStream stream;
 
 		// If encoding is specified, compress the data appropriately
+
 		if (encoding == "gzip")
 		{
 			byte[] jsonBytes = Encoding.UTF8.GetBytes(testData);
@@ -745,6 +747,7 @@ public sealed class RestHelpersStaticTests
 			await foreach (string? _ in stream.ReadResponseStreamAsync<string>("application/xml", null, null))
 			{
 				// No-op
+
 			}
 		});
 	}

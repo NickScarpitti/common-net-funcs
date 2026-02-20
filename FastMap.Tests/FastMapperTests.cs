@@ -800,44 +800,51 @@ public sealed class FastMapperTests
 		}
 	}
 
-	[Fact]
-	public void FastMapper_CacheManager_TryAddCacheAndTryAddLimitedCache_Works()
+	public enum TryAddCacheScenario
 	{
-		// Arrange - use dedicated test types to avoid polluting other tests
-		FastMapper.MapperCacheKey key = new(typeof(TryAddTestSource), typeof(TryAddTestDest));
-		Func<TryAddTestSource, TryAddTestDest> del = _ => new TryAddTestDest { Value = "X" };
-
-		// Act & Assert - unlimited cache
-		FastMapper.CacheManager.SetUseLimitedCache(false);
-		FastMapper.CacheManager.ClearAllCaches();
-		FastMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
-		FastMapper.CacheManager.GetCache().ContainsKey(key).ShouldBeTrue();
-
-		// Act & Assert - limited cache
-		FastMapper.CacheManager.SetUseLimitedCache(true);
-		FastMapper.CacheManager.ClearAllCaches();
-		FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
-		FastMapper.CacheManager.GetLimitedCache().ContainsKey(key).ShouldBeTrue();
+		FirstAdd,
+		DuplicateAdd
 	}
 
-	[Fact]
-	public void FastMapper_CacheManager_DuplicateTryAddCache_ReturnsFalse()
+	[Theory]
+	[InlineData(TryAddCacheScenario.FirstAdd)]
+	[InlineData(TryAddCacheScenario.DuplicateAdd)]
+	public void FastMapper_CacheManager_TryAddCache_WorksCorrectly(TryAddCacheScenario scenario)
 	{
 		// Arrange - use dedicated test types to avoid polluting other tests
 		FastMapper.MapperCacheKey key = new(typeof(TryAddTestSource), typeof(TryAddTestDest));
 		Func<TryAddTestSource, TryAddTestDest> del = _ => new TryAddTestDest { Value = "X" };
 
-		// Act & Assert - unlimited cache
-		FastMapper.CacheManager.SetUseLimitedCache(false);
-		FastMapper.CacheManager.ClearAllCaches();
-		FastMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
-		FastMapper.CacheManager.TryAddCache(key, del).ShouldBeFalse();
+		switch (scenario)
+		{
+			case TryAddCacheScenario.FirstAdd:
+				// Act & Assert - unlimited cache
+				FastMapper.CacheManager.SetUseLimitedCache(false);
+				FastMapper.CacheManager.ClearAllCaches();
+				FastMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
+				FastMapper.CacheManager.GetCache().ContainsKey(key).ShouldBeTrue();
 
-		// Act & Assert - limited cache
-		FastMapper.CacheManager.SetUseLimitedCache(true);
-		FastMapper.CacheManager.ClearAllCaches();
-		FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
-		FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeFalse();
+				// Act & Assert - limited cache
+				FastMapper.CacheManager.SetUseLimitedCache(true);
+				FastMapper.CacheManager.ClearAllCaches();
+				FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
+				FastMapper.CacheManager.GetLimitedCache().ContainsKey(key).ShouldBeTrue();
+				break;
+
+			case TryAddCacheScenario.DuplicateAdd:
+				// Act & Assert - unlimited cache
+				FastMapper.CacheManager.SetUseLimitedCache(false);
+				FastMapper.CacheManager.ClearAllCaches();
+				FastMapper.CacheManager.TryAddCache(key, del).ShouldBeTrue();
+				FastMapper.CacheManager.TryAddCache(key, del).ShouldBeFalse();
+
+				// Act & Assert - limited cache
+				FastMapper.CacheManager.SetUseLimitedCache(true);
+				FastMapper.CacheManager.ClearAllCaches();
+				FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeTrue();
+				FastMapper.CacheManager.TryAddLimitedCache(key, del).ShouldBeFalse();
+				break;
+		}
 	}
 
 	[Fact]

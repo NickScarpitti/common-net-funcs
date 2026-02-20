@@ -237,93 +237,72 @@ public sealed class CollectionsTests
 
 	#endregion
 
-	#region AddDictionaryItem Tests
+	#region AddDictionaryItem and AddDictionaryItems Tests
 
-
-	[Fact]
-	public void AddDictionaryItem_AddsItemToDictionary()
+	public enum AddDictionaryScenario
 	{
-		// Arrange
-
-		Dictionary<string, int> dict = new();
-		KeyValuePair<string, int> pair = new("test", 42);
-
-		// Act
-
-		dict.AddDictionaryItem(pair);
-
-		// Assert
-
-		dict.ShouldContainKey("test");
-		dict["test"].ShouldBe(42);
+		AddDictionaryItem_AddsItemToDictionary,
+		AddDictionaryItem_WithExistingKey_DoesNotOverwrite,
+		AddDictionaryItems_AddsMultipleItemsToDictionary,
+		AddDictionaryItems_WithExistingKeys_DoesNotOverwrite
 	}
 
-	[Fact]
-	public void AddDictionaryItem_WithExistingKey_DoesNotOverwrite()
+	[Theory]
+	[InlineData(AddDictionaryScenario.AddDictionaryItem_AddsItemToDictionary)]
+	[InlineData(AddDictionaryScenario.AddDictionaryItem_WithExistingKey_DoesNotOverwrite)]
+	[InlineData(AddDictionaryScenario.AddDictionaryItems_AddsMultipleItemsToDictionary)]
+	[InlineData(AddDictionaryScenario.AddDictionaryItems_WithExistingKeys_DoesNotOverwrite)]
+	public void AddDictionary_VariousScenarios_WorkCorrectly(AddDictionaryScenario scenario)
 	{
-		// Arrange
-
-		Dictionary<string, int> dict = new() { { "test", 42 } };
-		KeyValuePair<string, int> pair = new("test", 99);
-
-		// Act
-
-		dict.AddDictionaryItem(pair);
-
-		// Assert
-
-		dict["test"].ShouldBe(42);
-	}
-
-	#endregion
-
-	#region AddDictionaryItems Tests
-
-
-	[Fact]
-	public void AddDictionaryItems_AddsMultipleItemsToDictionary()
-	{
-		// Arrange
-
-		Dictionary<string, int> dict = new();
-		List<KeyValuePair<string, int>> pairs = new()
+		// Arrange & Act & Assert
+		switch (scenario)
+		{
+			case AddDictionaryScenario.AddDictionaryItem_AddsItemToDictionary:
 				{
+					Dictionary<string, int> dict = new();
+					KeyValuePair<string, int> pair = new("test", 42);
+					dict.AddDictionaryItem(pair);
+					dict.ShouldContainKey("test");
+					dict["test"].ShouldBe(42);
+					break;
+				}
+			case AddDictionaryScenario.AddDictionaryItem_WithExistingKey_DoesNotOverwrite:
+				{
+					Dictionary<string, int> dict = new() { { "test", 42 } };
+					KeyValuePair<string, int> pair = new("test", 99);
+					dict.AddDictionaryItem(pair);
+					dict["test"].ShouldBe(42);
+					break;
+				}
+			case AddDictionaryScenario.AddDictionaryItems_AddsMultipleItemsToDictionary:
+				{
+					Dictionary<string, int> dict = new();
+					List<KeyValuePair<string, int>> pairs = new()
+					{
 						new KeyValuePair<string, int>("test1", 42),
 						new KeyValuePair<string, int>("test2", 99)
-				};
-
-		// Act
-
-		dict.AddDictionaryItems(pairs, cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		dict.ShouldContainKey("test1");
-		dict.ShouldContainKey("test2");
-		dict["test1"].ShouldBe(42);
-		dict["test2"].ShouldBe(99);
-	}
-
-	[Fact]
-	public void AddDictionaryItems_WithExistingKeys_DoesNotOverwrite()
-	{
-		// Arrange
-
-		Dictionary<string, int> dict = new() { { "test1", 42 } };
-		List<KeyValuePair<string, int>> pairs = new()
+					};
+					dict.AddDictionaryItems(pairs, cancellationToken: Current.CancellationToken);
+					dict.ShouldContainKey("test1");
+					dict.ShouldContainKey("test2");
+					dict["test1"].ShouldBe(42);
+					dict["test2"].ShouldBe(99);
+					break;
+				}
+			case AddDictionaryScenario.AddDictionaryItems_WithExistingKeys_DoesNotOverwrite:
 				{
+					Dictionary<string, int> dict = new() { { "test1", 42 } };
+					List<KeyValuePair<string, int>> pairs = new()
+					{
 						new KeyValuePair<string, int>("test1", 99),
 						new KeyValuePair<string, int>("test2", 100)
-				};
-
-		// Act
-
-		dict.AddDictionaryItems(pairs, cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		dict["test1"].ShouldBe(42);
-		dict["test2"].ShouldBe(100);
+					};
+					dict.AddDictionaryItems(pairs, cancellationToken: Current.CancellationToken);
+					dict["test1"].ShouldBe(42);
+					dict["test2"].ShouldBe(100);
+					break;
+				}
+		}
 	}
 
 	#endregion
@@ -1573,54 +1552,45 @@ public sealed class CollectionsTests
 
 	#region IndexOf Tests
 
-
-	[Fact]
-	public void IndexOf_FindsCorrectIndex()
+	public enum IndexOfScenario
 	{
-		// Arrange
-
-		List<string> collection = new() { "test1", "test2", "test3" };
-
-		// Act
-
-		int result = Collections.IndexOf(collection, "test2");
-
-		// Assert
-
-		result.ShouldBe(1);
+		FindsCorrectIndex,
+		WithNonExistentItem_ReturnsMinusOne,
+		WithCustomComparer_FindsCorrectIndex
 	}
 
-	[Fact]
-	public void IndexOf_WithNonExistentItem_ReturnsMinusOne()
+	[Theory]
+	[InlineData(IndexOfScenario.FindsCorrectIndex)]
+	[InlineData(IndexOfScenario.WithNonExistentItem_ReturnsMinusOne)]
+	[InlineData(IndexOfScenario.WithCustomComparer_FindsCorrectIndex)]
+	public void IndexOf_VariousScenarios_WorkCorrectly(IndexOfScenario scenario)
 	{
-		// Arrange
-
-		List<string> collection = new() { "test1", "test2", "test3" };
-
-		// Act
-
-		int result = Collections.IndexOf(collection, "test4");
-
-		// Assert
-
-		result.ShouldBe(-1);
-	}
-
-	[Fact]
-	public void IndexOf_WithCustomComparer_FindsCorrectIndex()
-	{
-		// Arrange
-
-		List<string> collection = new() { "TEST1", "TEST2", "TEST3" };
-		StringComparer comparer = StringComparer.OrdinalIgnoreCase;
-
-		// Act
-
-		int result = collection.IndexOf("test2", comparer);
-
-		// Assert
-
-		result.ShouldBe(1);
+		// Arrange & Act & Assert
+		switch (scenario)
+		{
+			case IndexOfScenario.FindsCorrectIndex:
+				{
+					List<string> collection = new() { "test1", "test2", "test3" };
+					int result = Collections.IndexOf(collection, "test2");
+					result.ShouldBe(1);
+					break;
+				}
+			case IndexOfScenario.WithNonExistentItem_ReturnsMinusOne:
+				{
+					List<string> collection = new() { "test1", "test2", "test3" };
+					int result = Collections.IndexOf(collection, "test4");
+					result.ShouldBe(-1);
+					break;
+				}
+			case IndexOfScenario.WithCustomComparer_FindsCorrectIndex:
+				{
+					List<string> collection = new() { "TEST1", "TEST2", "TEST3" };
+					StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+					int result = collection.IndexOf("test2", comparer);
+					result.ShouldBe(1);
+					break;
+				}
+		}
 	}
 
 	#endregion

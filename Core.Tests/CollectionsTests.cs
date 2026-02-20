@@ -1506,177 +1506,166 @@ public sealed class CollectionsTests
 		result[0].Name.ShouldBe("test1,test2");
 	}
 
-	[Fact]
-	public void Constructor_ShouldInitializePositionAndMaxLengths_For1DArray()
+	public enum ArrayDimension
 	{
-		// Arrange
-
-		int[] array = new int[5];
-
-		// Act
-
-		ArrayTraverse traverse = new(array);
-
-		// Assert
-
-		traverse.Position.ShouldNotBeNull();
-		traverse.Position.Length.ShouldBe(1);
-		traverse.Position[0].ShouldBe(0);
+		OneDimensional,
+		TwoDimensional,
+		ThreeDimensional
 	}
 
-	[Fact]
-	public void Constructor_ShouldInitializePositionAndMaxLengths_For2DArray()
+	public enum ArrayTraverseEdgeCase
 	{
-		// Arrange
-
-		int[,] array = new int[3, 4];
-
-		// Act
-
-		ArrayTraverse traverse = new(array);
-
-		// Assert
-
-		traverse.Position.ShouldNotBeNull();
-		traverse.Position.Length.ShouldBe(2);
-		traverse.Position[0].ShouldBe(0);
-		traverse.Position[1].ShouldBe(0);
+		ArrayIsEmpty,
+		AtEndOfArray
 	}
 
-	[Fact]
-	public void Step_ShouldIterateAllPositions_For1DArray()
+	[Theory]
+	[InlineData(ArrayDimension.OneDimensional)]
+	[InlineData(ArrayDimension.TwoDimensional)]
+	public void ArrayTraverse_Constructor_InitializesPositionCorrectly(ArrayDimension dimension)
 	{
-		// Arrange
-
-		const int length = 4;
-		int[] array = new int[length];
-		ArrayTraverse traverse = new(array);
-		int[][] expectedPositions = new int[length][];
-		for (int i = 0; i < length; i++)
+		// Arrange & Act & Assert
+		switch (dimension)
 		{
-			expectedPositions[i] = new[] { i };
-		}
-
-		// Act & Assert
-
-		int stepCount = 0;
-		do
-		{
-			traverse.Position[0].ShouldBe(expectedPositions[stepCount][0]);
-			stepCount++;
-		} while (traverse.Step());
-
-		// After last step, should have iterated all positions
-
-		stepCount.ShouldBe(length);
-	}
-
-	[Fact]
-	public void Step_ShouldIterateAllPositions_For2DArray()
-	{
-		// Arrange
-
-		const int dim0 = 2, dim1 = 3;
-		int[,] array = new int[dim0, dim1];
-		ArrayTraverse traverse = new(array);
-		const int total = dim0 * dim1;
-		int count = 0;
-		int[,] visited = new int[dim0, dim1];
-
-		// Act
-
-		do
-		{
-			int i = traverse.Position[0];
-			int j = traverse.Position[1];
-			visited[i, j]++;
-			count++;
-		} while (traverse.Step());
-
-		// Assert
-
-		count.ShouldBe(total);
-		for (int i = 0; i < dim0; i++)
-		{
-			for (int j = 0; j < dim1; j++)
-			{
-				visited[i, j].ShouldBe(1);
-			}
-		}
-	}
-
-	[Fact]
-	public void Step_ShouldIterateAllPositions_For3DArray()
-	{
-		// Arrange
-
-		const int d0 = 2, d1 = 2, d2 = 2;
-		int[,,] array = new int[d0, d1, d2];
-		ArrayTraverse traverse = new(array);
-		const int total = d0 * d1 * d2;
-		int count = 0;
-		int[,,] visited = new int[d0, d1, d2];
-
-		// Act
-
-		do
-		{
-			int i = traverse.Position[0];
-			int j = traverse.Position[1];
-			int k = traverse.Position[2];
-			visited[i, j, k]++;
-			count++;
-		} while (traverse.Step());
-
-		// Assert
-
-		count.ShouldBe(total);
-		for (int i = 0; i < d0; i++)
-		{
-			for (int j = 0; j < d1; j++)
-			{
-				for (int k = 0; k < d2; k++)
+			case ArrayDimension.OneDimensional:
 				{
-					visited[i, j, k].ShouldBe(1);
+					int[] array = new int[5];
+					ArrayTraverse traverse = new(array);
+					traverse.Position.ShouldNotBeNull();
+					traverse.Position.Length.ShouldBe(1);
+					traverse.Position[0].ShouldBe(0);
+					break;
 				}
-			}
+			case ArrayDimension.TwoDimensional:
+				{
+					int[,] array = new int[3, 4];
+					ArrayTraverse traverse = new(array);
+					traverse.Position.ShouldNotBeNull();
+					traverse.Position.Length.ShouldBe(2);
+					traverse.Position[0].ShouldBe(0);
+					traverse.Position[1].ShouldBe(0);
+					break;
+				}
 		}
 	}
 
-	[Fact]
-	public void Step_ShouldReturnFalse_WhenArrayIsEmpty()
+	[Theory]
+	[InlineData(ArrayDimension.OneDimensional)]
+	[InlineData(ArrayDimension.TwoDimensional)]
+	[InlineData(ArrayDimension.ThreeDimensional)]
+	public void ArrayTraverse_Step_IteratesAllPositions(ArrayDimension dimension)
 	{
-		// Arrange
+		// Arrange & Act & Assert
+		switch (dimension)
+		{
+			case ArrayDimension.OneDimensional:
+				{
+					const int length = 4;
+					int[] array = new int[length];
+					ArrayTraverse traverse = new(array);
+					int[][] expectedPositions = new int[length][];
+					for (int i = 0; i < length; i++)
+					{
+						expectedPositions[i] = new[] { i };
+					}
 
-		int[] array = Array.Empty<int>();
-		ArrayTraverse traverse = new(array);
+					int stepCount = 0;
+					do
+					{
+						traverse.Position[0].ShouldBe(expectedPositions[stepCount][0]);
+						stepCount++;
+					} while (traverse.Step());
 
-		// Act
+					stepCount.ShouldBe(length);
+					break;
+				}
+			case ArrayDimension.TwoDimensional:
+				{
+					const int dim0 = 2, dim1 = 3;
+					int[,] array = new int[dim0, dim1];
+					ArrayTraverse traverse = new(array);
+					const int total = dim0 * dim1;
+					int count = 0;
+					int[,] visited = new int[dim0, dim1];
 
-		bool result = traverse.Step();
+					do
+					{
+						int i = traverse.Position[0];
+						int j = traverse.Position[1];
+						visited[i, j]++;
+						count++;
+					} while (traverse.Step());
 
-		// Assert
+					count.ShouldBe(total);
+					for (int i = 0; i < dim0; i++)
+					{
+						for (int j = 0; j < dim1; j++)
+						{
+							visited[i, j].ShouldBe(1);
+						}
+					}
+					break;
+				}
+			case ArrayDimension.ThreeDimensional:
+				{
+					const int d0 = 2, d1 = 2, d2 = 2;
+					int[,,] array = new int[d0, d1, d2];
+					ArrayTraverse traverse = new(array);
+					const int total = d0 * d1 * d2;
+					int count = 0;
+					int[,,] visited = new int[d0, d1, d2];
 
-		result.ShouldBeFalse();
+					do
+					{
+						int i = traverse.Position[0];
+						int j = traverse.Position[1];
+						int k = traverse.Position[2];
+						visited[i, j, k]++;
+						count++;
+					} while (traverse.Step());
+
+					count.ShouldBe(total);
+					for (int i = 0; i < d0; i++)
+					{
+						for (int j = 0; j < d1; j++)
+						{
+							for (int k = 0; k < d2; k++)
+							{
+								visited[i, j, k].ShouldBe(1);
+							}
+						}
+					}
+					break;
+				}
+		}
 	}
 
-	[Fact]
-	public void Step_ShouldReturnFalse_WhenAtEndOfArray()
+	[Theory]
+	[InlineData(ArrayTraverseEdgeCase.ArrayIsEmpty)]
+	[InlineData(ArrayTraverseEdgeCase.AtEndOfArray)]
+	public void ArrayTraverse_Step_ReturnsFalse_ForEdgeCases(ArrayTraverseEdgeCase edgeCase)
 	{
-		// Arrange
-
-		int[] array = new int[2];
-		ArrayTraverse traverse = new(array);
-
-		// Act
-
-		traverse.Step(); // Move to index 1
-
-		bool result = traverse.Step(); // Should be at end
-
-		// Assert
-
-		result.ShouldBeFalse();
+		// Arrange & Act & Assert
+		switch (edgeCase)
+		{
+			case ArrayTraverseEdgeCase.ArrayIsEmpty:
+				{
+					int[] array = Array.Empty<int>();
+					ArrayTraverse traverse = new(array);
+					bool result = traverse.Step();
+					result.ShouldBeFalse();
+					break;
+				}
+			case ArrayTraverseEdgeCase.AtEndOfArray:
+				{
+					int[] array = new int[2];
+					ArrayTraverse traverse = new(array);
+					traverse.Step(); // Move to index 1
+					bool result = traverse.Step(); // Should be at end
+					result.ShouldBeFalse();
+					break;
+				}
+		}
 	}
 
 	[Fact]

@@ -30,6 +30,9 @@ internal sealed class MockDisposableAttachment(string? attachmentName = null) : 
 
 public sealed class EmailTests
 {
+	public enum ConstructorType { Default, Parameterized, PropertySetters }
+	public enum DisposeMethod { AsyncDispose, SyncDispose, MultipleDispose }
+
 	[Theory]
 	[InlineData("test@example.com", true)]
 	[InlineData("test.name@subdomain.example.com", true)]
@@ -735,211 +738,228 @@ public sealed class EmailTests
 		stream2!.Position.ShouldBe(0); // Second stream should start at beginning
 	}
 
-	[Fact]
-	public async Task MailAttachment_DisposeShouldDisposeStream()
+	[Theory]
+	[InlineData(DisposeMethod.AsyncDispose)]
+	[InlineData(DisposeMethod.SyncDispose)]
+	[InlineData(DisposeMethod.MultipleDispose)]
+	public async Task MailAttachment_Disposal_ShouldWorkCorrectly(DisposeMethod method)
 	{
 		// Arrange
 		MemoryStream stream = new(new byte[] { 1, 2, 3 });
 		MailAttachment attachment = new("test.txt", stream);
 
-		// Act
-		await attachment.DisposeAsync();
-
-		// Assert
-		Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
-	}
-
-	[Fact]
-	public void MailAttachment_SynchronousDisposeShouldDisposeStream()
-	{
-		// Arrange
-		MemoryStream stream = new(new byte[] { 1, 2, 3 });
-		MailAttachment attachment = new("test.txt", stream);
-
-		// Act
-		attachment.Dispose();
-
-		// Assert
-		Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
-	}
-
-	[Fact]
-	public async Task MailAttachment_MultipleDisposeCalls_ShouldNotThrow()
-	{
-		// Arrange
-		MemoryStream stream = new(new byte[] { 1, 2, 3 });
-		MailAttachment attachment = new("test.txt", stream);
-
-		// Act
-		await attachment.DisposeAsync();
-		Exception? exception1 = await Record.ExceptionAsync(async () => await attachment.DisposeAsync());
-		Exception? exception2 = Record.Exception(attachment.Dispose);
-
-		// Assert
-		exception1.ShouldBeNull();
-		exception2.ShouldBeNull();
+		// Act & Assert
+		switch (method)
+		{
+			case DisposeMethod.AsyncDispose:
+				await attachment.DisposeAsync();
+				Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+				break;
+			case DisposeMethod.SyncDispose:
+				attachment.Dispose();
+				Assert.Throws<ObjectDisposedException>(() => stream.ReadByte());
+				break;
+			case DisposeMethod.MultipleDispose:
+				await attachment.DisposeAsync();
+				Exception? exception1 = await Record.ExceptionAsync(async () => await attachment.DisposeAsync());
+				Exception? exception2 = Record.Exception(attachment.Dispose);
+				exception1.ShouldBeNull();
+				exception2.ShouldBeNull();
+				break;
+		}
 	}
 
 	#endregion
 
 	#region Configuration Classes Tests
 
-	[Fact]
-	public void SmtpSettings_ConstructorWithParameters_ShouldSetPropertiesCorrectly()
+	[Theory]
+	[InlineData(ConstructorType.Default)]
+	[InlineData(ConstructorType.Parameterized)]
+	[InlineData(ConstructorType.PropertySetters)]
+	public void SmtpSettings_ConstructorScenarios_ShouldWorkCorrectly(ConstructorType constructorType)
 	{
 		// Arrange & Act
-		SmtpSettings settings = new("smtp.example.com", 587, "user@example.com", "password");
-
-		// Assert
-		settings.SmtpServer.ShouldBe("smtp.example.com");
-		settings.SmtpPort.ShouldBe(587);
-		settings.SmtpUser.ShouldBe("user@example.com");
-		settings.SmtpPassword.ShouldBe("password");
-	}
-
-	[Fact]
-	public void SmtpSettings_DefaultConstructor_ShouldHaveNullValues()
-	{
-		// Arrange & Act
-		SmtpSettings settings = new();
-
-		// Assert
-		settings.SmtpServer.ShouldBeNull();
-		settings.SmtpPort.ShouldBe(0);
-		settings.SmtpUser.ShouldBeNull();
-		settings.SmtpPassword.ShouldBeNull();
-	}
-
-	[Fact]
-	public void SmtpSettings_PropertySetters_ShouldWork()
-	{
-		// Arrange
-		SmtpSettings settings = new()
+		SmtpSettings settings = constructorType switch
 		{
-			SmtpServer = "smtp.test.com",
-			SmtpPort = 465,
-			SmtpUser = "test@test.com",
-			SmtpPassword = "TestPass"
+			ConstructorType.Default => new(),
+			ConstructorType.Parameterized => new("smtp.example.com", 587, "user@example.com", "password"),
+			ConstructorType.PropertySetters => new()
+			{
+				SmtpServer = "smtp.test.com",
+				SmtpPort = 465,
+				SmtpUser = "test@test.com",
+				SmtpPassword = "TestPass"
+			},
+			_ => throw new ArgumentOutOfRangeException(nameof(constructorType))
 		};
 
 		// Assert
-		settings.SmtpServer.ShouldBe("smtp.test.com");
-		settings.SmtpPort.ShouldBe(465);
-		settings.SmtpUser.ShouldBe("test@test.com");
-		settings.SmtpPassword.ShouldBe("TestPass");
+		switch (constructorType)
+		{
+			case ConstructorType.Default:
+				settings.SmtpServer.ShouldBeNull();
+				settings.SmtpPort.ShouldBe(0);
+				settings.SmtpUser.ShouldBeNull();
+				settings.SmtpPassword.ShouldBeNull();
+				break;
+			case ConstructorType.Parameterized:
+				settings.SmtpServer.ShouldBe("smtp.example.com");
+				settings.SmtpPort.ShouldBe(587);
+				settings.SmtpUser.ShouldBe("user@example.com");
+				settings.SmtpPassword.ShouldBe("password");
+				break;
+			case ConstructorType.PropertySetters:
+				settings.SmtpServer.ShouldBe("smtp.test.com");
+				settings.SmtpPort.ShouldBe(465);
+				settings.SmtpUser.ShouldBe("test@test.com");
+				settings.SmtpPassword.ShouldBe("TestPass");
+				break;
+		}
 	}
 
-	[Fact]
-	public void MailAddress_PropertySetters_ShouldWork()
+	[Theory]
+	[InlineData(ConstructorType.Default)]
+	[InlineData(ConstructorType.Parameterized)]
+	[InlineData(ConstructorType.PropertySetters)]
+	public void MailAddress_ConstructorScenarios_ShouldWorkCorrectly(ConstructorType constructorType)
 	{
-		// Arrange
-		MailAddress address = new()
+		// Arrange & Act
+		MailAddress address = constructorType switch
 		{
-			Name = "Test User",
-			Email = "test@example.com"
+			ConstructorType.Default => new(),
+			ConstructorType.Parameterized => new("Test Name", "test@example.com"),
+			ConstructorType.PropertySetters => new() { Name = "Test User", Email = "test@example.com" },
+			_ => throw new ArgumentOutOfRangeException(nameof(constructorType))
 		};
 
 		// Assert
-		address.Name.ShouldBe("Test User");
-		address.Email.ShouldBe("test@example.com");
+		switch (constructorType)
+		{
+			case ConstructorType.Default:
+				address.Name.ShouldBeNull();
+				address.Email.ShouldBeNull();
+				break;
+			case ConstructorType.Parameterized:
+				address.Name.ShouldBe("Test Name");
+				address.Email.ShouldBe("test@example.com");
+				break;
+			case ConstructorType.PropertySetters:
+				address.Name.ShouldBe("Test User");
+				address.Email.ShouldBe("test@example.com");
+				break;
+		}
 	}
 
-	[Fact]
-	public void EmailAddresses_WithCcAndBcc_ShouldSetPropertiesCorrectly()
-	{
-		// Arrange
-		MailAddress from = new("Sender", "sender@example.com");
-		MailAddress[] to = new[] { new MailAddress("To", "to@example.com") };
-		MailAddress[] cc = new[] { new MailAddress("CC", "cc@example.com") };
-		MailAddress[] bcc = new[] { new MailAddress("BCC", "bcc@example.com") };
-
-		// Act
-		EmailAddresses addresses = new(from, to, cc, bcc);
-
-		// Assert
-		addresses.FromAddress.ShouldBe(from);
-		addresses.ToAddresses.Length.ShouldBe(1);
-		addresses.CcAddresses.Length.ShouldBe(1);
-		addresses.BccAddresses.Length.ShouldBe(1);
-	}
-
-	[Fact]
-	public void EmailAddresses_DefaultConstructor_ShouldHaveEmptyArrays()
+	[Theory]
+	[InlineData(ConstructorType.Default)]
+	[InlineData(ConstructorType.Parameterized)]
+	public void EmailAddresses_ConstructorScenarios_ShouldWorkCorrectly(ConstructorType constructorType)
 	{
 		// Arrange & Act
-		EmailAddresses addresses = new();
+		EmailAddresses addresses = constructorType switch
+		{
+			ConstructorType.Default => new(),
+			ConstructorType.Parameterized => new(
+				new MailAddress("Sender", "sender@example.com"),
+				new[] { new MailAddress("To", "to@example.com") },
+				new[] { new MailAddress("CC", "cc@example.com") },
+				new[] { new MailAddress("BCC", "bcc@example.com") }
+			),
+			_ => throw new ArgumentOutOfRangeException(nameof(constructorType))
+		};
 
 		// Assert
-		addresses.FromAddress.ShouldNotBeNull();
-		addresses.ToAddresses.ShouldBeEmpty();
-		addresses.CcAddresses.ShouldBeEmpty();
-		addresses.BccAddresses.ShouldBeEmpty();
+		switch (constructorType)
+		{
+			case ConstructorType.Default:
+				addresses.FromAddress.ShouldNotBeNull();
+				addresses.ToAddresses.ShouldBeEmpty();
+				addresses.CcAddresses.ShouldBeEmpty();
+				addresses.BccAddresses.ShouldBeEmpty();
+				break;
+			case ConstructorType.Parameterized:
+				addresses.FromAddress.Email.ShouldBe("sender@example.com");
+				addresses.ToAddresses.Length.ShouldBe(1);
+				addresses.CcAddresses.Length.ShouldBe(1);
+				addresses.BccAddresses.Length.ShouldBe(1);
+				break;
+		}
 	}
 
-	[Fact]
-	public void EmailContent_AllConstructorParameters_ShouldSetPropertiesCorrectly()
-	{
-		// Arrange
-		IMailAttachment[] attachments = new[] { new MailAttachment("test.txt", new byte[] { 1, 2, 3 }) };
-
-		// Act
-		EmailContent content = new("Subject", "Body", true, attachments, false, true);
-
-		// Assert
-		content.Subject.ShouldBe("Subject");
-		content.Body.ShouldBe("Body");
-		content.BodyIsHtml.ShouldBeTrue();
-		content.Attachments.ShouldBe(attachments);
-		content.AutoDisposeAttachments.ShouldBeFalse();
-		content.ZipAttachments.ShouldBeTrue();
-	}
-
-	[Fact]
-	public void EmailContent_DefaultConstructor_ShouldHaveDefaultValues()
-	{
-		// Arrange & Act
-		EmailContent content = new();
-
-		// Assert
-		content.Subject.ShouldBeNull();
-		content.Body.ShouldBeNull();
-		content.BodyIsHtml.ShouldBeFalse();
-		content.Attachments.ShouldBeNull();
-		content.AutoDisposeAttachments.ShouldBeTrue();
-		content.ZipAttachments.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void SendEmailConfig_AllConstructorParameters_ShouldSetPropertiesCorrectly()
-	{
-		// Arrange
-		SmtpSettings smtp = new("smtp.test.com", 587);
-		EmailAddresses addresses = new(new MailAddress("Test", "test@example.com"));
-		EmailContent content = new("Subject", "Body");
-
-		// Act
-		SendEmailConfig config = new(smtp, addresses, content, true, "receipt@example.com");
-
-		// Assert
-		config.SmtpSettings.ShouldBe(smtp);
-		config.EmailAddresses.ShouldBe(addresses);
-		config.EmailContent.ShouldBe(content);
-		config.ReadReceipt.ShouldBeTrue();
-		config.ReadReceiptEmail.ShouldBe("receipt@example.com");
-	}
-
-	[Fact]
-	public void SendEmailConfig_DefaultConstructor_ShouldCreateDefaultInstances()
+	[Theory]
+	[InlineData(ConstructorType.Default)]
+	[InlineData(ConstructorType.Parameterized)]
+	public void EmailContent_ConstructorScenarios_ShouldWorkCorrectly(ConstructorType constructorType)
 	{
 		// Arrange & Act
-		SendEmailConfig config = new();
+		EmailContent content = constructorType switch
+		{
+			ConstructorType.Default => new(),
+			ConstructorType.Parameterized => new("Subject", "Body", true, new[] { new MailAttachment("test.txt", new byte[] { 1, 2, 3 }) }, false, true),
+			_ => throw new ArgumentOutOfRangeException(nameof(constructorType))
+		};
 
 		// Assert
-		config.SmtpSettings.ShouldNotBeNull();
-		config.EmailAddresses.ShouldNotBeNull();
-		config.EmailContent.ShouldNotBeNull();
-		config.ReadReceipt.ShouldBeFalse();
-		config.ReadReceiptEmail.ShouldBeNull();
+		switch (constructorType)
+		{
+			case ConstructorType.Default:
+				content.Subject.ShouldBeNull();
+				content.Body.ShouldBeNull();
+				content.BodyIsHtml.ShouldBeFalse();
+				content.Attachments.ShouldBeNull();
+				content.AutoDisposeAttachments.ShouldBeTrue();
+				content.ZipAttachments.ShouldBeFalse();
+				break;
+			case ConstructorType.Parameterized:
+				content.Subject.ShouldBe("Subject");
+				content.Body.ShouldBe("Body");
+				content.BodyIsHtml.ShouldBeTrue();
+				content.Attachments.ShouldNotBeNull();
+				content.Attachments!.Length.ShouldBe(1);
+				content.AutoDisposeAttachments.ShouldBeFalse();
+				content.ZipAttachments.ShouldBeTrue();
+				break;
+		}
+	}
+
+	[Theory]
+	[InlineData(ConstructorType.Default)]
+	[InlineData(ConstructorType.Parameterized)]
+	public void SendEmailConfig_ConstructorScenarios_ShouldWorkCorrectly(ConstructorType constructorType)
+	{
+		// Arrange & Act
+		SendEmailConfig config = constructorType switch
+		{
+			ConstructorType.Default => new(),
+			ConstructorType.Parameterized => new(
+				new SmtpSettings("smtp.test.com", 587),
+				new EmailAddresses(new MailAddress("Test", "test@example.com")),
+				new EmailContent("Subject", "Body"),
+				true,
+				"receipt@example.com"
+			),
+			_ => throw new ArgumentOutOfRangeException(nameof(constructorType))
+		};
+
+		// Assert
+		switch (constructorType)
+		{
+			case ConstructorType.Default:
+				config.SmtpSettings.ShouldNotBeNull();
+				config.EmailAddresses.ShouldNotBeNull();
+				config.EmailContent.ShouldNotBeNull();
+				config.ReadReceipt.ShouldBeFalse();
+				config.ReadReceiptEmail.ShouldBeNull();
+				break;
+			case ConstructorType.Parameterized:
+				config.SmtpSettings.SmtpServer.ShouldBe("smtp.test.com");
+				config.EmailAddresses.FromAddress.Email.ShouldBe("test@example.com");
+				config.EmailContent.Subject.ShouldBe("Subject");
+				config.ReadReceipt.ShouldBeTrue();
+				config.ReadReceiptEmail.ShouldBe("receipt@example.com");
+				break;
+		}
 	}
 
 	#endregion
@@ -1346,28 +1366,6 @@ public sealed class EmailTests
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
-	}
-
-	[Fact]
-	public void MailAddress_DefaultConstructor_ShouldHaveNullValues()
-	{
-		// Arrange & Act
-		MailAddress address = new();
-
-		// Assert
-		address.Name.ShouldBeNull();
-		address.Email.ShouldBeNull();
-	}
-
-	[Fact]
-	public void MailAddress_ParameterizedConstructor_ShouldSetValues()
-	{
-		// Arrange & Act
-		MailAddress address = new("Test Name", "test@example.com");
-
-		// Assert
-		address.Name.ShouldBe("Test Name");
-		address.Email.ShouldBe("test@example.com");
 	}
 
 	#endregion

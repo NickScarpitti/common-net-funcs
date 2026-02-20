@@ -724,85 +724,70 @@ public sealed class CollectionsTests
 
 	#region SingleToList Tests
 
-	[Fact]
-	public void SingleToList_WithNonNullObject_ReturnsListWithObject()
+	public enum SingleToListScenario
 	{
-		// Arrange
-		TestClass obj = new() { Name = "test" };
-
-		// Act
-		List<TestClass> result = obj.SingleToList();
-
-		// Assert
-
-		result.Count.ShouldBe(1);
-		result[0].ShouldBe(obj);
+		WithNonNullObject_ReturnsListWithObject,
+		WithNullObject_ReturnsEmptyList,
+		WithNonEmptyString_ReturnsListWithString,
+		WithEmptyString_ReturnsEmptyList,
+		WithEmptyStringAndAllowEmptyTrue_ReturnsListWithEmptyString,
+		WithNullString_ReturnsEmptyList
 	}
 
-	[Fact]
-	public void SingleToList_WithNullObject_ReturnsEmptyList()
+	[Theory]
+	[InlineData(SingleToListScenario.WithNonNullObject_ReturnsListWithObject)]
+	[InlineData(SingleToListScenario.WithNullObject_ReturnsEmptyList)]
+	[InlineData(SingleToListScenario.WithNonEmptyString_ReturnsListWithString)]
+	[InlineData(SingleToListScenario.WithEmptyString_ReturnsEmptyList)]
+	[InlineData(SingleToListScenario.WithEmptyStringAndAllowEmptyTrue_ReturnsListWithEmptyString)]
+	[InlineData(SingleToListScenario.WithNullString_ReturnsEmptyList)]
+	public void SingleToList_VariousScenarios_WorkCorrectly(SingleToListScenario scenario)
 	{
-		// Act
-
-		List<TestClass> result = Collections.SingleToList<TestClass>(null);
-
-		// Assert
-
-		result.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void SingleToList_WithNonEmptyString_ReturnsListWithString()
-	{
-		// Arrange
-
-		const string str = "test";
-
-		// Act
-
-		List<string> result = str.SingleToList();
-
-		// Assert
-
-		result.Count.ShouldBe(1);
-		result[0].ShouldBe(str);
-	}
-
-	[Fact]
-	public void SingleToList_WithEmptyString_ReturnsEmptyList()
-	{
-		// Act
-
-		List<string> result = string.Empty.SingleToList(allowEmptyValues: false);
-
-		// Assert
-
-		result.Count.ShouldBe(0);
-	}
-
-	[Fact]
-	public void SingleToList_WithEmptyStringAndAllowEmptyTrue_ReturnsListWithEmptyString()
-	{
-		// Act
-
-		List<string> result = string.Empty.SingleToList(allowEmptyValues: true);
-
-		// Assert
-
-		result.Count.ShouldBe(1);
-		result[0].ShouldBe(string.Empty);
-	}
-
-	[Fact]
-	public void SingleToList_WithNullString_ReturnsEmptyList()
-	{
-		// Act
-
-		List<string> result = Collections.SingleToList(null, allowEmptyValues: true);
-
-		// Assert
-
-		result.Count.ShouldBe(0);
+		// Arrange & Act & Assert
+		switch (scenario)
+		{
+			case SingleToListScenario.WithNonNullObject_ReturnsListWithObject:
+				{
+					TestClass obj = new() { Name = "test" };
+					List<TestClass> result = obj.SingleToList();
+					result.Count.ShouldBe(1);
+					result[0].ShouldBe(obj);
+					break;
+				}
+			case SingleToListScenario.WithNullObject_ReturnsEmptyList:
+				{
+					List<TestClass> result = Collections.SingleToList<TestClass>(null);
+					result.Count.ShouldBe(0);
+					break;
+				}
+			case SingleToListScenario.WithNonEmptyString_ReturnsListWithString:
+				{
+					const string str = "test";
+					List<string> result = str.SingleToList();
+					result.Count.ShouldBe(1);
+					result[0].ShouldBe(str);
+					break;
+				}
+			case SingleToListScenario.WithEmptyString_ReturnsEmptyList:
+				{
+					List<string> result = string.Empty.SingleToList(allowEmptyValues: false);
+					result.Count.ShouldBe(0);
+					break;
+				}
+			case SingleToListScenario.WithEmptyStringAndAllowEmptyTrue_ReturnsListWithEmptyString:
+				{
+					List<string> result = string.Empty.SingleToList(allowEmptyValues: true);
+					result.Count.ShouldBe(1);
+					result[0].ShouldBe(string.Empty);
+					break;
+				}
+			case SingleToListScenario.WithNullString_ReturnsEmptyList:
+				{
+					List<string> result = Collections.SingleToList(null, allowEmptyValues: true);
+					result.Count.ShouldBe(0);
+					break;
+				}
+		}
 	}
 
 	#endregion

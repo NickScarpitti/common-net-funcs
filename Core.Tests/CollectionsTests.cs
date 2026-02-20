@@ -200,18 +200,6 @@ public sealed class CollectionsTests
 		result.ShouldBe(expected);
 	}
 
-	[Fact]
-	public void AnyFast_WithNullConcurrentDictionary_ReturnsFalse()
-	{
-		// Act
-
-		bool result = ((ConcurrentDictionary<string, string>?)null).AnyFast();
-
-		// Assert
-
-		result.ShouldBeFalse();
-	}
-
 	[Theory]
 	[InlineData(0, false)]
 	[InlineData(1, true)]
@@ -1805,84 +1793,64 @@ public sealed class CollectionsTests
 
 	#region CombineExpressions Tests
 
-
-	[Fact]
-	public void CombineExpressions_CombinesMultipleExpressions()
+	public enum CombineExpressionsScenario
 	{
-		// Arrange
-
-		Expression<Func<TestClass, bool>> expr1 = x => x.Id > 0;
-		Expression<Func<TestClass, bool>> expr2 = x => x.Name != null;
-
-		List<Expression<Func<TestClass, bool>>> expressions = new() { expr1, expr2 };
-
-		// Act
-
-		Expression<Func<TestClass, bool>>? combinedExpr = Collections.CombineExpressions(expressions);
-		Func<TestClass, bool>? func = combinedExpr?.CompileFast();
-
-		// Assert
-
-		combinedExpr.ShouldNotBeNull();
-
-		// Test with valid object
-
-		TestClass validObj = new() { Id = 1, Name = "test" };
-		func!(validObj).ShouldBeTrue();
-
-		// Test with invalid object (Id = 0)
-
-		TestClass invalidObj1 = new() { Id = 0, Name = "test" };
-		func(invalidObj1).ShouldBeFalse();
-
-		// Test with invalid object (Name = null)
-
-		TestClass invalidObj2 = new() { Id = 1, Name = null };
-		func(invalidObj2).ShouldBeFalse();
+		CombinesMultipleExpressions,
+		WithSingleExpression_ReturnsSameExpression,
+		WithEmptyList_ReturnsNull
 	}
 
-	[Fact]
-	public void CombineExpressions_WithSingleExpression_ReturnsSameExpression()
+	[Theory]
+	[InlineData(CombineExpressionsScenario.CombinesMultipleExpressions)]
+	[InlineData(CombineExpressionsScenario.WithSingleExpression_ReturnsSameExpression)]
+	[InlineData(CombineExpressionsScenario.WithEmptyList_ReturnsNull)]
+	public void CombineExpressions_VariousScenarios_WorkCorrectly(CombineExpressionsScenario scenario)
 	{
-		// Arrange
-
-		Expression<Func<TestClass, bool>> expr = x => x.Id > 0;
-		List<Expression<Func<TestClass, bool>>> expressions = new() { expr };
-
-		// Act
-
-		Expression<Func<TestClass, bool>>? result = Collections.CombineExpressions(expressions);
-		Func<TestClass, bool>? func = result?.CompileFast();
-
-		// Assert
-
-		result.ShouldNotBeNull();
-
-		// Test with valid object
-
-		TestClass validObj = new() { Id = 1 };
-		func!(validObj).ShouldBeTrue();
-
-		// Test with invalid object
-
-		TestClass invalidObj = new() { Id = 0 };
-		func(invalidObj).ShouldBeFalse();
-	}
-
-	[Fact]
-	public void CombineExpressions_WithEmptyList_ReturnsNull()
-	{
-		// Arrange
-
-		List<Expression<Func<TestClass, bool>>> expressions = new();
-
-		// Act
-
-		Expression<Func<TestClass, bool>>? result = Collections.CombineExpressions(expressions);
-
-		// Assert
-
-		result.ShouldBeNull();
+		// Arrange & Act & Assert
+		switch (scenario)
+		{
+			case CombineExpressionsScenario.CombinesMultipleExpressions:
+				{
+					Expression<Func<TestClass, bool>> expr1 = x => x.Id > 0;
+					Expression<Func<TestClass, bool>> expr2 = x => x.Name != null;
+					List<Expression<Func<TestClass, bool>>> expressions = new() { expr1, expr2 };
+					Expression<Func<TestClass, bool>>? combinedExpr = Collections.CombineExpressions(expressions);
+					Func<TestClass, bool>? func = combinedExpr?.CompileFast();
+					combinedExpr.ShouldNotBeNull();
+					// Test with valid object
+					TestClass validObj = new() { Id = 1, Name = "test" };
+					func!(validObj).ShouldBeTrue();
+					// Test with invalid object (Id = 0)
+					TestClass invalidObj1 = new() { Id = 0, Name = "test" };
+					func(invalidObj1).ShouldBeFalse();
+					// Test with invalid object (Name = null)
+					TestClass invalidObj2 = new() { Id = 1, Name = null };
+					func(invalidObj2).ShouldBeFalse();
+					break;
+				}
+			case CombineExpressionsScenario.WithSingleExpression_ReturnsSameExpression:
+				{
+					Expression<Func<TestClass, bool>> expr = x => x.Id > 0;
+					List<Expression<Func<TestClass, bool>>> expressions = new() { expr };
+					Expression<Func<TestClass, bool>>? result = Collections.CombineExpressions(expressions);
+					Func<TestClass, bool>? func = result?.CompileFast();
+					result.ShouldNotBeNull();
+					// Test with valid object
+					TestClass validObj = new() { Id = 1 };
+					func!(validObj).ShouldBeTrue();
+					// Test with invalid object
+					TestClass invalidObj = new() { Id = 0 };
+					func(invalidObj).ShouldBeFalse();
+					break;
+				}
+			case CombineExpressionsScenario.WithEmptyList_ReturnsNull:
+				{
+					List<Expression<Func<TestClass, bool>>> expressions = new();
+					Expression<Func<TestClass, bool>>? result = Collections.CombineExpressions(expressions);
+					result.ShouldBeNull();
+					break;
+				}
+		}
 	}
 
 	#endregion

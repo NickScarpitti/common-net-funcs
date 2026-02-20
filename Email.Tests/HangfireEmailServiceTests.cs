@@ -1,5 +1,4 @@
-﻿using AutoFixture.Xunit3;
-using CommonNetFuncs.Email;
+﻿using CommonNetFuncs.Email;
 using CommonNetFuncs.Hangfire;
 
 namespace Email.Tests;
@@ -67,10 +66,19 @@ internal sealed class MockEmailService(bool returnValue) : IEmailService
 public sealed class HangfireEmailServiceTests
 {
 	[Theory]
-	[AutoData]
+	[InlineData(EmailServiceOverloadType.SmtpSettingsWithEmailContentAndReadReceipt, HangfireTestOutcome.Success)]
+	[InlineData(EmailServiceOverloadType.SmtpSettingsWithEmailContentAndReadReceipt, HangfireTestOutcome.ThrowsException)]
+	[InlineData(EmailServiceOverloadType.SmtpSettingsWithEmailContentNoReadReceipt, HangfireTestOutcome.Success)]
+	[InlineData(EmailServiceOverloadType.SmtpSettingsWithEmailContentNoReadReceipt, HangfireTestOutcome.ThrowsException)]
+	[InlineData(EmailServiceOverloadType.SmtpSettingsWithEmailContentBytesAndReadReceipt, HangfireTestOutcome.Success)]
+	[InlineData(EmailServiceOverloadType.SmtpSettingsWithEmailContentBytesAndReadReceipt, HangfireTestOutcome.ThrowsException)]
+	[InlineData(EmailServiceOverloadType.SmtpSettingsWithEmailContentBytesNoReadReceipt, HangfireTestOutcome.Success)]
+	[InlineData(EmailServiceOverloadType.SmtpSettingsWithEmailContentBytesNoReadReceipt, HangfireTestOutcome.ThrowsException)]
+	[InlineData(EmailServiceOverloadType.SendEmailConfig, HangfireTestOutcome.Success)]
+	[InlineData(EmailServiceOverloadType.SendEmailConfig, HangfireTestOutcome.ThrowsException)]
+	[InlineData(EmailServiceOverloadType.SendEmailConfigBytes, HangfireTestOutcome.Success)]
+	[InlineData(EmailServiceOverloadType.SendEmailConfigBytes, HangfireTestOutcome.ThrowsException)]
 	public async Task SendEmail_WithAllOverloads_ShouldHandleSuccessAndFailure(
-		string smtpServer,
-		int smtpPort,
 		EmailServiceOverloadType overloadType,
 		HangfireTestOutcome expectedOutcome)
 	{
@@ -78,7 +86,7 @@ public sealed class HangfireEmailServiceTests
 		bool mockReturnsSuccess = expectedOutcome == HangfireTestOutcome.Success;
 		MockEmailService mockService = new(mockReturnsSuccess);
 		HangfireEmailService service = new(mockService);
-		SmtpSettings smtpSettings = new(smtpServer, smtpPort);
+		SmtpSettings smtpSettings = new("smtp.test.com", 587);
 		EmailAddresses emailAddresses = new(
 			new MailAddress("Sender", "sender@example.com"),
 			new[] { new MailAddress("Recipient", "recipient@example.com") }
@@ -196,14 +204,13 @@ public sealed class HangfireEmailServiceTests
 		}
 	}
 
-	[Theory]
-	[AutoData]
-	public async Task SendEmail_WithRealEmailServiceAndInvalidAddress_ShouldThrowHangfireJobException(string smtpServer, int smtpPort)
+	[Fact]
+	public async Task SendEmail_WithRealEmailServiceAndInvalidAddress_ShouldThrowHangfireJobException()
 	{
 		// Arrange
 		EmailService realEmailService = new();
 		HangfireEmailService service = new(realEmailService);
-		SmtpSettings smtpSettings = new(smtpServer, smtpPort);
+		SmtpSettings smtpSettings = new("smtp.invalid.com", 587);
 		EmailAddresses emailAddresses = new(
 			new MailAddress("Sender", "invalid-email"),
 			new[] { new MailAddress("Recipient", "recipient@example.com") }

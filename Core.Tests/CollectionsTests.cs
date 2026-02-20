@@ -330,82 +330,66 @@ public sealed class CollectionsTests
 
 	#region AddRange and AddRangeParallel Tests
 
-
-	[Fact]
-	public void AddRange_AddsItemsToConcurrentBag()
+	public enum AddRangeMethodType
 	{
-		// Arrange
-
-		ConcurrentBag<string> bag = new();
-		List<string?> items = new() { "test1", "test2", null };
-
-		// Act
-
-		bag.AddRange(items, cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		bag.Count.ShouldBe(2);
-		bag.ShouldContain("test1");
-		bag.ShouldContain("test2");
+		AddRange_ConcurrentBag,
+		AddRangeParallel_ConcurrentBag,
+		AddRangeParallel_WithCustomParallelOptions,
+		AddRange_HashSet
 	}
 
-	[Fact]
-	public void AddRangeParallel_AddsItemsToConcurrentBag()
+	[Theory]
+	[InlineData(AddRangeMethodType.AddRange_ConcurrentBag)]
+	[InlineData(AddRangeMethodType.AddRangeParallel_ConcurrentBag)]
+	[InlineData(AddRangeMethodType.AddRangeParallel_WithCustomParallelOptions)]
+	[InlineData(AddRangeMethodType.AddRange_HashSet)]
+	public void AddRange_VariousMethods_AddItemsCorrectly(AddRangeMethodType methodType)
 	{
-		// Arrange
-
-		ConcurrentBag<string> bag = new();
-		List<string?> items = new() { "test1", "test2", null };
-
-		// Act
-
-		bag.AddRangeParallel(items, cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		bag.Count.ShouldBe(2);
-		bag.ShouldContain("test1");
-		bag.ShouldContain("test2");
-	}
-
-	[Fact]
-	public void AddRangeParallel_WithCustomParallelOptions()
-	{
-		// Arrange
-
-		ConcurrentBag<string> bag = new();
-		List<string?> items = new() { "test1", "test2", null };
-		ParallelOptions options = new() { MaxDegreeOfParallelism = 2 };
-
-		// Act
-
-		bag.AddRangeParallel(items, options, cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		bag.Count.ShouldBe(2);
-		bag.ShouldContain("test1");
-		bag.ShouldContain("test2");
-	}
-
-	[Fact]
-	public void AddRange_AddsItemsToHashSet()
-	{
-		// Arrange
-
-		HashSet<string> hashSet = new();
-		List<string?> items = new() { "test1", "test2", null };
-
-		// Act
-
-		hashSet.AddRange(items, cancellationToken: Current.CancellationToken);
-
-		// Assert
-
-		hashSet.Count.ShouldBe(2);
-		hashSet.ShouldContain("test1");
-		hashSet.ShouldContain("test2");
+		// Arrange & Act & Assert
+		switch (methodType)
+		{
+			case AddRangeMethodType.AddRange_ConcurrentBag:
+				{
+					ConcurrentBag<string> bag = new();
+					List<string?> items = new() { "test1", "test2", null };
+					bag.AddRange(items, cancellationToken: Current.CancellationToken);
+					bag.Count.ShouldBe(2);
+					bag.ShouldContain("test1");
+					bag.ShouldContain("test2");
+					break;
+				}
+			case AddRangeMethodType.AddRangeParallel_ConcurrentBag:
+				{
+					ConcurrentBag<string> bag = new();
+					List<string?> items = new() { "test1", "test2", null };
+					bag.AddRangeParallel(items, cancellationToken: Current.CancellationToken);
+					bag.Count.ShouldBe(2);
+					bag.ShouldContain("test1");
+					bag.ShouldContain("test2");
+					break;
+				}
+			case AddRangeMethodType.AddRangeParallel_WithCustomParallelOptions:
+				{
+					ConcurrentBag<string> bag = new();
+					List<string?> items = new() { "test1", "test2", null };
+					ParallelOptions options = new() { MaxDegreeOfParallelism = 2 };
+					bag.AddRangeParallel(items, options, cancellationToken: Current.CancellationToken);
+					bag.Count.ShouldBe(2);
+					bag.ShouldContain("test1");
+					bag.ShouldContain("test2");
+					break;
+				}
+			case AddRangeMethodType.AddRange_HashSet:
+				{
+					HashSet<string> hashSet = new();
+					List<string?> items = new() { "test1", "test2", null };
+					hashSet.AddRange(items, cancellationToken: Current.CancellationToken);
+					hashSet.Count.ShouldBe(2);
+					hashSet.ShouldContain("test1");
+					hashSet.ShouldContain("test2");
+					break;
+				}
+		}
 	}
 
 	#endregion

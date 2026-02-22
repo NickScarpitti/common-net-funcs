@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using FastExpressionCompiler;
-
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
@@ -133,16 +132,16 @@ public static class Inspect
 	// This class is used to track object pairs being compared
 	private sealed class ComparisonContext
 	{
-		private readonly HashSet<(object, object)> _comparingPairs = [];
+		private readonly HashSet<(object, object)> comparingPairs = [];
 
 		public bool TryAddPair(object obj1, object obj2)
 		{
-			return _comparingPairs.Add((obj1, obj2));
+			return comparingPairs.Add((obj1, obj2));
 		}
 
 		public void RemovePair(object obj1, object obj2)
 		{
-			_comparingPairs.Remove((obj1, obj2));
+			comparingPairs.Remove((obj1, obj2));
 		}
 	}
 
@@ -223,7 +222,7 @@ public static class Inspect
 	/// Creates a delegate for comparing two objects of the specified type for value equality.
 	/// </summary>
 	/// <param name="type">Type of the object to be compared</param>
-	/// <param name="ignoreStringCase">If <see langword="true"/>, will ignore case when comparing string properties for value equlity</param>
+	/// <param name="ignoreStringCase">If <see langword="true"/>, will ignore case when comparing string properties for value equality</param>
 	/// <param name="recursive">If <see langword="true"/>, will recursively compare properties of complex types</param>
 	/// <returns>A delegate for comparing two objects of the specified type for value equality</returns>
 	private static Func<object, object, IEnumerable<string>, bool> CreateCompareDelegate(Type type, bool ignoreStringCase, bool recursive)
@@ -285,8 +284,7 @@ public static class Inspect
 
 		Expression andAlsoExpression = comparisons.Aggregate(Expression.And);
 
-		Expression<Func<object, object, IEnumerable<string>, bool>> lambda = Expression.Lambda<Func<object, object, IEnumerable<string>, bool>>(
-						andAlsoExpression, obj1Param, obj2Param, exemptPropsParam);
+		Expression<Func<object, object, IEnumerable<string>, bool>> lambda = Expression.Lambda<Func<object, object, IEnumerable<string>, bool>>(andAlsoExpression, obj1Param, obj2Param, exemptPropsParam);
 
 		return lambda.CompileFast();
 	}

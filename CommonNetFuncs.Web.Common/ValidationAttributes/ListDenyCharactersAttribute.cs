@@ -1,7 +1,6 @@
-using System.Collections;
+﻿using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-
 using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Core.TypeChecks;
 

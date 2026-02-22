@@ -20,7 +20,7 @@ indent_size = 2
 # Code files
 [*.{cs,csx,vb,vbx}]
 indent_size = 2
-insert_final_newline = true
+insert_final_newline = false
 charset = utf-8-bom
 ###############################
 # .NET Coding Conventions     #
@@ -159,7 +159,7 @@ csharp_using_directive_placement = outside_namespace:silent
 csharp_prefer_simple_using_statement = true:suggestion
 csharp_style_namespace_declarations = file_scoped:silent
 csharp_style_prefer_method_group_conversion = true:silent
-csharp_style_expression_bodied_lambdas = true:silent
+csharp_style_expression_bodied_lambdas = true:suggestion
 csharp_style_expression_bodied_local_functions = false:silent
 csharp_style_implicit_object_creation_when_type_is_apparent = true:warning
 
@@ -335,6 +335,9 @@ dotnet_diagnostic.S3011.severity = silent
 
 # RCS1093: File contains no code
 dotnet_diagnostic.RCS1093.severity = silent
+
+# IDE0055: Fix formatting
+dotnet_diagnostic.IDE0055.severity = silent
 
 [*.vb]
 # Modifier preferences

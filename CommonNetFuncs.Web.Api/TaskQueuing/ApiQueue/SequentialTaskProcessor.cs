@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
-using System.Threading.Channels;
-using CommonNetFuncs.Core;
+﻿using CommonNetFuncs.Core;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
+using System.Threading.Channels;
 
 namespace CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 
@@ -10,7 +10,6 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
 #pragma warning restore S3881 // "IDisposable" should be implemented correctly
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-	private readonly Channel<QueuedTask> queue;
 	private readonly CancellationTokenSource cancellationTokenSource;
 	private readonly ChannelWriter<QueuedTask> writer;
 	private readonly ChannelReader<QueuedTask> reader;
@@ -23,7 +22,7 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
 	{
 		cancellationTokenSource = new CancellationTokenSource();
 
-		queue = Channel.CreateBounded<QueuedTask>(boundedChannelOptions);
+		Channel<QueuedTask> queue = Channel.CreateBounded<QueuedTask>(boundedChannelOptions);
 		writer = queue.Writer;
 		reader = queue.Reader;
 
@@ -35,7 +34,7 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
 	{
 		cancellationTokenSource = new CancellationTokenSource();
 
-		queue = Channel.CreateUnbounded<QueuedTask>(unboundedChannelOptions);
+		Channel<QueuedTask> queue = Channel.CreateUnbounded<QueuedTask>(unboundedChannelOptions);
 		writer = queue.Writer;
 		reader = queue.Reader;
 

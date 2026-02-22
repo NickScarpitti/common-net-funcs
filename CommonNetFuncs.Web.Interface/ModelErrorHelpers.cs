@@ -25,11 +25,6 @@ public static class ModelErrorHelpers
 				{
 					stringBuilder.Append($"{error.ErrorMessage} ");
 				}
-
-				if (stringBuilder[^1] == '.')
-				{
-					stringBuilder.Remove(stringBuilder.Length - 1, 1);
-				}
 				errors.Add(modelStateKey, stringBuilder.ToString());
 			}
 		}

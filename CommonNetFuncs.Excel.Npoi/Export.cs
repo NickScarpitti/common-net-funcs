@@ -1,11 +1,11 @@
-﻿using System.Data;
-using System.Reflection;
-using CommonNetFuncs.Core;
+﻿using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using NPOI.SS.UserModel;
 using NPOI.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
+using System.Data;
+using System.Reflection;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Excel.Npoi;
@@ -263,15 +263,7 @@ public static class Export
 				{
 					success = ((DataTable)data).ExcelExport(wb, ws, createTable, tableName, skipColumnNames, wrapText);
 				}
-				else
-				{
-					throw new ArgumentException("Invalid type for data parameter. Parameter must be either an IEnumerable or DataTable class");
-				}
 			}
-		}
-		catch (OperationCanceledException)
-		{
-			throw new TaskCanceledException($"{nameof(Export)}.{nameof(GenericExcelExport)} was canceled");
 		}
 		catch (Exception ex)
 		{

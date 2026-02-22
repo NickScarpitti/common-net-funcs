@@ -5,7 +5,7 @@ namespace Core.Tests;
 
 public sealed class ReflectionCachesTests : IDisposable
 {
-	private readonly Type _testType = typeof(TestClass);
+	private readonly Type testType = typeof(TestClass);
 
 	public ReflectionCachesTests()
 	{
@@ -55,14 +55,14 @@ public sealed class ReflectionCachesTests : IDisposable
 	public void ClearReflectionCaches_ClearsBothCaches()
 	{
 		// Arrange
-		ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType); // Add to cache
+		ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType); // Add to cache
 
 		// Act
 		ReflectionCaches.CacheManager.ClearAllCaches();
 
 		// Assert
 		// Should be empty, so a new call should trigger reflection again (no exception)
-		PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
+		PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType);
 		props.ShouldContain(x => x.Name == nameof(TestClass.Prop1));
 		props.ShouldContain(x => x.Name == nameof(TestClass.Prop2));
 	}
@@ -72,13 +72,13 @@ public sealed class ReflectionCachesTests : IDisposable
 	{
 		// Arrange
 		ReflectionCaches.CacheManager.SetUseLimitedCache(false);
-		ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
+		ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType);
 
 		// Act
 		ReflectionCaches.CacheManager.ClearCache();
 
 		// Assert
-		PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
+		PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType);
 		props.ShouldContain(x => x.Name == nameof(TestClass.Prop1));
 	}
 
@@ -87,13 +87,13 @@ public sealed class ReflectionCachesTests : IDisposable
 	{
 		// Arrange
 		ReflectionCaches.CacheManager.SetUseLimitedCache(true);
-		ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
+		ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType);
 
 		// Act
 		ReflectionCaches.CacheManager.ClearLimitedCache();
 
 		// Assert
-		PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
+		PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType);
 		props.ShouldContain(x => x.Name == nameof(TestClass.Prop2));
 	}
 
@@ -102,7 +102,7 @@ public sealed class ReflectionCachesTests : IDisposable
 	{
 		// Arrange
 		ReflectionCaches.CacheManager.SetUseLimitedCache(true);
-		ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
+		ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType);
 
 		// Act
 		ReflectionCaches.CacheManager.SetLimitedCacheSize(1);
@@ -110,7 +110,7 @@ public sealed class ReflectionCachesTests : IDisposable
 		// Assert
 		ReflectionCaches.CacheManager.GetLimitedCacheSize().ShouldBe(1);
 		// Should still work after resize
-		PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
+		PropertyInfo[] props = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType);
 		props.Length.ShouldBe(2);
 	}
 
@@ -152,8 +152,8 @@ public sealed class ReflectionCachesTests : IDisposable
 	{
 		ReflectionCaches.CacheManager.SetUseLimitedCache(true);
 
-		PropertyInfo[] props1 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
-		PropertyInfo[] props2 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
+		PropertyInfo[] props1 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType);
+		PropertyInfo[] props2 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType);
 
 		props1.ShouldBe(props2); // Should be cached
 		props1.Length.ShouldBe(2);
@@ -164,8 +164,8 @@ public sealed class ReflectionCachesTests : IDisposable
 	{
 		ReflectionCaches.CacheManager.SetUseLimitedCache(false);
 
-		PropertyInfo[] props1 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
-		PropertyInfo[] props2 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(_testType);
+		PropertyInfo[] props1 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType);
+		PropertyInfo[] props2 = ReflectionCaches.GetOrAddPropertiesFromReflectionCache(testType);
 
 		props1.ShouldBe(props2); // Should be cached
 		props1.Length.ShouldBe(2);

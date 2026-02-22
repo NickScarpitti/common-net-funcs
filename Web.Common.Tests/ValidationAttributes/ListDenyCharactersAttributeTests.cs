@@ -20,6 +20,33 @@ public sealed class ListDenyCharactersAttributeTests : ValidationTestBase
 	}
 
 	[Fact]
+	public void Constructor_WithCharArray_ShouldSetProperties()
+	{
+		// Arrange
+		char[] blacklist = ['<', '>', '"', '\'', '/'];
+
+		// Act
+		ListDenyCharactersAttribute attribute = new(blacklist);
+
+		// Assert
+		attribute.DenyCharacters.ShouldBe("<>\"'/");
+	}
+
+	[Fact]
+	public void Constructor_WithNullCharArray_ShouldThrow()
+	{
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => new ListDenyCharactersAttribute((char[])null!));
+	}
+
+	[Fact]
+	public void Constructor_WithEmptyCharArray_ShouldThrow()
+	{
+		// Act & Assert
+		Should.Throw<ArgumentException>(() => new ListDenyCharactersAttribute(Array.Empty<char>()));
+	}
+
+	[Fact]
 	public void Constructor_WithValidCharacters_ShouldSetProperties()
 	{
 		// Arrange

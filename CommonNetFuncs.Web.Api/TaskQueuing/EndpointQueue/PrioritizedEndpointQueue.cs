@@ -10,12 +10,14 @@ public class PrioritizedEndpointQueue : IDisposable
 	private readonly PriorityQueue<PrioritizedQueuedTask, PrioritizedQueuedTask> priorityQueue = new();
 	private readonly SemaphoreSlim queueSemaphore = new(1, 1);
 	private readonly CancellationTokenSource cancellationTokenSource;
-	private readonly Task processingTask;
+	private Task? processingTask;
 	private readonly PrioritizedQueueStats stats;
 	private readonly Dictionary<TaskPriority, List<TimeSpan>> processingTimesByPriority = new();
 	private readonly Lock statsLock = new();
 	private readonly ManualResetEventSlim newTaskEvent = new(false);
 	private readonly int processTimeWindow;
+	private volatile bool isShuttingDown;
+	private readonly Lock taskStartLock = new();
 
 	public string EndpointKey { get; }
 
@@ -36,13 +38,14 @@ public class PrioritizedEndpointQueue : IDisposable
 			processingTimesByPriority[priority] = new List<TimeSpan>();
 		}
 
-		// Start processing task
-		processingTask = ProcessTasksAsync(cancellationTokenSource.Token);
+		// Don't start processing task yet - it will be started lazily on first enqueue
 	}
 
-	public async Task<T?> EnqueueAsync<T>(Func<CancellationToken, Task<T>> taskFunction,
-				int priority, TaskPriority priorityLevel, CancellationToken cancellationToken = default)
+	public async Task<T?> EnqueueAsync<T>(Func<CancellationToken, Task<T>> taskFunction, int priority, TaskPriority priorityLevel, CancellationToken cancellationToken = default)
 	{
+		// Ensure processing task is started
+		EnsureProcessingTaskStarted();
+
 		PrioritizedQueuedTask queuedTask = new(async ct => await taskFunction(ct).ConfigureAwait(false))
 		{
 			Priority = priority,
@@ -68,11 +71,21 @@ public class PrioritizedEndpointQueue : IDisposable
 			queueSemaphore.Release();
 		}
 
-		logger.Debug("Enqueued task {TaskId} with priority {Priority} ({PriorityLevel}) for endpoint {EndpointKey}",
-						queuedTask.Id, priority, priorityLevel, EndpointKey);
+		logger.Debug("Enqueued task {TaskId} with priority {Priority} ({PriorityLevel}) for endpoint {EndpointKey}", queuedTask.Id, priority, priorityLevel, EndpointKey);
 
 		object? result = await queuedTask.CompletionSource.Task;
 		return (T?)result;
+	}
+
+	private void EnsureProcessingTaskStarted()
+	{
+		if (processingTask == null)
+		{
+			lock (taskStartLock)
+			{
+				processingTask ??= Task.Run(() => ProcessTasksAsync(cancellationTokenSource.Token), cancellationTokenSource.Token);
+			}
+		}
 	}
 
 	public virtual async Task<bool> CancelTasksByPriorityAsync(TaskPriority priority)
@@ -88,11 +101,11 @@ public class PrioritizedEndpointQueue : IDisposable
 			// Extract all tasks
 			while (priorityQueue.TryDequeue(out PrioritizedQueuedTask? task, out _))
 			{
-				if (task.PriorityLevel == priority && !task.IsCancelled)
+				if (task != null && task.PriorityLevel == priority && !task.IsCancelled)
 				{
 					tasksToCancel.Add(task);
 				}
-				else
+				else if (task != null)
 				{
 					tasksToKeep.Add(task);
 				}
@@ -124,31 +137,133 @@ public class PrioritizedEndpointQueue : IDisposable
 			queueSemaphore.Release();
 		}
 
-		logger.Info("Cancelled {Count} tasks with priority {Priority} for endpoint {EndpointKey}",
-						cancelledCount, priority, EndpointKey);
+		logger.Info("Cancelled {Count} tasks with priority {Priority} for endpoint {EndpointKey}", cancelledCount, priority, EndpointKey);
 
 		return cancelledCount > 0;
 	}
 
 	private async Task ProcessTasksAsync(CancellationToken cancellationToken)
 	{
-		while (!cancellationToken.IsCancellationRequested)
+		try
 		{
-			PrioritizedQueuedTask? currentTask = null;
-
-			// Wait for tasks or cancellation
-			await queueSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-			try
+			while (!cancellationToken.IsCancellationRequested && !isShuttingDown)
 			{
-				if (priorityQueue.TryDequeue(out currentTask, out _))
+				PrioritizedQueuedTask? currentTask = null;
+
+				// Wait for tasks or cancellation
+				await queueSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+				try
 				{
-					lock (statsLock)
+					if (priorityQueue.TryDequeue(out currentTask, out _))
 					{
-						stats.CurrentQueueDepth = priorityQueue.Count;
-						stats.CurrentProcessingPriority = currentTask.PriorityLevel;
+						lock (statsLock)
+						{
+							stats.CurrentQueueDepth = priorityQueue.Count;
+							stats.CurrentProcessingPriority = currentTask.PriorityLevel;
+						}
+					}
+					else
+					{
+						lock (statsLock)
+						{
+							stats.CurrentProcessingPriority = null;
+						}
 					}
 				}
-				else
+				finally
+				{
+					queueSemaphore.Release();
+				}
+
+				if (currentTask == null)
+				{
+					// Check shutdown flag before waiting
+					if (isShuttingDown)
+					{
+						break;
+					}
+
+					// No tasks available, wait for new tasks with a timeout to allow periodic shutdown checks
+					try
+					{
+						newTaskEvent.Wait(100, cancellationToken); // 100ms timeout
+						newTaskEvent.Reset();
+					}
+					catch (OperationCanceledException)
+					{
+						break;
+					}
+					catch (ObjectDisposedException)
+					{
+						// Resources disposed during shutdown
+						break;
+					}
+					continue;
+				}
+
+				// Process the task
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				try
+				{
+					if (currentTask.IsCancelled)
+					{
+						logger.Debug("Skipping cancelled task {TaskId} for endpoint {EndpointKey}", currentTask.Id, EndpointKey);
+						// Set the completion source to cancelled so waiting callers don't hang
+						currentTask.CompletionSource.TrySetCanceled(currentTask.CancellationTokenSource.Token);
+						continue;
+					}
+
+					logger.Debug("Processing task {TaskId} with priority {Priority} ({PriorityLevel}) for endpoint {EndpointKey}",
+						currentTask.Id, currentTask.Priority, currentTask.PriorityLevel, EndpointKey);
+
+					using CancellationTokenSource combinedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, currentTask.CancellationTokenSource.Token);
+
+					object? result = await currentTask.TaskFunction(combinedCts.Token).ConfigureAwait(false);
+					currentTask.CompletionSource.SetResult(result);
+
+					stopwatch.Stop();
+
+					lock (statsLock)
+					{
+						stats.TotalProcessedTasks++;
+						stats.LastProcessedAt = DateTime.UtcNow;
+
+						PriorityStats priorityStats = stats.PriorityBreakdown[currentTask.PriorityLevel];
+						priorityStats.ProcessedTasks++;
+						priorityStats.LastProcessedAt = DateTime.UtcNow;
+
+						List<TimeSpan> processingTimes = processingTimesByPriority[currentTask.PriorityLevel];
+						processingTimes.Add(stopwatch.Elapsed);
+
+						if (processingTimes.Count > processTimeWindow)
+						{
+							processingTimes.RemoveAt(0);
+						}
+					}
+
+					logger.Debug("Completed task {TaskId} with priority {Priority} for endpoint {EndpointKey} in {Duration}ms", currentTask.Id, currentTask.Priority, EndpointKey, stopwatch.ElapsedMilliseconds);
+				}
+				catch (OperationCanceledException cancelEx) when (currentTask.IsCancelled)
+				{
+					logger.Debug(cancelEx, "Task {TaskId} was cancelled for endpoint {EndpointKey}", currentTask.Id, EndpointKey);
+					// Set the completion source to cancelled so waiting callers don't hang
+					currentTask.CompletionSource.TrySetCanceled(currentTask.CancellationTokenSource.Token);
+				}
+				catch (Exception ex)
+				{
+					stopwatch.Stop();
+
+					lock (statsLock)
+					{
+						stats.TotalFailedTasks++;
+						stats.PriorityBreakdown[currentTask.PriorityLevel].FailedTasks++;
+					}
+
+					logger.Error(ex, "Error processing task {TaskId} with priority {Priority} for endpoint {EndpointKey}", currentTask.Id, currentTask.Priority, EndpointKey);
+					currentTask.CompletionSource.SetException(ex);
+				}
+				finally
 				{
 					lock (statsLock)
 					{
@@ -156,94 +271,14 @@ public class PrioritizedEndpointQueue : IDisposable
 					}
 				}
 			}
-			finally
-			{
-				queueSemaphore.Release();
-			}
-
-			if (currentTask == null)
-			{
-				// No tasks available, wait for new tasks
-				try
-				{
-					newTaskEvent.Wait(cancellationToken);
-					newTaskEvent.Reset();
-				}
-				catch (OperationCanceledException)
-				{
-					break;
-				}
-				continue;
-			}
-
-			// Process the task
-			Stopwatch stopwatch = Stopwatch.StartNew();
-
-			try
-			{
-				if (currentTask.IsCancelled)
-				{
-					logger.Debug("Skipping cancelled task {TaskId} for endpoint {EndpointKey}",
-												currentTask.Id, EndpointKey);
-					continue;
-				}
-
-				logger.Debug("Processing task {TaskId} with priority {Priority} ({PriorityLevel}) for endpoint {EndpointKey}",
-										currentTask.Id, currentTask.Priority, currentTask.PriorityLevel, EndpointKey);
-
-				using CancellationTokenSource combinedCts = CancellationTokenSource.CreateLinkedTokenSource(
-										cancellationToken, currentTask.CancellationTokenSource.Token);
-
-				object? result = await currentTask.TaskFunction(combinedCts.Token).ConfigureAwait(false);
-				currentTask.CompletionSource.SetResult(result);
-
-				stopwatch.Stop();
-
-				lock (statsLock)
-				{
-					stats.TotalProcessedTasks++;
-					stats.LastProcessedAt = DateTime.UtcNow;
-
-					PriorityStats priorityStats = stats.PriorityBreakdown[currentTask.PriorityLevel];
-					priorityStats.ProcessedTasks++;
-					priorityStats.LastProcessedAt = DateTime.UtcNow;
-
-					List<TimeSpan> processingTimes = processingTimesByPriority[currentTask.PriorityLevel];
-					processingTimes.Add(stopwatch.Elapsed);
-
-					if (processingTimes.Count > processTimeWindow)
-					{
-						processingTimes.RemoveAt(0);
-					}
-				}
-
-				logger.Debug("Completed task {TaskId} with priority {Priority} for endpoint {EndpointKey} in {Duration}ms", currentTask.Id, currentTask.Priority, EndpointKey, stopwatch.ElapsedMilliseconds);
-			}
-			catch (OperationCanceledException ocex) when (currentTask.IsCancelled)
-			{
-				logger.Debug(ocex, "Task {TaskId} was cancelled for endpoint {EndpointKey}", currentTask.Id, EndpointKey);
-				// Task was already marked as cancelled, no need to update stats
-			}
-			catch (Exception ex)
-			{
-				stopwatch.Stop();
-
-				lock (statsLock)
-				{
-					stats.TotalFailedTasks++;
-					stats.PriorityBreakdown[currentTask.PriorityLevel].FailedTasks++;
-				}
-
-				logger.Error(ex, "Error processing task {TaskId} with priority {Priority} for endpoint {EndpointKey}", currentTask.Id, currentTask.Priority, EndpointKey);
-				currentTask.CompletionSource.SetException(ex);
-			}
-			finally
-			{
-				lock (statsLock)
-				{
-					stats.CurrentProcessingPriority = null;
-				}
-			}
+		}
+		catch (OperationCanceledException)
+		{
+			// Expected when cancellation is requested
+		}
+		catch (ObjectDisposedException)
+		{
+			// Expected when resources are disposed during shutdown
 		}
 	}
 
@@ -310,21 +345,34 @@ public class PrioritizedEndpointQueue : IDisposable
 		{
 			if (disposing)
 			{
-				cancellationTokenSource.Cancel();
-				newTaskEvent.Set(); // Wake up processing task for shutdown
+				// Signal shutdown
+				isShuttingDown = true;
 
+				// Cancel and wake up the processing task
 				try
 				{
-					processingTask.Wait(TimeSpan.FromSeconds(5));
+					cancellationTokenSource.Cancel();
+					newTaskEvent.Set();
 				}
-				catch (Exception ex)
+				catch (ObjectDisposedException)
 				{
-					logger.Warn(ex, "Error waiting for processing task to complete for endpoint {EndpointKey}", EndpointKey);
+					// Already disposed
 				}
 
+				// Wait briefly for processing task to complete
+				try
+				{
+					processingTask?.Wait(TimeSpan.FromSeconds(5));
+				}
+				catch (AggregateException)
+				{
+					// Task may have been cancelled or faulted
+				}
+
+				// Dispose of resources
 				cancellationTokenSource.Dispose();
-				queueSemaphore.Dispose();
 				newTaskEvent.Dispose();
+				queueSemaphore.Dispose();
 			}
 			disposed = true;
 		}

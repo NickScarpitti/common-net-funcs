@@ -1,12 +1,11 @@
-﻿using System.Buffers;
+﻿using Amazon.S3;
+using Amazon.S3.Model;
+using NLog;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
-using Amazon.S3;
-using Amazon.S3.Model;
-using NLog;
-
 using static Amazon.S3.Util.AmazonS3Util;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.ExceptionLocation;
@@ -697,8 +696,7 @@ public static class AwsS3HelpersStatic
 					logger.Debug("Starting download of {fileName} from bucket {bucketName}", fileName, bucketName);
 				}
 
-				using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cancellationToken).ConfigureAwait(false);
-
+using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cancellationToken).ConfigureAwait(false);
 				if (logDebug)
 				{
 					sw!.Stop();

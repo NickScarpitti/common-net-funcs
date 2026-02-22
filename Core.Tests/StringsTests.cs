@@ -2,8 +2,6 @@
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
 
-
-
 namespace Core.Tests;
 
 public sealed class StringsTests
@@ -44,6 +42,9 @@ public sealed class StringsTests
 	[InlineData("NoDelimiters", "[", "]", null)]
 	[InlineData(null, "[", "]", null)]
 	[InlineData("", "[", "]", null)]
+	[InlineData("[test]", "[", "]", "test")]
+	[InlineData("test]start[end", "[", "]", null)]
+	[InlineData("test[start]middle]end", "[", "]", "start]middle")]
 	public void ExtractBetween_ReturnsCorrectSubstring(string? input, string start, string end, string? expected)
 	{
 		// Act
@@ -60,6 +61,31 @@ public sealed class StringsTests
 	[InlineData("not null", "not null")]
 	[InlineData(null, null)]
 	[InlineData("", "")]
+	[InlineData("Null", null)]
+	[InlineData("NuLL", null)]
+	[InlineData("   ", "   ")]
+	[InlineData("nullnull", null)]
+	[InlineData("NULLNULL", null)]
+	[InlineData("NullNull", null)]
+	[InlineData("  Null  ", null)] // Trim branch
+	[InlineData("  null  ", null)] // Trim branch with lowercase
+	[InlineData("   null", null)] // Leading spaces
+	[InlineData("null   ", null)] // Trailing spaces
+	[InlineData("some text", "some text")] // Non-null string
+	[InlineData("Null123", "Null123")] // Null with suffix
+	[InlineData("123Null", "123Null")] // Null with prefix
+	[InlineData("NULL NULL NULL", "NULL NULL NULL")] // Multiple NULLs with spaces
+	[InlineData("nUlL", null)] // Mixed case variant
+	[InlineData("\tNull\t", null)] // Tab characters instead of spaces
+	[InlineData("\nNull\n", null)] // Newline characters
+	[InlineData("NULLNULLNULL", null)] // Three NULLs concatenated
+	[InlineData("nullNULLnull", null)] // Mixed case multiple nulls
+	[InlineData("  nullnull  ", "  nullnull  ")] // Multiple nulls with surrounding spaces - has spaces so not just NULL
+	[InlineData("text with null", "text with null")] // Contains null but not only null
+	[InlineData("NULL_NULL", "NULL_NULL")] // NULLs separated by underscore
+	[InlineData("NULL.NULL", "NULL.NULL")] // NULLs separated by dot
+	[InlineData("xNULL", "xNULL")] // Prefix before NULL
+	[InlineData("NULLx", "NULLx")] // Suffix after NULL
 	public void MakeNullNull_HandlesNullStrings(string? input, string? expected)
 	{
 		// Act
@@ -67,6 +93,103 @@ public sealed class StringsTests
 
 		// Assert
 		result.ShouldBe(expected);
+	}
+
+	[Fact]
+	public void MakeNullNull_FirstCondition_StrEqReturnsTrue()
+	{
+		// Tests first part of OR: s?.StrEq("Null") != false
+		// Arrange
+		const string input = "NULL";
+
+		// Act
+		string? result = input.MakeNullNull();
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	public void MakeNullNull_SecondCondition_OnlyNullPatternsRemain()
+	{
+		// Tests second part of OR: s.ToUpperInvariant().Replace("NULL", string.Empty)?.Length == 0
+		// First condition should be false for this to be the deciding factor
+		// Arrange
+		const string input = "nullnull"; // Doesn't equal "Null" alone, but is composed only of "null"
+
+		// Act
+		string? result = input.MakeNullNull();
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	public void MakeNullNull_ThirdCondition_TrimmedEqualsNull()
+	{
+		// Tests third part of OR: s.Trim().StrEq("Null")
+		// This should be redundant with first condition, but testing explicitly
+		// Arrange
+		const string input = "   Null   ";
+
+		// Act
+		string? result = input.MakeNullNull();
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	public void MakeNullNull_AllConditionsFalse_ReturnsOriginal()
+	{
+		// Tests when all three OR conditions are false
+		// Arrange
+		const string input = "some value";
+
+		// Act
+		string? result = input.MakeNullNull();
+
+		// Assert
+		result.ShouldBe("some value");
+	}
+
+	[Fact]
+	public void MakeNullNull_EmptyAfterReplaceButNotNull_ReturnsNull()
+	{
+		// Specifically test the second condition where Replace leaves empty string
+		// Arrange
+		const string input = "NullNullNull";
+
+		// Act
+		string? result = input.MakeNullNull();
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	public void MakeNullNull_ComplexWhitespace_VariousBehaviors()
+	{
+		// Test with various whitespace combinations
+		// Arrange & Act & Assert
+		"\r\nNull\r\n".MakeNullNull().ShouldBeNull(); // Leading/trailing newlines are trimmed
+		" \t Null \t ".MakeNullNull().ShouldBeNull(); // Leading/trailing tabs are trimmed
+		"NULL\nNULL".MakeNullNull().ShouldBe("NULL\nNULL"); // Newline between NULLs means it's not just NULL
+		"null\r\nnull".MakeNullNull().ShouldBe("null\r\nnull"); // CRLF between nulls means it's not just null
+	}
+
+	[Fact]
+	public void MakeNullNull_OnlyWhitespace_ReturnsOriginal()
+	{
+		// Tests the outer if condition - whitespace only should not become null
+		// Arrange
+		const string input = "     ";
+
+		// Act
+		string? result = input.MakeNullNull();
+
+		// Assert
+		result.ShouldBe("     ");
 	}
 
 	[Theory]
@@ -90,6 +213,8 @@ public sealed class StringsTests
 	[InlineData("\t\nwhitespace\r\n", "whitespace")]
 	[InlineData(null, null)]
 	[InlineData("", "")]
+	[InlineData("already trimmed", "already trimmed")]
+	[InlineData("  ", "")]
 	public void TrimFull_RemovesExcessWhitespace(string? input, string? expected)
 	{
 		// Act
@@ -191,6 +316,12 @@ public sealed class StringsTests
 	[InlineData("string1", "string2", false)]
 	[InlineData(null, null, true)]
 	[InlineData("", null, true)]
+	[InlineData(null, "", true)]
+	[InlineData("test", null, false)]
+	[InlineData(null, "test", false)]
+	[InlineData("  test  ", "test", true)]
+	[InlineData("test", "  test  ", true)]
+	[InlineData("", "", true)]
 	public void StrEq_ComparesStrings(string? input1, string? input2, bool expected)
 	{
 		// Act
@@ -212,6 +343,71 @@ public sealed class StringsTests
 		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.IgnoreUppercase, cancellationToken: TestContext.Current.CancellationToken).ShouldBe("THE QUICK BROWN FOX");
 
 		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 4, cancellationToken: TestContext.Current.CancellationToken).ShouldBe("THE Quick Brown FOX");
+	}
+
+	[Theory]
+	[InlineData(null)]
+	[InlineData("")]
+	[InlineData("   ")]
+	public void ToTitleCase_ReturnsInputForNullOrWhitespace(string? input)
+	{
+		// Act
+		string? result = input.ToTitleCase(cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe(input);
+	}
+
+	[Fact]
+	public void ToTitleCase_RespectsCancellationToken()
+	{
+		// Arrange
+		using CancellationTokenSource cts = new();
+		cts.Cancel();
+		const string input = "word1 word2 word3 word4 word5";
+
+		// Act & Assert
+		Should.Throw<OperationCanceledException>(() =>
+			input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: cts.Token));
+	}
+
+	[Theory]
+	[InlineData("Hello World", new[] { "Hello", "World" }, true, true)]
+	[InlineData("Hello World", new[] { "Hello" }, true, true)]
+	[InlineData("Hello World", new[] { "Hello", "Missing" }, true, true)]
+	[InlineData("Hello World", new[] { "Missing" }, true, false)]
+	[InlineData("Hello World", new[] { "Hello", "World" }, false, true)]
+	[InlineData("Hello World", new[] { "Hello", "Missing" }, false, false)]
+	[InlineData(null, new[] { "test" }, true, false)]
+	[InlineData("", new[] { "test" }, true, false)]
+	[InlineData("   ", new[] { "test" }, true, false)]
+	public void Contains_WithCollection_Works(string? s, string[] stringsToFind, bool useOrComparison, bool expected)
+	{
+		// Act
+		bool result = s.Contains(stringsToFind, useOrComparison);
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData("Hello World", new[] { "Hello", "World" }, true, true)]
+	[InlineData("Hello World", new[] { "Hello" }, true, true)]
+	[InlineData("Hello World", new[] { "Hello", "Missing" }, true, true)]
+	[InlineData("Hello World", new[] { "Missing" }, true, false)]
+	[InlineData("Hello World", new[] { "Hello", "World" }, false, true)]
+	[InlineData("Hello World", new[] { "Hello", "Missing" }, false, false)]
+	[InlineData("", new[] { "test" }, true, false)]
+	public void Contains_Span_WithCollection_Works(string s, string[] stringsToFind, bool useOrComparison, bool expected)
+	{
+		// Arrange
+		ReadOnlySpan<char> span = s.AsSpan();
+
+		// Act
+		bool result = span.Contains(stringsToFind, useOrComparison);
+
+		// Assert
+		result.ShouldBe(expected);
 	}
 
 	[Theory]
@@ -258,6 +454,19 @@ public sealed class StringsTests
 		// Assert
 		result.StringProp.ShouldBe("test");
 		result.NestedObject.InnerString.ShouldBe("inner1");
+	}
+
+	[Fact]
+	public void TrimObjectStrings_HandlesNull()
+	{
+		// Arrange
+		TestObject? testObject = null;
+
+		// Act
+		TestObject? result = testObject?.TrimObjectStrings(recursive: true);
+
+		// Assert
+		result.ShouldBeNull();
 	}
 
 	public sealed class TestObject
@@ -535,10 +744,24 @@ public sealed class StringsTests
 		result.ShouldBe("Hello World\nTest");
 	}
 
+	[Fact]
+	public void NormalizeWhiteSpace_HandlesNullInput()
+	{
+		// Arrange
+		const string? input = null;
+
+		// Act
+		string result = input.NormalizeWhiteSpace();
+
+		// Assert
+		result.ShouldBe(string.Empty);
+	}
+
 	[Theory]
 	[InlineData("20230101", "yyyyMMdd", "MM/dd/yyyy", "01/01/2023")]
 	[InlineData("2023-01-01", "yyyy-MM-dd", "yyyy.MM.dd", "2023.01.01")]
-	public void FormatDateString_FormatsCorrectly(string input, string sourceFormat, string outputFormat, string expected)
+	[InlineData(null, "yyyy-MM-dd", "yyyy.MM.dd", null)]
+	public void FormatDateString_FormatsCorrectly(string? input, string sourceFormat, string outputFormat, string? expected)
 	{
 		// Act
 		string? result = input.FormatDateString(sourceFormat, outputFormat);
@@ -684,6 +907,7 @@ public sealed class StringsTests
 
 		// Act & Assert
 		Should.Throw<ArgumentException>(() => input.HasNoLessThanNumberOfChars('t', -1));
+		Should.Throw<ArgumentException>(() => input.HasNoLessThanNumberOfChars("t", -1));
 		Should.Throw<InvalidDataException>(() => input.HasNoLessThanNumberOfChars("tt", 1));
 	}
 
@@ -778,6 +1002,7 @@ public sealed class StringsTests
 	[InlineData("Hello", 'l', 2)]
 	[InlineData("Hello", 'x', -1)]
 	[InlineData(null, 'l', -1)]
+	[InlineData("Hello", null, -1)]
 	public void IndexOfInvariant_Char_Works(string? s, char? charToFind, int expected)
 	{
 		// Act
@@ -950,6 +1175,10 @@ public sealed class StringsTests
 	[InlineData("Hello World", new[] { "Hello", "World" }, "X", true, "X X")]
 	[InlineData("Hello World", new[] { "Hello" }, "X", true, "X World")]
 	[InlineData(null, new[] { "Hello" }, "X", true, null)]
+	[InlineData("", new[] { "test" }, "X", true, "")]
+	[InlineData("test test test", new[] { "test" }, "X", false, "X test test")]
+	[InlineData("Hello World", new[] { "", "Hello" }, "X", true, "X World")]
+	[InlineData("Hello World", new[] { "hello", "world" }, "X", true, "X X")]
 	public void ReplaceInvariant_Multiple_Works(string? s, string[] oldValues, string newValue, bool replaceAll, string? expected)
 	{
 		// Act
@@ -959,6 +1188,20 @@ public sealed class StringsTests
 		result.ShouldBe(expected);
 	}
 
+	[Fact]
+	public void ReplaceInvariant_RespectsCancellationToken()
+	{
+		// Arrange
+		using CancellationTokenSource cts = new();
+		cts.Cancel();
+		const string input = "word1 word2 word3 word4";
+		string[] oldValues = ["word1", "word2", "word3", "word4"];
+
+		// Act & Assert
+		Should.Throw<OperationCanceledException>(() =>
+			input.ReplaceInvariant(oldValues, "X", cancellationToken: cts.Token));
+	}
+
 	// StrComp (string?, string?)
 	[Theory]
 	[InlineData("abc", "abc", true)]
@@ -966,6 +1209,8 @@ public sealed class StringsTests
 	[InlineData(null, null, true)]
 	[InlineData("", null, true)]
 	[InlineData("abc", null, false)]
+	[InlineData(null, "abc", false)]
+	[InlineData(null, "", true)]
 	public void StrComp_Default_Works(string? s1, string? s2, bool expected)
 	{
 		// Act
@@ -979,6 +1224,10 @@ public sealed class StringsTests
 	[InlineData("abc", "ABC", StringComparison.InvariantCultureIgnoreCase, true)]
 	[InlineData("abc", "ABC", StringComparison.InvariantCulture, false)]
 	[InlineData(null, null, StringComparison.InvariantCulture, true)]
+	[InlineData("abc", null, StringComparison.InvariantCulture, false)]
+	[InlineData(null, "abc", StringComparison.InvariantCulture, false)]
+	[InlineData("", null, StringComparison.InvariantCulture, true)]
+	[InlineData(null, "", StringComparison.InvariantCulture, true)]
 	public void StrComp_Comparison_Works(string? s1, string? s2, StringComparison comparison, bool expected)
 	{
 		// Act
@@ -1079,6 +1328,21 @@ public sealed class StringsTests
 		}
 	}
 
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void NormalizeObjectStrings_HandlesNull(bool inlineData)
+	{
+		// Arrange
+		TestObject? testObject = null;
+
+		// Act
+		TestObject? result = testObject.NormalizeObjectStrings(inlineData, NormalizationForm.FormD, true);
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
 	private class TestNullObj
 	{
 		public string? Name { get; set; }
@@ -1129,7 +1393,7 @@ public sealed class StringsTests
 	public void ToNString_Overloads_Work()
 	{
 		// Arrange
-		DateTime? dt = new DateTime(2024, 1, 2, 3, 4, 5);
+		DateTime? dt = new DateTime(2024, 1, 2, 3, 4, 5, DateTimeKind.Unspecified);
 		DateOnly? d = new DateOnly(2024, 1, 2);
 		TimeSpan? ts = new TimeSpan(1, 2, 3);
 		int? i = 42;
@@ -1138,12 +1402,12 @@ public sealed class StringsTests
 		decimal? dec = 2.71m;
 		bool? b = true;
 		object? o = "test";
-		int? ni = null;
-		long? nl = null;
-		double? ndbl = null;
-		decimal? ndec = null;
-		bool? nb = null;
-		object? no = null;
+		int? nInt = null;
+		long? nLong = null;
+		double? nDouble = null;
+		decimal? nDecimal = null;
+		bool? nBool = null;
+		object? nObject = null;
 
 		// Act & Assert
 		dt.ToNString().ShouldBe(dt.ToString());
@@ -1156,12 +1420,12 @@ public sealed class StringsTests
 		b.ToNString().ShouldBe("True");
 		o.ToNString().ShouldBe("test");
 
-		ni.ToNString().ShouldBe(null);
-		nl.ToNString().ShouldBe(null);
-		ndbl.ToNString().ShouldBe(null);
-		ndec.ToNString().ShouldBe(null);
-		nb.ToNString().ShouldBe(null);
-		no.ToNString().ShouldBe(null);
+		nInt.ToNString().ShouldBe(null);
+		nLong.ToNString().ShouldBe(null);
+		nDouble.ToNString().ShouldBe(null);
+		nDecimal.ToNString().ShouldBe(null);
+		nBool.ToNString().ShouldBe(null);
+		nObject.ToNString().ShouldBe(null);
 		((object?)null).ToNString().ShouldBeNull();
 	}
 
@@ -1170,15 +1434,21 @@ public sealed class StringsTests
 	{
 		// Arrange
 		IEnumerable<string> enumerable = new[] { "1", "2", "3" };
+		IEnumerable<string> enumerableStrings = new[] { "four", "five", "six" };
 		IList<string> list = new List<string> { "4", "5", "6" };
+		IList<string> listStrings = new List<string> { "four", "five", "six" };
 
 		// Act
 		IEnumerable<int> result1 = enumerable.ToListInt();
 		List<int> result2 = list.ToListInt();
+		List<int> result3 = listStrings.ToListInt();
+		IEnumerable<int> result4 = enumerableStrings.ToListInt();
 
 		// Assert
 		result1.ShouldBe([1, 2, 3]);
 		result2.ShouldBe(new List<int> { 4, 5, 6 });
+		result3.ShouldBeEmpty();
+		result4.ShouldBeEmpty();
 	}
 
 	[Theory]
@@ -1222,7 +1492,7 @@ public sealed class StringsTests
 		}
 		else
 		{
-			result.ShouldBe(new DateTime(year.Value, month!.Value, day!.Value));
+			result.ShouldBe(new DateTime(year.Value, month!.Value, day!.Value, 0, 0, 0, DateTimeKind.Unspecified));
 		}
 	}
 
@@ -1313,15 +1583,21 @@ public sealed class StringsTests
 		string result1 = Strings.GetSafeDate(format);
 		string result2 = dt.GetSafeDate(format);
 		string result3 = d.GetSafeDate(format);
+		string result4 = ((DateOnly?)null).GetSafeDate(format);
+		string result5 = ((DateTime?)null).GetSafeDate(format);
 
 		// Assert
 		string.IsNullOrWhiteSpace(result1).ShouldBeFalse();
 		string.IsNullOrWhiteSpace(result2).ShouldBeFalse();
 		string.IsNullOrWhiteSpace(result3).ShouldBeFalse();
+		string.IsNullOrWhiteSpace(result4).ShouldBeFalse();
+		string.IsNullOrWhiteSpace(result5).ShouldBeFalse();
 	}
 
-	[Fact]
-	public void MakeExportNameUnique_Works()
+	[Theory]
+	[InlineData("png")]
+	[InlineData(null)]
+	public void MakeExportNameUnique_Works(string? extension)
 	{
 		// Arrange
 		const string tempDir = "TestData";
@@ -1329,7 +1605,7 @@ public sealed class StringsTests
 		const string ext = "png";
 
 		// Act
-		string unique = Strings.MakeExportNameUnique(tempDir, fileName, ext);
+		string unique = Strings.MakeExportNameUnique(tempDir, fileName, extension);
 
 		// Assert
 		unique.ShouldStartWith(fileName.Replace($".{ext}", string.Empty));
@@ -1383,6 +1659,11 @@ public sealed class StringsTests
 	[InlineData("abc123", @"\d+", "*", false, "*123")]
 	[InlineData("abc123", "[a-z]+", "#", false, "abc#")]
 	[InlineData(null, @"\d+", "*", false, null)]
+	[InlineData("abc123", "[a-z]+", null, false, "abc")]
+	[InlineData("abc123", @"\d+", "*", true, "*123")]
+	[InlineData("abc123", "[a-z]+", "#", true, "abc#")]
+	[InlineData(null, @"\d+", "*", true, null)]
+	[InlineData("abc123", "[a-z]+", null, true, "abc")]
 	public void ReplaceInverse_Regex_Works(string? input, string pattern, string? replacement, bool matchFirstOnly, string? expected)
 	{
 		// Arrange
@@ -1967,6 +2248,7 @@ public sealed class StringsTests
 	[InlineData("Hello", "LO", true)]
 	[InlineData("Hello", "x", false)]
 	[InlineData("", "he", false)]
+	[InlineData("Hello", "", false)]
 	public void ContainsInvariant_Span_Works(string input, string textToFind, bool expected)
 	{
 		// Arrange
@@ -1985,6 +2267,7 @@ public sealed class StringsTests
 	[InlineData("Hello", "He", true)]
 	[InlineData("Hello", "lo", false)]
 	[InlineData("", "he", false)]
+	[InlineData("Hello", "", false)]
 	public void StartsWithInvariant_Span_Works(string input, string textToFind, bool expected)
 	{
 		// Arrange
@@ -2003,6 +2286,7 @@ public sealed class StringsTests
 	[InlineData("Hello", "lo", true)]
 	[InlineData("Hello", "he", false)]
 	[InlineData("", "lo", false)]
+	[InlineData("Hello", "", false)]
 	public void EndsWithInvariant_Span_Works(string input, string textToFind, bool expected)
 	{
 		// Arrange
@@ -2021,6 +2305,7 @@ public sealed class StringsTests
 	[InlineData("Hello", "LO", 3)]
 	[InlineData("Hello", "x", -1)]
 	[InlineData("", "l", -1)]
+	[InlineData("Hello", "", -1)]
 	public void IndexOfInvariant_Span_Works(string input, string textToFind, int expected)
 	{
 		// Arrange
@@ -2096,7 +2381,7 @@ public sealed class StringsTests
 
 	[Theory]
 	[InlineData("123", 123)]
-	[InlineData("notanint", null)]
+	[InlineData("NotAnInt", null)]
 	[InlineData("", null)]
 	public void ToNInt_Span_Works(string input, int? expected)
 	{
@@ -2112,7 +2397,7 @@ public sealed class StringsTests
 
 	[Theory]
 	[InlineData("3.14", 3.14)]
-	[InlineData("notanumber", null)]
+	[InlineData("NotANumber", null)]
 	[InlineData("", null)]
 	public void ToNDouble_Span_Works(string input, double? expected)
 	{
@@ -2128,7 +2413,7 @@ public sealed class StringsTests
 
 	[Theory]
 	[InlineData("2.71", 2.71)]
-	[InlineData("notanumber", null)]
+	[InlineData("NotANumber", null)]
 	[InlineData("", null)]
 	public void ToNDecimal_Span_Works(string input, double? expected)
 	{
@@ -2160,7 +2445,7 @@ public sealed class StringsTests
 		}
 		else
 		{
-			result.ShouldBe(new DateTime(year.Value, month!.Value, day!.Value));
+			result.ShouldBe(new DateTime(year.Value, month!.Value, day!.Value, 0, 0, 0, DateTimeKind.Unspecified));
 		}
 	}
 
@@ -2503,8 +2788,749 @@ public sealed class StringsTests
 		result.Name.ShouldBeNull();
 		result.NestedObj.ShouldBeNull();
 	}
+
+	[Fact]
+	public void ParsePascalCase_Span_HandlesEmptySpan()
+	{
+		// Arrange
+		ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
+
+		// Act
+		ReadOnlySpan<char> result = span.ParsePascalCase();
+
+		// Assert
+		result.IsEmpty.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ContainsInvariant_IEnumerableString_WithString_ExactMatch_ReturnsTrue()
+	{
+		// Arrange
+		IEnumerable<string?> collection = new[] { "hello", "world", "test" };
+
+		// Act
+		bool result = collection.ContainsInvariant("TEST");
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ContainsInvariant_IEnumerableString_WithSpan_EmptySpan_ReturnsFalse()
+	{
+		// Arrange
+		IEnumerable<string?> collection = new[] { "hello", "world" };
+		ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
+
+		// Act
+		bool result = collection.ContainsInvariant(span);
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ContainsInvariant_IEnumerableString_WithSpan_Match_ReturnsTrue()
+	{
+		// Arrange
+		IEnumerable<string?> collection = new[] { "hello", "world", "test" };
+		ReadOnlySpan<char> span = "TEST".AsSpan();
+
+		// Act
+		bool result = collection.ContainsInvariant(span);
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ContainsInvariant_IEnumerableString_WithSpan_NoMatch_ReturnsFalse()
+	{
+		// Arrange
+		IEnumerable<string?> collection = new[] { "hello", "world" };
+		ReadOnlySpan<char> span = "missing".AsSpan();
+
+		// Act
+		bool result = collection.ContainsInvariant(span);
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Theory]
+	[InlineData("hello world", new[] { "hello", "world" }, true, true)]
+	[InlineData("hello world", new[] { "hello", "missing" }, true, true)]
+	[InlineData("hello world", new[] { "missing" }, true, false)]
+	[InlineData("hello world", new[] { "hello", "world" }, false, true)]
+	[InlineData("hello world", new[] { "hello", "missing" }, false, false)]
+	[InlineData("", new[] { "test" }, true, false)]
+	public void ContainsInvariant_String_WithCollection_Works(string s, string[] textsToFind, bool useOr, bool expected)
+	{
+		// Act
+		bool result = s.ContainsInvariant(textsToFind, useOr);
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData("hello world", new[] { "hello", "world" }, true, true)]
+	[InlineData("hello world", new[] { "hello", "missing" }, true, true)]
+	[InlineData("hello world", new[] { "missing" }, true, false)]
+	[InlineData("hello world", new[] { "hello", "world" }, false, true)]
+	[InlineData("hello world", new[] { "hello", "missing" }, false, false)]
+	public void ContainsInvariant_Span_WithCollection_Works(string s, string[] textsToFind, bool useOr, bool expected)
+	{
+		// Arrange
+		ReadOnlySpan<char> span = s.AsSpan();
+
+		// Act
+		bool result = span.ContainsInvariant(textsToFind, useOr);
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+
+
+
+
+	[Fact]
+	public void ContainsAnyCharacter_String_EmptyCharacters_ReturnsFalse()
+	{
+		// Act
+		bool result = "hello".ContainsAnyCharacter(ReadOnlySpan<char>.Empty);
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ContainsAnyCharacter_Span_EmptyCharacters_ReturnsFalse()
+	{
+		// Arrange
+		ReadOnlySpan<char> span = "hello".AsSpan();
+
+		// Act
+		bool result = span.ContainsAnyCharacter(ReadOnlySpan<char>.Empty);
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ToTitleCase_HandlesNonWordCharacters()
+	{
+		// Arrange
+		const string input = "hello-world...test";
+
+		// Act
+		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe("Hello-World...Test");
+	}
+
+	[Fact]
+	public void ToTitleCase_HandlesEmptyWords()
+	{
+		// Arrange
+		const string input = "  hello   world  ";
+
+		// Act
+		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldContain("Hello");
+		result.ShouldContain("World");
+	}
+
+	[Fact]
+	public void ToTitleCase_ConvertByLength_KeepsShortUppercaseWords()
+	{
+		// Arrange
+		const string input = "THE quick BROWN fox";
+
+		// Act
+		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 5, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe("THE Quick Brown Fox");
+	}
+
+	[Fact]
+	public void ToTitleCase_HandlesMixedCase()
+	{
+		// Arrange
+		const string input = "hELLo WoRLD";
+
+		// Act
+		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe("Hello World");
+	}
+
+	[Fact]
+	public void ReplaceInvariant_MultipleOldValues_NoMatch_ReturnsOriginal()
+	{
+		// Arrange
+		const string input = "hello world";
+		string[] oldValues = ["missing", "notfound"];
+
+		// Act
+		string? result = input.ReplaceInvariant(oldValues, "X", cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe(input);
+	}
+
+	[Fact]
+	public void ReplaceInvariant_MultipleOldValues_SingleMatch_ReplacesOnce()
+	{
+		// Arrange
+		const string input = "hello world hello";
+		string[] oldValues = ["hello"];
+
+		// Act
+		string? result = input.ReplaceInvariant(oldValues, "X", replaceAllInstances: false, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe("X world hello");
+	}
+
+	[Fact]
+	public void ExtractBetween_OverlappingDelimiters_ExtractsCorrectly()
+	{
+		// Arrange
+		const string input = "[[inner]]";
+
+		// Act
+		string? result = input.ExtractBetween("[", "]");
+
+		// Assert
+		result.ShouldBe("[inner]");
+	}
+
+	[Fact]
+	public void ExtractBetween_Span_OverlappingDelimiters_ExtractsCorrectly()
+	{
+		// Arrange
+		ReadOnlySpan<char> span = "[[inner]]".AsSpan();
+
+		// Act
+		ReadOnlySpan<char> result = span.ExtractBetween("[", "]");
+
+		// Assert
+		result.ToString().ShouldBe("[inner]");
+	}
+
+	[Fact]
+	public void ExtractFromLastInstance_NoMatch_ReturnsOriginal()
+	{
+		// Arrange
+		const string input = "hello";
+
+		// Act
+		string? result = input.ExtractFromLastInstance('x');
+
+		// Assert
+		result.ShouldBe(input);
+	}
+
+
+
+	[Fact]
+	public void ExtractFromLastInstance_Span_NoMatch_ReturnsOriginal()
+	{
+		// Arrange
+		ReadOnlySpan<char> span = "hello".AsSpan();
+
+		// Act
+		ReadOnlySpan<char> result = span.ExtractFromLastInstance('x');
+
+		// Assert
+		result.ToString().ShouldBe("hello");
+	}
+
+
+
+	[Fact]
+	public void ExtractToLastInstance_Span_EmptySpan_ReturnsEmpty()
+	{
+		// Arrange
+		ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
+
+		// Act
+		ReadOnlySpan<char> result = span.ExtractToLastInstance('.');
+
+		// Assert
+		result.IsEmpty.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ExtractFromLastInstance_Span_EmptySpan_ReturnsEmpty()
+	{
+		// Arrange
+		ReadOnlySpan<char> span = ReadOnlySpan<char>.Empty;
+
+		// Act
+		ReadOnlySpan<char> result = span.ExtractFromLastInstance('.');
+
+		// Assert
+		result.IsEmpty.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void MakeNullNull_MultipleNullsWithSpaces_ReturnsOriginal()
+	{
+		// Arrange
+		const string input = "NULL  NULL";
+
+		// Act
+		string? result = input.MakeNullNull();
+
+		// Assert
+		result.ShouldBe("NULL  NULL");
+	}
+
+	[Fact]
+	public void MakeNullNull_MixedCaseNullRepeated_ReturnsNull()
+	{
+		// Arrange
+		const string input = "NuLlNuLl";
+
+		// Act
+		string? result = input.MakeNullNull();
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	public void ParsePascalCase_Span_SingleUppercaseChar()
+	{
+		// Arrange
+		ReadOnlySpan<char> input = "A".AsSpan();
+
+		// Act
+		ReadOnlySpan<char> result = input.ParsePascalCase();
+
+		// Assert
+		result.ToString().ShouldBe("A");
+	}
+
+	[Fact]
+	public void ToTitleCase_ConvertByLength_SingleCharUppercase()
+	{
+		// Arrange
+		const string input = "THE A FOX";
+
+		// Act
+		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 3, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe("The A Fox");
+	}
+
+	[Fact]
+	public void ToTitleCase_NonWordCharacterPreservation()
+	{
+		// Arrange
+		const string input = "hello-world_test";
+
+		// Act
+		string? result = input.ToTitleCase(cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe("Hello-World_Test");
+	}
+
+	[Fact]
+	public void ContainsInvariant_AndComparison_NotAllTextsFound()
+	{
+		// Arrange
+		const string input = "Hello World";
+		string[] texts = ["Hello", "Missing"];
+
+		// Act
+		bool result = input.ContainsInvariant(texts, useOrComparison: false);
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ContainsInvariant_Span_AndComparison_FirstMatchSecondNot()
+	{
+		// Arrange
+		ReadOnlySpan<char> input = "Hello World".AsSpan();
+		string[] texts = ["Hello", "Missing"];
+
+		// Act
+		bool result = input.ContainsInvariant(texts, useOrComparison: false);
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void Contains_Span_WithOrdinalIgnoreCase()
+	{
+		// Arrange
+		ReadOnlySpan<char> input = "Hello World".AsSpan();
+		string[] texts = ["HELLO", "WORLD"];
+
+		// Act
+		bool result = input.Contains(texts, stringComparison: StringComparison.OrdinalIgnoreCase);
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ContainsAnyCharacter_String_EmptyCharacters()
+	{
+		// Arrange
+		const string input = "hello";
+
+		// Act
+		bool result = input.ContainsAnyCharacter(ReadOnlySpan<char>.Empty);
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ReplaceInvariant_SingleInstance_OnlyReplacesFirst()
+	{
+		// Arrange
+		const string input = "cat cat cat";
+
+		// Act
+		string? result = input.ReplaceInvariant("cat", "dog", replaceAllInstances: false, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe("dog cat cat");
+	}
+
+	[Fact]
+	public void ReplaceInvariant_MultipleOldValues_WithNullOrEmpty()
+	{
+		// Arrange
+		const string input = "hello world test";
+		string[] oldValues = ["", "world"];
+
+		// Act
+		string? result = input.ReplaceInvariant(oldValues, "REPLACED", cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe("hello REPLACED test");
+	}
+
+	[Fact]
+	public void ExtractBetween_Span_ToExactEnd()
+	{
+		// Arrange
+		ReadOnlySpan<char> input = "start[content]".AsSpan();
+
+		// Act
+		ReadOnlySpan<char> result = input.ExtractBetween("[", "]");
+
+		// Assert
+		result.ToString().ShouldBe("content");
+	}
+
+	[Fact]
+	public void ExtractFromLastInstance_Span_CharNotFound()
+	{
+		// Arrange
+		ReadOnlySpan<char> input = "hello world".AsSpan();
+
+		// Act
+		ReadOnlySpan<char> result = input.ExtractFromLastInstance('x');
+
+		// Assert
+		result.ToString().ShouldBe("hello world");
+	}
+
+	[Fact]
+	public void ExtractToLastInstance_Span_CharNotFound()
+	{
+		// Arrange
+		ReadOnlySpan<char> input = "hello world".AsSpan();
+
+		// Act
+		ReadOnlySpan<char> result = input.ExtractToLastInstance('x');
+
+		// Assert
+		result.ToString().ShouldBe("hello world");
+	}
+
+	[Fact]
+	public void StrEq_FirstIsNotNull_SecondIsNull()
+	{
+		// Arrange
+		const string s1 = "test";
+
+		// Act
+		bool result = s1.StrEq(null);
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void StrEq_FirstIsNull_SecondIsNotNull()
+	{
+		// Arrange
+		const string? s1 = null;
+
+		// Act
+		bool result = s1.StrEq("test");
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ToNDateTime_WithOADateValue()
+	{
+		// Arrange
+		const string oaDate = "44927"; // Represents 2023-01-01
+
+		// Act
+		DateTime? result = oaDate.ToNDateTime();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result?.Year.ShouldBe(2023);
+	}
+
+	[Fact]
+	public void ToNDateTime_Span_WithOADateValue()
+	{
+		// Arrange
+		ReadOnlySpan<char> oaDate = "44927".AsSpan(); // Represents 2023-01-01
+
+		// Act
+		DateTime? result = oaDate.ToNDateTime();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result?.Year.ShouldBe(2023);
+	}
+
+	[Fact]
+	public void ToNDateOnly_WithOADateValue()
+	{
+		// Arrange
+		const string oaDate = "44927"; // Represents 2023-01-01
+
+		// Act
+		DateOnly? result = oaDate.ToNDateOnly();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result?.Year.ShouldBe(2023);
+	}
+
+	[Fact]
+	public void ToNDateOnly_Span_WithOADateValue()
+	{
+		// Arrange
+		ReadOnlySpan<char> oaDate = "44927".AsSpan(); // Represents 2023-01-01
+
+		// Act
+		DateOnly? result = oaDate.ToNDateOnly();
+
+		// Assert
+		result.ShouldNotBeNull();
+		result?.Year.ShouldBe(2023);
+	}
+
+	[Fact]
+	public void TimespanToShortForm_WithMilliseconds()
+	{
+		// Arrange
+		TimeSpan t = TimeSpan.FromMilliseconds(1234.567);
+
+		// Act
+		string result = t.TimespanToShortForm();
+
+		// Assert
+		result.ShouldNotBeNullOrEmpty();
+	}
+
+	[Fact]
+	public void TimespanToShortForm_WithDaysAndLeadingZero()
+	{
+		// Arrange
+		TimeSpan t = new(1, 0, 5, 30); // 1 day, 5 minutes, 30 seconds
+
+		// Act
+		string result = t.TimespanToShortForm();
+
+		// Assert
+		result.ShouldContain("1:");
+	}
+
+	[Fact]
+	public void TimespanToShortForm_NoHours()
+	{
+		// Arrange
+		TimeSpan t = TimeSpan.FromMinutes(5.5); // 0 hours, 5 minutes, 30 seconds
+
+		// Act
+		string result = t.TimespanToShortForm();
+
+		// Assert
+		result.ShouldNotStartWith("00:");
+	}
+
+	[Fact]
+	public void GetHash_AllAlgorithms()
+	{
+		// Arrange
+		const string input = "test string";
+
+		// Act & Assert
+		input.GetHash(EHashAlgorithm.SHA1).ShouldNotBeNullOrEmpty();
+		input.GetHash(EHashAlgorithm.SHA256).ShouldNotBeNullOrEmpty();
+		input.GetHash(EHashAlgorithm.SHA384).ShouldNotBeNullOrEmpty();
+		input.GetHash(EHashAlgorithm.MD5).ShouldNotBeNullOrEmpty();
+		input.GetHash(EHashAlgorithm.SHA512).ShouldNotBeNullOrEmpty();
+	}
+
+	[Fact]
+	public void UrlEncodeReadable_WithCustomEscapeSequences()
+	{
+		// Arrange
+		const string input = "hello world/test";
+		List<KeyValuePair<string, string>> customSequences = [new("%20", "_")];
+
+		// Act
+		string? result = input.UrlEncodeReadable(customSequences, appendDefaultEscapeSequences: false, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public void UrlEncodeReadable_AppendDefaultEscapeSequences()
+	{
+		// Arrange
+		const string input = "hello world/test";
+		List<KeyValuePair<string, string>> customSequences = [new("%21", "!")];
+
+		// Act
+		string? result = input.UrlEncodeReadable(customSequences, appendDefaultEscapeSequences: true, cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public void FormatPhoneNumber_SevenDigits()
+	{
+		// Arrange
+		const string input = "1234567";
+
+		// Act
+		string? result = input.FormatPhoneNumber();
+
+		// Assert
+		result.ShouldBe("123-4567");
+	}
+
+	[Fact]
+	public void FormatPhoneNumber_TenDigitsWithParens()
+	{
+		// Arrange
+		const string input = "1234567890";
+
+		// Act
+		string? result = input.FormatPhoneNumber(addParenToAreaCode: true);
+
+		// Assert
+		result.ShouldBe("(123)-456-7890");
+	}
+
+	[Fact]
+	public void FormatPhoneNumber_ElevenDigits()
+	{
+		// Arrange
+		const string input = "11234567890";
+
+		// Act
+		string? result = input.FormatPhoneNumber();
+
+		// Assert
+		result.ShouldBe("+1 123-456-7890");
+	}
+
+	[Fact]
+	public void FormatPhoneNumber_TwelveDigits()
+	{
+		// Arrange
+		const string input = "121234567890";
+
+		// Act
+		string? result = input.FormatPhoneNumber();
+
+		// Assert
+		result.ShouldBe("+12 123-456-7890");
+	}
+
+	[Fact]
+	public void FormatPhoneNumber_WithExtension()
+	{
+		// Arrange
+		const string input = "1234567x123";
+
+		// Act
+		string? result = input.FormatPhoneNumber();
+
+		// Assert
+		result.ShouldBe("123-4567x123");
+	}
+
+	[Fact]
+	public void FormatPhoneNumber_InvalidLength()
+	{
+		// Arrange
+		const string input = "12345";
+
+		// Act
+		string? result = input.FormatPhoneNumber();
+
+		// Assert
+		result.ShouldBe("12345");
+	}
+
+	[Theory]
+	[InlineData("abcd", true, "ab cd")]
+	[InlineData("ab\ncd", true, "ab  cd")]
+	[InlineData("ab\rcd", true, "ab  cd")]
+	[InlineData("ab\n\rcd", true, "ab   cd")]
+	[InlineData("abcd", false, "abcd")]
+	[InlineData("ab\ncd", false, "ab cd")]
+	[InlineData("ab\rcd", false, "ab cd")]
+	[InlineData("ab\n\rcd", false, "ab  cd")]
+	public void SanitizeForLog_ShouldWork(string s, bool insertNewLine, string expected)
+	{
+		// Arrange
+		if (insertNewLine)
+		{
+			s = $"{s[..2]}{Environment.NewLine}{s[2..]}";
+		}
+
+		// Act
+		string? result = s.SanitizeForLog();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
 }
 
-#endregion
-
-
+	#endregion

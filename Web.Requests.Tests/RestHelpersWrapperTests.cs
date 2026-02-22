@@ -183,7 +183,11 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		bool tokenRefreshed = false;
 		ValueTask<string> getBearerTokenFunc(string _, bool forceRefresh)
 		{
-			if (forceRefresh) tokenRefreshed = true;
+			if (forceRefresh)
+			{
+				tokenRefreshed = true;
+			}
+
 			return new ValueTask<string>(forceRefresh ? "refreshed-token" : "initial-token");
 		}
 

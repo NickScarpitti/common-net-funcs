@@ -104,6 +104,39 @@ public sealed class SelectListItemCreationTests
 	[Theory]
 	[InlineData(42, true)]
 	[InlineData(42, false)]
+	public void ToSelectListItem_NullableIntWithValue_ReturnsCorrectItem(int? value, bool selected)
+	{
+		SelectListItem? result = value.ToSelectListItem(selected);
+
+		result.ShouldNotBeNull();
+		result.Value.ShouldBe(value.ToString());
+		result.Text.ShouldBe(value.ToString());
+		result.Selected.ShouldBe(selected);
+	}
+
+	[Theory]
+	[InlineData(null)]
+	public void ToSelectListItem_NullIntWithoutSelected_ReturnsNull(int? value)
+	{
+		value.ToSelectListItem().ShouldBeNull();
+	}
+
+	[Theory]
+	[InlineData(42)]
+	[InlineData(100)]
+	public void ToSelectListItem_NullableIntWithoutSelected_ReturnsCorrectItem(int? value)
+	{
+		SelectListItem? result = value.ToSelectListItem();
+
+		result.ShouldNotBeNull();
+		result.Value.ShouldBe(value.ToString());
+		result.Text.ShouldBe(value.ToString());
+		result.Selected.ShouldBeFalse();
+	}
+
+	[Theory]
+	[InlineData(42, true)]
+	[InlineData(42, false)]
 	public void ToSelectListItem_ValidInt_ReturnsCorrectItem(int value, bool selected)
 	{
 		SelectListItem result = value.ToSelectListItem(selected);
@@ -130,6 +163,40 @@ public sealed class SelectListItemCreationTests
 	public void ToSelectListItem_NullIntWithText_ReturnsNull(int? value, string? text)
 	{
 		value.ToSelectListItem(text).ShouldBeNull();
+	}
+
+	[Theory]
+	[InlineData(42, null)]
+	[InlineData(42, "text")]
+	public void ToSelectListItem_NullableIntWithText_ReturnsCorrectItem(int? value, string? text)
+	{
+		SelectListItem? result = value.ToSelectListItem(text);
+
+		result.ShouldNotBeNull();
+		result.Value.ShouldBe(value.ToString());
+		result.Text.ShouldBe(text ?? string.Empty);
+		result.Selected.ShouldBeFalse();
+	}
+
+	[Theory]
+	[InlineData(null, null, true)]
+	[InlineData(null, "text", false)]
+	public void ToSelectListItem_NullIntWithTextAndSelected_ReturnsNull(int? value, string? text, bool selected)
+	{
+		value.ToSelectListItem(text, selected).ShouldBeNull();
+	}
+
+	[Theory]
+	[InlineData(42, null, true)]
+	[InlineData(42, "text", false)]
+	public void ToSelectListItem_NullableIntWithTextAndSelected_ReturnsCorrectItem(int? value, string? text, bool selected)
+	{
+		SelectListItem? result = value.ToSelectListItem(text, selected);
+
+		result.ShouldNotBeNull();
+		result.Value.ShouldBe(value.ToString());
+		result.Text.ShouldBe(text ?? string.Empty);
+		result.Selected.ShouldBe(selected);
 	}
 
 	[Theory]

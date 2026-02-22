@@ -27,10 +27,12 @@ public static class PdfConversion
 	/// <param name="fileName">File name including full file path to the file to convert to a PDF</param>
 	/// <param name="outputPath">Optional: Path to output file to, defaults to the same path as fileName if null</param>
 	/// <param name="conversionTimeout">Optional: Time limit for how long the conversion can take before being canceled</param>
+	/// <param name="maxRetries">Optional: Number of times to retry the conversion if it fails before throwing an exception, default is 3</param>
+	/// <param name="overwriteExistingFile">Optional: Whether to overwrite the output file if it already exists, default is false</param>
 	/// <exception cref="LibreOfficeFailedException"></exception>
 	/// <exception cref="ArgumentException"></exception>
 	/// <exception cref="FileNotFoundException"></exception>
-	public static void ConvertToPdf(string libreOfficeExecutable, string fileName, string? outputPath = null, TimeSpan? conversionTimeout = null, int maxRetries = 3)
+	public static void ConvertToPdf(string libreOfficeExecutable, string fileName, string? outputPath = null, TimeSpan? conversionTimeout = null, int maxRetries = 3, bool overwriteExistingFile = false)
 	{
 		if (!File.Exists(fileName))
 		{
@@ -87,7 +89,7 @@ public static class PdfConversion
 				}
 			}
 
-			MovePdfFile(pdfFileName, outputPath, fileName);
+			MovePdfFile(pdfFileName, outputPath, fileName, overwriteExistingFile);
 		}
 		catch (Exception ex)
 		{
@@ -105,11 +107,13 @@ public static class PdfConversion
 	/// <param name="libreOfficeExecutable">Full file path or alias to the LibreOffice executable.</param>
 	/// <param name="fileName">File name including full file path to the file to convert to a PDF</param>
 	/// <param name="outputPath">Optional: Path to output file to, defaults to the same path as fileName if null</param>
+	/// <param name="maxRetries">Optional: Number of times to retry the conversion if it fails before throwing an exception, default is 3</param>
+	/// <param name="overwriteExistingFile">Optional: Whether to overwrite the output file if it already exists, default is false</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for asynchronous conversion operation</param>
 	/// <exception cref="LibreOfficeFailedException"></exception>
 	/// <exception cref="ArgumentException"></exception>
 	/// <exception cref="FileNotFoundException"></exception>
-	public static async Task ConvertToPdfAsync(string libreOfficeExecutable, string fileName, string? outputPath = null, CancellationToken? cancellationToken = null, int maxRetries = 3)
+	public static async Task ConvertToPdfAsync(string libreOfficeExecutable, string fileName, string? outputPath = null, int maxRetries = 3, bool overwriteExistingFile = false, CancellationToken? cancellationToken = null)
 	{
 		if (!File.Exists(fileName))
 		{
@@ -150,7 +154,7 @@ public static class PdfConversion
 				}
 			}
 
-			MovePdfFile(pdfFileName, outputPath, fileName);
+			MovePdfFile(pdfFileName, outputPath, fileName, overwriteExistingFile);
 		}
 		catch (OperationCanceledException)
 		{
@@ -241,11 +245,11 @@ public static class PdfConversion
 		}
 	}
 
-	private static void MovePdfFile(string pdfFileName, string? outputPath, string fileName)
+	private static void MovePdfFile(string pdfFileName, string? outputPath, string fileName, bool overwriteExistingFile = false)
 	{
 		if (File.Exists(pdfFileName))
 		{
-			File.Move(pdfFileName, Combine(outputPath ?? string.Empty, $"{GetFileNameWithoutExtension(fileName)}.pdf"));
+			File.Move(pdfFileName, Combine(outputPath ?? string.Empty, $"{GetFileNameWithoutExtension(fileName)}.pdf"), overwrite: overwriteExistingFile);
 		}
 	}
 }

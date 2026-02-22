@@ -5,6 +5,7 @@ using CommonNetFuncs.Core;
 namespace CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 // Individual Endpoint Queue
 
+
 public class EndpointQueue : IDisposable
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -36,6 +37,7 @@ public class EndpointQueue : IDisposable
 		stats = new QueueStats(endpointKey);
 
 		// Start processing task
+
 		processingTask = ProcessTasksAsync(cancellationTokenSource.Token);
 	}
 
@@ -52,6 +54,7 @@ public class EndpointQueue : IDisposable
 		stats = new QueueStats(endpointKey);
 
 		// Start processing task
+
 		processingTask = ProcessTasksAsync(cancellationTokenSource.Token);
 	}
 
@@ -91,14 +94,14 @@ public class EndpointQueue : IDisposable
 					processingTimes.Add(stopwatch.Elapsed);
 
 					// Keep only last 100 processing times for average calculation
+
 					if (processingTimes.Count > processTimeWindow)
 					{
 						processingTimes.RemoveAt(0);
 					}
 				}
 
-				logger.Debug("Completed task {TaskId} for endpoint {EndpointKey} in {Duration}ms",
-										task.Id, EndpointKey, stopwatch.ElapsedMilliseconds);
+				logger.Debug("Completed task {TaskId} for endpoint {EndpointKey} in {Duration}ms", task.Id, EndpointKey, stopwatch.ElapsedMilliseconds);
 			}
 			catch (Exception ex)
 			{

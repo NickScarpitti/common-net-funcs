@@ -30,10 +30,10 @@ public sealed class OptimizerTests : IDisposable
 	}
 
 	private readonly Fixture fixture;
-	private readonly string _testPngPath;
-	private readonly string _testJpgPath;
-	private readonly string _testGifPath;
-	private readonly string _testInvalidPath;
+	private readonly string testPngPath;
+	private readonly string testJpgPath;
+	private readonly string testGifPath;
+	private readonly string testInvalidPath;
 
 	public OptimizerTests()
 	{
@@ -42,10 +42,10 @@ public sealed class OptimizerTests : IDisposable
 
 		// Setup test file paths
 		string testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
-		_testPngPath = Path.Combine(testDataDir, "test.png");
-		_testJpgPath = Path.Combine(testDataDir, "test.jpg");
-		_testGifPath = Path.Combine(testDataDir, "test.gif");
-		_testInvalidPath = Path.Combine(testDataDir, "nonexistent.png");
+		testPngPath = Path.Combine(testDataDir, "test.png");
+		testJpgPath = Path.Combine(testDataDir, "test.jpg");
+		testGifPath = Path.Combine(testDataDir, "test.gif");
+		testInvalidPath = Path.Combine(testDataDir, "nonexistent.png");
 	}
 
 	[RetryTheory(3)]
@@ -75,7 +75,7 @@ public sealed class OptimizerTests : IDisposable
 	public async Task OptimizeImage_ShouldAcceptCustomArguments(string[]? gifsicleArgs, string[]? jpegoptimArgs, string[]? optipngArgs)
 	{
 		// Arrange
-		string[] testFiles = { _testGifPath, _testJpgPath, _testPngPath };
+		string[] testFiles = { testGifPath, testJpgPath, testPngPath };
 
 		foreach (string file in testFiles)
 		{
@@ -88,7 +88,7 @@ public sealed class OptimizerTests : IDisposable
 	public async Task OptimizeImage_ShouldHandleNonExistentFile()
 	{
 		// Act & Assert
-		await Should.ThrowAsync<FileNotFoundException>(async () => await Optimizer.OptimizeImage(_testInvalidPath));
+		await Should.ThrowAsync<FileNotFoundException>(async () => await Optimizer.OptimizeImage(testInvalidPath));
 	}
 
 	[RetryTheory(3)]
@@ -116,23 +116,35 @@ public sealed class OptimizerTests : IDisposable
 		await cts.CancelAsync();
 
 		// Act & Assert
-		await Should.ThrowAsync<OperationCanceledException>(async () => await Optimizer.OptimizeImage(_testPngPath, cancellationToken: cts.Token));
+		await Should.ThrowAsync<OperationCanceledException>(async () => await Optimizer.OptimizeImage(testPngPath, cancellationToken: cts.Token));
 	}
 
 	[RetryTheory(3)]
 	[InlineData(new[] { "-b", "-O3" }, null, null, "test.gif")]     // Gifsicle
 	[InlineData(null, new[] { "--preserve" }, null, "test.jpg")]    // Jpegoptim
 	[InlineData(null, null, new[] { "-o5" }, "test.png")]          // Optipng
-	public async Task OptimizeImage_ShouldAppendFilePathToArgs_WhenNotPresent(
-			string[]? gifsicleArgs,
-			string[]? jpegoptimArgs,
-			string[]? optipngArgs,
-			string fileName)
+	public async Task OptimizeImage_ShouldAppendFilePathToArgs_WhenNotPresent(string[]? gifsicleArgs, string[]? jpegoptimArgs, string[]? optipngArgs, string fileName)
 	{
 		// Arrange
 		string testPath = Path.Combine(AppContext.BaseDirectory, "TestData", fileName);
 
 		// Act & Assert
 		await Should.NotThrowAsync(async () => await Optimizer.OptimizeImage(testPath, gifsicleArgs, jpegoptimArgs, optipngArgs));
+	}
+
+	[RetryTheory(3)]
+	[InlineData(new[] { "--invalid-flag-that-does-not-exist" }, null, null, "test.gif")]     // Gifsicle with invalid flag
+	[InlineData(null, new[] { "--invalid-flag-that-does-not-exist" }, null, "test.jpg")]    // Jpegoptim with invalid flag
+	[InlineData(null, null, new[] { "--invalid-flag-that-does-not-exist" }, "test.png")]   // Optipng with invalid flag
+	public async Task OptimizeImage_ShouldHandleCommandFailure_WithInvalidArguments(string[]? gifsicleArgs, string[]? jpegoptimArgs, string[]? optipngArgs, string fileName)
+	{
+		// Arrange
+		string testPath = Path.Combine(AppContext.BaseDirectory, "TestData", fileName);
+
+		// Act - pass invalid arguments to trigger command failure (result.IsSuccess == false)
+		await Optimizer.OptimizeImage(testPath, gifsicleArgs, jpegoptimArgs, optipngArgs);
+
+		// Assert - original file should remain unchanged when optimization fails
+		File.Exists(testPath).ShouldBeTrue();
 	}
 }

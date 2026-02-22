@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Core.CollectionClasses;
 using FastExpressionCompiler;
+using static Xunit.TestContext;
 
 namespace Core.Tests;
 
@@ -268,13 +269,13 @@ public sealed class CollectionsTests
 		// Arrange
 		Dictionary<string, int> dict = new();
 		List<KeyValuePair<string, int>> pairs = new()
-				{
-						new KeyValuePair<string, int>("test1", 42),
-						new KeyValuePair<string, int>("test2", 99)
-				};
+			{
+				new KeyValuePair<string, int>("test1", 42),
+				new KeyValuePair<string, int>("test2", 99)
+			};
 
 		// Act
-		dict.AddDictionaryItems(pairs, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		dict.AddDictionaryItems(pairs, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		dict.ShouldContainKey("test1");
@@ -289,13 +290,13 @@ public sealed class CollectionsTests
 		// Arrange
 		Dictionary<string, int> dict = new() { { "test1", 42 } };
 		List<KeyValuePair<string, int>> pairs = new()
-				{
-						new KeyValuePair<string, int>("test1", 99),
-						new KeyValuePair<string, int>("test2", 100)
-				};
+			{
+				new KeyValuePair<string, int>("test1", 99),
+				new KeyValuePair<string, int>("test2", 100)
+			};
 
 		// Act
-		dict.AddDictionaryItems(pairs, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		dict.AddDictionaryItems(pairs, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		dict["test1"].ShouldBe(42);
@@ -314,7 +315,7 @@ public sealed class CollectionsTests
 		List<string?> items = new() { "test1", "test2", null };
 
 		// Act
-		bag.AddRange(items, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		bag.AddRange(items, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		bag.Count.ShouldBe(2);
@@ -330,7 +331,7 @@ public sealed class CollectionsTests
 		List<string?> items = new() { "test1", "test2", null };
 
 		// Act
-		bag.AddRangeParallel(items, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		bag.AddRangeParallel(items, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		bag.Count.ShouldBe(2);
@@ -347,7 +348,7 @@ public sealed class CollectionsTests
 		ParallelOptions options = new() { MaxDegreeOfParallelism = 2 };
 
 		// Act
-		bag.AddRangeParallel(items, options, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		bag.AddRangeParallel(items, options, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		bag.Count.ShouldBe(2);
@@ -363,7 +364,7 @@ public sealed class CollectionsTests
 		List<string?> items = new() { "test1", "test2", null };
 
 		// Act
-		hashSet.AddRange(items, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		hashSet.AddRange(items, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		hashSet.Count.ShouldBe(2);
@@ -382,7 +383,7 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		items.SetValue(item => item.Name = item.Name?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		items.SetValue(item => item.Name = item.Name?.ToUpper(), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		items.Count.ShouldBe(items.Count);
@@ -399,7 +400,7 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		IEnumerable<TestClass> result = items.SetValueEnumerate(item => item.Name = item.Name?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		IEnumerable<TestClass> result = items.SetValueEnumerate(item => item.Name = item.Name?.ToUpper(), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Count().ShouldBe(items.Count);
@@ -416,7 +417,7 @@ public sealed class CollectionsTests
 		List<string> items = new() { "test1", "test2" };
 
 		// Act
-		items.SetValue(s => s?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		items.SetValue(s => s?.ToUpper(), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		items.Count.ShouldBe(2);
@@ -431,7 +432,7 @@ public sealed class CollectionsTests
 		List<string> items = new() { "test1", "test2" };
 
 		// Act
-		List<string?> result = items.SetValueEnumerate(s => s?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken).ToList();
+		List<string?> result = items.SetValueEnumerate(s => s?.ToUpper(), cancellationToken: Current.CancellationToken).ToList();
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -446,7 +447,7 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		items.Count.ShouldBe(2);
@@ -461,11 +462,143 @@ public sealed class CollectionsTests
 		List<TestClass> items = new() { new TestClass { Name = "test1" }, new TestClass { Name = "test2" } };
 
 		// Act
-		items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), 2, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		items.SetValueParallel(item => item.Name = item.Name?.ToUpper(), 2, cancellationToken: Current.CancellationToken);
 		// Assert
 		items.Count.ShouldBe(2);
 		items.ShouldContain(item => item.Name == "TEST1");
 		items.ShouldContain(item => item.Name == "TEST2");
+	}
+
+	[Fact]
+	public void SetValue_ThrowsOnNullItems()
+	{
+		// Arrange
+		IEnumerable<TestClass>? items = null;
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => items!.SetValue(_ => { }));
+	}
+
+	[Fact]
+	public void SetValue_ThrowsOnNullUpdateMethod()
+	{
+		// Arrange
+		List<TestClass> items = new() { new TestClass() };
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => items.SetValue(null!));
+	}
+
+	[Fact]
+	public void SetValue_ForStrings_ThrowsOnNullItems()
+	{
+		// Arrange
+		IEnumerable<string?>? items = null;
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => items!.SetValue(s => s));
+	}
+
+	[Fact]
+	public void SetValue_ForStrings_ThrowsOnNullUpdateMethod()
+	{
+		// Arrange
+		List<string?> items = new() { "test" };
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => items.SetValue(null!));
+	}
+
+	[Fact]
+	public void SetValue_ForStrings_WithIList_AppliesFunction()
+	{
+		// Arrange
+		List<string?> items = new() { "test1", "test2", "test3" };
+
+		// Act - calls IList path directly
+		items.SetValue(s => s?.ToUpper(), cancellationToken: Current.CancellationToken);
+
+		// Assert
+		items[0].ShouldBe("TEST1");
+		items[1].ShouldBe("TEST2");
+		items[2].ShouldBe("TEST3");
+	}
+
+	[Fact]
+	public void SetValue_ForStrings_WithEnumerable_AppliesFunction()
+	{
+		// Arrange - use an IEnumerable that is NOT an IList
+		// Note: SetValue modifies in-place, but when given a non-IList enumerable,
+		// it converts to list internally. Since we don't get a reference to that list,
+		// we can only verify the method executes without error.
+		string[] array = new[] { "test1", "test2", "test3" };
+		IEnumerable<string?> items = array.Where(x => x != null);
+
+		// Act - should call ToList() path and modify the internal list
+		Should.NotThrow(() => items.SetValue(s => s?.ToUpper()));
+
+		// Assert - original array is unchanged since ToList() created a copy
+		array[0].ShouldBe("test1"); // Original unchanged
+	}
+
+	[Fact]
+	public void SetValueEnumerate_ThrowsOnNullItems()
+	{
+		// Arrange
+		IEnumerable<TestClass>? items = null;
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => items!.SetValueEnumerate(_ => { }));
+	}
+
+	[Fact]
+	public void SetValueEnumerate_ThrowsOnNullUpdateMethod()
+	{
+		// Arrange
+		List<TestClass> items = new() { new TestClass() };
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => items.SetValueEnumerate(null!));
+	}
+
+	[Fact]
+	public void SetValueEnumerate_ForStrings_ThrowsOnNullItems()
+	{
+		// Arrange
+		IEnumerable<string?>? items = null;
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => items!.SetValueEnumerate(s => s));
+	}
+
+	[Fact]
+	public void SetValueEnumerate_ForStrings_ThrowsOnNullUpdateMethod()
+	{
+		// Arrange
+		List<string?> items = new() { "test" };
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => items.SetValueEnumerate(null!));
+	}
+
+	[Fact]
+	public void SetValueParallel_ThrowsOnNullItems()
+	{
+		// Arrange
+		IEnumerable<TestClass>? items = null;
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => items!.SetValueParallel(_ => { }));
+	}
+
+	[Fact]
+	public void SetValueParallel_ThrowsOnNullUpdateMethod()
+	{
+		// Arrange
+		List<TestClass> items = new() { new TestClass() };
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => items.SetValueParallel(null!));
 	}
 
 	#endregion
@@ -479,7 +612,7 @@ public sealed class CollectionsTests
 		int[,] array = new int[,] { { 1, 2 }, { 3, 4 } };
 
 		// Act
-		array.SetValue((arr, indices) => arr.SetValue(((int)arr.GetValue(indices)!) * 2, indices), cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		array.SetValue((arr, indices) => arr.SetValue(((int)arr.GetValue(indices)!) * 2, indices), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		array[0, 0].ShouldBe(2);
@@ -498,6 +631,26 @@ public sealed class CollectionsTests
 #pragma warning disable S1854 // Unused assignments should be removed
 		Should.NotThrow(() => array.SetValue((arr, indices) => arr = indices));
 #pragma warning restore S1854 // Unused assignments should be removed
+	}
+
+	[Fact]
+	public void SetValue_ForArray_ThrowsOnNullArray()
+	{
+		// Arrange
+		Array? array = null;
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => Collections.SetValue(array!, (_, __) => { }));
+	}
+
+	[Fact]
+	public void SetValue_ForArray_ThrowsOnNullUpdateMethod()
+	{
+		// Arrange
+		int[] array = new int[] { 1, 2, 3 };
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => Collections.SetValue(array, (Action<Array, int[]>)null!));
 	}
 
 	#endregion
@@ -640,16 +793,16 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> list = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 2, Name = "test2" },
-						new TestClass { Id = 3, Name = "test3" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 2, Name = "test2" },
+				new TestClass { Id = 3, Name = "test3" }
+			};
 
 		TestClass partial = new() { Id = 2 };
 
 		// Act
-		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -664,15 +817,15 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> list = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 2, Name = "test2" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 2, Name = "test2" }
+			};
 
 		TestClass partial = new() { Id = 3 };
 
 		// Act
-		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -685,16 +838,16 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> list = new()
-				{
-						new TestClass { Id = 1, Name = "test1", Value = 10 },
-						new TestClass { Id = 2, Name = "test2", Value = 20 },
-						new TestClass { Id = 2, Name = "test3", Value = 30 }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1", Value = 10 },
+				new TestClass { Id = 2, Name = "test2", Value = 20 },
+				new TestClass { Id = 2, Name = "test3", Value = 30 }
+			};
 
 		TestClass partial = new() { Id = 2, Name = "test3" };
 
 		// Act
-		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		TestClass? result = list.AsQueryable().GetObjectByPartial(partial, ignoreDefaultValues, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		if (ignoreDefaultValues)
@@ -728,7 +881,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", false, null);
 
 		// Act
-		List<TestClass> result = dataTable.ToList<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		List<TestClass> result = dataTable.ToList<TestClass>(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -757,7 +910,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", (short)0, DateTime.MaxValue, DateOnly.MaxValue);
 
 		// Act
-		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -788,7 +941,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", (short)0, DateOnly.MaxValue, DateTime.MaxValue);
 
 		// Act
-		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -800,7 +953,7 @@ public sealed class CollectionsTests
 		result[1]!.Id.ShouldBe(2);
 		result[1]!.Name.ShouldBe("test2");
 		result[1]!.IsActive.ShouldBeFalse();
-		result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue));
+		result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue, DateTimeKind.Unspecified));
 		result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
 	}
 
@@ -824,7 +977,7 @@ public sealed class CollectionsTests
 		if (!badFirstDate && !badSecondDate)
 		{
 			// Act
-			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.Count.ShouldBe(2);
@@ -836,7 +989,7 @@ public sealed class CollectionsTests
 			result[1]!.Id.ShouldBe(2);
 			result[1]!.Name.ShouldBe("test2");
 			result[1]!.IsActive.ShouldBeFalse();
-			result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue));
+			result[1]!.Date.ShouldBe(new DateTime(DateOnly.MaxValue, TimeOnly.MinValue, DateTimeKind.Unspecified));
 			result[1]!.DateOnly.ShouldBe(DateOnly.MaxValue);
 		}
 		else
@@ -866,7 +1019,7 @@ public sealed class CollectionsTests
 		if (!badFirstDate && !badSecondDate)
 		{
 			// Act
-			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
+			List<TestClass> result = dataTable.ToList<TestClass>(convertShortToBool: true, cancellationToken: Current.CancellationToken);
 
 			// Assert
 			result.Count.ShouldBe(2);
@@ -901,7 +1054,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2", false);
 
 		// Act
-		List<TestClass> result = dataTable.ToListParallel<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken);
+		List<TestClass> result = dataTable.ToListParallel<TestClass>(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -921,7 +1074,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2");
 
 		// Act
-		List<TestClass> result = dataTable.ToEnumerableParallel<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken).ToList();
+		List<TestClass> result = dataTable.ToEnumerableParallel<TestClass>(cancellationToken: Current.CancellationToken).ToList();
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -941,7 +1094,7 @@ public sealed class CollectionsTests
 		dataTable.Rows.Add(2, "test2");
 
 		// Act
-		List<TestClass> result = dataTable.ToEnumerableStreaming<TestClass>(cancellationToken: Xunit.TestContext.Current.CancellationToken).ToList();
+		List<TestClass> result = dataTable.ToEnumerableStreaming<TestClass>(cancellationToken: Current.CancellationToken).ToList();
 
 		// Assert
 		result.Count.ShouldBe(2);
@@ -953,169 +1106,119 @@ public sealed class CollectionsTests
 
 	#region ToDataTable Tests
 
-	//	[Theory]
-	//	[InlineData(true)]
-	//	[InlineData(false)]
-	//	public void ToDataTable_ConvertsCollectionToDataTable(bool useExpressionTrees)
-	//	{
-	//		// Arrange
-	//		List<TestClass> collection = new()
-	//				{
-	//						new TestClass { Id = 1, Name = "test1", IsActive = true },
-	//						new TestClass { Id = 2, Name = "test2", IsActive = false }
-	//				};
+	[Fact]
+	public void ToDataTable_ConvertsCollectionToDataTable()
+	{
+		// Arrange
+		List<TestClass> collection = new()
+		{
+			new TestClass { Id = 1, Name = "test1", IsActive = true },
+			new TestClass { Id = 2, Name = "test2", IsActive = false }
+		};
 
-	//		using DataTable result = new();
+		// Act
+		DataTable? result = collection.ToDataTable(cancellationToken: Current.CancellationToken);
 
-	//		// Act
-	//		if (useExpressionTrees)
-	//		{
-	//			collection.ToDataTable(result);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			collection.ToDataTableReflection(result);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
+		// Assert
+		result.ShouldNotBeNull();
+		result.Columns.Count.ShouldBe(7); // All properties of TestClass
+		result.Rows.Count.ShouldBe(2);
+		result.Rows[0]["Id"].ShouldBe(1);
+		result.Rows[0]["Name"].ShouldBe("test1");
+		result.Rows[0]["IsActive"].ShouldBe(true);
+	}
 
-	//		// Assert
-	//		result.ShouldNotBeNull();
-	//		result.Columns.Count.ShouldBe(7); // Id, Name, IsActive
-	//		result.Rows.Count.ShouldBe(2);
+	[Fact]
+	public void ToDataTable_WithNullCollection_ReturnsNull()
+	{
+		// Act
+		DataTable? result = Collections.ToDataTable<TestClass>(null, cancellationToken: Current.CancellationToken);
 
-	//		result.Rows[0]["Id"].ShouldBe(1);
-	//		result.Rows[0]["Name"].ShouldBe("test1");
-	//		result.Rows[0]["IsActive"].ShouldBe(true);
+		// Assert
+		result.ShouldBeNull();
+	}
 
-	//		result.Rows[1]["Id"].ShouldBe(2);
-	//		result.Rows[1]["Name"].ShouldBe("test2");
-	//		result.Rows[1]["IsActive"].ShouldBe(false);
+	[Fact]
+	public void ToDataTable_WithParallel_ConvertsCollectionToDataTable()
+	{
+		// Arrange
+		List<TestClass> collection = new()
+		{
+			new TestClass { Id = 1, Name = "test1" },
+			new TestClass { Id = 2, Name = "test2" },
+			new TestClass { Id = 3, Name = "test3" }
+		};
 
-	//		result.Dispose();
-	//	}
+		// Act
+		DataTable? result = collection.ToDataTable(useParallel: true, cancellationToken: Current.CancellationToken);
 
-	//	[Theory]
-	//	[InlineData(nameof(TestClass.Id), nameof(TestClass.Name), false)]
-	//	[InlineData(nameof(TestClass.Id), nameof(TestClass.Name), true)]
-	//	[InlineData($"{nameof(TestClass.Id)}NotInTestClass1", $"{nameof(TestClass.Name)}NotInTestClass2", false)]
-	//	[InlineData($"{nameof(TestClass.Id)}NotInTestClass1", $"{nameof(TestClass.Name)}NotInTestClass2", true)]
-	//	[InlineData(null, null, false)]
-	//	[InlineData(null, null, true)]
-	//	public void ToDataTable_WithExistingDataTable_AddsRowsToIt(string? column1Name, string? column2Name, bool useExpressionTrees)
-	//	{
-	//		// Arrange
-	//		List<TestClass> collection = new()
-	//				{
-	//						new TestClass { Id = 1, Name = "test1" },
-	//						new TestClass { Id = 2, Name = "test2" }
-	//				};
+		// Assert
+		result.ShouldNotBeNull();
+		result.Rows.Count.ShouldBe(3);
+		// Check that all rows were added (order may vary due to parallel processing)
+		result.Rows.Cast<DataRow>().Count(r => (int)r["Id"] == 1).ShouldBe(1);
+		result.Rows.Cast<DataRow>().Count(r => (int)r["Id"] == 2).ShouldBe(1);
+		result.Rows.Cast<DataRow>().Count(r => (int)r["Id"] == 3).ShouldBe(1);
+	}
 
-	//		using DataTable dataTable = new();
+	[Fact]
+	public void ToDataTable_WithParallelAndCustomDegreeOfParallelism_ConvertsCorrectly()
+	{
+		// Arrange
+		List<TestClass> collection = Enumerable.Range(1, 10).Select(i => new TestClass { Id = i, Name = $"test{i}" }).ToList();
 
-	//		if (column1Name != null)
-	//		{
-	//			dataTable.Columns.Add(column1Name, typeof(int));
-	//		}
+		// Act
+		DataTable? result = collection.ToDataTable(useParallel: true, degreeOfParallelism: 2, cancellationToken: Current.CancellationToken);
 
-	//		if (column2Name != null)
-	//		{
-	//			dataTable.Columns.Add(column2Name, typeof(string));
-	//		}
+		// Assert
+		result.ShouldNotBeNull();
+		result.Rows.Count.ShouldBe(10);
+	}
 
-	//		// Act
-	//		DataTable result = new();
+	[Fact]
+	public void ToDataTable_WithExistingDataTableHavingInvalidColumns_RemovesInvalidColumns()
+	{
+		// Arrange
+		List<TestClass> collection = new()
+		{
+			new TestClass { Id = 1, Name = "test1" }
+		};
+		DataTable dataTable = new();
+		dataTable.Columns.Add("InvalidColumn", typeof(string));
+		dataTable.Columns.Add("AnotherInvalidColumn", typeof(int));
 
-	//		// Act
-	//		if (useExpressionTrees)
-	//		{
-	//			result = collection.ToDataTable(dataTable);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			result = collection.ToDataTableReflection(dataTable);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
+		// Act
+		DataTable? result = collection.ToDataTable(dataTable, cancellationToken: Current.CancellationToken);
 
-	//		// Assert
-	//		result.ShouldBeSameAs(dataTable);
-	//		result.Rows.Count.ShouldBe(2);
-	//		result.Rows[0]["Id"].ShouldBe(1);
-	//		result.Rows[0]["Name"].ShouldBe("test1");
-	//		result.Rows[1]["Id"].ShouldBe(2);
-	//		result.Rows[1]["Name"].ShouldBe("test2");
-	//	}
+		// Assert
+		result.ShouldNotBeNull();
+		result.Columns.Contains("InvalidColumn").ShouldBeFalse();
+		result.Columns.Contains("AnotherInvalidColumn").ShouldBeFalse();
+		result.Columns.Contains("Id").ShouldBeTrue();
+		result.Columns.Contains("Name").ShouldBeTrue();
+	}
 
-	//	[Theory]
-	//	[InlineData(true)]
-	//	[InlineData(false)]
-	//	public void ToDataTable_WithParallel_ConvertsCollectionToDataTable(bool useExpressionTrees)
-	//	{
-	//		// Arrange
-	//		List<TestClass> collection = new()
-	//				{
-	//						new TestClass { Id = 1, Name = "test1" },
-	//						new TestClass { Id = 2, Name = "test2" }
-	//				};
+	[Fact]
+	public void ToDataTable_WithExistingDataTableHavingValidColumns_KeepsValidColumns()
+	{
+		// Arrange
+		List<TestClass> collection = new()
+		{
+			new TestClass { Id = 1, Name = "test1" }
+		};
+		DataTable dataTable = new();
+		dataTable.Columns.Add("Id", typeof(int));
+		dataTable.Columns.Add("Name", typeof(string));
 
-	//		// Act
-	//		using DataTable result = new();
-	//		if (useExpressionTrees)
-	//		{
-	//			collection.ToDataTable(result, useParallel: true);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			collection.ToDataTableReflection(result, useParallel: true);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
-	//		// Assert
-	//		result.ShouldNotBeNull();
-	//		result.Rows.Count.ShouldBe(2);
+		// Act
+		DataTable? result = collection.ToDataTable(dataTable, cancellationToken: Current.CancellationToken);
 
-	//		// Since parallel processing doesn't guarantee order, we need to check both rows exist
-	//		bool foundRow1 = false;
-	//		bool foundRow2 = false;
-
-	//		foreach (DataRow row in result.Rows)
-	//		{
-	//			if (((int)row["Id"] == 1) && ((string)row["Name"] == "test1"))
-	//			{
-	//				foundRow1 = true;
-	//			}
-	//			else if (((int)row["Id"] == 2) && ((string)row["Name"] == "test2"))
-	//			{
-	//				foundRow2 = true;
-	//			}
-	//		}
-
-	//		foundRow1.ShouldBeTrue();
-	//		foundRow2.ShouldBeTrue();
-	//	}
-
-	//	[Theory]
-	//	[InlineData(true)]
-	//	[InlineData(false)]
-	//	public void ToDataTable_WithNullCollection_ReturnsNull(bool useExpressionTrees)
-	//	{
-	//		// Act
-	//		DataTable? result = new();
-	//		if (useExpressionTrees)
-	//		{
-	//			result = Collections.ToDataTable<TestClass>(null, result);
-	//		}
-	//		else
-	//		{
-	//#pragma warning disable CS0618 // Type or member is obsolete
-	//			result = Collections.ToDataTableReflection<TestClass>(null, result);
-	//#pragma warning restore CS0618 // Type or member is obsolete
-	//		}
-
-	//		// Assert
-	//		result.ShouldBeNull();
-	//	}
+		// Assert
+		result.ShouldNotBeNull();
+		result.Columns.Contains("Id").ShouldBeTrue();
+		result.Columns.Contains("Name").ShouldBeTrue();
+		result.Rows.Count.ShouldBe(1);
+	}
 
 	#endregion
 
@@ -1126,11 +1229,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" },
-						new TestClass { Id = 2, Name = "test3" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test2" },
+				new TestClass { Id = 2, Name = "test3" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps("Name").ToList();
@@ -1152,10 +1255,10 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test2" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps("Name", separator: ",").ToList();
@@ -1321,11 +1424,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test2" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps("Name", distinct: false).ToList();
@@ -1340,11 +1443,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test2" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps("Name", distinct: true).ToList();
@@ -1359,11 +1462,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1" },
-						new TestClass { Id = 1, Name = "test2" },
-						new TestClass { Id = 2, Name = "test3" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1" },
+				new TestClass { Id = 1, Name = "test2" },
+				new TestClass { Id = 2, Name = "test3" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps("Name", parallel: true).ToList();
@@ -1399,11 +1502,11 @@ public sealed class CollectionsTests
 	{
 		// Arrange
 		List<TestClass> collection = new()
-				{
-						new TestClass { Id = 1, Name = "test1", Description = "desc1" },
-						new TestClass { Id = 1, Name = "test2", Description = "desc2" },
-						new TestClass { Id = 1, Name = "test1", Description = "desc1" }
-				};
+			{
+				new TestClass { Id = 1, Name = "test1", Description = "desc1" },
+				new TestClass { Id = 1, Name = "test2", Description = "desc2" },
+				new TestClass { Id = 1, Name = "test1", Description = "desc1" }
+			};
 
 		// Act
 		List<TestClass> result = collection.StringAggProps(new HashSet<string> { "Name", "Description" }, distinct: distinct).ToList();
@@ -1804,6 +1907,28 @@ public sealed class CollectionsTests
 		result.ShouldContain("B|EMPTY");
 	}
 
+	[Fact]
+	public void GetCombinations_WithInvalidMaxCombinations_ThrowsArgumentException()
+	{
+		// Arrange
+		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
+
+		// Act & Assert
+		Should.Throw<ArgumentException>(() => sources.GetCombinations(maxCombinations: 0));
+		Should.Throw<ArgumentException>(() => sources.GetCombinations(maxCombinations: -1));
+	}
+
+	[Fact]
+	public void GetRandomCombinations_WithInvalidMaxCombinations_ThrowsArgumentException()
+	{
+		// Arrange
+		List<List<string>> sources = new() { new List<string> { "A", "B" }, new List<string> { "1", "2" } };
+
+		// Act & Assert
+		Should.Throw<ArgumentException>(() => sources.GetRandomCombinations(maxCombinations: 0));
+		Should.Throw<ArgumentException>(() => sources.GetRandomCombinations(maxCombinations: -1));
+	}
+
 	#endregion
 
 	#region CombineExpressions Tests
@@ -1818,7 +1943,7 @@ public sealed class CollectionsTests
 		List<Expression<Func<TestClass, bool>>> expressions = new() { expr1, expr2 };
 
 		// Act
-		Expression<Func<TestClass, bool>>? combinedExpr = Collections.CombineExpressions<TestClass>(expressions);
+		Expression<Func<TestClass, bool>>? combinedExpr = Collections.CombineExpressions(expressions);
 		Func<TestClass, bool>? func = combinedExpr?.CompileFast();
 
 		// Assert
@@ -1867,7 +1992,7 @@ public sealed class CollectionsTests
 		List<Expression<Func<TestClass, bool>>> expressions = new();
 
 		// Act
-		Expression<Func<TestClass, bool>>? result = Collections.CombineExpressions<TestClass>(expressions);
+		Expression<Func<TestClass, bool>>? result = Collections.CombineExpressions(expressions);
 
 		// Assert
 		result.ShouldBeNull();
@@ -2361,6 +2486,271 @@ public sealed class CollectionsTests
 	{
 		FixedLruDictionary<int, string> dict = new(2);
 		Should.Throw<KeyNotFoundException>(() => _ = dict[42]);
+	}
+
+	// Additional tests for FixedFIFODictionary coverage
+
+	[Fact]
+	public void FixedFIFODictionary_TrimExcess_Works()
+	{
+		FixedFifoDictionary<int, string> dict = new(10);
+		dict.Add(1, "a");
+		dict.Add(2, "b");
+		Should.NotThrow(dict.TrimExcess);
+		dict.Count.ShouldBe(2);
+	}
+
+	[Fact]
+	public void FixedFIFODictionary_IEnumerable_GetEnumerator_Works()
+	{
+		FixedFifoDictionary<int, string> dict = new(2);
+		dict.Add(1, "a");
+		dict.Add(2, "b");
+		System.Collections.IEnumerable enumerable = dict;
+		System.Collections.IEnumerator enumerator = enumerable.GetEnumerator();
+		enumerator.MoveNext().ShouldBeTrue();
+	}
+
+	[Fact]
+	public void FixedFIFODictionary_Indexer_Get_ReturnsValue()
+	{
+		FixedFifoDictionary<int, string> dict = new(2);
+		dict[1] = "a";
+		dict[1].ShouldBe("a");
+	}
+
+	[Fact]
+	public void FixedFIFODictionary_Indexer_Get_ThrowsOnMissingKey()
+	{
+		FixedFifoDictionary<int, string> dict = new(2);
+		Should.Throw<KeyNotFoundException>(() => _ = dict[42]);
+	}
+
+	[Fact]
+	public void FixedFIFODictionary_TryGetValue_ReturnsFalseForMissingKey()
+	{
+		FixedFifoDictionary<int, string> dict = new(2);
+		dict.Add(1, "a");
+		dict.TryGetValue(42, out string? value).ShouldBeFalse();
+		value.ShouldBeNull();
+	}
+
+	[Fact]
+	public void FixedFIFODictionary_TryAdd_ReturnsFalseForExistingKey()
+	{
+		FixedFifoDictionary<int, string> dict = new(5);
+		dict.Add(1, "a");
+		bool result = dict.TryAdd(1, "b");
+		result.ShouldBeFalse();
+		dict[1].ShouldBe("a");
+	}
+
+	[Fact]
+	public void FixedFIFODictionary_TryAdd_EvictsOldestWhenFull()
+	{
+		FixedFifoDictionary<int, string> dict = new(2);
+		dict.TryAdd(1, "a").ShouldBeTrue();
+		dict.TryAdd(2, "b").ShouldBeTrue();
+		dict.TryAdd(3, "c").ShouldBeTrue();
+		dict.ContainsKey(1).ShouldBeFalse();
+		dict.ContainsKey(2).ShouldBeTrue();
+		dict.ContainsKey(3).ShouldBeTrue();
+	}
+
+	[Fact]
+	public void FixedFIFODictionary_Add_KeyValuePair_EvictsOldestWhenFull()
+	{
+		FixedFifoDictionary<int, string> dict = new(2);
+		dict.Add(new KeyValuePair<int, string?>(1, "a"));
+		dict.Add(new KeyValuePair<int, string?>(2, "b"));
+		dict.Add(new KeyValuePair<int, string?>(3, "c"));
+		dict.Count.ShouldBe(2);
+		dict.ContainsKey(1).ShouldBeFalse();
+		dict.ContainsKey(3).ShouldBeTrue();
+	}
+
+	[Fact]
+	public void FixedFIFODictionary_Add_KeyValuePair_UpdatesExistingItem()
+	{
+		FixedFifoDictionary<int, string> dict = new(2);
+		dict.Add(new KeyValuePair<int, string?>(1, "a"));
+		dict.Add(new KeyValuePair<int, string?>(1, "b"));
+		dict[1].ShouldBe("b");
+		dict.Count.ShouldBe(1);
+	}
+
+	[Fact]
+	public void FixedFIFODictionary_GetOrAdd_AddsNewItemWhenMissing()
+	{
+		FixedFifoDictionary<int, string> dict = new(2);
+		string result = dict.GetOrAdd(1, k => $"value{k}");
+		result.ShouldBe("value1");
+		dict[1].ShouldBe("value1");
+	}
+
+	[Fact]
+	public void FixedFIFODictionary_GetOrAdd_ReturnsExistingValue()
+	{
+		FixedFifoDictionary<int, string> dict = new(2);
+		dict.Add(1, "existing");
+		string result = dict.GetOrAdd(1, _ => "new");
+		result.ShouldBe("existing");
+		dict[1].ShouldBe("existing");
+	}
+
+	[Fact]
+	public void FixedFIFODictionary_GetOrAdd_EvictsOldestWhenFull()
+	{
+		FixedFifoDictionary<int, string> dict = new(2);
+		dict.Add(1, "a");
+		dict.Add(2, "b");
+		string result = dict.GetOrAdd(3, _ => "c");
+		result.ShouldBe("c");
+		dict.ContainsKey(1).ShouldBeFalse();
+		dict.ContainsKey(2).ShouldBeTrue();
+		dict.ContainsKey(3).ShouldBeTrue();
+	}
+
+	// Additional tests for FixedLRUDictionary coverage
+
+	[Fact]
+	public void FixedLRUDictionary_TrimExcess_Works()
+	{
+		FixedLruDictionary<int, string> dict = new(10);
+		dict.Add(1, "a");
+		dict.Add(2, "b");
+		Should.NotThrow(dict.TrimExcess);
+		dict.Count.ShouldBe(2);
+	}
+
+	[Fact]
+	public void FixedLRUDictionary_IEnumerable_GetEnumerator_Works()
+	{
+		FixedLruDictionary<int, string> dict = new(2);
+		dict.Add(1, "a");
+		dict.Add(2, "b");
+		System.Collections.IEnumerable enumerable = dict;
+		System.Collections.IEnumerator enumerator = enumerable.GetEnumerator();
+		enumerator.MoveNext().ShouldBeTrue();
+	}
+
+	[Fact]
+	public void FixedLRUDictionary_Indexer_Get_WhenKeyAlreadyAtFront_ReturnsValue()
+	{
+		FixedLruDictionary<int, string> dict = new(3);
+		dict[3] = "c";
+		dict[2] = "b";
+		dict[1] = "a"; // 1 is now at front
+		string result = dict[1]!; // Should return without moving since already at front
+		result.ShouldBe("a");
+		dict.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public void FixedLRUDictionary_Indexer_Get_MovesItemToFront()
+	{
+		FixedLruDictionary<int, string> dict = new(3);
+		dict[1] = "a";
+		dict[2] = "b";
+		dict[3] = "c";
+		// Access 1 to move it to front
+		string result = dict[1]!;
+		result.ShouldBe("a");
+		// Add another item, should evict 2 (not 1)
+		dict[4] = "d";
+		dict.ContainsKey(2).ShouldBeFalse();
+		dict.ContainsKey(1).ShouldBeTrue();
+	}
+
+	[Fact]
+	public void FixedLRUDictionary_TryGetValue_WhenKeyAlreadyAtFront_ReturnsTrue()
+	{
+		FixedLruDictionary<int, string> dict = new(3);
+		dict[3] = "c";
+		dict[2] = "b";
+		dict[1] = "a"; // 1 is now at front
+		bool result = dict.TryGetValue(1, out string? value); // Should return without moving
+		result.ShouldBeTrue();
+		value.ShouldBe("a");
+	}
+
+	[Fact]
+	public void FixedLRUDictionary_TryGetValue_ReturnsFalseForMissingKey()
+	{
+		FixedLruDictionary<int, string> dict = new(2);
+		dict.Add(1, "a");
+		dict.TryGetValue(42, out string? value).ShouldBeFalse();
+		value.ShouldBeNull();
+	}
+
+	[Fact]
+	public void FixedLRUDictionary_GetOrAdd_WhenKeyExistsAtFront_ReturnsExistingValue()
+	{
+		FixedLruDictionary<int, string> dict = new(3);
+		dict[3] = "c";
+		dict[2] = "b";
+		dict[1] = "a"; // 1 is now at front
+		string result = dict.GetOrAdd(1, _ => "new");
+		result.ShouldBe("a");
+	}
+
+	[Fact]
+	public void FixedLRUDictionary_GetOrAdd_WhenKeyExistsNotAtFront_MovesToFront()
+	{
+		FixedLruDictionary<int, string> dict = new(3);
+		dict[1] = "a";
+		dict[2] = "b";
+		dict[3] = "c"; // 3 is at front, 1 is at back
+		string result = dict.GetOrAdd(1, _ => "new");
+		result.ShouldBe("a");
+		// Add another item, should evict 2 (not 1 since it was moved to front)
+		dict[4] = "d";
+		dict.ContainsKey(2).ShouldBeFalse();
+		dict.ContainsKey(1).ShouldBeTrue();
+	}
+
+	[Fact]
+	public void FixedLRUDictionary_GetOrAdd_AddsNewItemWhenMissing()
+	{
+		FixedLruDictionary<int, string> dict = new(2);
+		string result = dict.GetOrAdd(1, k => $"value{k}");
+		result.ShouldBe("value1");
+		dict[1].ShouldBe("value1");
+	}
+
+	[Fact]
+	public void FixedLRUDictionary_GetOrAdd_EvictsLeastRecentlyUsedWhenFull()
+	{
+		FixedLruDictionary<int, string> dict = new(2);
+		dict.Add(1, "a");
+		dict.Add(2, "b");
+		string result = dict.GetOrAdd(3, _ => "c");
+		result.ShouldBe("c");
+		dict.ContainsKey(1).ShouldBeFalse();
+		dict.ContainsKey(2).ShouldBeTrue();
+		dict.ContainsKey(3).ShouldBeTrue();
+	}
+
+	[Fact]
+	public void FixedLRUDictionary_TryAdd_ReturnsFalseForExistingKey()
+	{
+		FixedLruDictionary<int, string> dict = new(5);
+		dict.Add(1, "a");
+		bool result = dict.TryAdd(1, "b");
+		result.ShouldBeFalse();
+		dict[1].ShouldBe("a");
+	}
+
+	[Fact]
+	public void FixedLRUDictionary_TryAdd_EvictsLeastRecentlyUsedWhenFull()
+	{
+		FixedLruDictionary<int, string> dict = new(2);
+		dict.TryAdd(1, "a").ShouldBeTrue();
+		dict.TryAdd(2, "b").ShouldBeTrue();
+		dict.TryAdd(3, "c").ShouldBeTrue();
+		dict.ContainsKey(1).ShouldBeFalse();
+		dict.ContainsKey(2).ShouldBeTrue();
+		dict.ContainsKey(3).ShouldBeTrue();
 	}
 
 	#endregion

@@ -93,8 +93,7 @@ public sealed class HangfireShutdownMonitorTests
 	{
 		// Arrange
 		IServiceProvider serviceProvider = A.Fake<IServiceProvider>();
-		A.CallTo(() => serviceProvider.GetService(typeof(BackgroundJobServer)))
-			.Returns(null);
+		A.CallTo(() => serviceProvider.GetService(typeof(BackgroundJobServer))).Returns(null);
 
 		using CancellationTokenSource cts = new();
 		IHostApplicationLifetime lifetime = A.Fake<IHostApplicationLifetime>();
@@ -120,13 +119,11 @@ public sealed class HangfireShutdownMonitorTests
 		// Arrange
 		BackgroundJobServer backgroundJobServer = A.Fake<BackgroundJobServer>();
 		IServiceProvider serviceProvider = A.Fake<IServiceProvider>();
-		A.CallTo(() => serviceProvider.GetService(typeof(BackgroundJobServer)))
-			.Returns(backgroundJobServer);
+		A.CallTo(() => serviceProvider.GetService(typeof(BackgroundJobServer))).Returns(backgroundJobServer);
 
 		// Setup JobStorage.Current to throw when GetMonitoringApi is called
 		JobStorage mockStorage = A.Fake<JobStorage>();
-		A.CallTo(() => mockStorage.GetMonitoringApi())
-			.Throws<InvalidOperationException>();
+		A.CallTo(() => mockStorage.GetMonitoringApi()).Throws<InvalidOperationException>();
 
 		JobStorage.Current = mockStorage;
 

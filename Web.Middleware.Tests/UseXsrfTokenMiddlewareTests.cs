@@ -9,14 +9,14 @@ namespace Web.Middleware.Tests;
 public sealed class UseXsrfTokenMiddlewareTests
 {
 	private readonly IFixture fixture;
-	private readonly IApplicationBuilder _builder;
+	private readonly IApplicationBuilder builder;
 
 	public UseXsrfTokenMiddlewareTests()
 	{
 		fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
-		_builder = A.Fake<IApplicationBuilder>();
+		builder = A.Fake<IApplicationBuilder>();
 		// Setup UseMiddleware to return the builder for fluent chaining
-		A.CallTo(() => _builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(_builder);
+		A.CallTo(() => builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).Returns(builder);
 	}
 
 	[RetryTheory(3)]
@@ -32,8 +32,7 @@ public sealed class UseXsrfTokenMiddlewareTests
 		string expectedToken = fixture.Create<string>();
 		AntiforgeryTokenSet tokenSet = new(expectedToken, expectedToken, "form", "header");
 
-		A.CallTo(() => antiforgery.GetAndStoreTokens(context))
-				.Returns(tokenSet);
+		A.CallTo(() => antiforgery.GetAndStoreTokens(context)).Returns(tokenSet);
 
 		UseXsrfTokenMiddleware middleware = new(next, antiforgery, httpOnly);
 
@@ -64,10 +63,22 @@ public sealed class UseXsrfTokenMiddlewareTests
 	public void UseXsrfToken_Extension_ShouldAddMiddleware(bool httpOnly)
 	{
 		// Act
-		IApplicationBuilder result = _builder.UseMiddleware<UseXsrfTokenMiddleware>(httpOnly);
+		IApplicationBuilder result = builder.UseXsrfToken(httpOnly);
 
 		// Assert
-		result.ShouldBe(_builder);
+		result.ShouldBe(builder);
+		A.CallTo(() => builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).MustHaveHappened();
+	}
+
+	[RetryFact(3)]
+	public void UseXsrfToken_Extension_WithDefaultParameter_ShouldAddMiddleware()
+	{
+		// Act
+		IApplicationBuilder result = builder.UseXsrfToken();
+
+		// Assert
+		result.ShouldBe(builder);
+		A.CallTo(() => builder.Use(A<Func<RequestDelegate, RequestDelegate>>._)).MustHaveHappened();
 	}
 
 	[RetryFact(3)]
@@ -78,11 +89,9 @@ public sealed class UseXsrfTokenMiddlewareTests
 		IAntiforgery antiforgery = A.Fake<IAntiforgery>();
 		HttpContext context = new DefaultHttpContext();
 
-		AntiforgeryTokenSet tokenSet = new(fixture.Create<string>(),
-				fixture.Create<string>(), "form", "header");
+		AntiforgeryTokenSet tokenSet = new(fixture.Create<string>(), fixture.Create<string>(), "form", "header");
 
-		A.CallTo(() => antiforgery.GetAndStoreTokens(context))
-				.Returns(tokenSet);
+		A.CallTo(() => antiforgery.GetAndStoreTokens(context)).Returns(tokenSet);
 
 		UseXsrfTokenMiddleware middleware = new(next, antiforgery, false);
 
@@ -101,11 +110,9 @@ public sealed class UseXsrfTokenMiddlewareTests
 		IAntiforgery antiforgery = A.Fake<IAntiforgery>();
 		HttpContext context = new DefaultHttpContext();
 
-		AntiforgeryTokenSet tokenSet = new(fixture.Create<string>(),
-				fixture.Create<string>(), "form", "header");
+		AntiforgeryTokenSet tokenSet = new(fixture.Create<string>(), fixture.Create<string>(), "form", "header");
 
-		A.CallTo(() => antiforgery.GetAndStoreTokens(context))
-				.Returns(tokenSet);
+		A.CallTo(() => antiforgery.GetAndStoreTokens(context)).Returns(tokenSet);
 
 		UseXsrfTokenMiddleware middleware = new(next, antiforgery, false);
 

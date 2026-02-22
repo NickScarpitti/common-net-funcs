@@ -162,7 +162,7 @@ public class CompressionStreamsBenchmarks
 	// ===== Helper class for non-seekable streams =====
 	private sealed class NonSeekableStream(byte[] data) : Stream
 	{
-		private readonly MemoryStream _innerStream = new(data);
+		private readonly MemoryStream innerStream = new(data);
 
 		public override bool CanRead => true;
 		public override bool CanSeek => false;
@@ -176,17 +176,17 @@ public class CompressionStreamsBenchmarks
 
 		public override void Flush()
 		{
-			_innerStream.Flush();
+			innerStream.Flush();
 		}
 
 		public override int Read(byte[] buffer, int offset, int count)
 		{
-			return _innerStream.Read(buffer, offset, count);
+			return innerStream.Read(buffer, offset, count);
 		}
 
 		public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
 		{
-			return _innerStream.ReadAsync(buffer, cancellationToken);
+			return innerStream.ReadAsync(buffer, cancellationToken);
 		}
 
 		public override long Seek(long offset, SeekOrigin origin)
@@ -208,7 +208,7 @@ public class CompressionStreamsBenchmarks
 		{
 			if (disposing)
 			{
-				_innerStream?.Dispose();
+				innerStream?.Dispose();
 			}
 			base.Dispose(disposing);
 		}

@@ -6,13 +6,13 @@ namespace Web.Middleware.Tests;
 
 public sealed class UseCustomHeadersMiddlewareTests
 {
-	private readonly HttpContext _context;
-	private readonly RequestDelegate _next;
+	private readonly HttpContext context;
+	private readonly RequestDelegate next;
 
 	public UseCustomHeadersMiddlewareTests()
 	{
-		_context = new DefaultHttpContext();
-		_next = A.Fake<RequestDelegate>();
+		context = new DefaultHttpContext();
+		next = A.Fake<RequestDelegate>();
 	}
 
 	[RetryTheory(3)]
@@ -23,14 +23,14 @@ public sealed class UseCustomHeadersMiddlewareTests
 	{
 		// Arrange
 		Dictionary<string, string> addHeaders = new() { { headerKey, headerValue } };
-		UseCustomHeadersMiddleware middleware = new(_next, addHeaders);
+		UseCustomHeadersMiddleware middleware = new(next, addHeaders);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+		await middleware.InvokeAsync(context);
 
 		// Assert
-		_context.Response.Headers[headerKey].ToString().ShouldBe(headerValue);
-		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
+		context.Response.Headers[headerKey].ToString().ShouldBe(headerValue);
+		A.CallTo(() => next(context)).MustHaveHappenedOnceExactly();
 	}
 
 	[RetryTheory(3)]
@@ -42,68 +42,65 @@ public sealed class UseCustomHeadersMiddlewareTests
 		// Arrange
 		foreach (string header in headersToRemove)
 		{
-			_context.Response.Headers.TryAdd(header, "InitialValue");
+			context.Response.Headers.TryAdd(header, "InitialValue");
 		}
 
-		UseCustomHeadersMiddleware middleware = new(_next, removeHeaders: headersToRemove);
+		UseCustomHeadersMiddleware middleware = new(next, removeHeaders: headersToRemove);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+		await middleware.InvokeAsync(context);
 
 		// Assert
 		foreach (string header in headersToRemove)
 		{
-			_context.Response.Headers.ContainsKey(header).ShouldBeFalse();
+			context.Response.Headers.ContainsKey(header).ShouldBeFalse();
 		}
-		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
+		A.CallTo(() => next(context)).MustHaveHappenedOnceExactly();
 	}
 
 	[RetryFact(3)]
 	public async Task InvokeAsync_WithNullHeaders_OnlyCallsNext()
 	{
 		// Arrange
-		UseCustomHeadersMiddleware middleware = new(_next);
+		UseCustomHeadersMiddleware middleware = new(next);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+		await middleware.InvokeAsync(context);
 
 		// Assert
-		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
+		A.CallTo(() => next(context)).MustHaveHappenedOnceExactly();
 	}
 
 	[RetryFact(3)]
 	public async Task InvokeAsync_WithEmptyHeaderCollections_OnlyCallsNext()
 	{
 		// Arrange
-		UseCustomHeadersMiddleware middleware = new(_next, new Dictionary<string, string>(), Array.Empty<string>());
+		UseCustomHeadersMiddleware middleware = new(next, new Dictionary<string, string>(), Array.Empty<string>());
 
 		// Act
-		await middleware.InvokeAsync(_context);
+		await middleware.InvokeAsync(context);
 
 		// Assert
-		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
+		A.CallTo(() => next(context)).MustHaveHappenedOnceExactly();
 	}
 
 	[RetryFact(3)]
 	public async Task InvokeAsync_WithBothAddAndRemoveHeaders_ProcessesAllHeaders()
 	{
 		// Arrange
-		Dictionary<string, string> addHeaders = new()
-				{
-						{ "X-New-Header", "NewValue" }
-				};
+		Dictionary<string, string> addHeaders = new() { { "X-New-Header", "NewValue" } };
 		string[] removeHeaders = ["X-Old-Header"];
-		_context.Response.Headers.TryAdd("X-Old-Header", "OldValue");
+		context.Response.Headers.TryAdd("X-Old-Header", "OldValue");
 
-		UseCustomHeadersMiddleware middleware = new(_next, addHeaders, removeHeaders);
+		UseCustomHeadersMiddleware middleware = new(next, addHeaders, removeHeaders);
 
 		// Act
-		await middleware.InvokeAsync(_context);
+		await middleware.InvokeAsync(context);
 
 		// Assert
-		_context.Response.Headers.ContainsKey("X-Old-Header").ShouldBeFalse();
-		_context.Response.Headers["X-New-Header"].ToString().ShouldBe("NewValue");
-		A.CallTo(() => _next(_context)).MustHaveHappenedOnceExactly();
+		context.Response.Headers.ContainsKey("X-Old-Header").ShouldBeFalse();
+		context.Response.Headers["X-New-Header"].ToString().ShouldBe("NewValue");
+		A.CallTo(() => next(context)).MustHaveHappenedOnceExactly();
 	}
 
 	[RetryFact(3)]

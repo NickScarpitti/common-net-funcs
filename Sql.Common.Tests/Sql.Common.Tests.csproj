@@ -6,11 +6,18 @@
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
 		<LangVersion>latest</LangVersion>
-		<ExcludeByFile>**/*.g.cs,**/obj/**</ExcludeByFile>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.2" />
+		<CoverletExclude Include="[*.Tests]*" />
+		<CoverletExclude Include="[*]System.Text.RegularExpressions.Generated.*" />
+		<CoverletExcludeByFile Include="**/*.g.cs" />
+		<CoverletExcludeByFile Include="**/obj/**" />
+		<CoverletExcludeByFile Include="**/bin/**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.3" />
 		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
 		<PackageReference Include="xunit.v3" Version="3.2.2" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
@@ -20,7 +27,7 @@
 		<PackageReference Include="AutoFixture" Version="4.18.1" />
 		<PackageReference Include="AutoFixture.AutoFakeItEasy" Version="4.18.1" />
 		<PackageReference Include="FakeItEasy" Version="8.3.0" />
-		<PackageReference Include="coverlet.collector" Version="6.0.4">
+		<PackageReference Include="coverlet.collector" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

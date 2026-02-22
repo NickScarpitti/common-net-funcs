@@ -56,6 +56,44 @@ public sealed class StreamsTests
 	}
 
 	[Fact]
+	public async Task ReadStreamAsync_HandlesNonSeekableStream()
+	{
+		// Arrange
+		byte[] data = fixture.CreateMany<byte>(1024).ToArray();
+		await using NonSeekableMemoryStream stream = new(data);
+
+		// Act
+		byte[] result = await stream.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+		// Assert
+		result.ShouldBe(data);
+	}
+
+	// Helper for non-seekable stream
+	private sealed class NonSeekableMemoryStream(byte[] buffer) : MemoryStream(buffer)
+	{
+		public override bool CanSeek => false;
+
+		public override long Length => throw new NotSupportedException();
+
+		public override long Position
+		{
+			get => throw new NotSupportedException();
+			set => throw new NotSupportedException();
+		}
+
+		public override long Seek(long offset, SeekOrigin loc)
+		{
+			throw new NotSupportedException();
+		}
+
+		public override void SetLength(long value)
+		{
+			throw new NotSupportedException();
+		}
+	}
+
+	[Fact]
 	public async Task WriteStreamToStream_MemoryStream_CopiesData()
 	{
 		// Arrange
@@ -490,5 +528,230 @@ public sealed class StreamsTests
 
 		// Act & Assert
 		Should.Throw<ObjectDisposedException>(() => counting.SetLength(10));
+	}
+
+	[Fact]
+	public void CountingStream_Constructor_ThrowsOnNullStream()
+	{
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => new CountingStream(null!));
+	}
+
+	[Fact]
+	public async Task CountingStream_CopyToAsync_ThrowsOnNullDestination()
+	{
+		// Arrange
+		await using MemoryStream inner = new();
+		await using CountingStream counting = new(inner);
+
+		// Act & Assert
+		await Should.ThrowAsync<ArgumentNullException>(async () => await counting.CopyToAsync(null!, 128, CancellationToken.None));
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(-1)]
+	[InlineData(-100)]
+	public async Task CountingStream_CopyToAsync_ThrowsOnInvalidBufferSize(int bufferSize)
+	{
+		// Arrange
+		await using MemoryStream inner = new();
+		await using CountingStream counting = new(inner);
+		await using MemoryStream dest = new();
+
+		// Act & Assert
+		await Should.ThrowAsync<ArgumentOutOfRangeException>(async () => await counting.CopyToAsync(dest, bufferSize, CancellationToken.None));
+	}
+
+	[Fact]
+	public void CountingStream_Finalizer_DisposesCorrectly()
+	{
+		// Arrange
+		using MemoryStream inner = new();
+		WeakReference weakRef;
+
+		// Act
+		void CreateCountingStream()
+		{
+			CountingStream counting = new(inner);
+			weakRef = new WeakReference(counting);
+			// Let counting go out of scope without disposing
+		}
+
+		CreateCountingStream();
+#pragma warning disable S1215 // "GC.Collect" should not be called
+		GC.Collect();
+		GC.WaitForPendingFinalizers();
+		GC.Collect();
+#pragma warning restore S1215 // "GC.Collect" should not be called
+
+		// Assert - finalizer should have run
+		weakRef.IsAlive.ShouldBeFalse();
+	}
+
+	[Fact]
+	public async Task CountingStream_ReadAsync_Memory_ReturnsCorrectData()
+	{
+		// Arrange
+		byte[] data = fixture.CreateMany<byte>(100).ToArray();
+		await using MemoryStream inner = new(data);
+		await using CountingStream counting = new(inner);
+		Memory<byte> buffer = new byte[data.Length];
+
+		// Act
+		int bytesRead = await counting.ReadAsync(buffer, CancellationToken.None);
+
+		// Assert
+		bytesRead.ShouldBe(data.Length);
+		buffer.ToArray().ShouldBe(data);
+	}
+
+	[Fact]
+	public async Task CountingStream_ReadAsync_ThrowsIfDisposed()
+	{
+		// Arrange
+		await using MemoryStream inner = new();
+		CountingStream counting = new(inner);
+		await counting.DisposeAsync();
+
+		// Act & Assert
+#pragma warning disable CA2022 // Avoid inexact read with 'Stream.Read'
+#pragma warning disable CA1835 // Prefer the 'Memory'-based overloads for 'ReadAsync' and 'WriteAsync'
+		await Should.ThrowAsync<ObjectDisposedException>(async () => await counting.ReadAsync(new byte[1], 0, 1));
+		await Should.ThrowAsync<ObjectDisposedException>(async () => await counting.ReadAsync(new Memory<byte>(new byte[1]), CancellationToken.None));
+#pragma warning restore CA1835 // Prefer the 'Memory'-based overloads for 'ReadAsync' and 'WriteAsync'
+#pragma warning restore CA2022 // Avoid inexact read with 'Stream.Read'
+	}
+
+	[Fact]
+	public async Task CountingStream_WriteAsync_Memory_IncrementsCounter()
+	{
+		// Arrange
+		byte[] data = fixture.CreateMany<byte>(150).ToArray();
+		await using MemoryStream inner = new();
+		await using CountingStream counting = new(inner);
+		ReadOnlyMemory<byte> buffer = data;
+
+		// Act
+		await counting.WriteAsync(buffer, CancellationToken.None);
+
+		// Assert
+		counting.BytesWritten.ShouldBe(data.Length);
+		inner.ToArray().ShouldBe(data);
+	}
+
+	[Fact]
+	public async Task CountingStream_WriteAsync_ThrowsIfDisposed()
+	{
+		// Arrange
+		await using MemoryStream inner = new();
+		CountingStream counting = new(inner);
+		await counting.DisposeAsync();
+
+		// Act & Assert
+		await Should.ThrowAsync<ObjectDisposedException>(async () => await counting.WriteAsync((new byte[1]).AsMemory(0, 1)));
+	}
+
+	[Fact]
+	public async Task CountingStream_FlushAsync_ThrowsIfDisposed()
+	{
+		// Arrange
+		await using MemoryStream inner = new();
+		CountingStream counting = new(inner);
+		await counting.DisposeAsync();
+
+		// Act & Assert
+		await Should.ThrowAsync<ObjectDisposedException>(async () => await counting.FlushAsync(CancellationToken.None));
+	}
+
+	[Fact]
+	public void CountingStream_Position_SetterWorks()
+	{
+		// Arrange
+		byte[] data = fixture.CreateMany<byte>(100).ToArray();
+		using MemoryStream inner = new(data);
+		using CountingStream counting = new(inner);
+
+		// Act
+		counting.Position = 50;
+
+		// Assert
+		counting.Position.ShouldBe(50);
+		inner.Position.ShouldBe(50);
+	}
+
+	[Fact]
+	public void CountingStream_CanRead_ReturnsInnerStreamCanRead()
+	{
+		// Arrange
+		using MemoryStream inner = new();
+		using CountingStream counting = new(inner);
+
+		// Assert
+		counting.CanRead.ShouldBe(inner.CanRead);
+	}
+
+	[Fact]
+	public void CountingStream_CanSeek_ReturnsInnerStreamCanSeek()
+	{
+		// Arrange
+		using MemoryStream inner = new();
+		using CountingStream counting = new(inner);
+
+		// Assert
+		counting.CanSeek.ShouldBe(inner.CanSeek);
+	}
+
+	[Fact]
+	public void CountingStream_CanWrite_ReturnsInnerStreamCanWrite()
+	{
+		// Arrange
+		using MemoryStream inner = new();
+		using CountingStream counting = new(inner);
+
+		// Assert
+		counting.CanWrite.ShouldBe(inner.CanWrite);
+	}
+
+	[Fact]
+	public void CountingStream_Length_ReturnsInnerStreamLength()
+	{
+		// Arrange
+		byte[] data = fixture.CreateMany<byte>(200).ToArray();
+		using MemoryStream inner = new(data);
+		using CountingStream counting = new(inner);
+
+		// Assert
+		counting.Length.ShouldBe(inner.Length);
+	}
+
+	[Fact]
+	public void CountingStream_Dispose_CalledMultipleTimes_DoesNotThrow()
+	{
+		// Arrange
+		using MemoryStream inner = new();
+		CountingStream counting = new(inner);
+
+		// Act & Assert
+		Should.NotThrow(() =>
+		{
+			counting.Dispose();
+			counting.Dispose(); // Should not throw on second dispose
+		});
+	}
+
+	[Fact]
+	public async Task CountingStream_DisposeAsync_CalledMultipleTimes_DoesNotThrow()
+	{
+		// Arrange
+		await using MemoryStream inner = new();
+		CountingStream counting = new(inner);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () =>
+		{
+			await counting.DisposeAsync();
+			await counting.DisposeAsync(); // Should not throw on second dispose
+		});
 	}
 }

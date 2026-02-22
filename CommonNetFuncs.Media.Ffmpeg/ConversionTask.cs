@@ -128,9 +128,6 @@ public static class ConversionTask
 			if (hardwareAccelerationValues != null)
 			{
 				conversion.UseHardwareAcceleration(hardwareAccelerationValues.hardwareAccelerator, hardwareAccelerationValues.decoder, hardwareAccelerationValues.encoder);
-				//.UseHardwareAcceleration(HardwareAccelerator.auto, VideoCodec.h264, VideoCodec.av1) //This works
-				//.UseHardwareAcceleration(HardwareAccelerator.auto, VideoCodec.h264_cuvid, VideoCodec.av1)
-				//.UseHardwareAcceleration(HardwareAccelerator.auto, VideoCodec.h264_nvenc, VideoCodec.av1)
 			}
 
 			if (hardwareAccelerationValues != null)

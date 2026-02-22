@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using static CommonNetFuncs.Core.Strings;
+using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Web.Common.ValidationAttributes;
 
@@ -16,12 +16,12 @@ public sealed class ListStringLengthAttribute(int maximumLength) : ValidationAtt
 		get;
 	} = maximumLength >= 0 ? maximumLength : throw new ArgumentOutOfRangeException(nameof(maximumLength), "Maximum length must be >= 0");
 
-	private int _minimumLength;
+	private int minimumLength;
 
 	public int MinimumLength
 	{
-		get => _minimumLength;
-		set => _minimumLength = value >= 0 ? value : throw new ArgumentOutOfRangeException(nameof(MinimumLength), "Minimum length must be >= 0");
+		get => minimumLength;
+		set => minimumLength = value >= 0 ? value : throw new ArgumentOutOfRangeException(nameof(MinimumLength), "Minimum length must be >= 0");
 	}
 
 	protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
@@ -88,11 +88,6 @@ public sealed class ListStringLengthAttribute(int maximumLength) : ValidationAtt
 	/// </summary>
 	private static void EnsureLegalLengths(int minimumLength, int maximumLength)
 	{
-		if (maximumLength < 0)
-		{
-			throw new ArgumentOutOfRangeException(nameof(maximumLength), "Maximum length cannot be negative");
-		}
-
 		if (minimumLength > maximumLength)
 		{
 			throw new ArgumentOutOfRangeException(nameof(minimumLength), "Minimum length must be less than or equal to maximum length");

@@ -6,8 +6,15 @@
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
 		<LangVersion>latest</LangVersion>
-		<ExcludeByFile>**/*.g.cs,**/obj/**</ExcludeByFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<CoverletExclude Include="[*.Tests]*" />
+		<CoverletExclude Include="[*]System.Text.RegularExpressions.Generated.*" />
+		<CoverletExcludeByFile Include="**/*.g.cs" />
+		<CoverletExcludeByFile Include="**/obj/**" />
+		<CoverletExcludeByFile Include="**/bin/**" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<None Remove="TestData\TestDocument.docx" />
@@ -20,7 +27,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="coverlet.collector" Version="6.0.4">
+		<PackageReference Include="coverlet.collector" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

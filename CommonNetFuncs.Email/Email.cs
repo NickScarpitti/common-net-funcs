@@ -119,7 +119,11 @@ public sealed class MailAttachmentBytes : IMailAttachment
 
 	public Stream? GetStream()
 	{
-		if (AttachmentBytes == null) return null;
+		if (AttachmentBytes == null)
+		{
+			return null;
+		}
+
 		MemoryStream stream = new();
 		stream.Write(AttachmentBytes, 0, AttachmentBytes.Length);
 		stream.Position = 0;
@@ -344,17 +348,17 @@ public static class Email
 			if (success)
 			{
 				MimeMessage email = new();
-				email.From.Add(new MailboxAddress(sendEmailConfig.EmailAddresses.FromAddress?.Name, sendEmailConfig.EmailAddresses.FromAddress?.Email));
-				email.To.AddRange(sendEmailConfig.EmailAddresses.ToAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+				email.From.Add(new MailboxAddress(sendEmailConfig.EmailAddresses.FromAddress?.Name, sendEmailConfig.EmailAddresses.FromAddress?.Email ?? string.Empty));
+				email.To.AddRange(sendEmailConfig.EmailAddresses.ToAddresses.Select(x => new MailboxAddress(x.Name, x.Email ?? string.Empty)).ToList());
 				if (sendEmailConfig.EmailAddresses.CcAddresses?.Length > 0)
 				{
-					email.Cc.AddRange(sendEmailConfig.EmailAddresses.CcAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+					email.Cc.AddRange(sendEmailConfig.EmailAddresses.CcAddresses.Select(x => new MailboxAddress(x.Name, x.Email ?? string.Empty)).ToList());
 				}
 				if (sendEmailConfig.EmailAddresses.BccAddresses?.Length > 0)
 				{
-					email.Bcc.AddRange(sendEmailConfig.EmailAddresses.BccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+					email.Bcc.AddRange(sendEmailConfig.EmailAddresses.BccAddresses.Select(x => new MailboxAddress(x.Name, x.Email ?? string.Empty)).ToList());
 				}
-				email.Subject = sendEmailConfig.EmailContent.Subject;
+				email.Subject = sendEmailConfig.EmailContent.Subject ?? string.Empty;
 
 				BodyBuilder bodyBuilder = new();
 				if (sendEmailConfig.EmailContent.BodyIsHtml)
@@ -402,7 +406,7 @@ public static class Email
 							success = false; //Sets success to false when the email send fails on the last attempt
 						}
 					}
-					Thread.Sleep(500);
+					await Task.Delay(500, cancellationToken).ConfigureAwait(false);
 				}
 			}
 		}
@@ -467,7 +471,7 @@ public static class Email
 		bool isValid = false;
 		try
 		{
-			isValid = Regex.IsMatch(email ?? string.Empty, EmailRegex, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
+			isValid = !string.IsNullOrWhiteSpace(email) && Regex.IsMatch(email ?? string.Empty, EmailRegex, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
 		}
 		catch (Exception ex)
 		{

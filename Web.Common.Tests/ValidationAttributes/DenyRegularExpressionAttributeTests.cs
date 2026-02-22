@@ -390,4 +390,14 @@ public sealed class DenyRegularExpressionAttributeTests : ValidationTestBase
 			result.ErrorMessage?.ShouldContain("must not match the pattern");
 		}
 	}
+
+	[Fact]
+	public void Constructor_WithEmptyPattern_ShouldThrowOnValidation()
+	{
+		// Arrange - empty pattern is allowed in constructor but should throw in SetupRegex
+		DenyRegularExpressionAttribute attribute = new(string.Empty);
+
+		// Act & Assert
+		Should.Throw<InvalidOperationException>(() => attribute.GetValidationResult("test", DummyValidationContext));
+	}
 }

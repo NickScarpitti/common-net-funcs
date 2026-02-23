@@ -1,6 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.IO.Compression;
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
+using MailKit.Net.Proxy;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
@@ -163,14 +166,16 @@ public sealed class SmtpSettings
 {
 	public SmtpSettings()
 	{
+		ConnectionTimeout = TimeSpan.FromSeconds(5);
 	}
 
-	public SmtpSettings(string? smtpServer, int smtpPort, string? smtpUser = null, string? smtpPassword = null)
+	public SmtpSettings(string? smtpServer, int smtpPort, string? smtpUser = null, string? smtpPassword = null, TimeSpan? connectionTimeout = null)
 	{
 		SmtpServer = smtpServer;
 		SmtpPort = smtpPort;
 		SmtpUser = smtpUser;
 		SmtpPassword = smtpPassword;
+		ConnectionTimeout = connectionTimeout ?? TimeSpan.FromSeconds(5);
 	}
 
 
@@ -194,6 +199,64 @@ public sealed class SmtpSettings
 	/// Gets or sets the password for the SMTP server, if required.
 	/// </summary>
 	public string? SmtpPassword { get; set; }
+
+	/// <summary>
+	/// Gets or sets the duration to wait before a connection attempt times out.
+	/// </summary>
+	public TimeSpan ConnectionTimeout { get; set; }
+
+	/// <summary>
+	/// Gets or sets the SecureSocketOptions to use with the SMTP connection.
+	/// </summary>
+	/// <remarks>Defaults to StartTls when SmtpUser and SmtpPassword are used, otherwise, defaults to None.</remarks>
+	public SecureSocketOptions? SecureSocketOptions { get; set; }
+
+	/// <summary>
+	/// Gets or sets a value indicating whether Transport Layer Security (TLS) is required for secure communication.
+	/// </summary>
+	/// <remarks>
+	/// If set to <see langword="true"/>, all communications must use TLS to ensure data security.
+	/// If set to <see langword="false"/>, non-TLS communications are allowed.
+	/// A <see langword="null"/> value indicates that the requirement is not specified.
+	/// </remarks>
+	public bool? RequireTLS { get; set; }
+
+	/// <summary>
+	/// Gets or sets the collection of client certificates used to authenticate the client to a server.
+	/// </summary>
+	/// <remarks>
+	/// Add one or more valid client certificates to this collection to enable client authentication during secure connections.
+	/// Ensure that each certificate is properly configured and trusted by the target server.
+	/// The collection may be null if no client certificates are required.
+	/// </remarks>
+	public X509CertificateCollection? ClientCertificates { get; set; }
+
+	/// <summary>
+	/// Gets or sets the proxy client used to route network requests through a proxy server.
+	/// </summary>
+	/// <remarks>
+	/// Assigning a proxy client enables network operations to be performed via the specified proxy.
+	/// If this property is null, network requests are made directly without using a proxy.
+	/// </remarks>
+	public IProxyClient? ProxyClient { get; set; }
+
+	/// <summary>
+	/// Gets or sets the local network endpoint for the connection, including the IP address and port number.
+	/// </summary>
+	/// <remarks>
+	/// This property is useful for determining which local address and port are being used for the connection.
+	/// The value may be null if the local endpoint has not been assigned.
+	/// </remarks>
+	public IPEndPoint? LocalEndPoint { get; set; }
+
+	/// <summary>
+	/// Gets or sets the local domain name associated with the application.
+	/// </summary>
+	/// <remarks>
+	/// This property can be null if the local domain is not set.
+	/// It is typically used to identify the domain in which the application is running if required by network configurations.
+	/// </remarks>
+	public string? LocalDomain { get; set; }
 }
 
 public sealed class EmailAddresses(MailAddress? fromAddress = null, IEnumerable<MailAddress>? toAddresses = null, IEnumerable<MailAddress>? ccAddresses = null, IEnumerable<MailAddress>? bccAddresses = null)
@@ -383,15 +446,46 @@ public static class Email
 				{
 					try
 					{
-						using SmtpClient smtpClient = new();
+						using SmtpClient smtpClient = new()
+						{
+							Timeout = (int)sendEmailConfig.SmtpSettings.ConnectionTimeout.TotalMilliseconds
+						};
+
+						if (sendEmailConfig.SmtpSettings.RequireTLS != null)
+						{
+							smtpClient.RequireTLS = (bool)sendEmailConfig.SmtpSettings.RequireTLS;
+						}
+
+						if (sendEmailConfig.SmtpSettings.ClientCertificates != null)
+						{
+							smtpClient.ClientCertificates = sendEmailConfig.SmtpSettings.ClientCertificates;
+						}
+
+						if (sendEmailConfig.SmtpSettings.ProxyClient != null)
+						{
+							smtpClient.ProxyClient = sendEmailConfig.SmtpSettings.ProxyClient;
+						}
+
+						if (sendEmailConfig.SmtpSettings.LocalEndPoint != null)
+						{
+							smtpClient.LocalEndPoint = sendEmailConfig.SmtpSettings.LocalEndPoint;
+						}
+
+						if (sendEmailConfig.SmtpSettings.LocalDomain != null)
+						{
+							smtpClient.LocalDomain = sendEmailConfig.SmtpSettings.LocalDomain;
+						}
+
 						if (!string.IsNullOrWhiteSpace(sendEmailConfig.SmtpSettings.SmtpUser) && !string.IsNullOrWhiteSpace(sendEmailConfig.SmtpSettings.SmtpPassword))
 						{
-							await smtpClient.ConnectAsync(sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, SecureSocketOptions.StartTls, cancellationToken).ConfigureAwait(false);
+							await smtpClient.ConnectAsync(sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort,
+								sendEmailConfig.SmtpSettings.SecureSocketOptions ?? SecureSocketOptions.StartTls, cancellationToken).ConfigureAwait(false);
 							await smtpClient.AuthenticateAsync(sendEmailConfig.SmtpSettings.SmtpUser, sendEmailConfig.SmtpSettings.SmtpPassword, cancellationToken).ConfigureAwait(false);
 						}
 						else
 						{
-							await smtpClient.ConnectAsync(sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, SecureSocketOptions.None, cancellationToken).ConfigureAwait(false);
+							await smtpClient.ConnectAsync(sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort,
+								sendEmailConfig.SmtpSettings.SecureSocketOptions ?? SecureSocketOptions.None, cancellationToken).ConfigureAwait(false);
 						}
 						await smtpClient.SendAsync(email, cancellationToken).ConfigureAwait(false);
 						await smtpClient.DisconnectAsync(true, cancellationToken).ConfigureAwait(false);

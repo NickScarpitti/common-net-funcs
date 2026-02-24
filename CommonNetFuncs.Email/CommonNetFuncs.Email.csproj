@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Version>3.8.37</Version>
+    <Version>3.8.38</Version>
     <MinVerTagPrefix>email-</MinVerTagPrefix>
     <MinVerIgnoreHeight>true</MinVerIgnoreHeight>
     <MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -76,8 +76,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MailKit" Version="4.14.1" />
-    <PackageReference Include="MimeKit" Version="4.14.0" />
+    <PackageReference Include="MailKit" Version="4.15.0" />
+    <PackageReference Include="MimeKit" Version="4.15.0" />
     <PackageReference Include="MinVer" Version="7.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

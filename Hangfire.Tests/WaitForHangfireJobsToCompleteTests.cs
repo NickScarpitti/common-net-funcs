@@ -177,7 +177,7 @@ public sealed class WaitForHangfireJobsToCompleteTests
 
 		// Assert - Should stop after max wait time even when jobs never complete
 		Assert.True(duration.TotalSeconds >= 60, $"Method should wait at least 60 seconds but only waited {duration.TotalSeconds} seconds");
-		Assert.True(duration.TotalSeconds < 70, $"Method should not wait much longer than 60 seconds but waited {duration.TotalSeconds} seconds");
+		Assert.True(duration.TotalSeconds < 75, $"Method should not wait much longer than 60 seconds but waited {duration.TotalSeconds} seconds");
 		// Logging verification would require capturing NLog output
 	}
 

@@ -160,7 +160,7 @@ public static partial class Collections
 	/// <summary>
 	/// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq.
 	/// </summary>
-	/// <typeparam name="T">Type of object having values set.</typeparam>
+	/// <typeparam name="T">Type of object having values uniqueElements.</typeparam>
 	/// <param name="items">Items to have the updateMethod expression performed on.</param>
 	/// <param name="updateMethod">Lambda expression of the action to perform.</param>
 	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
@@ -225,7 +225,7 @@ public static partial class Collections
 	/// <summary>
 	/// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq.
 	/// </summary>
-	/// <typeparam name="T">Type of object having values set.</typeparam>
+	/// <typeparam name="T">Type of object having values uniqueElements.</typeparam>
 	/// <param name="items">Items to have the updateMethod expression performed on.</param>
 	/// <param name="updateMethod">Lambda expression of the action to perform.</param>
 	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
@@ -279,7 +279,7 @@ public static partial class Collections
 	/// <summary>
 	/// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq using a Parallel.ForEach loop.
 	/// </summary>
-	/// <typeparam name="T">Type of object having values set.</typeparam>
+	/// <typeparam name="T">Type of object having values uniqueElements.</typeparam>
 	/// <param name="items">Items to have the updateMethod expression performed on.</param>
 	/// <param name="updateMethod">Lambda expression of the action to perform.</param>
 	/// <param name="maxDegreeOfParallelism">Integer setting the max number of parallel operations allowed. Default of -1 allows maximum possible.</param>
@@ -1145,7 +1145,7 @@ public static partial class Collections
 	/// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>
 	/// <param name="separator">Optional: String value used between aggregated values. Default is '|'.</param>
 	/// <param name="nullReplacement">Optional: String value used to replace null values. Default is <see langword="null"/>.</param>
-	/// <returns>A set of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
+	/// <returns>A uniqueElements of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
 	/// <exception cref="ArgumentException">Thrown when <paramref name="maxCombinations"/> is not null and is less than 1.</exception>
 	public static HashSet<string> GetCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
 	{
@@ -1195,7 +1195,7 @@ public static partial class Collections
 	/// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>
 	/// <param name="separator">Optional: String value used between aggregated values. Default is '|'.</param>
 	/// <param name="nullReplacement">Optional: String value used to replace null values. Default is <see langword="null"/>.</param>
-	/// <returns>A set of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
+	/// <returns>A uniqueElements of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
 	/// <exception cref="ArgumentException">Thrown when <paramref name="maxCombinations"/> is not null and is less than 1.</exception>
 	public static HashSet<string> GetRandomCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
 	{
@@ -1213,7 +1213,7 @@ public static partial class Collections
 	}
 
 	/// <summary>
-	/// Generates a set of unique combinations from the provided source collections.
+	/// Generates a uniqueElements of unique combinations from the provided source collections.
 	/// </summary>
 	/// <param name="sources">The source collections to combine.</param>
 	/// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>
@@ -1268,6 +1268,62 @@ public static partial class Collections
 		{
 			yield return combination;
 		}
+	}
+
+	/// <summary>
+	/// Determines whether the specified enumerable contains any duplicate elements.
+	/// </summary>
+	/// <typeparam name="T">The type of the elements in the enumerable.</typeparam>
+	/// <param name="enumerable">The sequence of elements to check for duplicates. This parameter cannot be null.</param>
+	/// <returns>true if the sequence contains duplicate elements; otherwise, false.</returns>
+	public static bool ContainsDuplicates<T>(this IEnumerable<T> enumerable)
+	{
+		HashSet<T> uniqueElements = new();
+		return enumerable.Any(element => !uniqueElements.Add(element));
+	}
+
+	/// <summary>
+	/// Identifies all elements that appear more than once in the specified enumerable.
+	/// </summary>
+	/// <typeparam name="T">The type of the elements contained in the enumerable.</typeparam>
+	/// <param name="enumerable">The enumerable to check for duplicates.</param>
+	/// <returns>A <see cref="HashSet{T}"/> containing each distinct element that occurs more than once in the input enumerable.</returns>
+	public static HashSet<T> GetUniqueDuplicates<T>(this IEnumerable<T> enumerable)
+	{
+		HashSet<T> uniqueElements = new();
+		HashSet<T> duplicateElements = new();
+		foreach (T? element in enumerable.Where(element => !uniqueElements.Add(element)))
+		{
+			duplicateElements.Add(element);
+		}
+
+		return duplicateElements;
+	}
+
+	/// <summary>
+	/// Get all duplicated elements in an enumerable along with their count of occurrences.
+	/// </summary>
+	/// <typeparam name="T">The type of the elements contained in the enumerable.</typeparam>
+	/// <param name="enumerable">Elements to be evaluated for duplicates</param>
+	/// <param name="includeUniqueInCount">If set to <see langword="true"/>, the count will include the first occurrence of the element as well, otherwise the count will only reflect the number of additional occurrences beyond the first one.</param>
+	/// <returns>A <see cref="Dictionary{T, int}"/> of duplicate elements in the enumerable along with their count of occurrences.</returns>
+	public static Dictionary<T, int> GetDuplicatesWithCount<T>(this IEnumerable<T> enumerable, bool includeUniqueInCount = false) where T : notnull
+	{
+		HashSet<T> uniqueElements = new();
+		Dictionary<T, int> duplicateElements = new();
+		foreach (T element in enumerable.Where(element => !uniqueElements.Add(element)))
+		{
+			if (duplicateElements.TryGetValue(element, out int count))
+			{
+				duplicateElements[element] = count + 1;
+			}
+			else
+			{
+				duplicateElements[element] = !includeUniqueInCount ? 1 : 2;
+			}
+		}
+
+		return duplicateElements;
 	}
 }
 

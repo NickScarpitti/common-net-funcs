@@ -160,7 +160,7 @@ public static partial class Collections
 	/// <summary>
 	/// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq.
 	/// </summary>
-	/// <typeparam name="T">Type of object having values uniqueElements.</typeparam>
+	/// <typeparam name="T">Type of object having values set.</typeparam>
 	/// <param name="items">Items to have the updateMethod expression performed on.</param>
 	/// <param name="updateMethod">Lambda expression of the action to perform.</param>
 	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
@@ -225,7 +225,7 @@ public static partial class Collections
 	/// <summary>
 	/// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq.
 	/// </summary>
-	/// <typeparam name="T">Type of object having values uniqueElements.</typeparam>
+	/// <typeparam name="T">Type of object having values set.</typeparam>
 	/// <param name="items">Items to have the updateMethod expression performed on.</param>
 	/// <param name="updateMethod">Lambda expression of the action to perform.</param>
 	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
@@ -279,7 +279,7 @@ public static partial class Collections
 	/// <summary>
 	/// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq using a Parallel.ForEach loop.
 	/// </summary>
-	/// <typeparam name="T">Type of object having values uniqueElements.</typeparam>
+	/// <typeparam name="T">Type of object having values set.</typeparam>
 	/// <param name="items">Items to have the updateMethod expression performed on.</param>
 	/// <param name="updateMethod">Lambda expression of the action to perform.</param>
 	/// <param name="maxDegreeOfParallelism">Integer setting the max number of parallel operations allowed. Default of -1 allows maximum possible.</param>
@@ -1145,7 +1145,7 @@ public static partial class Collections
 	/// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>
 	/// <param name="separator">Optional: String value used between aggregated values. Default is '|'.</param>
 	/// <param name="nullReplacement">Optional: String value used to replace null values. Default is <see langword="null"/>.</param>
-	/// <returns>A uniqueElements of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
+	/// <returns>A set of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
 	/// <exception cref="ArgumentException">Thrown when <paramref name="maxCombinations"/> is not null and is less than 1.</exception>
 	public static HashSet<string> GetCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
 	{
@@ -1195,7 +1195,7 @@ public static partial class Collections
 	/// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>
 	/// <param name="separator">Optional: String value used between aggregated values. Default is '|'.</param>
 	/// <param name="nullReplacement">Optional: String value used to replace null values. Default is <see langword="null"/>.</param>
-	/// <returns>A uniqueElements of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
+	/// <returns>A set of unique combinations generated from the source collections up to the quantity specified by <paramref name="maxCombinations"/>.</returns>
 	/// <exception cref="ArgumentException">Thrown when <paramref name="maxCombinations"/> is not null and is less than 1.</exception>
 	public static HashSet<string> GetRandomCombinations(this IEnumerable<IEnumerable<string?>> sources, int? maxCombinations = null, string separator = "|", string? nullReplacement = default)
 	{
@@ -1213,7 +1213,7 @@ public static partial class Collections
 	}
 
 	/// <summary>
-	/// Generates a uniqueElements of unique combinations from the provided source collections.
+	/// Generates a set of unique combinations from the provided source collections.
 	/// </summary>
 	/// <param name="sources">The source collections to combine.</param>
 	/// <param name="maxCombinations">Optional: The maximum number of combinations to generate. Default is <see langword="null"/> (no limit).</param>

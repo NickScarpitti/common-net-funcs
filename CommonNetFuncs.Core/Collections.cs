@@ -1269,6 +1269,62 @@ public static partial class Collections
 			yield return combination;
 		}
 	}
+
+	/// <summary>
+	/// Determines whether the specified enumerable contains any duplicate elements.
+	/// </summary>
+	/// <typeparam name="T">The type of the elements in the enumerable.</typeparam>
+	/// <param name="enumerable">The sequence of elements to check for duplicates. This parameter cannot be null.</param>
+	/// <returns>true if the sequence contains duplicate elements; otherwise, false.</returns>
+	public static bool ContainsDuplicates<T>(this IEnumerable<T> enumerable)
+	{
+		HashSet<T> uniqueElements = new();
+		return enumerable.Any(element => !uniqueElements.Add(element));
+	}
+
+	/// <summary>
+	/// Identifies all elements that appear more than once in the specified enumerable.
+	/// </summary>
+	/// <typeparam name="T">The type of the elements contained in the enumerable.</typeparam>
+	/// <param name="enumerable">The enumerable to check for duplicates.</param>
+	/// <returns>A <see cref="HashSet{T}"/> containing each distinct element that occurs more than once in the input enumerable.</returns>
+	public static HashSet<T> GetUniqueDuplicates<T>(this IEnumerable<T> enumerable)
+	{
+		HashSet<T> uniqueElements = new();
+		HashSet<T> duplicateElements = new();
+		foreach (T? element in enumerable.Where(element => !uniqueElements.Add(element)))
+		{
+			duplicateElements.Add(element);
+		}
+
+		return duplicateElements;
+	}
+
+	/// <summary>
+	/// Get all duplicated elements in an enumerable along with their count of occurrences.
+	/// </summary>
+	/// <typeparam name="T">The type of the elements contained in the enumerable.</typeparam>
+	/// <param name="enumerable">Elements to be evaluated for duplicates</param>
+	/// <param name="includeUniqueInCount">If set to <see langword="true"/>, the count will include the first occurrence of the element as well, otherwise the count will only reflect the number of additional occurrences beyond the first one.</param>
+	/// <returns>A <see cref="Dictionary{T, int}"/> of duplicate elements in the enumerable along with their count of occurrences.</returns>
+	public static Dictionary<T, int> GetDuplicatesWithCount<T>(this IEnumerable<T> enumerable, bool includeUniqueInCount = false) where T : notnull
+	{
+		HashSet<T> uniqueElements = new();
+		Dictionary<T, int> duplicateElements = new();
+		foreach (T element in enumerable.Where(element => !uniqueElements.Add(element)))
+		{
+			if (duplicateElements.TryGetValue(element, out int count))
+			{
+				duplicateElements[element] = count + 1;
+			}
+			else
+			{
+				duplicateElements[element] = !includeUniqueInCount ? 1 : 2;
+			}
+		}
+
+		return duplicateElements;
+	}
 }
 
 /// <summary>

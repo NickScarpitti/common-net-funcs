@@ -5,6 +5,7 @@ namespace CommonNetFuncs.Web.Api.OpenApiTransformers;
 
 public sealed class HeaderTransformer : IOpenApiOperationTransformer
 {
+#pragma warning disable S2325 // Make method static
 	public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
 	{
 		operation.Parameters ??= [];
@@ -21,4 +22,5 @@ public sealed class HeaderTransformer : IOpenApiOperationTransformer
 		});
 		return Task.CompletedTask;
 	}
+#pragma warning restore S2325 // Make method static
 }

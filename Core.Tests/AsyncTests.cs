@@ -1365,6 +1365,318 @@ public sealed class AsyncTests
 
 	#endregion
 
+	#region ObjectFill ConcurrentDictionary<TKey, TValue>
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithValidInputs_ShouldAddValue()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dictionary = new();
+		const string key = "testKey";
+		const int expectedValue = 42;
+
+		static Task<int?> func()
+		{
+			return Task.FromResult<int?>(42);
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await dictionary.ObjectFill(key, func, semaphore, Current.CancellationToken);
+
+		// Assert
+		dictionary.ShouldContainKey(key);
+		dictionary[key].ShouldBe(expectedValue);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithNullDictionary_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?>? dictionary = null;
+		const string key = "testKey";
+
+		static Task<int?> func()
+		{
+			return Task.FromResult<int?>(42);
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () =>
+			await dictionary.ObjectFill(key, func, semaphore, Current.CancellationToken));
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithNullSemaphore_ShouldAddValue()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dictionary = new();
+		const string key = "testKey";
+		const int expectedValue = 99;
+
+		static Task<int?> func()
+		{
+			return Task.FromResult<int?>(99);
+		}
+
+		// Act
+		await dictionary.ObjectFill(key, func, null!, Current.CancellationToken);
+
+		// Assert
+		dictionary.ShouldContainKey(key);
+		dictionary[key].ShouldBe(expectedValue);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithNullTaskResult_ShouldSetNullValue()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dictionary = new();
+		const string key = "testKey";
+
+		static Task<int?> func()
+		{
+			return Task.FromResult<int?>(null);
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await dictionary.ObjectFill(key, func, semaphore, Current.CancellationToken);
+
+		// Assert
+		dictionary.ShouldContainKey(key);
+		dictionary[key].ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WhenTaskThrows_ShouldHandleException()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dictionary = new();
+		const string key = "testKey";
+
+		static Task<int?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await dictionary.ObjectFill(key, func, semaphore, Current.CancellationToken);
+
+		// Assert
+		dictionary.ShouldNotContainKey(key);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WhenTaskThrows_ShouldReleaseSemaphore()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dictionary = new();
+		const string key = "testKey";
+
+		static Task<int?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await dictionary.ObjectFill(key, func, semaphore, Current.CancellationToken);
+
+		// Assert - Semaphore should be available (count should be 1)
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithSemaphore_ShouldLimitConcurrency()
+	{
+		// Arrange
+		ConcurrentDictionary<int, string?> dictionary = new();
+		int concurrentExecutions = 0;
+		int maxConcurrent = 0;
+		object lockObj = new();
+		using SemaphoreSlim semaphore = new(2, 2);
+
+		List<Task> tasks = [];
+		for (int i = 0; i < 6; i++)
+		{
+			int index = i;
+			async Task<string?> func()
+			{
+				lock (lockObj)
+				{
+					concurrentExecutions++;
+					maxConcurrent = Math.Max(maxConcurrent, concurrentExecutions);
+				}
+				await Task.Delay(50, Current.CancellationToken);
+				lock (lockObj)
+				{
+					concurrentExecutions--;
+				}
+				return $"Result{index}";
+			}
+			tasks.Add(dictionary.ObjectFill(index, func, semaphore, Current.CancellationToken));
+		}
+
+		// Act
+		await Task.WhenAll(tasks);
+
+		// Assert
+		maxConcurrent.ShouldBeLessThanOrEqualTo(2);
+		dictionary.Count.ShouldBe(6);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_ShouldWaitForSemaphore()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dictionary = new();
+		const string key = "testKey";
+		using SemaphoreSlim semaphore = new(1, 1);
+		await semaphore.WaitAsync(Current.CancellationToken); // Acquire semaphore
+
+		static Task<int?> func()
+		{
+			return Task.FromResult<int?>(75);
+		}
+
+		// Act
+		Task fillTask = dictionary.ObjectFill(key, func, semaphore, Current.CancellationToken);
+
+		// Give a moment to ensure it's waiting
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Assert
+		dictionary.ShouldNotContainKey(key); // Should not have updated yet
+
+		// Release the semaphore
+		semaphore.Release();
+		await fillTask;
+
+		dictionary.ShouldContainKey(key);
+		dictionary[key].ShouldBe(75);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithCancellationToken_ShouldHandleCancellation()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dictionary = new();
+		const string key = "testKey";
+		using SemaphoreSlim semaphore = new(0, 1); // Start with no available slots
+		using CancellationTokenSource cts = new();
+
+		static Task<int?> func()
+		{
+			return Task.FromResult<int?>(42);
+		}
+
+		// Act
+		Task fillTask = dictionary.ObjectFill(key, func, semaphore, cts.Token);
+
+		// Give a moment for the task to start waiting on the semaphore
+		await Task.Delay(50, Current.CancellationToken);
+
+		// Cancel while waiting
+		cts.Cancel();
+
+		// The method should complete without throwing (it catches the exception)
+		await fillTask;
+
+		// Assert - Value should not be added becauseof cancellation
+		dictionary.ShouldNotContainKey(key);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_MultipleCalls_ShouldUpdateValues()
+	{
+		// Arrange
+		ConcurrentDictionary<int, string?> dictionary = new();
+		using SemaphoreSlim semaphore = new(3, 3);
+
+		List<Task> tasks = [];
+		for (int i = 0; i < 10; i++)
+		{
+			int index = i;
+			async Task<string?> func()
+			{
+				await Task.Delay(10, Current.CancellationToken);
+				return $"Value{index}";
+			}
+			tasks.Add(dictionary.ObjectFill(index, func, semaphore, Current.CancellationToken));
+		}
+
+		// Act
+		await Task.WhenAll(tasks);
+
+		// Assert
+		dictionary.Count.ShouldBe(10);
+		for (int i = 0; i < 10; i++)
+		{
+			dictionary[i].ShouldBe($"Value{i}");
+		}
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithComplexValueType_ShouldAddValue()
+	{
+		// Arrange
+		ConcurrentDictionary<string, AsyncIntString?> dictionary = new();
+		const string key = "testKey";
+		AsyncIntString expectedValue = new() { AsyncInt = 100, AsyncString = "TestValue" };
+
+		Task<AsyncIntString?> func()
+		{
+			return Task.FromResult<AsyncIntString?>(new AsyncIntString
+			{
+				AsyncInt = 100,
+				AsyncString = "TestValue"
+			});
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await dictionary.ObjectFill(key, func, semaphore, Current.CancellationToken);
+
+		// Assert
+		dictionary.ShouldContainKey(key);
+		dictionary[key].ShouldNotBeNull();
+		dictionary[key]!.AsyncInt.ShouldBe(expectedValue.AsyncInt);
+		dictionary[key]!.AsyncString.ShouldBe(expectedValue.AsyncString);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_OverwriteExistingKey_ShouldUpdateValue()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dictionary = new();
+		const string key = "testKey";
+		dictionary[key] = 10; // Set initial value
+
+		static Task<int?> func()
+		{
+			return Task.FromResult<int?>(42);
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await dictionary.ObjectFill(key, func, semaphore, Current.CancellationToken);
+
+		// Assert
+		dictionary[key].ShouldBe(42); // Value should be updated
+	}
+
+	#endregion
+
 	#region ObjectFill<T> MemoryStream
 
 	[Theory]

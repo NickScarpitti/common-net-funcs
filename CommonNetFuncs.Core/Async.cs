@@ -11,7 +11,7 @@ public static class Async
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="T"/> obj variable asynchronously.
 	/// </summary>
 	/// <param name="obj">Object to insert data into.</param>
 	/// <param name="task">Async task that returns the value to insert into obj object.</param>
@@ -38,9 +38,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="IList{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Async task that returns the value to insert into obj object.</param>
 	public static async Task ObjectFill<T>(this IList<T?> obj, Task<T?> task)
 	{
@@ -59,9 +59,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">ConcurrentBag object to insert data into.</param>
 	/// <param name="task">Async task that returns the value to insert into obj object.</param>
 	public static async Task ObjectFill<T>(this ConcurrentBag<T?> obj, Task<T?> task)
 	{
@@ -77,9 +77,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Async task that returns the value to insert into obj object.</param>
 	public static async Task ObjectFill<T>(this HashSet<T?> obj, Task<T?> task)
 	{
@@ -98,7 +98,7 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="T"/> obj variable asynchronously.
 	/// </summary>
 	/// <param name="obj">Object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
@@ -134,9 +134,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">ConcurrentBag object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
@@ -165,9 +165,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="IList{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
@@ -196,9 +196,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
@@ -230,9 +230,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="List{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Async task that returns the value to insert into obj object.</param>
 	public static async Task ObjectFill<T>(this List<T> obj, Task<List<T>?> task)
 	{
@@ -254,9 +254,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Async task that returns the value to insert into obj object.</param>
 	public static async Task ObjectFill<T>(this HashSet<T> obj, Task<HashSet<T>?> task)
 	{
@@ -278,9 +278,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Async task that returns the value to insert into obj object.</param>
 	public static async Task ObjectFill<T>(this HashSet<T> obj, Task<List<T>?> task)
 	{
@@ -302,9 +302,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="List{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
@@ -336,9 +336,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
@@ -370,9 +370,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill obj variable asynchronously.
+	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">Object to insert data into.</param>
+	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
@@ -404,7 +404,7 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill list obj variable asynchronously.
+	/// Task to fill <see cref="List{T}"/> obj variable asynchronously.
 	/// </summary>
 	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
@@ -428,9 +428,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill list obj variable asynchronously.
+	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
+	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
 	public static async Task ObjectFill<T>(this HashSet<T> obj, Task<IEnumerable<T>> task)
 	{
@@ -452,7 +452,7 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill list obj variable asynchronously.
+	/// Task to fill <see cref="List{T}"/> obj variable asynchronously.
 	/// </summary>
 	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
@@ -486,9 +486,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill list obj variable asynchronously.
+	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
+	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
@@ -520,9 +520,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill list obj variable asynchronously.
+	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
+	/// <param name="obj">ConcurrentBag object to insert data into.</param>
 	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
 	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<IEnumerable<T>?> task)
 	{
@@ -541,9 +541,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill list obj variable asynchronously.
+	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
+	/// <param name="obj">ConcurrentBag object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
@@ -572,9 +572,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill list obj variable asynchronously.
+	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
+	/// <param name="obj">ConcurrentBag object to insert data into.</param>
 	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
 	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<ConcurrentBag<T>?> task)
 	{
@@ -593,9 +593,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill list obj variable asynchronously.
+	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
+	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
 	public static async Task ObjectFill<T>(this HashSet<T> obj, Task<ConcurrentBag<T>?> task)
 	{
@@ -617,9 +617,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill list obj variable asynchronously.
+	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
+	/// <param name="obj">ConcurrentBag object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
@@ -648,9 +648,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill list obj variable asynchronously.
+	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
+	/// <param name="obj">ConcurrentBag object to insert data into.</param>
 	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
 	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<List<T>?> task)
 	{
@@ -669,9 +669,9 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill list obj variable asynchronously.
+	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
 	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
+	/// <param name="obj">ConcurrentBag object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
@@ -692,6 +692,35 @@ public static class Async
 		catch (Exception ex)
 		{
 			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
+		}
+		finally
+		{
+			semaphore?.Release();
+		}
+	}
+
+	/// <summary>
+	/// Task to fill <see cref="ConcurrentDictionary{TKey, TValue}"> obj variable for a specific key asynchronously.
+	/// </summary>
+	/// <param name="obj">ConcurrentDictionary object to insert data into.</param>
+	/// <param name="key">Key of the item to insert into the ConcurrentDictionary.</param>
+	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj with the provided key.</param>
+	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+	public static async Task ObjectFill<TKey, TValue>(this ConcurrentDictionary<TKey, TValue?>? obj, TKey key, Func<Task<TValue?>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default) where TKey : notnull
+	{
+		try
+		{
+			if (semaphore != null)
+			{
+				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+			}
+
+			obj?[key] = await task().ConfigureAwait(false);
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
 		}
 		finally
 		{
@@ -760,7 +789,7 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <paramref name="ms"/> variable asynchronously.
+	/// Task to fill <see cref="MemoryStream"/> variable asynchronously.
 	/// </summary>
 	/// <param name="ms">MemoryStream to insert data into.</param>
 	/// <param name="task">Async task that returns a <see cref="MemoryStream"/> object to insert into <paramref name="ms"/>.</param>
@@ -783,7 +812,7 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <paramref name="ms"/> variable asynchronously.
+	/// Task to fill <see cref="MemoryStream"/> variable asynchronously.
 	/// </summary>
 	/// <param name="ms">MemoryStream to insert data into.</param>
 	/// <param name="task"><see cref="Func{TResult}"/> that creates and returns the task to run and returns a <see cref="MemoryStream"/> object to insert into <paramref name="ms"/>.</param>

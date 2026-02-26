@@ -20,7 +20,7 @@ public static class Async
 		{
 			if (obj is not null)
 			{
-				T? resultObject = await task;
+				T? resultObject = await task.ConfigureAwait(false);
 				if (!typeof(T).IsSimpleType())
 				{
 					lock (obj)
@@ -45,7 +45,7 @@ public static class Async
 	{
 		try
 		{
-			T? resultObject = await task;
+			T? resultObject = await task.ConfigureAwait(false);
 			lock (obj)
 			{
 				obj.Add(resultObject);
@@ -66,7 +66,7 @@ public static class Async
 	{
 		try
 		{
-			T? resultObject = await task;
+			T? resultObject = await task.ConfigureAwait(false);
 			obj.Add(resultObject);
 		}
 		catch (Exception ex)
@@ -84,7 +84,7 @@ public static class Async
 	{
 		try
 		{
-			T? resultObject = await task;
+			T? resultObject = await task.ConfigureAwait(false);
 			lock (obj)
 			{
 				obj.Add(resultObject);
@@ -237,7 +237,7 @@ public static class Async
 	{
 		try
 		{
-			List<T>? resultObject = await task;
+			List<T>? resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -261,7 +261,7 @@ public static class Async
 	{
 		try
 		{
-			HashSet<T>? resultObject = await task;
+			HashSet<T>? resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -285,7 +285,7 @@ public static class Async
 	{
 		try
 		{
-			List<T>? resultObject = await task;
+			List<T>? resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -411,7 +411,7 @@ public static class Async
 	{
 		try
 		{
-			IEnumerable<T>? resultObject = await task;
+			IEnumerable<T>? resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -435,7 +435,7 @@ public static class Async
 	{
 		try
 		{
-			IEnumerable<T>? resultObject = await task;
+			IEnumerable<T>? resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -527,7 +527,7 @@ public static class Async
 	{
 		try
 		{
-			IEnumerable<T>? resultObject = await task;
+			IEnumerable<T>? resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null && obj != null)
 			{
 				obj.AddRangeParallel(resultObject);
@@ -579,7 +579,7 @@ public static class Async
 	{
 		try
 		{
-			ConcurrentBag<T>? resultObject = await task;
+			ConcurrentBag<T>? resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null && obj != null)
 			{
 				obj.AddRangeParallel(resultObject);
@@ -600,7 +600,7 @@ public static class Async
 	{
 		try
 		{
-			ConcurrentBag<T>? resultObject = await task;
+			ConcurrentBag<T>? resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -655,7 +655,7 @@ public static class Async
 	{
 		try
 		{
-			List<T>? resultObject = await task;
+			List<T>? resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null && obj != null)
 			{
 				obj.AddRangeParallel(resultObject);
@@ -728,6 +728,75 @@ public static class Async
 	}
 
 	/// <summary>
+	/// Task to fill <see cref="ConcurrentDictionary{TKey, TValue}"> obj variable for a specific key asynchronously.
+	/// </summary>
+	/// <param name="obj">ConcurrentDictionary object to insert data into.</param>
+	/// <param name="key">Key of the item to insert into the ConcurrentDictionary.</param>
+	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj with the provided key.</param>
+	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+	public static async Task ObjectFill<TKey, TValue>(this ConcurrentDictionary<TKey, TValue?>? obj, TKey key, Func<Task<TValue?>> task) where TKey : notnull
+	{
+		try
+		{
+			obj?[key] = await task().ConfigureAwait(false);
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+		}
+	}
+
+	/// <summary>
+	/// Task to fill <see cref="ConcurrentDictionary{TKey, TValue}"> obj variable for a specific key asynchronously.
+	/// </summary>
+	/// <param name="obj">ConcurrentDictionary object to insert data into.</param>
+	/// <param name="key">Key of the item to insert into the ConcurrentDictionary.</param>
+	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj with the provided key.</param>
+	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+	public static async Task ObjectFill<TKey, TValue>(this ConcurrentDictionary<TKey, TValue?>? obj, TKey key, Task<TValue?> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default) where TKey : notnull
+	{
+		try
+		{
+			if (semaphore != null)
+			{
+				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+			}
+
+			obj?[key] = await task.ConfigureAwait(false);
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+		}
+		finally
+		{
+			semaphore?.Release();
+		}
+	}
+
+	/// <summary>
+	/// Task to fill <see cref="ConcurrentDictionary{TKey, TValue}"> obj variable for a specific key asynchronously.
+	/// </summary>
+	/// <param name="obj">ConcurrentDictionary object to insert data into.</param>
+	/// <param name="key">Key of the item to insert into the ConcurrentDictionary.</param>
+	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj with the provided key.</param>
+	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+	public static async Task ObjectFill<TKey, TValue>(this ConcurrentDictionary<TKey, TValue?>? obj, TKey key, Task<TValue?> task) where TKey : notnull
+	{
+		try
+		{
+			obj?[key] = await task.ConfigureAwait(false);
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+		}
+	}
+
+	/// <summary>
 	/// Task to fill a <see cref="DataTable"/> asynchronously.
 	/// </summary>
 	/// <param name="dt">DataTable to insert data into.</param>
@@ -736,7 +805,7 @@ public static class Async
 	{
 		try
 		{
-			using DataTable resultTable = await task;
+			using DataTable resultTable = await task.ConfigureAwait(false);
 			if (resultTable != null)
 			{
 				await using DataTableReader reader = resultTable.CreateDataReader();
@@ -796,7 +865,7 @@ public static class Async
 	{
 		try
 		{
-			await using MemoryStream resultObject = await task;
+			await using MemoryStream resultObject = await task.ConfigureAwait(false);
 #pragma warning disable S3998 // Threads should not lock on objects with weak identity
 			lock (ms)
 			{
@@ -859,7 +928,7 @@ public static class Async
 				PropertyInfo? prop = Array.Find(props, x => x.Name.StrEq(propertyName));
 				if (prop != null)
 				{
-					TTask value = await task;
+					TTask value = await task.ConfigureAwait(false);
 					prop.SetValue(obj, value);
 				}
 				else
@@ -1027,7 +1096,7 @@ public static class Async
 		try
 		{
 			await semaphore.WaitAsync(token).ConfigureAwait(false);
-			await task;
+			await task.ConfigureAwait(false);
 		}
 		catch (Exception ex)
 		{
@@ -1050,7 +1119,7 @@ public static class Async
 		try
 		{
 			await semaphore.WaitAsync(token).ConfigureAwait(false);
-			return await task;
+			return await task.ConfigureAwait(false);
 		}
 		catch (Exception ex)
 		{

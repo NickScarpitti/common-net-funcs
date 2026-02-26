@@ -273,9 +273,9 @@ public sealed class AsyncTests
 	{
 		List<Func<Task<string>>> tasks =
 		[
-				() => Task.FromResult("Result1"),
-						() => Task.FromResult("Result2"),
-						() => Task.FromResult("Result3")
+			() => Task.FromResult("Result1"),
+			() => Task.FromResult("Result2"),
+			() => Task.FromResult("Result3")
 		];
 		ConcurrentBag<string> results = await tasks.RunAll();
 		results.Count.ShouldBe(3);

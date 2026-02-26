@@ -25,4 +25,6 @@ public static class ExceptionLocation
 
 		return $"{type.FullName}.{method.Name}";
 	}
+
+	public const string ErrorLocationTemplate = "Error in {ErrorLocation}";
 }

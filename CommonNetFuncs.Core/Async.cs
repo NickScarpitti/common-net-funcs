@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
-
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
@@ -688,6 +687,35 @@ public static class Async
 			{
 				obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
 			}
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{ErrorLocation} Error", ex.GetLocationOfException());
+		}
+		finally
+		{
+			semaphore?.Release();
+		}
+	}
+
+	/// <summary>
+	/// Task to fill <see cref="ConcurrentDictionary{TKey, TValue}"> obj variable for a specific key asynchronously.
+	/// </summary>
+	/// <param name="obj">ConcurrentDictionary object to insert data into.</param>
+	/// <param name="key">Key of the item to insert into the ConcurrentDictionary.</param>
+	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj with the provided key.</param>
+	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
+	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+	public static async Task ObjectFill<TKey, TValue>(this ConcurrentDictionary<TKey, TValue?>? obj, TKey key, Func<Task<TValue?>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default) where TKey : notnull
+	{
+		try
+		{
+			if (semaphore != null)
+			{
+				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+			}
+
+			obj?[key] = await task().ConfigureAwait(false);
 		}
 		catch (Exception ex)
 		{

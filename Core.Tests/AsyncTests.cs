@@ -76,6 +76,58 @@ public sealed class AsyncTests
 		obj.AsyncString.ShouldBe("Updated");
 	}
 
+	[Fact]
+	public async Task ObjectFill_WithFuncComplexType_ShouldCopyProperties()
+	{
+		// Arrange - Test Func<Task<T>> overload WITHOUT semaphore with complex type (covers line 53)
+		AsyncIntString obj = new() { AsyncInt = 0, AsyncString = "Original" };
+		static Task<AsyncIntString> func()
+		{
+			return Task.FromResult(new AsyncIntString { AsyncInt = 99, AsyncString = "FromFunc" });
+		}
+
+		// Act
+		await obj.ObjectFill(func);
+
+		// Assert
+		obj.AsyncInt.ShouldBe(99);
+		obj.AsyncString.ShouldBe("FromFunc");
+	}
+
+	[Fact]
+	public async Task ObjectFill_WithFuncComplexTypeAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 5, AsyncString = "Test" };
+		static Task<AsyncIntString?> func()
+		{
+			return Task.FromResult<AsyncIntString?>(null);
+		}
+
+		// Act
+		await obj.ObjectFill(func);
+
+		// Assert
+		obj.AsyncInt.ShouldBe(5);
+		obj.AsyncString.ShouldBe("Test");
+	}
+
+	[Fact]
+	public async Task ObjectFill_WithFuncAndException_ShouldHandleException()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1, AsyncString = "Original" };
+		static Task<AsyncIntString> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectFill(func));
+		obj.AsyncInt.ShouldBe(1);
+		obj.AsyncString.ShouldBe("Original");
+	}
+
 	#endregion
 
 	#region ObjectFill<T> Collections (List, HashSet, ConcurrentBag)
@@ -499,7 +551,7 @@ public sealed class AsyncTests
 		// Arrange
 		List<int> list = [1, 2];
 		IEnumerable<int> items = new[] { 3, 4, 5 };
-		Task<IEnumerable<int>> task = Task.FromResult(items);
+		Task<IEnumerable<int>?> task = Task.FromResult<IEnumerable<int>?>(items);
 
 		// Act
 		await list.ObjectFill(task);
@@ -514,13 +566,51 @@ public sealed class AsyncTests
 		// Arrange
 		HashSet<string> hashSet = ["A", "B"];
 		IEnumerable<string> items = new[] { "C", "D" };
-		Task<IEnumerable<string>> task = Task.FromResult(items);
+		Task<IEnumerable<string>?> task = Task.FromResult<IEnumerable<string>?>(items);
 
 		// Act
 		await hashSet.ObjectFill(task);
 
 		// Assert
 		hashSet.Count.ShouldBe(4);
+	}
+
+	#endregion
+
+	#region ObjectFill List/HashSet with Func<Task<IEnumerable>> (no semaphore)
+
+	[Fact]
+	public async Task ObjectFill_ListWithFuncIEnumerableNoSemaphore_ShouldAddRange()
+	{
+		// Arrange
+		List<int> list = [1];
+		static Task<IEnumerable<int>?> func()
+		{
+			return Task.FromResult<IEnumerable<int>?>([2, 3]);
+		}
+
+		// Act
+		await list.ObjectFill(func);
+
+		// Assert
+		list.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncIEnumerableNoSemaphore_ShouldAddRange()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1];
+		static Task<IEnumerable<int>?> func()
+		{
+			return Task.FromResult<IEnumerable<int>?>([2, 3]);
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(3);
 	}
 
 	#endregion
@@ -532,9 +622,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<int> list = [1];
-		static Task<IEnumerable<int>> func()
+		static Task<IEnumerable<int>?> func()
 		{
-			return Task.FromResult<IEnumerable<int>>([2, 3]);
+			return Task.FromResult<IEnumerable<int>?>([2, 3]);
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -551,9 +641,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1];
-		static Task<IEnumerable<int>> func()
+		static Task<IEnumerable<int>?> func()
 		{
-			return Task.FromResult<IEnumerable<int>>([2, 3]);
+			return Task.FromResult<IEnumerable<int>?>([2, 3]);
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -654,9 +744,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		ConcurrentBag<int> bag = [];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
-			return Task.FromResult(new List<int> { 1, 2, 3 });
+			return Task.FromResult<List<int>?>(new List<int> { 1, 2, 3 });
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -762,6 +852,74 @@ public sealed class AsyncTests
 
 		// Assert
 		bag.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncConcurrentBagNoSemaphore_ShouldAddRange()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1];
+		static Task<ConcurrentBag<int>?> func()
+		{
+			return Task.FromResult<ConcurrentBag<int>?>(new ConcurrentBag<int>([2, 3]));
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncListNoSemaphore_ShouldAddRange()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1];
+		static Task<List<int>?> func()
+		{
+			return Task.FromResult<List<int>?>(new List<int> { 2, 3 });
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncIEnumerableNoSemaphore_ShouldAddRange()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1];
+		static Task<IEnumerable<int>?> func()
+		{
+			return Task.FromResult<IEnumerable<int>?>([2, 3]);
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncConcurrentBagNoSemaphore_ShouldAddRange()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1];
+		static Task<ConcurrentBag<int>?> func()
+		{
+			return Task.FromResult<ConcurrentBag<int>?>(new ConcurrentBag<int>([2, 3]));
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(3);
 	}
 
 	#endregion
@@ -874,7 +1032,7 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<int> list = [1];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
 			throw new InvalidOperationException("Test exception");
 		}
@@ -893,7 +1051,7 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
 			throw new InvalidOperationException("Test exception");
 		}
@@ -912,7 +1070,7 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1];
-		static Task<HashSet<int>> func()
+		static Task<HashSet<int>?> func()
 		{
 			throw new InvalidOperationException("Test exception");
 		}
@@ -931,7 +1089,7 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<int> list = [1];
-		Task<IEnumerable<int>> task = Task.FromException<IEnumerable<int>>(new InvalidOperationException("Test exception"));
+		Task<IEnumerable<int>?> task = Task.FromException<IEnumerable<int>?>(new InvalidOperationException("Test exception"));
 
 		// Act
 		await list.ObjectFill(task);
@@ -945,7 +1103,7 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1];
-		Task<IEnumerable<int>> task = Task.FromException<IEnumerable<int>>(new InvalidOperationException("Test exception"));
+		Task<IEnumerable<int>?> task = Task.FromException<IEnumerable<int>?>(new InvalidOperationException("Test exception"));
 
 		// Act
 		await hashSet.ObjectFill(task);
@@ -959,7 +1117,7 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<int> list = [1];
-		static Task<IEnumerable<int>> func()
+		static Task<IEnumerable<int>?> func()
 		{
 			throw new InvalidOperationException("Test exception");
 		}
@@ -978,7 +1136,7 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1];
-		static Task<IEnumerable<int>> func()
+		static Task<IEnumerable<int>?> func()
 		{
 			throw new InvalidOperationException("Test exception");
 		}
@@ -1077,7 +1235,7 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		ConcurrentBag<int> bag = [];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
 			throw new InvalidOperationException("Test exception");
 		}
@@ -1103,6 +1261,426 @@ public sealed class AsyncTests
 
 		// Assert
 		hashSet.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetSingleItemWithFuncThrowing_ShouldHandleException()
+	{
+		// Arrange
+		HashSet<string?> hashSet = [];
+		static Task<string?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetHashSetResultWithFuncThrowing_ShouldHandleException()
+	{
+		// Arrange
+		HashSet<int> hashSet = [];
+		static Task<HashSet<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetListResultWithFuncThrowing_ShouldHandleException()
+	{
+		// Arrange
+		HashSet<int> hashSet = [];
+		static Task<List<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncListSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1];
+		static Task<List<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		hashSet.Count.ShouldBe(1);
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncConcurrentBagSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1];
+		static Task<ConcurrentBag<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		hashSet.Count.ShouldBe(1);
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagSingleItemWithFuncThrowing_ShouldHandleException()
+	{
+		// Arrange
+		ConcurrentBag<string?> bag = [];
+		static Task<string?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagConcurrentBagResultWithFuncThrowing_ShouldHandleException()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [];
+		static Task<ConcurrentBag<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagListResultWithFuncThrowing_ShouldHandleException()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [];
+		static Task<List<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionaryWithFuncThrowing_ShouldHandleException()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dict = new();
+		static Task<int?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await dict.ObjectFill("key1", func);
+
+		// Assert
+		dict.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionaryWithFuncAndSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dict = new();
+		static Task<int?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await dict.ObjectFill("key1", func, semaphore, Current.CancellationToken);
+
+		// Assert
+		dict.Count.ShouldBe(0);
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_DataTableWithFuncNoSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		DataTable dt = new();
+		dt.Columns.Add("Id", typeof(int));
+		dt.Rows.Add(1);
+
+		static Task<DataTable> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await dt.ObjectFill(func);
+
+		// Assert
+		dt.Rows.Count.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_DataTableWithFuncAndSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		DataTable dt = new();
+		dt.Columns.Add("Id", typeof(int));
+		dt.Rows.Add(1);
+
+		static Task<DataTable> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await dt.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		dt.Rows.Count.ShouldBe(1);
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_MemoryStreamWithFuncNoSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		await using MemoryStream ms = new();
+		byte[] initialData = [1, 2, 3];
+		await ms.WriteAsync(initialData, Current.CancellationToken);
+		long initialLength = ms.Length;
+
+		static Task<MemoryStream> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await ms.ObjectFill(func);
+
+		// Assert
+		ms.Length.ShouldBe(initialLength);
+	}
+
+	[Fact]
+	public async Task ObjectFill_MemoryStreamWithFuncAndSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		byte[] initialData = [1, 2, 3];
+		await ms.WriteAsync(initialData, Current.CancellationToken);
+		long initialLength = ms.Length;
+
+		static Task<MemoryStream> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await ms.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		ms.Length.ShouldBe(initialLength);
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ListWithFuncListNoSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		List<int> list = [1, 2];
+		static Task<List<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await list.ObjectFill(func);
+
+		// Assert
+		list.Count.ShouldBe(2); // No items added due to exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncHashSetNoSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1, 2];
+		static Task<HashSet<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(2); // No items added due to exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncListNoSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1, 2];
+		static Task<List<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(2); // No items added due to exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncConcurrentBagNoSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1, 2];
+		static Task<ConcurrentBag<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(2); // No items added due to exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncListNoSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1, 2];
+		static Task<List<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(2); // No items added due to exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncIEnumerableNoSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1, 2];
+		static Task<IEnumerable<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(2); // No items added due to exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_ListWithFuncIEnumerableNoSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		List<int> list = [1, 2];
+		static Task<IEnumerable<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await list.ObjectFill(func);
+
+		// Assert
+		list.Count.ShouldBe(2); // No items added due to exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncIEnumerableNoSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1, 2];
+		static Task<IEnumerable<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(2); // No items added due to exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncConcurrentBagNoSemaphoreThrowing_ShouldHandleException()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1, 2];
+		static Task<ConcurrentBag<int>?> func()
+		{
+			throw new InvalidOperationException("Test exception");
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(2); // No items added due to exception
 	}
 
 	#endregion
@@ -1170,9 +1748,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<int> list = [1];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
-			return Task.FromResult(new List<int> { 2, 3 });
+			return Task.FromResult<List<int>?>(new List<int> { 2, 3 });
 		}
 
 		// Act
@@ -1232,9 +1810,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
-			return Task.FromResult(new List<int> { 2, 3 });
+			return Task.FromResult<List<int>?>(new List<int> { 2, 3 });
 		}
 
 		// Act
@@ -1249,9 +1827,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1];
-		static Task<HashSet<int>> func()
+		static Task<HashSet<int>?> func()
 		{
-			return Task.FromResult(new HashSet<int> { 2, 3 });
+			return Task.FromResult<HashSet<int>?>(new HashSet<int> { 2, 3 });
 		}
 
 		// Act
@@ -1266,9 +1844,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1];
-		static Task<IEnumerable<int>> func()
+		static Task<IEnumerable<int>?> func()
 		{
-			return Task.FromResult<IEnumerable<int>>([2, 3]);
+			return Task.FromResult<IEnumerable<int>?>([2, 3]);
 		}
 
 		// Act
@@ -1283,9 +1861,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<int> list = [1];
-		static Task<IEnumerable<int>> func()
+		static Task<IEnumerable<int>?> func()
 		{
-			return Task.FromResult<IEnumerable<int>>([2, 3]);
+			return Task.FromResult<IEnumerable<int>?>([2, 3]);
 		}
 
 		// Act
@@ -1334,9 +1912,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		ConcurrentBag<int> bag = [];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
-			return Task.FromResult(new List<int> { 1, 2, 3 });
+			return Task.FromResult<List<int>?>(new List<int> { 1, 2, 3 });
 		}
 
 		// Act
@@ -1585,7 +2163,7 @@ public sealed class AsyncTests
 		await Task.Delay(50, Current.CancellationToken);
 
 		// Cancel while waiting
-		cts.Cancel();
+		await cts.CancelAsync();
 
 		// The method should complete without throwing (it catches the exception)
 		await fillTask;
@@ -1792,6 +2370,52 @@ public sealed class AsyncTests
 	}
 
 	[Fact]
+	public async Task ObjectFill_DataTableWithFuncNoSemaphore_ShouldLoadData()
+	{
+		// Arrange
+		using DataTable dt = new();
+		dt.Columns.Add("Id", typeof(int));
+		dt.Columns.Add("Name", typeof(string));
+		static Task<DataTable> func()
+		{
+			DataTable resultDt = new();
+			resultDt.Columns.Add("Id", typeof(int));
+			resultDt.Columns.Add("Name", typeof(string));
+			resultDt.Rows.Add(1, "Test1");
+			resultDt.Rows.Add(2, "Test2");
+			return Task.FromResult(resultDt);
+		}
+
+		// Act
+		await dt.ObjectFill(func);
+
+		// Assert
+		dt.Rows.Count.ShouldBe(2);
+		dt.Rows[0]["Id"].ShouldBe(1);
+		dt.Rows[0]["Name"].ShouldBe("Test1");
+		dt.Rows[1]["Id"].ShouldBe(2);
+		dt.Rows[1]["Name"].ShouldBe("Test2");
+	}
+
+	[Fact]
+	public async Task ObjectFill_DataTableWithFuncNoSemaphore_WhenResultIsNull_ShouldNotModify()
+	{
+		// Arrange
+		using DataTable dt = new();
+		dt.Columns.Add("Id", typeof(int));
+		static Task<DataTable> func()
+		{
+			return Task.FromResult<DataTable>(null!);
+		}
+
+		// Act
+		await dt.ObjectFill(func);
+
+		// Assert
+		dt.Rows.Count.ShouldBe(0);
+	}
+
+	[Fact]
 	public async Task ObjectFill_DataTableWithFuncSemaphore_ShouldLoadData()
 	{
 		// Arrange
@@ -1918,6 +2542,86 @@ public sealed class AsyncTests
 
 	#endregion
 
+	#region ObjectFill<T> List<T> with Func<Task<List<T>?>>
+
+	[Fact]
+	public async Task ObjectFill_ListWithFuncList_ShouldAddRangeToList()
+	{
+		// Arrange
+		List<int> list = [1, 2, 3];
+		static Task<List<int>?> func()
+		{
+			return Task.FromResult<List<int>?>(new List<int> { 4, 5, 6 });
+		}
+
+		// Act
+		await list.ObjectFill(func);
+
+		// Assert
+		list.Count.ShouldBe(6);
+		list.ShouldBe([1, 2, 3, 4, 5, 6]);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ListWithFuncList_WhenResultIsNull_ShouldNotModifyList()
+	{
+		// Arrange
+		List<string> list = ["A", "B"];
+		static Task<List<string>?> func()
+		{
+			return Task.FromResult<List<string>?>(null);
+		}
+
+		// Act
+		await list.ObjectFill(func);
+
+		// Assert
+		list.Count.ShouldBe(2);
+		list.ShouldBe(["A", "B"]);
+	}
+
+	#endregion
+
+	#region ObjectFill<T> List<T> with Func<Task<IEnumerable<T>?>>
+
+	[Fact]
+	public async Task ObjectFill_ListWithFuncIEnumerable_ShouldAddRangeToList()
+	{
+		// Arrange
+		List<int> list = [1, 2, 3];
+		static Task<IEnumerable<int>?> func()
+		{
+			return Task.FromResult<IEnumerable<int>?>(new List<int> { 4, 5, 6 });
+		}
+
+		// Act
+		await list.ObjectFill(func);
+
+		// Assert
+		list.Count.ShouldBe(6);
+		list.ShouldBe([1, 2, 3, 4, 5, 6]);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ListWithFuncIEnumerable_WhenResultIsNull_ShouldNotModifyList()
+	{
+		// Arrange
+		List<string> list = ["A", "B"];
+		static Task<IEnumerable<string>?> func()
+		{
+			return Task.FromResult<IEnumerable<string>?>(null);
+		}
+
+		// Act
+		await list.ObjectFill(func);
+
+		// Assert
+		list.Count.ShouldBe(2);
+		list.ShouldBe(["A", "B"]);
+	}
+
+	#endregion
+
 	#region ObjectFill<T> HashSet<T> with Task<List<T>?>
 
 	[Fact]
@@ -1982,6 +2686,46 @@ public sealed class AsyncTests
 
 	#endregion
 
+	#region ObjectFill<T> HashSet<T> with Func<Task<List<T>?>>
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncList_ShouldAddRangeToHashSet()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1, 2, 3];
+		static Task<List<int>?> func()
+		{
+			return Task.FromResult<List<int>?>(new List<int> { 4, 5, 6 });
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(6);
+		hashSet.ShouldBe([1, 2, 3, 4, 5, 6]);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncList_WhenResultIsNull_ShouldNotModifyHashSet()
+	{
+		// Arrange
+		HashSet<string> hashSet = ["A", "B"];
+		static Task<List<string>?> func()
+		{
+			return Task.FromResult<List<string>?>(null);
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(2);
+		hashSet.ShouldBe(["A", "B"]);
+	}
+
+	#endregion
+
 	#region ObjectFill<T> HashSet<T> with Task<HashSet<T>?>
 
 	[Fact]
@@ -2038,9 +2782,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<int> list = [1, 2, 3];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
-			return Task.FromResult(new List<int> { 4, 5, 6 });
+			return Task.FromResult<List<int>?>(new List<int> { 4, 5, 6 });
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -2058,9 +2802,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<string> list = ["A", "B"];
-		static Task<List<string>> func()
+		static Task<List<string>?> func()
 		{
-			return Task.FromResult(new List<string> { "C", "D" });
+			return Task.FromResult<List<string>?>(new List<string> { "C", "D" });
 		}
 
 		// Act
@@ -2076,9 +2820,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<int> list = [10, 20];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
-			return Task.FromResult<List<int>>(null!);
+			return Task.FromResult<List<int>?>(null);
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -2096,9 +2840,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<int> list = [1, 2];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
-			return Task.FromException<List<int>>(new InvalidOperationException("Test error"));
+			return Task.FromException<List<int>?>(new InvalidOperationException("Test error"));
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -2115,9 +2859,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<int> list = [1];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
-			return Task.FromResult(new List<int> { 2 });
+			return Task.FromResult<List<int>?>(new List<int> { 2 });
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -2134,7 +2878,7 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		List<int> list = [1];
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
 			throw new InvalidOperationException("Fail");
 		}
@@ -2161,7 +2905,7 @@ public sealed class AsyncTests
 		for (int i = 0; i < 5; i++)
 		{
 			List<int> list = [i];
-			async Task<List<int>> func()
+			async Task<List<int>?> func()
 			{
 				lock (lockObj)
 				{
@@ -2191,9 +2935,9 @@ public sealed class AsyncTests
 		// Arrange
 		List<int> list = [1];
 		using CancellationTokenSource cts = new();
-		static Task<List<int>> func()
+		static Task<List<int>?> func()
 		{
-			return Task.FromResult(new List<int> { 2 });
+			return Task.FromResult<List<int>?>(new List<int> { 2 });
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -2214,9 +2958,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1, 2, 3];
-		static Task<HashSet<int>> func()
+		static Task<HashSet<int>?> func()
 		{
-			return Task.FromResult(new HashSet<int> { 4, 5, 6 });
+			return Task.FromResult<HashSet<int>?>(new HashSet<int> { 4, 5, 6 });
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -2234,9 +2978,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<string> hashSet = ["A", "B"];
-		static Task<HashSet<string>> func()
+		static Task<HashSet<string>?> func()
 		{
-			return Task.FromResult<HashSet<string>>(null!);
+			return Task.FromResult<HashSet<string>?>(null);
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -2254,9 +2998,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1, 2];
-		static Task<HashSet<int>> func()
+		static Task<HashSet<int>?> func()
 		{
-			return Task.FromException<HashSet<int>>(new InvalidOperationException("Test error"));
+			return Task.FromException<HashSet<int>?>(new InvalidOperationException("Test error"));
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -2273,9 +3017,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1, 2, 3];
-		static Task<HashSet<int>> func()
+		static Task<HashSet<int>?> func()
 		{
-			return Task.FromResult(new HashSet<int> { 2, 3, 4, 5 });
+			return Task.FromResult<HashSet<int>?>(new HashSet<int> { 2, 3, 4, 5 });
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -2293,9 +3037,9 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1];
-		static Task<HashSet<int>> func()
+		static Task<HashSet<int>?> func()
 		{
-			return Task.FromResult(new HashSet<int> { 2 });
+			return Task.FromResult<HashSet<int>?>(new HashSet<int> { 2 });
 		}
 
 		using SemaphoreSlim semaphore = new(1, 1);
@@ -2312,7 +3056,7 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		HashSet<int> hashSet = [1];
-		static Task<HashSet<int>> func()
+		static Task<HashSet<int>?> func()
 		{
 			throw new InvalidOperationException("Fail");
 		}
@@ -2339,7 +3083,7 @@ public sealed class AsyncTests
 		for (int i = 0; i < 5; i++)
 		{
 			HashSet<int> hashSet = [i];
-			async Task<HashSet<int>> func()
+			async Task<HashSet<int>?> func()
 			{
 				lock (lockObj)
 				{
@@ -2369,9 +3113,9 @@ public sealed class AsyncTests
 		// Arrange
 		HashSet<int> hashSet = [1];
 		using CancellationTokenSource cts = new();
-		static Task<HashSet<int>> func()
+		static Task<HashSet<int>?> func()
 		{
-			return Task.FromResult(new HashSet<int> { 2 });
+			return Task.FromResult<HashSet<int>?>(new HashSet<int> { 2 });
 		}
 		using SemaphoreSlim semaphore = new(1, 1);
 
@@ -2380,6 +3124,49 @@ public sealed class AsyncTests
 
 		// Assert
 		await Should.ThrowAsync<Exception>(async () => await hashSet.ObjectFill(func, semaphore, cts.Token));
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncListSemaphore_ShouldAddRangeToHashSet()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1, 2];
+		static Task<List<int>?> func()
+		{
+			return Task.FromResult<List<int>?>(new List<int> { 3, 4 });
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		hashSet.Count.ShouldBe(4);
+		hashSet.ShouldBe([1, 2, 3, 4]);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncConcurrentBagSemaphore_ShouldAddRangeToHashSet()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1, 2];
+		static Task<ConcurrentBag<int>?> func()
+		{
+			return Task.FromResult<ConcurrentBag<int>?>(new ConcurrentBag<int>([3, 4]));
+		}
+
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		hashSet.Count.ShouldBe(4);
+		hashSet.ShouldContain(1);
+		hashSet.ShouldContain(2);
+		hashSet.ShouldContain(3);
+		hashSet.ShouldContain(4);
 	}
 
 	#endregion
@@ -3075,6 +3862,1995 @@ public sealed class AsyncTests
 		// Act & Assert
 		await Should.ThrowAsync<InvalidOperationException>(group.RunTasks());
 	}
+
+	#endregion
+
+	#region ObjectFill with Task<T> (direct Task, not Func)
+
+	[Fact]
+	public async Task ObjectFill_WithDirectTaskT_ShouldCopyProperties()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1, AsyncString = "original" };
+		Task<AsyncIntString> task = Task.FromResult(new AsyncIntString { AsyncInt = 42, AsyncString = "updated" });
+
+		// Act
+		await obj.ObjectFill(task);
+
+		// Assert
+		obj.AsyncInt.ShouldBe(42);
+		obj.AsyncString.ShouldBe("updated");
+	}
+
+	[Fact]
+	public async Task ObjectFill_WithDirectTaskT_WhenTaskResultIsNull_ShouldNotModifyObject()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1, AsyncString = "original" };
+		Task<AsyncIntString?> task = Task.FromResult<AsyncIntString?>(null);
+
+		// Act
+		await obj.ObjectFill(task);
+
+		// Assert
+		obj.AsyncInt.ShouldBe(1);
+		obj.AsyncString.ShouldBe("original");
+	}
+
+	[Fact]
+	public async Task ObjectFill_WithDirectTaskT_WhenObjectIsNull_ShouldNotThrow()
+	{
+		// Arrange
+		AsyncIntString? obj = null;
+		Task<AsyncIntString?> task = Task.FromResult<AsyncIntString?>(new AsyncIntString { AsyncInt = 42 });
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectFill(task));
+	}
+
+	[Fact]
+	public async Task ObjectFill_WithDirectTaskT_WhenTaskThrows_ShouldHandleException()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1 };
+		Task<AsyncIntString> task = Task.FromException<AsyncIntString>(new InvalidOperationException("test error"));
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectFill(task));
+	}
+
+	#endregion
+
+	#region ObjectFill ConcurrentDictionary with Task<TValue?>
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithDirectTask_ShouldAddValue()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dict = new();
+		const string key = "testKey";
+		Task<int?> task = Task.FromResult<int?>(42);
+
+		// Act
+		await dict.ObjectFill(key, task);
+
+		// Assert
+		dict.ShouldContainKey(key);
+		dict[key].ShouldBe(42);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithDirectTask_WhenResultIsNull_ShouldSetNullValue()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dict = new();
+		const string key = "testKey";
+		Task<int?> task = Task.FromResult<int?>(null);
+
+		// Act
+		await dict.ObjectFill(key, task);
+
+		// Assert
+		dict.ShouldContainKey(key);
+		dict[key].ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithDirectTask_WhenDictionaryIsNull_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?>? dict = null;
+		const string key = "testKey";
+		Task<int?> task = Task.FromResult<int?>(42);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await dict.ObjectFill(key, task));
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithDirectTask_WhenTaskThrows_ShouldHandleException()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dict = new();
+		const string key = "testKey";
+		Task<int?> task = Task.FromException<int?>(new InvalidOperationException("test error"));
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await dict.ObjectFill(key, task));
+		dict.ShouldNotContainKey(key);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithDirectTaskFunc_ShouldAddValue()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dict = new();
+		const string key = "testKey";
+
+		Task<int?> func() => Task.FromResult<int?>(42);
+
+		// Act
+		await dict.ObjectFill(key, func);
+
+		// Assert
+		dict.ShouldContainKey(key);
+		dict[key].ShouldBe(42);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithDirectTaskFunc_WhenDictionaryIsNull_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?>? dict = null;
+		const string key = "testKey";
+
+		Task<int?> func() => Task.FromResult<int?>(42);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await dict.ObjectFill(key, func));
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentDictionary_WithDirectTaskFunc_WhenTaskThrows_ShouldHandleException()
+	{
+		// Arrange
+		ConcurrentDictionary<string, int?> dict = new();
+		const string key = "testKey";
+
+		Task<int?> func() => Task.FromException<int?>(new InvalidOperationException("test error"));
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await dict.ObjectFill(key, func));
+		dict.ShouldNotContainKey(key);
+	}
+
+	#endregion
+
+	#region ObjectFill DataTable with Task<DataTable>
+
+	[Fact]
+	public async Task ObjectFill_DataTable_WithDirectTask_ShouldLoadData()
+	{
+		// Arrange
+		DataTable dt = new();
+		dt.Columns.Add("Id", typeof(int));
+		dt.Columns.Add("Name", typeof(string));
+
+		DataTable resultTable = new();
+		resultTable.Columns.Add("Id", typeof(int));
+		resultTable.Columns.Add("Name", typeof(string));
+		resultTable.Rows.Add(1, "Test");
+		resultTable.Rows.Add(2, "Data");
+
+		Task<DataTable> task = Task.FromResult(resultTable);
+
+		// Act
+		await dt.ObjectFill(task);
+
+		// Assert
+		dt.Rows.Count.ShouldBe(2);
+		dt.Rows[0]["Id"].ShouldBe(1);
+		dt.Rows[0]["Name"].ShouldBe("Test");
+	}
+
+	[Fact]
+	public async Task ObjectFill_DataTable_WithDirectTask_WhenTaskThrows_ShouldHandleException()
+	{
+		// Arrange
+		DataTable dt = new();
+		Task<DataTable> task = Task.FromException<DataTable>(new InvalidOperationException("test error"));
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await dt.ObjectFill(task));
+	}
+
+	#endregion
+
+	#region ObjectFill MemoryStream with Task<MemoryStream>
+
+	[Fact]
+	public async Task ObjectFill_MemoryStream_WithDirectTask_ShouldWriteData()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		byte[] data = [1, 2, 3, 4, 5];
+		using MemoryStream resultMs = new(data);
+		Task<MemoryStream> task = Task.FromResult(resultMs);
+
+		// Act
+		await ms.ObjectFill(task);
+
+		// Assert
+		ms.Length.ShouldBe(5);
+		ms.ToArray().ShouldBe(data);
+	}
+
+	[Fact]
+	public async Task ObjectFill_MemoryStream_WithDirectTask_WhenTaskThrows_ShouldHandleException()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		Task<MemoryStream> task = Task.FromException<MemoryStream>(new InvalidOperationException("test error"));
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await ms.ObjectFill(task));
+	}
+
+	#endregion
+
+	#region ObjectUpdate with Task<TTask>
+
+	[Fact]
+	public async Task ObjectUpdate_WithDirectTask_ShouldUpdateProperty()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1, AsyncString = "original" };
+		Task<int> task = Task.FromResult(42);
+
+		// Act
+		await obj.ObjectUpdate(nameof(AsyncIntString.AsyncInt), task);
+
+		// Assert
+		obj.AsyncInt.ShouldBe(42);
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithDirectTask_WithInvalidPropertyName_ShouldHandleException()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1 };
+		Task<int> task = Task.FromResult(42);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectUpdate("InvalidProperty", task));
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithDirectTask_WhenTaskThrows_ShouldHandleException()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1 };
+		Task<int> task = Task.FromException<int>(new InvalidOperationException("test error"));
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectUpdate(nameof(AsyncIntString.AsyncInt), task));
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithFunc_WithInvalidPropertyName_ShouldHandleException()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1 };
+
+		static Task<int> func() => Task.FromResult(42);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectUpdate("InvalidProperty", func));
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithFunc_WhenTaskThrows_ShouldHandleException()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1 };
+
+		static Task<int> func() => Task.FromException<int>(new InvalidOperationException("test error"));
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectUpdate(nameof(AsyncIntString.AsyncInt), func));
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithFuncSemaphore_WithInvalidPropertyName_ShouldHandleException()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1 };
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<int> func() => Task.FromResult(42);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectUpdate("InvalidProperty", func, semaphore));
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithFuncSemaphore_WhenTaskThrows_ShouldHandleExceptionAndReleaseSemaphore()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1 };
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<int> func() => Task.FromException<int>(new InvalidOperationException("test error"));
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectUpdate(nameof(AsyncIntString.AsyncInt), func, semaphore));
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	#endregion
+
+	#region RunAsyncWithSemaphore with errorText
+
+	[Fact]
+	public async Task RunAsyncWithSemaphore_WithErrorText_ShouldIncludeErrorTextInLog()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+		Task task = Task.FromException(new InvalidOperationException("test error"));
+		const string errorText = "Custom error message";
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await task.RunAsyncWithSemaphore(semaphore, errorText: errorText));
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphore_WithBreakOnError_ShouldCancel()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+		using CancellationTokenSource cts = new();
+		Task task = Task.FromException(new InvalidOperationException("test error"));
+
+		// Act
+		await task.RunAsyncWithSemaphore(semaphore, cts, breakOnError: true);
+
+		// Assert
+		cts.Token.IsCancellationRequested.ShouldBeTrue();
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphore_WithErrorTextAndBreakOnError_ShouldCancelAndIncludeErrorText()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+		using CancellationTokenSource cts = new();
+		Task task = Task.FromException(new InvalidOperationException("test error"));
+		const string errorText = "Custom error message";
+
+		// Act
+		await task.RunAsyncWithSemaphore(semaphore, cts, breakOnError: true, errorText: errorText);
+
+		// Assert
+		cts.Token.IsCancellationRequested.ShouldBeTrue();
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphoreT_WithErrorText_ShouldIncludeErrorTextInLog()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+		Task<int> task = Task.FromException<int>(new InvalidOperationException("test error"));
+		const string errorText = "Custom error message";
+
+		// Act
+		int? result = await task.RunAsyncWithSemaphore(semaphore, errorText: errorText);
+
+		// Assert
+		result.ShouldBe(default(int)); // Returns default(int) not null
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphoreT_WithBreakOnError_ShouldCancel()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+		using CancellationTokenSource cts = new();
+		Task<int> task = Task.FromException<int>(new InvalidOperationException("test error"));
+
+		// Act
+		int? result = await task.RunAsyncWithSemaphore(semaphore, cts, breakOnError: true);
+
+		// Assert
+		result.ShouldBe(default(int)); // Returns default(int) not null
+		cts.Token.IsCancellationRequested.ShouldBeTrue();
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphoreT_WithErrorTextAndBreakOnError_ShouldCancelAndIncludeErrorText()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+		using CancellationTokenSource cts = new();
+		Task<int> task = Task.FromException<int>(new InvalidOperationException("test error"));
+		const string errorText = "Custom error message";
+
+		// Act
+		int? result = await task.RunAsyncWithSemaphore(semaphore, cts, breakOnError: true, errorText: errorText);
+
+		// Assert
+		result.ShouldBe(default(int)); // Returns default(int) not null
+		cts.Token.IsCancellationRequested.ShouldBeTrue();
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphoreT_Success_ShouldReturnResult()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+		Task<int> task = Task.FromResult(42);
+
+		// Act
+		int? result = await task.RunAsyncWithSemaphore(semaphore);
+
+		// Assert
+		result.ShouldBe(42);
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphore_Success_ShouldComplete()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+		Task task = Task.CompletedTask;
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await task.RunAsyncWithSemaphore(semaphore));
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	#endregion
+
+	#region Additional Edge Cases
+
+	[Fact]
+	public async Task ObjectFill_IList_WithNullObjectAndSemaphore_ShouldNotAdd()
+	{
+		// Arrange
+		IList<int?>? list = null;
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<int?> func() => Task.FromResult<int?>(42);
+
+		// Act
+		await list!.ObjectFill(func, semaphore, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		list.ShouldBeNull();
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSet_WithNullObjectAndSemaphore_ShouldNotAdd()
+	{
+		// Arrange
+		HashSet<int?>? set = null;
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<int?> func() => Task.FromResult<int?>(42);
+
+		// Act
+		await set!.ObjectFill(func, semaphore, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		set.ShouldBeNull();
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBag_WithNullObjectAndSemaphore_ShouldNotAdd()
+	{
+		// Arrange
+		ConcurrentBag<int?>? bag = null;
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		static Task<int?> func() => Task.FromResult<int?>(42);
+
+		// Act
+		await bag!.ObjectFill(func, semaphore, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		bag.ShouldBeNull();
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAll_WithCancellationDuringExecution_ShouldStopProcessing()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(2, 2);
+		using CancellationTokenSource cts = new();
+
+		List<Func<Task<int>>> tasks =
+		[
+			async () =>
+			{
+				await Task.Delay(10);
+				return 1;
+			},
+			async () =>
+			{
+				await Task.Delay(10);
+				throw new InvalidOperationException("error");
+			},
+			async () =>
+			{
+				await Task.Delay(10);
+				return 3;
+			}
+		];
+
+		// Act
+		ConcurrentBag<int> _ = await tasks.RunAll(semaphore, cts, breakOnError: true);
+
+		// Assert
+		cts.Token.IsCancellationRequested.ShouldBeTrue();
+		semaphore.CurrentCount.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task RunAll_WithoutBreakOnError_ShouldContinueOnException()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		List<Func<Task<int>>> tasks =
+		[
+			() => Task.FromResult(1),
+			() => Task.FromException<int>(new InvalidOperationException("error")),
+			() => Task.FromResult(3)
+		];
+
+		// Act
+		ConcurrentBag<int> results = await tasks.RunAll(semaphore, breakOnError: false);
+
+		// Assert
+		results.Count.ShouldBe(2);
+		results.ShouldContain(1);
+		results.ShouldContain(3);
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAll_Void_WithCancellationDuringExecution_ShouldStopProcessing()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(2, 2);
+		using CancellationTokenSource cts = new();
+		int executionCount = 0;
+
+		List<Func<Task>> tasks =
+		[
+			async () =>
+			{
+				Interlocked.Increment(ref executionCount);
+				await Task.Delay(10);
+			},
+			async () =>
+			{
+				Interlocked.Increment(ref executionCount);
+				await Task.Delay(10);
+				throw new InvalidOperationException("error");
+			},
+			async () =>
+			{
+				Interlocked.Increment(ref executionCount);
+				await Task.Delay(10);
+			}
+		];
+
+		// Act
+		await tasks.RunAll(semaphore, cts, breakOnError: true);
+
+		// Assert
+		cts.Token.IsCancellationRequested.ShouldBeTrue();
+		semaphore.CurrentCount.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task RunAll_Void_WithoutBreakOnError_ShouldContinueOnException()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+		int executionCount = 0;
+
+		List<Func<Task>> tasks =
+		[
+			() =>
+			{
+				Interlocked.Increment(ref executionCount);
+				return Task.CompletedTask;
+			},
+			() =>
+			{
+				Interlocked.Increment(ref executionCount);
+				return Task.FromException(new InvalidOperationException("error"));
+			},
+			() =>
+			{
+				Interlocked.Increment(ref executionCount);
+				return Task.CompletedTask;
+			}
+		];
+
+		// Act
+		await tasks.RunAll(semaphore, breakOnError: false);
+
+		// Assert
+		executionCount.ShouldBe(3);
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ResultTaskGroup_WithCancellationToken_ShouldRespectCancellation()
+	{
+		// Arrange
+		using CancellationTokenSource cts = new();
+		await cts.CancelAsync();
+
+		List<Task<int>> tasks = [Task.FromResult(1), Task.FromResult(2)];
+		ResultTaskGroup<int> group = new(tasks);
+
+		// Act & Assert
+		await Should.ThrowAsync<OperationCanceledException>(async () => await group.RunTasks(cts.Token));
+	}
+
+	[Fact]
+	public async Task TaskGroup_WithCancellationToken_ShouldRespectCancellation()
+	{
+		// Arrange
+		using CancellationTokenSource cts = new();
+		await cts.CancelAsync();
+
+		List<Task> tasks = [Task.CompletedTask, Task.CompletedTask];
+		TaskGroup group = new(tasks);
+
+		// Act & Assert
+		await Should.ThrowAsync<OperationCanceledException>(async () => await group.RunTasks(cts.Token));
+	}
+
+	#endregion
+
+	#region ObjectFill<T> Simple Type Tests (IsSimpleType branch coverage)
+
+	[Fact]
+	public async Task ObjectFill_WithSimpleTypeTask_ShouldNotCopyProperties()
+	{
+		// Arrange - Test that simple types don't go through CopyPropertiesTo path
+		string obj = "original";
+		Task<string> task = Task.FromResult("updated");
+
+		// Act
+		await obj.ObjectFill(task);
+
+		// Assert - obj remains unchanged as simple types don't support property copying
+		obj.ShouldBe("original");
+	}
+
+	[Fact]
+	public async Task ObjectFill_WithSimpleTypeFuncTask_ShouldNotCopyProperties()
+	{
+		// Arrange - Test Func<Task<T>> overload with simple type
+		string obj = "original";
+		static Task<string> func()
+		{
+			return Task.FromResult("updated");
+		}
+
+		// Act
+		await obj.ObjectFill(func);
+
+		// Assert - obj remains unchanged
+		obj.ShouldBe("original");
+	}
+
+	[Fact]
+	public async Task ObjectFill_WithSimpleTypeFuncTaskAndSemaphore_ShouldNotCopyProperties()
+	{
+		// Arrange - Test Func<Task<T>> with semaphore overload with simple type
+		string obj = "original";
+		static Task<string> func()
+		{
+			return Task.FromResult("updated");
+		}
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await obj.ObjectFill(func, semaphore);
+
+		// Assert - obj remains unchanged
+		obj.ShouldBe("original");
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_WithSimpleTypeNullString_ShouldNotCopyProperties()
+	{
+		// Arrange - Test with null simple type
+		string? obj = null;
+		Task<string?> task = Task.FromResult<string?>("value");
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectFill(task));
+	}
+
+	[Fact]
+	public async Task ObjectFill_WithSimpleTypeFuncTaskNullSemaphore_ShouldWork()
+	{
+		// Arrange - Test Func<Task<T>> with null semaphore and simple type
+		string obj = "test";
+		static Task<string> func()
+		{
+			return Task.FromResult("new");
+		}
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectFill(func, null));
+	}
+
+	#endregion
+
+	#region ObjectFill Additional Collection Coverage
+
+	[Fact]
+	public async Task ObjectFill_IListWithNullTask_ShouldNotThrow()
+	{
+		// Arrange
+		IList<int?> list = new List<int?> { 1, 2 };
+		Task<int?> task = Task.FromResult<int?>(null);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await list.ObjectFill(task));
+		list.Count.ShouldBe(3);
+		list[2].ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task ObjectFill_IListWithFuncTask_ShouldAddItem()
+	{
+		// Arrange
+		IList<string?> list = new List<string?> { "a" };
+		static Task<string?> func()
+		{
+			return Task.FromResult<string?>("b");
+		}
+
+		// Act
+		await list.ObjectFill(func, null, Current.CancellationToken);
+
+		// Assert
+		list.Count.ShouldBe(2);
+		list[1].ShouldBe("b");
+	}
+
+	[Fact]
+	public async Task ObjectFill_IListWithNullObject_ShouldNotThrow()
+	{
+		// Arrange
+		IList<int>? list = null;
+		static Task<int> func()
+		{
+			return Task.FromResult(5);
+		}
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await list!.ObjectFill(func, semaphore, Current.CancellationToken));
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithNullObject_ShouldNotThrow()
+	{
+		// Arrange
+		HashSet<int>? hashSet = null;
+		static Task<int> func()
+		{
+			return Task.FromResult(5);
+		}
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await hashSet!.ObjectFill(func, semaphore, Current.CancellationToken));
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithNullObject_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentBag<int>? bag = null;
+		static Task<int> func()
+		{
+			return Task.FromResult(5);
+		}
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await bag!.ObjectFill(func, semaphore, Current.CancellationToken));
+	}
+
+	[Fact]
+	public async Task ObjectFill_ListWithNullSemaphore_ShouldWork()
+	{
+		// Arrange
+		List<int> list = [1, 2];
+		static Task<List<int>?> func()
+		{
+			return Task.FromResult<List<int>?>(new List<int> { 3, 4 });
+		}
+
+		// Act
+		await list.ObjectFill(func, null, Current.CancellationToken);
+
+		// Assert
+		list.Count.ShouldBe(4);
+		list.ShouldContain(3);
+		list.ShouldContain(4);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithSemaphoreAndNullSemaphore_ShouldWork()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1, 2];
+		static Task<HashSet<int>?> func()
+		{
+			return Task.FromResult<HashSet<int>?>(new HashSet<int> { 3, 4 });
+		}
+
+		// Act
+		await hashSet.ObjectFill(func, null!, Current.CancellationToken);
+
+		// Assert
+		hashSet.Count.ShouldBe(4);
+		hashSet.ShouldContain(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithIEnumerableAndNullSemaphore_ShouldWork()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1];
+		static Task<IEnumerable<int>?> func()
+		{
+			return Task.FromResult<IEnumerable<int>?>(new[] { 2, 3 });
+		}
+
+		// Act
+		await hashSet.ObjectFill(func, null!, Current.CancellationToken);
+
+		// Assert
+		hashSet.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithConcurrentBagAndNullSemaphore_ShouldWork()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1];
+		static Task<ConcurrentBag<int>?> func()
+		{
+			return Task.FromResult<ConcurrentBag<int>?>(new ConcurrentBag<int> { 2, 3 });
+		}
+
+		// Act
+		await hashSet.ObjectFill(func, null!, Current.CancellationToken);
+
+		// Assert
+		hashSet.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithIEnumerableAndNullSemaphore_ShouldWork()
+	{
+		// Arrange
+		ConcurrentBag<int>? bag = new();
+		bag.Add(1);
+		static Task<IEnumerable<int>> func()
+		{
+			return Task.FromResult<IEnumerable<int>>(new[] { 2, 3 });
+		}
+
+		// Act
+		await bag.ObjectFill(func, null!, Current.CancellationToken);
+
+		// Assert
+		bag.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithConcurrentBagAndNullSemaphore_ShouldWork()
+	{
+		// Arrange
+		ConcurrentBag<int>? bag = new();
+		bag.Add(1);
+		static Task<ConcurrentBag<int>> func()
+		{
+			return Task.FromResult(new ConcurrentBag<int> { 2, 3 });
+		}
+
+		// Act
+		await bag.ObjectFill(func, null!, Current.CancellationToken);
+
+		// Assert
+		bag.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithListAndNullSemaphore_ShouldWork()
+	{
+		// Arrange
+		ConcurrentBag<int>? bag = new();
+		bag.Add(1);
+		static Task<List<int>?> func()
+		{
+			return Task.FromResult<List<int>?>(new List<int> { 2, 3 });
+		}
+
+		// Act
+		await bag.ObjectFill(func, null!, Current.CancellationToken);
+
+		// Assert
+		bag.Count.ShouldBe(3);
+	}
+
+	#endregion
+
+	#region ObjectUpdate Additional Coverage
+
+	[Fact]
+	public async Task ObjectUpdate_WithInvalidPropertyName_ShouldThrowAndLogError()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 10 };
+		Task<int> task = Task.FromResult(20);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectUpdate("InvalidProperty", task));
+		// The method catches and logs the exception, so it won't throw
+		obj.AsyncInt.ShouldBe(10); // Value should remain unchanged
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithFuncTask_ShouldUpdateProperty()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 5, AsyncString = "old" };
+		static Task<string> func()
+		{
+			return Task.FromResult("new");
+		}
+
+		// Act
+		await obj.ObjectUpdate("AsyncString", func);
+
+		// Assert
+		obj.AsyncString.ShouldBe("new");
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithFuncTaskAndInvalidPropertyName_ShouldLogError()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 10 };
+		static Task<int> func()
+		{
+			return Task.FromResult(20);
+		}
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await obj.ObjectUpdate("NonExistent", func));
+		obj.AsyncInt.ShouldBe(10);
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithSemaphoreAndValidProperty_ShouldUpdate()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncDecimal = 1.5m };
+		static Task<decimal> func()
+		{
+			return Task.FromResult(3.7m);
+		}
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await obj.ObjectUpdate("AsyncDecimal", func, semaphore, Current.CancellationToken);
+
+		// Assert
+		obj.AsyncDecimal.ShouldBe(3.7m);
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithSemaphoreAndInvalidProperty_ShouldReleaseSemaphore()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncInt = 1 };
+		static Task<int> func()
+		{
+			return Task.FromResult(2);
+		}
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await obj.ObjectUpdate("BadProperty", func, semaphore, Current.CancellationToken);
+
+		// Assert
+		semaphore.CurrentCount.ShouldBe(1); // Semaphore should be released
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithNullSemaphore_ShouldWork()
+	{
+		// Arrange
+		AsyncIntString obj = new() { AsyncFloat = 1.0f };
+		static Task<float> func()
+		{
+			return Task.FromResult(2.5f);
+		}
+
+		// Act
+		await obj.ObjectUpdate("AsyncFloat", func, null!, Current.CancellationToken);
+
+		// Assert
+		obj.AsyncFloat.ShouldBe(2.5f);
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithTaskAndNoProperties_ShouldLogErrorAndNotThrow()
+	{
+		// Arrange - Test type with no properties triggers "Unable to get properties" exception
+		EmptyClass obj = new();
+		Task<int> task = Task.FromResult(42);
+
+		// Act & Assert - Should not throw, exception is caught and logged
+		await Should.NotThrowAsync(async () => await obj.ObjectUpdate("AnyProperty", task));
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithFuncTaskAndNoProperties_ShouldLogErrorAndNotThrow()
+	{
+		// Arrange - Test type with no properties triggers "Unable to get properties" exception
+		EmptyClass obj = new();
+		static Task<int> func()
+		{
+			return Task.FromResult(42);
+		}
+
+		// Act & Assert - Should not throw, exception is caught and logged
+		await Should.NotThrowAsync(async () => await obj.ObjectUpdate("AnyProperty", func));
+	}
+
+	[Fact]
+	public async Task ObjectUpdate_WithFuncTaskSemaphoreAndNoProperties_ShouldLogErrorAndReleaseSemaphore()
+	{
+		// Arrange - Test type with no properties triggers "Unable to get properties" exception
+		EmptyClass obj = new();
+		static Task<int> func()
+		{
+			return Task.FromResult(42);
+		}
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await obj.ObjectUpdate("AnyProperty", func, semaphore, Current.CancellationToken);
+
+		// Assert - Should not throw, exception is caught and logged, semaphore is released
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	#endregion
+
+	#region RunAll Additional Coverage
+
+	[Fact]
+	public async Task RunAll_WithNullSemaphore_ShouldRunAllTasks()
+	{
+		// Arrange
+		int count = 0;
+		List<Func<Task<int>>> tasks =
+		[
+			async () => { await Task.Delay(1); return Interlocked.Increment(ref count); },
+			async () => { await Task.Delay(1); return Interlocked.Increment(ref count); },
+			async () => { await Task.Delay(1); return Interlocked.Increment(ref count); }
+		];
+
+		// Act
+		ConcurrentBag<int> results = await tasks.RunAll(null, null, false);
+
+		// Assert
+		results.Count.ShouldBe(3);
+		count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task RunAll_NonGenericWithNullSemaphore_ShouldRunAllTasks()
+	{
+		// Arrange
+		int count = 0;
+		List<Func<Task>> tasks =
+		[
+			async () => { await Task.Delay(1); Interlocked.Increment(ref count); },
+			async () => { await Task.Delay(1); Interlocked.Increment(ref count); },
+			async () => { await Task.Delay(1); Interlocked.Increment(ref count); }
+		];
+
+		// Act
+		await tasks.RunAll(null, null, false);
+
+		// Assert
+		count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task RunAll_WithBreakOnErrorFalse_ShouldContinueAfterError()
+	{
+		// Arrange
+		int successCount = 0;
+		using SemaphoreSlim semaphore = new(2, 2);
+		List<Func<Task<int>>> tasks =
+		[
+			async () => { await Task.Delay(1); Interlocked.Increment(ref successCount); return 1; },
+			async () => { await Task.Delay(1); throw new InvalidOperationException("Test error"); },
+			async () => { await Task.Delay(10); Interlocked.Increment(ref successCount); return 3; }
+		];
+
+		// Act
+		ConcurrentBag<int> results = await tasks.RunAll(semaphore, null, breakOnError: false);
+
+		// Assert
+		successCount.ShouldBe(2);
+		results.Count.ShouldBe(2); // Only successful tasks add results
+	}
+
+	[Fact]
+	public async Task RunAll_NonGenericWithBreakOnErrorFalse_ShouldContinueAfterError()
+	{
+		// Arrange
+		int successCount = 0;
+		using SemaphoreSlim semaphore = new(2, 2);
+		List<Func<Task>> tasks =
+		[
+			async () => { await Task.Delay(1); Interlocked.Increment(ref successCount); },
+			async () => { await Task.Delay(1); throw new InvalidOperationException("Test error"); },
+			async () => { await Task.Delay(10); Interlocked.Increment(ref successCount); }
+		];
+
+		// Act
+		await tasks.RunAll(semaphore, null, breakOnError: false);
+
+		// Assert
+		successCount.ShouldBe(2);
+	}
+
+	#endregion
+
+	#region RunAsyncWithSemaphore Additional Coverage
+
+	[Fact]
+	public async Task RunAsyncWithSemaphore_WithNullCancellationTokenSource_ShouldWork()
+	{
+		// Arrange
+		Task task = Task.CompletedTask;
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await task.RunAsyncWithSemaphore(semaphore, null, false, null);
+
+		// Assert
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphore_WithErrorTextParameter_ShouldLogWithErrorText()
+	{
+		// Arrange
+		Task task = Task.FromException(new InvalidOperationException("Test"));
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await task.RunAsyncWithSemaphore(semaphore, null, false, "Custom error message"));
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphoreT_WithNullCancellationTokenSource_ShouldReturnResult()
+	{
+		// Arrange
+		Task<int> task = Task.FromResult(42);
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		int result = await task.RunAsyncWithSemaphore(semaphore, null, false, null);
+
+		// Assert
+		result.ShouldBe(42);
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphoreT_WithErrorTextParameter_ShouldReturnDefault()
+	{
+		// Arrange
+		Task<int> task = Task.FromException<int>(new InvalidOperationException("Test"));
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		int result = await task.RunAsyncWithSemaphore(semaphore, null, false, "Error context");
+
+		// Assert
+		result.ShouldBe(default(int));
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphoreT_WithBreakOnErrorTrue_ShouldCancelTokenSource()
+	{
+		// Arrange
+		Task<int> task = Task.FromException<int>(new InvalidOperationException("Test"));
+		using SemaphoreSlim semaphore = new(1, 1);
+		using CancellationTokenSource cts = new();
+
+		// Act
+		int result = await task.RunAsyncWithSemaphore(semaphore, cts, breakOnError: true, null);
+
+		// Assert
+		result.ShouldBe(default(int));
+		cts.Token.IsCancellationRequested.ShouldBeTrue();
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphore_WithNullErrorText_ShouldLogCorrectly()
+	{
+		// Arrange
+		Task task = Task.FromException(new InvalidOperationException("Test"));
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await task.RunAsyncWithSemaphore(semaphore, null, false, null));
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task RunAsyncWithSemaphore_WithWhitespaceErrorText_ShouldLogWithoutErrorText()
+	{
+		// Arrange
+		Task task = Task.FromException(new InvalidOperationException("Test"));
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await task.RunAsyncWithSemaphore(semaphore, null, false, "   "));
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	#endregion
+
+	#region ResultTaskGroup and TaskGroup Additional Coverage
+
+	[Fact]
+	public async Task ResultTaskGroup_WithEmptyTaskList_ShouldReturnEmptyArray()
+	{
+		// Arrange
+		ResultTaskGroup<int> group = new();
+
+		// Act
+		int[] results = await group.RunTasks();
+
+		// Assert
+		results.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public async Task TaskGroup_WithEmptyTaskList_ShouldReturnImmediately()
+	{
+		// Arrange
+		TaskGroup group = new();
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await group.RunTasks());
+		group.Tasks.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ResultTaskGroup_WithNullSemaphore_ShouldRunAllTasks()
+	{
+		// Arrange
+		List<Task<int>> tasks = [new Task<int>(() => 1), new Task<int>(() => 2), new Task<int>(() => 3)];
+		ResultTaskGroup<int> group = new(tasks, null);
+
+		// Act
+		int[] results = await group.RunTasks();
+
+		// Assert
+		results.Length.ShouldBe(3);
+		results.ShouldContain(1);
+		results.ShouldContain(2);
+		results.ShouldContain(3);
+	}
+
+	[Fact]
+	public async Task TaskGroup_WithNullSemaphore_ShouldRunAllTasks()
+	{
+		// Arrange
+		int count = 0;
+		List<Task> tasks =
+		[
+			new Task(() => Interlocked.Increment(ref count)),
+			new Task(() => Interlocked.Increment(ref count)),
+			new Task(() => Interlocked.Increment(ref count))
+		];
+		TaskGroup group = new(tasks, null);
+
+		// Act
+		await group.RunTasks();
+
+		// Assert
+		count.ShouldBe(3);
+		group.Tasks.Count.ShouldBe(0); // Tasks should be cleared
+	}
+
+	[Fact]
+	public async Task ResultTaskGroup_WithAlreadyStartedTasks_ShouldHandleCorrectly()
+	{
+		// Arrange
+		Task<int> task1 = Task.FromResult(1);
+		Task<int> task2 = Task.FromResult(2);
+		List<Task<int>> tasks = [task1, task2];
+		ResultTaskGroup<int> group = new(tasks, null);
+
+		// Act
+		int[] results = await group.RunTasks();
+
+		// Assert
+		results.Length.ShouldBe(2);
+		results.ShouldContain(1);
+		results.ShouldContain(2);
+	}
+
+	[Fact]
+	public async Task TaskGroup_WithAlreadyStartedTasks_ShouldHandleCorrectly()
+	{
+		// Arrange
+		Task task1 = Task.CompletedTask;
+		Task task2 = Task.CompletedTask;
+		List<Task> tasks = [task1, task2];
+		TaskGroup group = new(tasks, null);
+
+		// Act
+		await group.RunTasks();
+
+		// Assert
+		group.Tasks.Count.ShouldBe(0); // Tasks should be cleared
+	}
+
+	[Fact]
+	public async Task ResultTaskGroup_WithSemaphore_ShouldLimitConcurrency()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+		int maxConcurrent = 0;
+		int currentConcurrent = 0;
+#pragma warning disable S2925 // Do not use 'Thread.Sleep()' in a test.
+		List<Task<int>> tasks =
+		[
+			new Task<int>(() =>
+			{
+				int current = Interlocked.Increment(ref currentConcurrent);
+				if (current > maxConcurrent) maxConcurrent = current;
+				Thread.Sleep(10);
+				Interlocked.Decrement(ref currentConcurrent);
+				return 1;
+			}),
+			new Task<int>(() =>
+			{
+				int current = Interlocked.Increment(ref currentConcurrent);
+				if (current > maxConcurrent) maxConcurrent = current;
+				Thread.Sleep(10);
+				Interlocked.Decrement(ref currentConcurrent);
+				return 2;
+			}),
+			new Task<int>(() =>
+			{
+				int current = Interlocked.Increment(ref currentConcurrent);
+				if (current > maxConcurrent) maxConcurrent = current;
+				Thread.Sleep(10);
+				Interlocked.Decrement(ref currentConcurrent);
+				return 3;
+			})
+		];
+#pragma warning restore S2925 // Do not use 'Thread.Sleep()' in a test.
+		ResultTaskGroup<int> group = new(tasks, semaphore);
+
+		// Act
+		int[] results = await group.RunTasks();
+
+		// Assert
+		results.Length.ShouldBe(3);
+		maxConcurrent.ShouldBe(1); // With semaphore(1,1), only 1 should run at a time
+	}
+
+	[Fact]
+	public async Task TaskGroup_WithSemaphore_ShouldLimitConcurrency()
+	{
+		// Arrange
+		using SemaphoreSlim semaphore = new(1, 1);
+		int maxConcurrent = 0;
+		int currentConcurrent = 0;
+#pragma warning disable S2925 // Do not use 'Thread.Sleep()' in a test.
+		List<Task> tasks =
+		[
+			new Task(() =>
+			{
+				int current = Interlocked.Increment(ref currentConcurrent);
+				if (current > maxConcurrent) maxConcurrent = current;
+				Thread.Sleep(10);
+				Interlocked.Decrement(ref currentConcurrent);
+			}),
+			new Task(() =>
+			{
+				int current = Interlocked.Increment(ref currentConcurrent);
+				if (current > maxConcurrent) maxConcurrent = current;
+				Thread.Sleep(10);
+				Interlocked.Decrement(ref currentConcurrent);
+			}),
+			new Task(() =>
+			{
+				int current = Interlocked.Increment(ref currentConcurrent);
+				if (current > maxConcurrent) maxConcurrent = current;
+				Thread.Sleep(10);
+				Interlocked.Decrement(ref currentConcurrent);
+			})
+		];
+		TaskGroup group = new(tasks, semaphore);
+#pragma warning restore S2925 // Do not use 'Thread.Sleep()' in a test.
+		// Act
+		await group.RunTasks();
+
+		// Assert
+		maxConcurrent.ShouldBe(1);
+		group.Tasks.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public async Task ResultTaskGroup_WithNullCancellationToken_ShouldUseNew()
+	{
+		// Arrange
+		List<Task<int>> tasks = [Task.FromResult(1), Task.FromResult(2)];
+		ResultTaskGroup<int> group = new(tasks);
+
+		// Act
+		int[] results = await group.RunTasks(null);
+
+		// Assert
+		results.Length.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task TaskGroup_WithNullCancellationToken_ShouldUseNew()
+	{
+		// Arrange
+		List<Task> tasks = [Task.CompletedTask, Task.CompletedTask];
+		TaskGroup group = new(tasks);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await group.RunTasks(null));
+	}
+
+	#endregion
+
+	#region Additional ObjectFill Coverage for Uncovered Branches
+
+	[Fact]
+	public async Task ObjectFill_FuncTaskWithSemaphoreAndComplexType_ShouldCopyProperties()
+	{
+		// Arrange - Test the Func<Task<T>> with semaphore overload with complex type to cover line 86-88
+		AsyncIntString obj = new() { AsyncInt = 1, AsyncString = "orig" };
+		static Task<AsyncIntString> func()
+		{
+			return Task.FromResult(new AsyncIntString { AsyncInt = 10, AsyncString = "new" });
+		}
+		using SemaphoreSlim semaphore = new(2, 2);
+
+		// Act
+		await obj.ObjectFill(func, semaphore);
+
+		// Assert
+		obj.AsyncInt.ShouldBe(10);
+		obj.AsyncString.ShouldBe("new");
+		semaphore.CurrentCount.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ListWithIListOverload_ShouldAddNonNullValue()
+	{
+		// Arrange
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+		IList<int> list = new List<int> { 1 };
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+		Task<int> task = Task.FromResult(2);
+
+		// Act
+		await list.ObjectFill(task);
+
+		// Assert
+		list.Count.ShouldBe(2);
+		list[1].ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task ObjectFill_IListWithFuncAndSemaphore_ShouldAdd()
+	{
+		// Arrange - Test IList with semaphore (covers line 139)
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+		IList<int> list = new List<int> { 1, 2 };
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+		static Task<int> func()
+		{
+			return Task.FromResult(3);
+		}
+		using SemaphoreSlim semaphore = new(1, 1);
+
+		// Act
+		await list.ObjectFill(func, semaphore, Current.CancellationToken);
+
+		// Assert
+		list.Count.ShouldBe(3);
+		list[2].ShouldBe(3);
+		semaphore.CurrentCount.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_IListWithTask_WhenExceptionThrown_ShouldLogAndNotThrow()
+	{
+		// Arrange
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+		IList<string?> list = new List<string?>();
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+		Task<string?> task = Task.FromException<string?>(new InvalidOperationException("Test exception"));
+
+		// Act & Assert - Should not throw, exception is caught and logged
+		await list.ObjectFill(task);
+
+		list.Count.ShouldBe(0); // No item added due to exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_IListWithFunc_WhenExceptionThrown_ShouldLogAndNotThrow()
+	{
+		// Arrange
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+		IList<string?> list = new List<string?>();
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+		static Task<string?> func() => Task.FromException<string?>(new InvalidOperationException("Test exception"));
+
+		// Act & Assert - Should not throw, exception is caught and logged
+		await list.ObjectFill(func);
+
+		list.Count.ShouldBe(0); // No item added due to exception
+	}
+
+	[Fact]
+	public async Task ObjectFill_IListWithFunc_ShouldAddItem()
+	{
+		// Arrange
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+		IList<int> list = new List<int> { 1, 2 };
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+		static Task<int> func()
+		{
+			return Task.FromResult(3);
+		}
+
+		// Act
+		await list.ObjectFill(func);
+
+		// Assert
+		list.Count.ShouldBe(3);
+		list[2].ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_IListWithFunc_NullableType_ShouldAddNullItem()
+	{
+		// Arrange
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
+		IList<string?> list = new List<string?> { "a", "b" };
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
+		static Task<string?> func()
+		{
+			return Task.FromResult<string?>(null);
+		}
+
+		// Act
+		await list.ObjectFill(func);
+
+		// Assert
+		list.Count.ShouldBe(3);
+		list[2].ShouldBeNull();
+	}
+
+	[Fact]
+	public async Task ObjectFill_ListWithTaskListAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		List<int> list = [1, 2];
+		Task<List<int>?> task = Task.FromResult<List<int>?>(null);
+
+		// Act
+		await list.ObjectFill(task);
+
+		// Assert
+		list.Count.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ListWithFuncListAndNonNullResult_ShouldAddRange()
+	{
+		// Arrange
+		List<int> list = [1];
+		static Task<List<int>?> func()
+		{
+			return Task.FromResult<List<int>?>(new List<int> { 2, 3 });
+		}
+
+		// Act
+		await list.ObjectFill(func);
+
+		// Assert
+		list.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithTaskSingleItem_ShouldAdd()
+	{
+		// Arrange
+		HashSet<string?> hashSet = ["a"];
+		Task<string?> task = Task.FromResult<string?>("b");
+
+		// Act
+		await hashSet.ObjectFill(task);
+
+		// Assert
+		hashSet.Count.ShouldBe(2);
+		hashSet.ShouldContain("b");
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncSingleItem_ShouldAdd()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1];
+		static Task<int> func()
+		{
+			return Task.FromResult(2);
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithTaskHashSetAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		HashSet<int> hashSet = [1];
+		Task<HashSet<int>?> task = Task.FromResult<HashSet<int>?>(null);
+
+		// Act
+		await hashSet.ObjectFill(task);
+
+		// Assert
+		hashSet.Count.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_HashSetWithFuncHashSet_ShouldAddRange()
+	{
+		// Arrange
+		HashSet<string> hashSet = ["a"];
+		static Task<HashSet<string>?> func()
+		{
+			return Task.FromResult<HashSet<string>?>(new HashSet<string> { "b", "c" });
+		}
+
+		// Act
+		await hashSet.ObjectFill(func);
+
+		// Assert
+		hashSet.Count.ShouldBe(3);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithTaskSingleItem_ShouldAdd()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = new();
+		bag.Add(1);
+		Task<int> task = Task.FromResult(2);
+
+		// Act
+		await bag.ObjectFill(task);
+
+		// Assert
+		bag.Count.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncSingleItem_ShouldAdd()
+	{
+		// Arrange
+		ConcurrentBag<string?> bag = new();
+		bag.Add("a");
+		static Task<string?> func()
+		{
+			return Task.FromResult<string?>("b");
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithTaskIEnumerableAndNullBag_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentBag<int>? bag = null;
+		Task<IEnumerable<int>?> task = Task.FromResult<IEnumerable<int>?>(new[] { 1, 2 });
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await bag.ObjectFill(task));
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncIEnumerableAndNullBag_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentBag<int>? bag = null;
+		static Task<IEnumerable<int>?> func()
+		{
+			return Task.FromResult<IEnumerable<int>?>(new[] { 1, 2 });
+		}
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await bag.ObjectFill(func));
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithTaskIEnumerableAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1];
+		Task<IEnumerable<int>?> task = Task.FromResult<IEnumerable<int>?>(null);
+
+		// Act
+		await bag.ObjectFill(task);
+
+		// Assert
+		bag.Count.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncIEnumerableAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1];
+		static Task<IEnumerable<int>?> func()
+		{
+			return Task.FromResult<IEnumerable<int>?>(null);
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithTaskConcurrentBagAndNullBag_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentBag<int>? bag = null;
+		Task<ConcurrentBag<int>?> task = Task.FromResult<ConcurrentBag<int>?>(new ConcurrentBag<int> { 1 });
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await bag.ObjectFill(task));
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncConcurrentBagAndNullBag_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentBag<int>? bag = null;
+		static Task<ConcurrentBag<int>?> func()
+		{
+			return Task.FromResult<ConcurrentBag<int>?>(new ConcurrentBag<int> { 1 });
+		}
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await bag.ObjectFill(func));
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithTaskConcurrentBagAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1];
+		Task<ConcurrentBag<int>?> task = Task.FromResult<ConcurrentBag<int>?>(null);
+
+		// Act
+		await bag.ObjectFill(task);
+
+		// Assert
+		bag.Count.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncConcurrentBagAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1];
+		static Task<ConcurrentBag<int>?> func()
+		{
+			return Task.FromResult<ConcurrentBag<int>?>(null);
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithTaskListAndNullBag_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentBag<int>? bag = null;
+		Task<List<int>?> task = Task.FromResult<List<int>?>(new List<int> { 1 });
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await bag.ObjectFill(task));
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncListAndNullBag_ShouldNotThrow()
+	{
+		// Arrange
+		ConcurrentBag<int>? bag = null;
+		static Task<List<int>?> func()
+		{
+			return Task.FromResult<List<int>?>(new List<int> { 1 });
+		}
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await bag.ObjectFill(func));
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithTaskListAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1];
+		Task<List<int>?> task = Task.FromResult<List<int>?>(null);
+
+		// Act
+		await bag.ObjectFill(task);
+
+		// Assert
+		bag.Count.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_ConcurrentBagWithFuncListAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		ConcurrentBag<int> bag = [1];
+		static Task<List<int>?> func()
+		{
+			return Task.FromResult<List<int>?>(null);
+		}
+
+		// Act
+		await bag.ObjectFill(func);
+
+		// Assert
+		bag.Count.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_DataTableWithTaskAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		using DataTable dt = new();
+		dt.Columns.Add("Id", typeof(int));
+		dt.Rows.Add(1);
+		Task<DataTable> task = Task.FromResult<DataTable>(null!);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await dt.ObjectFill(task));
+		dt.Rows.Count.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_DataTableWithFuncAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		using DataTable dt = new();
+		dt.Columns.Add("Id", typeof(int));
+		dt.Rows.Add(1);
+		static Task<DataTable> func()
+		{
+			return Task.FromResult<DataTable>(null!);
+		}
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await dt.ObjectFill(func));
+		dt.Rows.Count.ShouldBe(1);
+	}
+
+	[Fact]
+	public async Task ObjectFill_MemoryStreamWithTaskAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		ms.WriteByte(1);
+		long originalLength = ms.Length;
+		Task<MemoryStream> task = Task.FromResult<MemoryStream>(null!);
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await ms.ObjectFill(task));
+		ms.Length.ShouldBe(originalLength);
+	}
+
+	[Fact]
+	public async Task ObjectFill_MemoryStreamWithFuncAndNullResult_ShouldNotModify()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		ms.WriteByte(1);
+		long originalLength = ms.Length;
+		static Task<MemoryStream> func()
+		{
+			return Task.FromResult<MemoryStream>(null!);
+		}
+
+		// Act & Assert
+		await Should.NotThrowAsync(async () => await ms.ObjectFill(func));
+		ms.Length.ShouldBe(originalLength);
+	}
+
+	#endregion
+
+	#region Helper Classes
+
+#pragma warning disable S2094 // Classes should not be empty
+	private class EmptyClass;
+#pragma warning restore S2094 // Classes should not be empty
 
 	#endregion
 }

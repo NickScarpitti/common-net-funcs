@@ -40,7 +40,7 @@
 		</PackageReference>
 		<PackageReference Include="FakeItEasy" Version="9.0.1" />
 		<PackageReference Include="Shouldly" Version="4.3.0" />
-		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.1" />
+		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" />
 	</ItemGroup>
 
 	<ItemGroup>

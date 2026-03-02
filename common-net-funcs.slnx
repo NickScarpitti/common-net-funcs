@@ -23,7 +23,8 @@
     <Project Path="Media.Ffmpeg.Tests/Media.Ffmpeg.Tests.csproj" />
     <Project Path="Office.Common.Tests/Office.Common.Tests.csproj" />
     <Project Path="Sql.Common.Tests/Sql.Common.Tests.csproj" />
-    <Project Path="SubsetModelBinder.Tests/SubsetModelBinder.Tests.csproj" />
+    <Project Path="SubsetModelBinder.Attribute.Tests/SubsetModelBinder.Attribute.Tests.csproj" />
+    <Project Path="SubsetModelBinder.Generator.Tests/SubsetModelBinder.Generator.Tests.csproj" />
     <Project Path="Web.Api.Tests/Web.Api.Tests.csproj" />
     <Project Path="Web.Aws.S3.Tests/Web.Aws.S3.Tests.csproj" />
     <Project Path="Web.Common.Tests/Web.Common.Tests.csproj" />

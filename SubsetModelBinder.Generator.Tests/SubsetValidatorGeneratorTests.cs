@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using static Xunit.TestContext;
 
-namespace SubsetModelBinder.Tests;
+namespace SubsetModelBinder.Generator.Tests;
 
 public class SubsetValidatorGeneratorTests
 {

@@ -208,7 +208,7 @@ public class SubsetOfAttributeTests
 		Type attributeType = typeof(SubsetOfAttribute);
 
 		// Act & Assert
-		attributeType.BaseType.ShouldBe(typeof(Attribute));
+		attributeType.BaseType.ShouldBe(typeof(System.Attribute));
 	}
 
 	[Theory]

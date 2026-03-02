@@ -1,5 +1,5 @@
+﻿using System.Reflection;
 using CommonNetFuncs.SubsetModelBinder;
-using System.Reflection;
 
 namespace SubsetModelBinder.Tests;
 

@@ -625,18 +625,5 @@ public sealed partial class BaseDbContextActionsTests
 		return (scope.ServiceProvider, ctx, scope);
 	}
 
-	/// <summary>
-	/// Creates a service provider configured for circular reference tests.
-	/// Uses in-memory database provider like the main test suite.
-	/// </summary>
-	internal static (IServiceProvider serviceProvider, CircularRefDbContext context) CreateCircularRefServiceProvider()
-	{
-		ServiceCollection services = new();
-		services.AddDbContextPool<CircularRefDbContext>(options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
-		IServiceProvider provider = services.BuildServiceProvider();
-		CircularRefDbContext ctx = provider.GetRequiredService<CircularRefDbContext>();
-		return (provider, ctx);
-	}
-
 	#endregion
 }

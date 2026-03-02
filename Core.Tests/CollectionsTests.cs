@@ -2889,4 +2889,532 @@ public sealed class CollectionsTests
 		Should.NotThrow(() => queue.ClearTrim(forceGc: true));
 		queue.Count.ShouldBe(0);
 	}
+
+	#region ContainsDuplicates Tests
+
+	[Fact]
+	public void ContainsDuplicates_WithListOfIntegersNoDuplicates_ReturnsFalse()
+	{
+		// Arrange
+		List<int> list = new() { 1, 2, 3, 4, 5 };
+
+		// Act
+		bool result = list.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ContainsDuplicates_WithListOfIntegersWithDuplicates_ReturnsTrue()
+	{
+		// Arrange
+		List<int> list = new() { 1, 2, 3, 2, 5 };
+
+		// Act
+		bool result = list.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ContainsDuplicates_WithArrayOfStringsNoDuplicates_ReturnsFalse()
+	{
+		// Arrange
+		string[] array = { "apple", "banana", "cherry" };
+
+		// Act
+		bool result = array.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ContainsDuplicates_WithArrayOfStringsWithDuplicates_ReturnsTrue()
+	{
+		// Arrange
+		string[] array = { "apple", "banana", "apple" };
+
+		// Act
+		bool result = array.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ContainsDuplicates_WithEmptyList_ReturnsFalse()
+	{
+		// Arrange
+		List<int> list = new();
+
+		// Act
+		bool result = list.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ContainsDuplicates_WithSingleElement_ReturnsFalse()
+	{
+		// Arrange
+		List<int> list = new() { 42 };
+
+		// Act
+		bool result = list.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ContainsDuplicates_WithMultipleDuplicates_ReturnsTrue()
+	{
+		// Arrange
+		List<int> list = new() { 1, 2, 1, 3, 2, 4, 1 };
+
+		// Act
+		bool result = list.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ContainsDuplicates_WithHashSetNoDuplicates_ReturnsFalse()
+	{
+		// Arrange
+		HashSet<string> set = new() { "one", "two", "three" };
+
+		// Act
+		bool result = set.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ContainsDuplicates_WithNullableIntsIncludingNulls_ReturnsTrue()
+	{
+		// Arrange
+		List<int?> list = new() { 1, null, 2, null, 3 };
+
+		// Act
+		bool result = list.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ContainsDuplicates_WithCustomObjects_ReturnsTrue()
+	{
+		// Arrange
+		TestClass obj1 = new() { Id = 1, Name = "Test" };
+		TestClass obj2 = new() { Id = 2, Name = "Test" };
+		List<TestClass> list = new() { obj1, obj2, obj1 };
+
+		// Act
+		bool result = list.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void ContainsDuplicates_WithEnumerableNoDuplicates_ReturnsFalse()
+	{
+		// Arrange
+		IEnumerable<double> enumerable = Enumerable.Range(1, 5).Select(x => (double)x);
+
+		// Act
+		bool result = enumerable.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeFalse();
+	}
+
+	[Fact]
+	public void ContainsDuplicates_WithEnumerableWithDuplicates_ReturnsTrue()
+	{
+		// Arrange
+		IEnumerable<double> enumerable = new List<double> { 1.1, 2.2, 3.3, 2.2 };
+
+		// Act
+		bool result = enumerable.ContainsDuplicates();
+
+		// Assert
+		result.ShouldBeTrue();
+	}
+
+	#endregion
+
+	#region GetUniqueDuplicates Tests
+
+	[Fact]
+	public void GetUniqueDuplicates_WithListOfIntegersNoDuplicates_ReturnsEmptySet()
+	{
+		// Arrange
+		List<int> list = new() { 1, 2, 3, 4, 5 };
+
+		// Act
+		HashSet<int> result = list.GetUniqueDuplicates();
+
+		// Assert
+		result.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void GetUniqueDuplicates_WithListOfIntegersWithDuplicates_ReturnsCorrectSet()
+	{
+		// Arrange
+		List<int> list = new() { 1, 2, 3, 2, 5, 3 };
+
+		// Act
+		HashSet<int> result = list.GetUniqueDuplicates();
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result.ShouldContain(2);
+		result.ShouldContain(3);
+	}
+
+	[Fact]
+	public void GetUniqueDuplicates_WithArrayOfStringsNoDuplicates_ReturnsEmptySet()
+	{
+		// Arrange
+		string[] array = { "apple", "banana", "cherry" };
+
+		// Act
+		HashSet<string> result = array.GetUniqueDuplicates();
+
+		// Assert
+		result.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void GetUniqueDuplicates_WithArrayOfStringsWithDuplicates_ReturnsCorrectSet()
+	{
+		// Arrange
+		string[] array = { "apple", "banana", "apple", "cherry", "banana" };
+
+		// Act
+		HashSet<string> result = array.GetUniqueDuplicates();
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result.ShouldContain("apple");
+		result.ShouldContain("banana");
+	}
+
+	[Fact]
+	public void GetUniqueDuplicates_WithEmptyList_ReturnsEmptySet()
+	{
+		// Arrange
+		List<int> list = new();
+
+		// Act
+		HashSet<int> result = list.GetUniqueDuplicates();
+
+		// Assert
+		result.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void GetUniqueDuplicates_WithSingleElement_ReturnsEmptySet()
+	{
+		// Arrange
+		List<int> list = new() { 42 };
+
+		// Act
+		HashSet<int> result = list.GetUniqueDuplicates();
+
+		// Assert
+		result.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void GetUniqueDuplicates_WithMultipleOccurrences_ReturnsEachDuplicateOnce()
+	{
+		// Arrange
+		List<int> list = new() { 1, 2, 1, 3, 2, 4, 1, 2 };
+
+		// Act
+		HashSet<int> result = list.GetUniqueDuplicates();
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result.ShouldContain(1);
+		result.ShouldContain(2);
+	}
+
+	[Fact]
+	public void GetUniqueDuplicates_WithNullableIntsIncludingNulls_ReturnsNullInSet()
+	{
+		// Arrange
+		List<int?> list = new() { 1, null, 2, null, 3 };
+
+		// Act
+		HashSet<int?> result = list.GetUniqueDuplicates();
+
+		// Assert
+		result.Count.ShouldBe(1);
+		result.Contains(null).ShouldBeTrue();
+	}
+
+	[Fact]
+	public void GetUniqueDuplicates_WithCustomObjects_ReturnsCorrectSet()
+	{
+		// Arrange
+		TestClass obj1 = new() { Id = 1, Name = "Test" };
+		TestClass obj2 = new() { Id = 2, Name = "Test" };
+		TestClass obj3 = new() { Id = 3, Name = "Test" };
+		List<TestClass> list = new() { obj1, obj2, obj1, obj3, obj2 };
+
+		// Act
+		HashSet<TestClass> result = list.GetUniqueDuplicates();
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result.ShouldContain(obj1);
+		result.ShouldContain(obj2);
+	}
+
+	[Fact]
+	public void GetUniqueDuplicates_WithEnumerableNoDuplicates_ReturnsEmptySet()
+	{
+		// Arrange
+		IEnumerable<double> enumerable = Enumerable.Range(1, 5).Select(x => (double)x);
+
+		// Act
+		HashSet<double> result = enumerable.GetUniqueDuplicates();
+
+		// Assert
+		result.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void GetUniqueDuplicates_WithEnumerableWithDuplicates_ReturnsCorrectSet()
+	{
+		// Arrange
+		IEnumerable<double> enumerable = new List<double> { 1.1, 2.2, 3.3, 2.2, 1.1 };
+
+		// Act
+		HashSet<double> result = enumerable.GetUniqueDuplicates();
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result.ShouldContain(1.1);
+		result.ShouldContain(2.2);
+	}
+
+	#endregion
+
+	#region GetDuplicatesWithCount Tests
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithListOfIntegersNoDuplicates_ReturnsEmptyDictionary()
+	{
+		// Arrange
+		List<int> list = new() { 1, 2, 3, 4, 5 };
+
+		// Act
+		Dictionary<int, int> result = list.GetDuplicatesWithCount();
+
+		// Assert
+		result.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithListOfIntegersWithDuplicates_IncludeUniqueFalse_ReturnsCorrectCounts()
+	{
+		// Arrange
+		List<int> list = new() { 1, 2, 3, 2, 5, 3, 2 };
+
+		// Act
+		Dictionary<int, int> result = list.GetDuplicatesWithCount(includeUniqueInCount: false);
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result[2].ShouldBe(2); // 2 additional occurrences
+		result[3].ShouldBe(1); // 1 additional occurrence
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithListOfIntegersWithDuplicates_IncludeUniqueTrue_ReturnsCorrectCounts()
+	{
+		// Arrange
+		List<int> list = new() { 1, 2, 3, 2, 5, 3, 2 };
+
+		// Act
+		Dictionary<int, int> result = list.GetDuplicatesWithCount(includeUniqueInCount: true);
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result[2].ShouldBe(3); // Total occurrences
+		result[3].ShouldBe(2); // Total occurrences
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithArrayOfStrings_IncludeUniqueFalse_ReturnsCorrectCounts()
+	{
+		// Arrange
+		string[] array = { "apple", "banana", "apple", "cherry", "banana", "apple" };
+
+		// Act
+		Dictionary<string, int> result = array.GetDuplicatesWithCount(includeUniqueInCount: false);
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result["apple"].ShouldBe(2); // 2 additional occurrences
+		result["banana"].ShouldBe(1); // 1 additional occurrence
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithArrayOfStrings_IncludeUniqueTrue_ReturnsCorrectCounts()
+	{
+		// Arrange
+		string[] array = { "apple", "banana", "apple", "cherry", "banana", "apple" };
+
+		// Act
+		Dictionary<string, int> result = array.GetDuplicatesWithCount(includeUniqueInCount: true);
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result["apple"].ShouldBe(3); // Total occurrences
+		result["banana"].ShouldBe(2); // Total occurrences
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithEmptyList_ReturnsEmptyDictionary()
+	{
+		// Arrange
+		List<int> list = new();
+
+		// Act
+		Dictionary<int, int> result = list.GetDuplicatesWithCount();
+
+		// Assert
+		result.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithSingleElement_ReturnsEmptyDictionary()
+	{
+		// Arrange
+		List<int> list = new() { 42 };
+
+		// Act
+		Dictionary<int, int> result = list.GetDuplicatesWithCount();
+
+		// Assert
+		result.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithTwoOccurrences_IncludeUniqueFalse_ReturnsOne()
+	{
+		// Arrange
+		List<int> list = new() { 1, 2, 1 };
+
+		// Act
+		Dictionary<int, int> result = list.GetDuplicatesWithCount(includeUniqueInCount: false);
+
+		// Assert
+		result.Count.ShouldBe(1);
+		result[1].ShouldBe(1); // 1 additional occurrence
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithTwoOccurrences_IncludeUniqueTrue_ReturnsTwo()
+	{
+		// Arrange
+		List<int> list = new() { 1, 2, 1 };
+
+		// Act
+		Dictionary<int, int> result = list.GetDuplicatesWithCount(includeUniqueInCount: true);
+
+		// Assert
+		result.Count.ShouldBe(1);
+		result[1].ShouldBe(2); // Total occurrences
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithStringsIncludingDuplicates_ReturnsCorrectCounts()
+	{
+		// Arrange
+		List<string> list = new() { "a", "b", "c", "b", "d", "b" };
+
+		// Act
+		Dictionary<string, int> result = list.GetDuplicatesWithCount(includeUniqueInCount: false);
+
+		// Assert
+		result.Count.ShouldBe(1);
+		result["b"].ShouldBe(2); // 2 additional occurrences of "b"
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithEnumerableWithDuplicates_IncludeUniqueFalse_ReturnsCorrectCounts()
+	{
+		// Arrange
+		IEnumerable<double> enumerable = new List<double> { 1.1, 2.2, 3.3, 2.2, 1.1, 1.1 };
+
+		// Act
+		Dictionary<double, int> result = enumerable.GetDuplicatesWithCount(includeUniqueInCount: false);
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result[1.1].ShouldBe(2); // 2 additional occurrences
+		result[2.2].ShouldBe(1); // 1 additional occurrence
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithEnumerableWithDuplicates_IncludeUniqueTrue_ReturnsCorrectCounts()
+	{
+		// Arrange
+		IEnumerable<double> enumerable = new List<double> { 1.1, 2.2, 3.3, 2.2, 1.1, 1.1 };
+
+		// Act
+		Dictionary<double, int> result = enumerable.GetDuplicatesWithCount(includeUniqueInCount: true);
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result[1.1].ShouldBe(3); // Total occurrences
+		result[2.2].ShouldBe(2); // Total occurrences
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithManyOccurrences_IncludeUniqueFalse_ReturnsCorrectCount()
+	{
+		// Arrange
+		List<string> list = new() { "a", "b", "a", "c", "a", "b", "a", "d", "a" };
+
+		// Act
+		Dictionary<string, int> result = list.GetDuplicatesWithCount(includeUniqueInCount: false);
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result["a"].ShouldBe(4); // 4 additional occurrences
+		result["b"].ShouldBe(1); // 1 additional occurrence
+	}
+
+	[Fact]
+	public void GetDuplicatesWithCount_WithManyOccurrences_IncludeUniqueTrue_ReturnsCorrectCount()
+	{
+		// Arrange
+		List<string> list = new() { "a", "b", "a", "c", "a", "b", "a", "d", "a" };
+
+		// Act
+		Dictionary<string, int> result = list.GetDuplicatesWithCount(includeUniqueInCount: true);
+
+		// Assert
+		result.Count.ShouldBe(2);
+		result["a"].ShouldBe(5); // Total occurrences
+		result["b"].ShouldBe(2); // Total occurrences
+	}
+
+	#endregion
 }

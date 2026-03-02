@@ -1,4 +1,4 @@
-using CommonNetFuncs.Web.Common.CachingSupportClasses;
+﻿using CommonNetFuncs.Web.Common.CachingSupportClasses;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Web.Common.CachingSupportClasses.CacheOptionDefaults;
 

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Moq;
+using static Xunit.TestContext;
 
 namespace Web.Api.Tests.TaskQueuing.EndpointQueue;
 
@@ -170,16 +171,16 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 					app.UseRouting();
 					app.UseEndpoints(endpoints => PrioritizedEndpointQueueExtensions.EndpointQueueMetrics(endpoints));
 				}))
-			.StartAsync();
+			.StartAsync(cancellationToken: Current.CancellationToken);
 
 		HttpClient client = host.GetTestClient();
 
 		// Act
-		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics");
+		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics", Current.CancellationToken);
 
 		// Assert
 		response.StatusCode.ShouldBe(HttpStatusCode.OK);
-		string content = await response.Content.ReadAsStringAsync();
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
 		content.ShouldNotBeNullOrEmpty();
 	}
 
@@ -200,7 +201,7 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 					app.UseRouting();
 					app.UseEndpoints(endpoints => PrioritizedEndpointQueueExtensions.EndpointQueueMetrics(endpoints));
 				}))
-			.StartAsync();
+			.StartAsync(cancellationToken: Current.CancellationToken);
 
 		HttpClient client = host.GetTestClient();
 		PrioritizedEndpointQueueService queueService = host.Services.GetRequiredService<PrioritizedEndpointQueueService>();
@@ -210,11 +211,11 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 		await queueService.ExecuteAsync(testKey, _ => Task.FromResult(42), TaskPriority.Normal, CancellationToken.None);
 
 		// Act
-		HttpResponseMessage response = await client.GetAsync($"/api/endpoint-queue-metrics/{testKey}");
+		HttpResponseMessage response = await client.GetAsync($"/api/endpoint-queue-metrics/{testKey}", Current.CancellationToken);
 
 		// Assert
 		response.StatusCode.ShouldBe(HttpStatusCode.OK);
-		string content = await response.Content.ReadAsStringAsync();
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
 		content.ShouldContain($"\"EndpointKey\":\"{testKey}\"");
 	}
 

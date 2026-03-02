@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Moq;
+using static Xunit.TestContext;
 
 namespace Web.Api.Tests.TaskQueuing.EndpointQueue;
 
@@ -351,16 +352,16 @@ public class EndpointQueueExtensionsTests
 					app.UseRouting();
 					app.UseEndpoints(endpoints => EndpointQueueExtensions.EndpointQueueMetrics(endpoints));
 				}))
-			.StartAsync();
+			.StartAsync(cancellationToken: Current.CancellationToken);
 
 		HttpClient client = host.GetTestClient();
 
 		// Act
-		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics");
+		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics", Current.CancellationToken);
 
 		// Assert
 		response.StatusCode.ShouldBe(HttpStatusCode.OK);
-		string content = await response.Content.ReadAsStringAsync();
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
 		content.ShouldNotBeNullOrEmpty();
 	}
 
@@ -381,7 +382,7 @@ public class EndpointQueueExtensionsTests
 					app.UseRouting();
 					app.UseEndpoints(endpoints => EndpointQueueExtensions.EndpointQueueMetrics(endpoints));
 				}))
-			.StartAsync();
+			.StartAsync(cancellationToken: Current.CancellationToken);
 
 		HttpClient client = host.GetTestClient();
 		EndpointQueueService queueService = host.Services.GetRequiredService<EndpointQueueService>();
@@ -391,11 +392,11 @@ public class EndpointQueueExtensionsTests
 		await queueService.ExecuteAsync(testKey, _ => Task.FromResult(42), new BoundedChannelOptions(1), CancellationToken.None);
 
 		// Act
-		HttpResponseMessage response = await client.GetAsync($"/api/endpoint-queue-metrics/{testKey}");
+		HttpResponseMessage response = await client.GetAsync($"/api/endpoint-queue-metrics/{testKey}", Current.CancellationToken);
 
 		// Assert
 		response.StatusCode.ShouldBe(HttpStatusCode.OK);
-		string content = await response.Content.ReadAsStringAsync();
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
 		content.ShouldContain($"\"EndpointKey\":\"{testKey}\"");
 	}
 

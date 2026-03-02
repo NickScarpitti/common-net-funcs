@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Moq;
+using static Xunit.TestContext;
 
 namespace Web.Api.Tests.TaskQueuing.ApiQueue;
 
@@ -415,16 +416,16 @@ public class PrioritizedSequentialTaskExtensionsTests
 					app.UseRouting();
 					app.UseEndpoints(endpoints => PrioritizedSequentialTaskExtensions.EndpointQueueMetrics(endpoints));
 				}))
-			.StartAsync();
+			.StartAsync(cancellationToken: Current.CancellationToken);
 
 		HttpClient client = host.GetTestClient();
 
 		// Act
-		HttpResponseMessage response = await client.GetAsync("/api/prioritized-sequential-api-tasks-metrics");
+		HttpResponseMessage response = await client.GetAsync("/api/prioritized-sequential-api-tasks-metrics", Current.CancellationToken);
 
 		// Assert
 		response.StatusCode.ShouldBe(HttpStatusCode.OK);
-		string content = await response.Content.ReadAsStringAsync();
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
 		content.ShouldContain("\"EndpointKey\":\"All\"");
 	}
 

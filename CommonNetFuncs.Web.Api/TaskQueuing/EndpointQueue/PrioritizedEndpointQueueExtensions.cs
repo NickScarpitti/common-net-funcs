@@ -59,7 +59,7 @@ public static class PrioritizedEndpointQueueExtensions
 				return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error retrieving endpoint queue metrics");
 			}
 		})
-				.WithName("GetEndpointQueueMetrics");
+				.WithName("GetPrioritizedEndpointQueueMetrics");
 
 		endpoints.MapGet("/api/endpoint-queue-metrics/{endpointKey}", async ([FromServices] PrioritizedEndpointQueueService queueService, string endpointKey) =>
 		{
@@ -73,7 +73,7 @@ public static class PrioritizedEndpointQueueExtensions
 				return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error retrieving endpoint queue metrics");
 			}
 		})
-		.WithName("GetEndpointQueueMetrics");
+				.WithName("GetPrioritizedEndpointQueueMetricsByKey");
 
 		return endpoints;
 	}

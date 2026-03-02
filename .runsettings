@@ -9,7 +9,7 @@
 				<Configuration>
 					<Format>cobertura</Format>
 					<Exclude>[*.Tests]*;[*]*.Program;[*]*.Startup</Exclude>
-					<ExcludeByFile>**/obj/**/*.cs;**/bin/**/*.cs;**/obj/**;**/bin/**;**/*.g.cs;**/*.Designer.cs;**\obj\**\*.cs;**\bin\**\*.cs</ExcludeByFile>
+					<ExcludeByFile>**/obj/**/*.cs;**/bin/**/*.cs;**/obj/**;**/bin/**;**/*.g.cs;**/*.Designer.cs;**/*.generated.cs;**\obj\**\*.cs;**\bin\**\*.cs;**\*.generated.cs</ExcludeByFile>
 					<ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
 					<SkipAutoProps>true</SkipAutoProps>
 					<DeterministicReport>true</DeterministicReport>

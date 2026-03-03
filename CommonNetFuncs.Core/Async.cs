@@ -1392,6 +1392,7 @@ public static class Async
 		CancellationToken token = cancellationTokenSource.Token;
 		await Parallel.ForEachAsync(tasks, async (task, _) =>
 		{
+			bool semaphoreAcquired = false;
 			try
 			{
 				if (token.IsCancellationRequested)
@@ -1402,6 +1403,7 @@ public static class Async
 				if (semaphore != null)
 				{
 					await semaphore.WaitAsync(token).ConfigureAwait(false);
+					semaphoreAcquired = true;
 				}
 
 				results.Add(await task().ConfigureAwait(false));
@@ -1416,7 +1418,10 @@ public static class Async
 			}
 			finally
 			{
-				semaphore?.Release();
+				if (semaphoreAcquired)
+				{
+					semaphore!.Release();
+				}
 			}
 		}).ConfigureAwait(false);
 		return results;
@@ -1435,6 +1440,7 @@ public static class Async
 		CancellationToken token = cancellationTokenSource.Token;
 		await Parallel.ForEachAsync(tasks, async (task, _) =>
 		{
+			bool semaphoreAcquired = false;
 			try
 			{
 				if (token.IsCancellationRequested)
@@ -1445,6 +1451,7 @@ public static class Async
 				if (semaphore != null)
 				{
 					await semaphore.WaitAsync(token).ConfigureAwait(false);
+					semaphoreAcquired = true;
 				}
 
 				await task().ConfigureAwait(false);
@@ -1459,7 +1466,10 @@ public static class Async
 			}
 			finally
 			{
-				semaphore?.Release();
+				if (semaphoreAcquired)
+				{
+					semaphore!.Release();
+				}
 			}
 		}).ConfigureAwait(false);
 	}

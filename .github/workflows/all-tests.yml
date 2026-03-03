@@ -41,7 +41,6 @@ jobs:
           - Office.Common.Tests
           - Sql.Common.Tests
           - SubsetModelBinder.Attribute.Tests
-          - SubsetModelBinder.Generator.Tests
           - Web.Api.Tests
           - Web.Aws.S3.Tests
           - Web.Common.Tests

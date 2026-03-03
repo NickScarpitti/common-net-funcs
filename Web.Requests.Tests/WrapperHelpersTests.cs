@@ -11,265 +11,377 @@ namespace Web.Requests.Tests;
 
 public sealed class WrapperHelpersTests
 {
-	#region GetHeaders Tests
+	#region PopulateHeaders Tests
 
 	[Fact]
-	public void GetHeaders_ShouldReturnJsonHeaders_WhenStreaming()
+	public void PopulateHeaders_ShouldAddJsonHeaders_WhenStreaming()
 	{
+		Dictionary<string, string> headers = [];
 		RestHelperOptions options = new("test", "api");
 
-		Dictionary<string, string> headers = WrapperHelpers.GetHeaders(options, isStreaming: true);
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: true);
 
-		headers.ShouldContain(h => h.Key == AcceptHeader && h.Value == Json);
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(Json);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(Json);
+		headers.ShouldContainKey("Accept-Encoding");
+		headers["Accept-Encoding"].ShouldBe("identity");
 	}
 
 	[Fact]
-	public void GetHeaders_ShouldIncludeCustomHeaders_WhenProvided()
+	public void PopulateHeaders_ShouldAddCustomHeaders_WhenProvided()
 	{
+		Dictionary<string, string> headers = [];
 		RestHelperOptions options = new("test", "api", HttpHeaders: new Dictionary<string, string>
 		{
-			["X-Custom"] = "value"
+			["X-Custom"] = "custom-value",
+			["X-Another"] = "another-value"
 		});
 
-		Dictionary<string, string> headers = WrapperHelpers.GetHeaders(options, isStreaming: false);
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
 
 		headers.ShouldContainKey("X-Custom");
-		headers["X-Custom"].ShouldBe("value");
+		headers["X-Custom"].ShouldBe("custom-value");
+		headers.ShouldContainKey("X-Another");
+		headers["X-Another"].ShouldBe("another-value");
 	}
 
-	#endregion
-
-	#region SetCompressionHttpHeaders Tests
-
 	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnGzipMemPackHeaders_WhenConfigured()
+	public void PopulateHeaders_ShouldAddGzipMemPackHeaders_WhenConfigured()
 	{
-		CompressionOptions options = new()
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
 		{
 			UseCompression = true,
 			CompressionType = ECompressionType.Gzip,
 			UseMemPack = true
-		};
+		});
 
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(MemPack);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(MemPack);
+		headers.ShouldContainKey("Accept-Encoding");
+		headers["Accept-Encoding"].ShouldContain("gzip");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldAddBrotliMemPackHeaders_WhenConfigured()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = true,
+			CompressionType = ECompressionType.Brotli,
+			UseMemPack = true
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(MemPack);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(MemPack);
+		headers.ShouldContainKey("Accept-Encoding");
+		headers["Accept-Encoding"].ShouldContain("br");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldAddGzipMsgPackHeaders_WhenConfigured()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = true,
+			CompressionType = ECompressionType.Gzip,
+			UseMsgPack = true
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(MsgPack);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(MsgPack);
+		headers.ShouldContainKey("Accept-Encoding");
+		headers["Accept-Encoding"].ShouldContain("gzip");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldAddBrotliMsgPackHeaders_WhenConfigured()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = true,
+			CompressionType = ECompressionType.Brotli,
+			UseMsgPack = true
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(MsgPack);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(MsgPack);
+		headers.ShouldContainKey("Accept-Encoding");
+		headers["Accept-Encoding"].ShouldContain("br");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldAddGzipJsonHeaders_WhenConfigured()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = true,
+			CompressionType = ECompressionType.Gzip
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(Json);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(Json);
+		headers.ShouldContainKey("Accept-Encoding");
+		headers["Accept-Encoding"].ShouldContain("gzip");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldAddBrotliJsonHeaders_WhenConfigured()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = true,
+			CompressionType = ECompressionType.Brotli
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(Json);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(Json);
+		headers.ShouldContainKey("Accept-Encoding");
+		headers["Accept-Encoding"].ShouldContain("br");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldAddMemPackHeaders_WhenNoCompressionTypeSpecified()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = true,
+			UseMemPack = true,
+			CompressionType = null
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(MemPack);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(MemPack);
+		headers.ShouldNotContainKey("Accept-Encoding");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldAddMsgPackHeaders_WhenNoCompressionTypeSpecified()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = true,
+			UseMsgPack = true,
+			CompressionType = null
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(MsgPack);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(MsgPack);
+		headers.ShouldNotContainKey("Accept-Encoding");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldAddJsonHeaders_WhenNoCompressionTypeSpecified()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = true,
+			CompressionType = null
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(Json);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(Json);
+		headers.ShouldNotContainKey("Accept-Encoding");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldDefaultToGzipMemPack_WhenUnknownCompressionType()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = true,
+			UseMemPack = true,
+			CompressionType = (ECompressionType)999 // Invalid type
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
 
 		headers.ShouldContainKey("Content-Type");
 		headers["Content-Type"].ShouldBe(MemPack);
 		headers.ShouldContainKey("Accept-Encoding");
+		headers["Accept-Encoding"].ShouldContain("gzip");
 	}
 
 	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnBrotliMemPackHeaders_WhenConfigured()
+	public void PopulateHeaders_ShouldDefaultToGzipMsgPack_WhenUnknownCompressionType()
 	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = ECompressionType.Brotli,
-			UseMemPack = true
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MemPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnGzipMsgPackHeaders_WhenConfigured()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = ECompressionType.Gzip,
-			UseMsgPack = true
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MsgPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnBrotliMsgPackHeaders_WhenConfigured()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = ECompressionType.Brotli,
-			UseMsgPack = true
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MsgPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnGzipJsonHeaders_WhenConfigured()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = ECompressionType.Gzip
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(Json);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnBrotliJsonHeaders_WhenConfigured()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = ECompressionType.Brotli
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(Json);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnMemPackHeaders_WhenNoCompressionTypeSpecified()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			UseMemPack = true,
-			CompressionType = null
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MemPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnMsgPackHeaders_WhenNoCompressionTypeSpecified()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			UseMsgPack = true,
-			CompressionType = null
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MsgPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnJsonHeaders_WhenNoCompressionTypeSpecified()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			CompressionType = null
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(Json);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldDefaultToGzipMemPack_WhenUnknownCompressionType()
-	{
-		CompressionOptions options = new()
-		{
-			UseCompression = true,
-			UseMemPack = true,
-			CompressionType = (ECompressionType)999 // Invalid type
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(MemPack);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldDefaultToGzipMsgPack_WhenUnknownCompressionType()
-	{
-		CompressionOptions options = new()
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
 		{
 			UseCompression = true,
 			UseMsgPack = true,
 			CompressionType = (ECompressionType)999 // Invalid type
-		};
+		});
 
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
 
 		headers.ShouldContainKey("Content-Type");
 		headers["Content-Type"].ShouldBe(MsgPack);
+		headers.ShouldContainKey("Accept-Encoding");
+		headers["Accept-Encoding"].ShouldContain("gzip");
 	}
 
 	[Fact]
-	public void SetCompressionHttpHeaders_ShouldDefaultToGzipJson_WhenUnknownCompressionType()
+	public void PopulateHeaders_ShouldDefaultToGzipJson_WhenUnknownCompressionType()
 	{
-		CompressionOptions options = new()
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
 		{
 			UseCompression = true,
 			CompressionType = (ECompressionType)999 // Invalid type
-		};
+		});
 
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, options);
-
-		headers.ShouldContainKey("Content-Type");
-		headers["Content-Type"].ShouldBe(Json);
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldReturnJsonNoEncodeHeaders_WhenStreaming()
-	{
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(null, null, isStreaming: true);
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
 
 		headers.ShouldContainKey("Content-Type");
 		headers["Content-Type"].ShouldBe(Json);
+		headers.ShouldContainKey("Accept-Encoding");
+		headers["Accept-Encoding"].ShouldContain("gzip");
 	}
 
 	[Fact]
-	public void SetCompressionHttpHeaders_ShouldPreserveExistingHeaders()
+	public void PopulateHeaders_ShouldNotOverrideExistingHeaders()
 	{
-		Dictionary<string, string> existingHeaders = new()
-		{
-			["X-Custom"] = "value"
-		};
-
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(existingHeaders, null);
-
-		headers.ShouldContainKey("X-Custom");
-		headers["X-Custom"].ShouldBe("value");
-	}
-
-	[Fact]
-	public void SetCompressionHttpHeaders_ShouldNotOverrideExistingHeaders()
-	{
-		Dictionary<string, string> existingHeaders = new()
+		Dictionary<string, string> headers = new()
 		{
 			["Content-Type"] = "custom-type"
 		};
-
-		CompressionOptions options = new()
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
 		{
 			UseCompression = true,
 			CompressionType = ECompressionType.Gzip
-		};
+		});
 
-		Dictionary<string, string> headers = WrapperHelpers.SetCompressionHttpHeaders(existingHeaders, options);
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
 
 		headers["Content-Type"].ShouldBe("custom-type");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldCombineCustomAndCompressionHeaders()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api",
+			HttpHeaders: new Dictionary<string, string> { ["X-Custom"] = "value" },
+			CompressionOptions: new CompressionOptions
+			{
+				UseCompression = true,
+				CompressionType = ECompressionType.Gzip
+			});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers.ShouldContainKey("X-Custom");
+		headers["X-Custom"].ShouldBe("value");
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(Json);
+		headers.ShouldContainKey("Accept-Encoding");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldHandleEmptyOptions()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api");
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		// Should have no headers added when no compression or custom headers
+		headers.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldNotAddCompressionHeaders_WhenUseCompressionIsFalse()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = false,
+			CompressionType = ECompressionType.Gzip
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldReusePooledDictionary()
+	{
+		Dictionary<string, string> headers = new()
+		{
+			["Old-Header"] = "old-value"
+		};
+		RestHelperOptions options = new("test", "api",
+			HttpHeaders: new Dictionary<string, string> { ["New-Header"] = "new-value" });
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		// Should add new headers without removing old ones (caller's responsibility to clear)
+		headers.ShouldContainKey("Old-Header");
+		headers.ShouldContainKey("New-Header");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldOverrideExistingCustomHeaders_WhenSameKeyProvided()
+	{
+		Dictionary<string, string> headers = new()
+		{
+			["X-Custom"] = "old-value"
+		};
+		RestHelperOptions options = new("test", "api",
+			HttpHeaders: new Dictionary<string, string> { ["X-Custom"] = "new-value" });
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: false);
+
+		headers["X-Custom"].ShouldBe("new-value");
 	}
 
 	#endregion

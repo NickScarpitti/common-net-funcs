@@ -1,11 +1,17 @@
-﻿using System.Threading.Channels;
+﻿using System.Net;
+using System.Threading.Channels;
 using CommonNetFuncs.Web.Api.TaskQueuing;
 using CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Moq;
+using static Xunit.TestContext;
 
 namespace Web.Api.Tests.TaskQueuing.ApiQueue;
 
@@ -387,6 +393,40 @@ public class PrioritizedSequentialTaskExtensionsTests
 
 		// Assert
 		stats.ShouldNotBeNull();
+	}
+
+	#endregion
+
+	#region Integration Tests
+
+	[Fact]
+	public async Task EndpointQueueMetrics_Endpoint_Should_Return_Stats_Successfully()
+	{
+		// Arrange
+		using IHost host = await new HostBuilder()
+			.ConfigureWebHost(webBuilder => webBuilder
+				.UseTestServer()
+				.ConfigureServices(services =>
+				{
+					services.AddRouting();
+					services.AddSingleton(new PrioritizedSequentialTaskProcessor(new BoundedChannelOptions(10)));
+				})
+				.Configure(app =>
+				{
+					app.UseRouting();
+					app.UseEndpoints(endpoints => PrioritizedSequentialTaskExtensions.EndpointQueueMetrics(endpoints));
+				}))
+			.StartAsync(cancellationToken: Current.CancellationToken);
+
+		HttpClient client = host.GetTestClient();
+
+		// Act
+		HttpResponseMessage response = await client.GetAsync("/api/prioritized-sequential-api-tasks-metrics", Current.CancellationToken);
+
+		// Assert
+		response.StatusCode.ShouldBe(HttpStatusCode.OK);
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
+		content.ShouldContain("\"EndpointKey\":\"All\"");
 	}
 
 	#endregion

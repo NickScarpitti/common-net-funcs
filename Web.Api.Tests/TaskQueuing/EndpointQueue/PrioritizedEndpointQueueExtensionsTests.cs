@@ -1,8 +1,14 @@
-﻿using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
+﻿using System.Net;
+using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Moq;
+using static Xunit.TestContext;
 
 namespace Web.Api.Tests.TaskQueuing.EndpointQueue;
 
@@ -145,6 +151,75 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 		// Assert
 		result.ShouldBe(app);
 	}
+
+	#region Integration Tests
+
+	[Fact]
+	public async Task EndpointQueueMetrics_GetAll_Endpoint_Should_Return_Stats_Successfully()
+	{
+		// Arrange
+		using IHost host = await new HostBuilder()
+			.ConfigureWebHost(webBuilder => webBuilder
+				.UseTestServer()
+				.ConfigureServices(services =>
+				{
+					services.AddRouting();
+					services.AddSingleton<PrioritizedEndpointQueueService>();
+				})
+				.Configure(app =>
+				{
+					app.UseRouting();
+					app.UseEndpoints(endpoints => PrioritizedEndpointQueueExtensions.EndpointQueueMetrics(endpoints));
+				}))
+			.StartAsync(cancellationToken: Current.CancellationToken);
+
+		HttpClient client = host.GetTestClient();
+
+		// Act
+		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics", Current.CancellationToken);
+
+		// Assert
+		response.StatusCode.ShouldBe(HttpStatusCode.OK);
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
+		content.ShouldNotBeNullOrEmpty();
+	}
+
+	[Fact]
+	public async Task EndpointQueueMetrics_GetByKey_Endpoint_Should_Return_Stats_For_Specific_Key()
+	{
+		// Arrange
+		using IHost host = await new HostBuilder()
+			.ConfigureWebHost(webBuilder => webBuilder
+				.UseTestServer()
+				.ConfigureServices(services =>
+				{
+					services.AddRouting();
+					services.AddSingleton<PrioritizedEndpointQueueService>();
+				})
+				.Configure(app =>
+				{
+					app.UseRouting();
+					app.UseEndpoints(endpoints => PrioritizedEndpointQueueExtensions.EndpointQueueMetrics(endpoints));
+				}))
+			.StartAsync(cancellationToken: Current.CancellationToken);
+
+		HttpClient client = host.GetTestClient();
+		PrioritizedEndpointQueueService queueService = host.Services.GetRequiredService<PrioritizedEndpointQueueService>();
+
+		// Execute a task to create the queue
+		const string testKey = "TestPriorityEndpoint";
+		await queueService.ExecuteAsync(testKey, _ => Task.FromResult(42), TaskPriority.Normal, CancellationToken.None);
+
+		// Act
+		HttpResponseMessage response = await client.GetAsync($"/api/endpoint-queue-metrics/{testKey}", Current.CancellationToken);
+
+		// Assert
+		response.StatusCode.ShouldBe(HttpStatusCode.OK);
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
+		content.ShouldContain($"\"EndpointKey\":\"{testKey}\"");
+	}
+
+	#endregion
 
 	public class TestController : ControllerBase;
 }

@@ -1,12 +1,11 @@
-﻿using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
-using Microsoft.Extensions.Hosting;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Threading.Channels;
+using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
+using Microsoft.Extensions.Hosting;
 
 namespace CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 
-#pragma warning disable S3881 // "IDisposable" should be implemented correctly
-public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
+public class PrioritizedSequentialTaskProcessor : BackgroundService
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -65,6 +64,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 		{
 			priorityQueue.Enqueue(queuedTask, -priority); // Negative for max-heap behavior
 
+
 			lock (statsLock)
 			{
 				stats.TotalQueuedTasks++;
@@ -73,6 +73,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 			}
 
 			// Transfer highest priority item from priority queue to channel
+
 			if (priorityQueue.TryDequeue(out PrioritizedQueuedTask? highestPriorityTask, out _))
 			{
 				await writer.WriteAsync(highestPriorityTask, cancellationToken).ConfigureAwait(false);
@@ -87,6 +88,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken) // Stopping token used here to match the BackgroundService base class
+
 	{
 		await foreach (PrioritizedQueuedTask currentTask in reader.ReadAllAsync(stoppingToken).ConfigureAwait(false))
 		{
@@ -101,6 +103,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 				logger.Debug("Processing task {TaskId}", currentTask.Id);
 
 				// Process the task
+
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				lock (statsLock)
@@ -138,6 +141,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 			{
 				logger.Debug(oce, "Task {TaskId} was cancelled", currentTask.Id);
 				// Task was already marked as cancelled, no need to update stats
+
 			}
 			catch (Exception ex)
 			{
@@ -154,49 +158,30 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService, IDisposable
 		}
 	}
 
-	public Task<PrioritizedQueueStats> GetAllQueueStatsAsync()
+	public virtual Task<PrioritizedQueueStats> GetAllQueueStatsAsync()
 	{
 		return Task.FromResult(stats);
 	}
 
-	private bool disposed;
-
 	public override void Dispose()
 	{
-		Dispose(true);
-		GC.SuppressFinalize(this);
-	}
-
-	protected virtual void Dispose(bool disposing)
-	{
-		if (!disposed)
+		try
 		{
-			if (disposing)
+			while (reader.Count > 0)
 			{
-				try
+				if (!reader.TryRead(out PrioritizedQueuedTask? processingTask))
 				{
-					while (reader.Count > 0)
-					{
-						if (!reader.TryRead(out PrioritizedQueuedTask? processingTask))
-						{
-							break;
-						}
-						// Wait for the processing task to complete
-						processingTask.CompletionSource.Task.Wait(TimeSpan.FromSeconds(5));
-					}
+					break;
 				}
-				catch (Exception ex)
-				{
-					logger.Warn(ex, "Error waiting for processing queued task to complete");
-				}
-			}
-			disposed = true;
-		}
-	}
+				// Wait for the processing task to complete
 
-	~PrioritizedSequentialTaskProcessor()
-	{
-		Dispose(false);
+				processingTask.CompletionSource.Task.Wait(TimeSpan.FromSeconds(5));
+			}
+		}
+		catch (Exception ex)
+		{
+			logger.Warn(ex, "Error waiting for processing queued task to complete");
+		}
+		base.Dispose(); // Call the dispose method of the base class to ensure proper cleanup
 	}
 }
-#pragma warning restore S3881 // "IDisposable" should be implemented correctly

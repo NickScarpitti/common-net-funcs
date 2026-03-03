@@ -420,16 +420,16 @@ public class EndpointQueueExtensionsTests
 					app.UseRouting();
 					app.UseEndpoints(endpoints => EndpointQueueExtensions.EndpointQueueMetrics(endpoints));
 				}))
-			.StartAsync();
+			.StartAsync(cancellationToken: Current.CancellationToken);
 
 		HttpClient client = host.GetTestClient();
 
 		// Act
-		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics");
+		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics", Current.CancellationToken);
 
 		// Assert
 		response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
-		string content = await response.Content.ReadAsStringAsync();
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
 		content.ShouldContain("Error retrieving endpoint queue metrics");
 		content.ShouldContain("Test exception");
 	}
@@ -454,16 +454,16 @@ public class EndpointQueueExtensionsTests
 					app.UseRouting();
 					app.UseEndpoints(endpoints => EndpointQueueExtensions.EndpointQueueMetrics(endpoints));
 				}))
-			.StartAsync();
+			.StartAsync(cancellationToken: Current.CancellationToken);
 
 		HttpClient client = host.GetTestClient();
 
 		// Act
-		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics/TestKey");
+		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics/TestKey", Current.CancellationToken);
 
 		// Assert
 		response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
-		string content = await response.Content.ReadAsStringAsync();
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
 		content.ShouldContain("Error retrieving endpoint queue metrics");
 		content.ShouldContain("Test exception");
 	}

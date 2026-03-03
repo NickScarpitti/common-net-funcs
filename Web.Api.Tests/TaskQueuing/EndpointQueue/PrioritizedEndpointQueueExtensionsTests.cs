@@ -223,7 +223,8 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 	public async Task EndpointQueueMetrics_GetAll_When_Service_Throws_Exception_Should_Return_Problem()
 	{
 		// Arrange - Create a mock service that throws an exception
-		Mock<PrioritizedEndpointQueueService> serviceMock = new();
+		Mock<IServiceProvider> serviceProviderMock = new();
+		Mock<PrioritizedEndpointQueueService> serviceMock = new(serviceProviderMock.Object);
 		serviceMock.Setup(s => s.GetAllQueueStatsAsync()).ThrowsAsync(new InvalidOperationException("Test exception"));
 
 		using IHost host = await new HostBuilder()
@@ -239,16 +240,16 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 					app.UseRouting();
 					app.UseEndpoints(endpoints => PrioritizedEndpointQueueExtensions.EndpointQueueMetrics(endpoints));
 				}))
-			.StartAsync();
+			.StartAsync(cancellationToken: Current.CancellationToken);
 
 		HttpClient client = host.GetTestClient();
 
 		// Act
-		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics");
+		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics", Current.CancellationToken);
 
 		// Assert
 		response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
-		string content = await response.Content.ReadAsStringAsync();
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
 		content.ShouldContain("Error retrieving endpoint queue metrics");
 		content.ShouldContain("Test exception");
 	}
@@ -257,7 +258,8 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 	public async Task EndpointQueueMetrics_GetByKey_When_Service_Throws_Exception_Should_Return_Problem()
 	{
 		// Arrange - Create a mock service that throws an exception
-		Mock<PrioritizedEndpointQueueService> serviceMock = new();
+		Mock<IServiceProvider> serviceProviderMock = new();
+		Mock<PrioritizedEndpointQueueService> serviceMock = new(serviceProviderMock.Object);
 		serviceMock.Setup(s => s.GetQueueStatsAsync(It.IsAny<string>())).ThrowsAsync(new InvalidOperationException("Test exception"));
 
 		using IHost host = await new HostBuilder()
@@ -273,16 +275,16 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 					app.UseRouting();
 					app.UseEndpoints(endpoints => PrioritizedEndpointQueueExtensions.EndpointQueueMetrics(endpoints));
 				}))
-			.StartAsync();
+			.StartAsync(cancellationToken: Current.CancellationToken);
 
 		HttpClient client = host.GetTestClient();
 
 		// Act
-		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics/TestKey");
+		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics/TestKey", Current.CancellationToken);
 
 		// Assert
 		response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
-		string content = await response.Content.ReadAsStringAsync();
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
 		content.ShouldContain("Error retrieving endpoint queue metrics");
 		content.ShouldContain("Test exception");
 	}

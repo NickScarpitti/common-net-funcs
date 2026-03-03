@@ -16,7 +16,7 @@ public interface IPrioritizedEndpointQueueService
 	Task<bool> CancelTasksAsync(string endpointKey, TaskPriority priority);
 }
 
-public sealed class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueService, IDisposable
+public class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueService, IDisposable
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -62,14 +62,14 @@ public sealed class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueS
 		return await queue.EnqueueAsync(taskFunction, customPriority, priorityLevel, cancellationToken).ConfigureAwait(false);
 	}
 
-	public Task<PrioritizedQueueStats> GetQueueStatsAsync(string endpointKey)
+	public virtual Task<PrioritizedQueueStats> GetQueueStatsAsync(string endpointKey)
 	{
 		PrioritizedQueueStats stats = queues.TryGetValue(endpointKey, out PrioritizedEndpointQueue? queue) ? queue.Stats : new(endpointKey);
 
 		return Task.FromResult(stats);
 	}
 
-	public Task<Dictionary<string, PrioritizedQueueStats>> GetAllQueueStatsAsync()
+	public virtual Task<Dictionary<string, PrioritizedQueueStats>> GetAllQueueStatsAsync()
 	{
 		Dictionary<string, PrioritizedQueueStats> allStats = queues.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Stats);
 
@@ -141,7 +141,7 @@ public sealed class PrioritizedEndpointQueueService : IPrioritizedEndpointQueueS
 		GC.SuppressFinalize(this);
 	}
 
-	private void Dispose(bool disposing)
+	protected virtual void Dispose(bool disposing)
 	{
 		if (!disposed)
 		{

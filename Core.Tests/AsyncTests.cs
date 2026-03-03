@@ -2168,7 +2168,7 @@ public sealed class AsyncTests
 		// The method should complete without throwing (it catches the exception)
 		await fillTask;
 
-		// Assert - Value should not be added becauseof cancellation
+		// Assert - Value should not be added because of cancellation
 		dictionary.ShouldNotContainKey(key);
 	}
 

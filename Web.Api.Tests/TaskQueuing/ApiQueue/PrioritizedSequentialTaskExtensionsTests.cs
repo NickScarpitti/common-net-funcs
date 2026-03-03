@@ -433,7 +433,7 @@ public class PrioritizedSequentialTaskExtensionsTests
 	public async Task EndpointQueueMetrics_Endpoint_When_Service_Throws_Exception_Should_Return_Problem()
 	{
 		// Arrange - Create a mock processor that throws an exception
-		Mock<PrioritizedSequentialTaskProcessor> processorMock = new(new BoundedChannelOptions(10));
+		Mock<PrioritizedSequentialTaskProcessor> processorMock = new(new BoundedChannelOptions(10), 1000);
 		processorMock.Setup(p => p.GetAllQueueStatsAsync()).ThrowsAsync(new InvalidOperationException("Test exception"));
 
 		using IHost host = await new HostBuilder()
@@ -449,16 +449,16 @@ public class PrioritizedSequentialTaskExtensionsTests
 					app.UseRouting();
 					app.UseEndpoints(endpoints => PrioritizedSequentialTaskExtensions.EndpointQueueMetrics(endpoints));
 				}))
-			.StartAsync();
+			.StartAsync(cancellationToken: Current.CancellationToken);
 
 		HttpClient client = host.GetTestClient();
 
 		// Act
-		HttpResponseMessage response = await client.GetAsync("/api/prioritized-sequential-api-tasks-metrics");
+		HttpResponseMessage response = await client.GetAsync("/api/prioritized-sequential-api-tasks-metrics", Current.CancellationToken);
 
 		// Assert
 		response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
-		string content = await response.Content.ReadAsStringAsync();
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
 		content.ShouldContain("Error retrieving endpoint queue metrics");
 		content.ShouldContain("Test exception");
 	}

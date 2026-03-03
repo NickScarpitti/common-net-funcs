@@ -219,6 +219,76 @@ public sealed class PrioritizedEndpointQueueExtensionsTests
 		content.ShouldContain($"\"EndpointKey\":\"{testKey}\"");
 	}
 
+	[Fact]
+	public async Task EndpointQueueMetrics_GetAll_When_Service_Throws_Exception_Should_Return_Problem()
+	{
+		// Arrange - Create a mock service that throws an exception
+		Mock<IServiceProvider> serviceProviderMock = new();
+		Mock<PrioritizedEndpointQueueService> serviceMock = new(serviceProviderMock.Object);
+		serviceMock.Setup(s => s.GetAllQueueStatsAsync()).ThrowsAsync(new InvalidOperationException("Test exception"));
+
+		using IHost host = await new HostBuilder()
+			.ConfigureWebHost(webBuilder => webBuilder
+				.UseTestServer()
+				.ConfigureServices(services =>
+				{
+					services.AddRouting();
+					services.AddSingleton(serviceMock.Object);
+				})
+				.Configure(app =>
+				{
+					app.UseRouting();
+					app.UseEndpoints(endpoints => PrioritizedEndpointQueueExtensions.EndpointQueueMetrics(endpoints));
+				}))
+			.StartAsync(cancellationToken: Current.CancellationToken);
+
+		HttpClient client = host.GetTestClient();
+
+		// Act
+		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics", Current.CancellationToken);
+
+		// Assert
+		response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
+		content.ShouldContain("Error retrieving endpoint queue metrics");
+		content.ShouldContain("Test exception");
+	}
+
+	[Fact]
+	public async Task EndpointQueueMetrics_GetByKey_When_Service_Throws_Exception_Should_Return_Problem()
+	{
+		// Arrange - Create a mock service that throws an exception
+		Mock<IServiceProvider> serviceProviderMock = new();
+		Mock<PrioritizedEndpointQueueService> serviceMock = new(serviceProviderMock.Object);
+		serviceMock.Setup(s => s.GetQueueStatsAsync(It.IsAny<string>())).ThrowsAsync(new InvalidOperationException("Test exception"));
+
+		using IHost host = await new HostBuilder()
+			.ConfigureWebHost(webBuilder => webBuilder
+				.UseTestServer()
+				.ConfigureServices(services =>
+				{
+					services.AddRouting();
+					services.AddSingleton(serviceMock.Object);
+				})
+				.Configure(app =>
+				{
+					app.UseRouting();
+					app.UseEndpoints(endpoints => PrioritizedEndpointQueueExtensions.EndpointQueueMetrics(endpoints));
+				}))
+			.StartAsync(cancellationToken: Current.CancellationToken);
+
+		HttpClient client = host.GetTestClient();
+
+		// Act
+		HttpResponseMessage response = await client.GetAsync("/api/endpoint-queue-metrics/TestKey", Current.CancellationToken);
+
+		// Assert
+		response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
+		content.ShouldContain("Error retrieving endpoint queue metrics");
+		content.ShouldContain("Test exception");
+	}
+
 	#endregion
 
 	public class TestController : ControllerBase;

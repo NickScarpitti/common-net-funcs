@@ -2,6 +2,7 @@
 using System.Threading.Channels;
 using CommonNetFuncs.Web.Api.TaskQueuing;
 using CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
+using FakeItEasy;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -375,6 +376,40 @@ public class SequentialTaskExtensionsTests
 		response.StatusCode.ShouldBe(HttpStatusCode.OK);
 		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
 		content.ShouldContain("\"EndpointKey\":\"All\"");
+	}
+
+	[Fact]
+	public async Task EndpointQueueMetrics_Endpoint_When_Service_Throws_Exception_Should_Return_Problem()
+	{
+		// Arrange - Create a mock processor that throws an exception
+		Mock<SequentialTaskProcessor> processorMock = new(new BoundedChannelOptions(10), 1000);
+		processorMock.Setup(p => p.GetAllQueueStatsAsync()).ThrowsAsync(new InvalidOperationException("Test exception"));
+
+		using IHost host = await new HostBuilder()
+			.ConfigureWebHost(webBuilder => webBuilder
+				.UseTestServer()
+				.ConfigureServices(services =>
+				{
+					services.AddRouting();
+					services.AddSingleton(processorMock.Object);
+				})
+				.Configure(app =>
+				{
+					app.UseRouting();
+					app.UseEndpoints(endpoints => SequentialTaskExtensions.EndpointQueueMetrics(endpoints));
+				}))
+			.StartAsync(cancellationToken: Current.CancellationToken);
+
+		HttpClient client = host.GetTestClient();
+
+		// Act
+		HttpResponseMessage response = await client.GetAsync("/api/sequential-api-tasks-metrics", Current.CancellationToken);
+
+		// Assert
+		response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+		string content = await response.Content.ReadAsStringAsync(Current.CancellationToken);
+		content.ShouldContain("Error retrieving endpoint queue metrics");
+		content.ShouldContain("Test exception");
 	}
 
 	#endregion

@@ -14,7 +14,7 @@ public interface IEndpointQueueService
 	Task<Dictionary<string, QueueStats>> GetAllQueueStatsAsync();
 }
 
-public sealed class EndpointQueueService : IEndpointQueueService, IDisposable
+public class EndpointQueueService : IEndpointQueueService, IDisposable
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -54,13 +54,13 @@ public sealed class EndpointQueueService : IEndpointQueueService, IDisposable
 		return await queue.EnqueueAsync(taskFunction, cancellationToken).ConfigureAwait(false);
 	}
 
-	public Task<QueueStats> GetQueueStatsAsync(string endpointKey)
+	public virtual Task<QueueStats> GetQueueStatsAsync(string endpointKey)
 	{
 		QueueStats stats = queues.TryGetValue(endpointKey, out EndpointQueue? queue) ? queue.Stats : new QueueStats(endpointKey);
 		return Task.FromResult(stats);
 	}
 
-	public Task<Dictionary<string, QueueStats>> GetAllQueueStatsAsync()
+	public virtual Task<Dictionary<string, QueueStats>> GetAllQueueStatsAsync()
 	{
 		Dictionary<string, QueueStats> allStats = queues.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Stats);
 		return Task.FromResult(allStats);
@@ -116,7 +116,7 @@ public sealed class EndpointQueueService : IEndpointQueueService, IDisposable
 		GC.SuppressFinalize(this);
 	}
 
-	private void Dispose(bool disposing)
+	protected virtual void Dispose(bool disposing)
 	{
 		if (!disposed)
 		{

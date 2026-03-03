@@ -29,7 +29,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.17</Version>
+		<Version>4.0.21</Version>
 		<MinVerTagPrefix>web.api-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -89,7 +89,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" PrivateAssets="all" />
-		<PackageReference Include="Scalar.AspNetCore" Version="2.12.47" />
+		<PackageReference Include="Scalar.AspNetCore" Version="2.12.52" />
 	</ItemGroup>
 
 	<ItemGroup>

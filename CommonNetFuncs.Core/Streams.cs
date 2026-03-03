@@ -191,8 +191,8 @@ public sealed class CountingStream(Stream innerStream) : Stream
 		{
 			disposed = true;
 			// Don't dispose the inner stream as it's managed by ASP.NET Core
-			GC.SuppressFinalize(this);
 			await base.DisposeAsync().ConfigureAwait(false);
+			GC.SuppressFinalize(this);
 		}
 	}
 

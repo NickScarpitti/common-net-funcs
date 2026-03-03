@@ -15,6 +15,7 @@ public class SequentialTaskProcessor : BackgroundService
 	private readonly List<TimeSpan> processingTimes = new();
 	private readonly Lock statsLock = new();
 	private readonly int processTimeWindow;
+	private bool disposed;
 
 	public SequentialTaskProcessor(BoundedChannelOptions boundedChannelOptions, int processTimeWindow = 1000)
 	{
@@ -66,7 +67,7 @@ public class SequentialTaskProcessor : BackgroundService
 			{
 				logger.Debug("Processing task {TaskId}", task.Id);
 
-				object? result = await task.TaskFunction(stoppingToken).ConfigureAwait(false);
+				object? result = await task.TaskFunction(cancellationTokenSource.Token).ConfigureAwait(false);
 				task.CompletionSource.SetResult(result);
 
 				lock (statsLock)
@@ -126,8 +127,31 @@ public class SequentialTaskProcessor : BackgroundService
 
 	public override void Dispose()
 	{
-		writer.Complete();
-		cancellationTokenSource.Cancel();
+		if (disposed)
+		{
+			return;
+		}
+
+		disposed = true;
+
+		try
+		{
+			writer.Complete();
+		}
+		catch (Exception ex)
+		{
+			logger.Warn(ex, "Error completing writer channel");
+		}
+
+		try
+		{
+			// Wait for ExecuteAsync to finish processing
+			StopAsync(CancellationToken.None).Wait(TimeSpan.FromSeconds(10));
+		}
+		catch (Exception ex)
+		{
+			logger.Warn(ex, "Error stopping background service");
+		}
 
 		try
 		{
@@ -147,7 +171,9 @@ public class SequentialTaskProcessor : BackgroundService
 			logger.Warn(ex, "Error waiting for processing queued task to complete");
 		}
 
+		cancellationTokenSource.Cancel();
 		cancellationTokenSource.Dispose();
 		base.Dispose(); // Call the dispose method of the base class to ensure proper cleanup
+		GC.SuppressFinalize(this);
 	}
 }

@@ -17,6 +17,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService
 	private readonly PrioritizedQueueStats stats;
 	private readonly Dictionary<TaskPriority, List<TimeSpan>> processingTimesByPriority = new();
 	private readonly int processTimeWindow = 1000;
+	private bool disposed;
 
 	public PrioritizedSequentialTaskProcessor(BoundedChannelOptions boundedChannelOptions, int processTimeWindow = 1000)
 	{
@@ -112,7 +113,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService
 					stats.CurrentProcessingPriority = currentTask.PriorityLevel;
 				}
 
-				object? result = await currentTask.TaskFunction(stoppingToken).ConfigureAwait(false);
+				object? result = await currentTask.TaskFunction(CancellationToken.None).ConfigureAwait(false);
 				currentTask.CompletionSource.SetResult(result);
 
 				stopwatch.Stop();
@@ -165,6 +166,32 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService
 
 	public override void Dispose()
 	{
+		if (disposed)
+		{
+			return;
+		}
+
+		disposed = true;
+
+		try
+		{
+			writer.Complete();
+		}
+		catch (Exception ex)
+		{
+			logger.Warn(ex, "Error completing writer channel");
+		}
+
+		try
+		{
+			// Wait for ExecuteAsync to finish processing
+			StopAsync(CancellationToken.None).Wait(TimeSpan.FromSeconds(10));
+		}
+		catch (Exception ex)
+		{
+			logger.Warn(ex, "Error stopping background service");
+		}
+
 		try
 		{
 			while (reader.Count > 0)
@@ -182,6 +209,7 @@ public class PrioritizedSequentialTaskProcessor : BackgroundService
 		{
 			logger.Warn(ex, "Error waiting for processing queued task to complete");
 		}
-		base.Dispose(); // Call the dispose method of the base class to ensure proper cleanup
+		base.Dispose();
+		GC.SuppressFinalize(this);
 	}
 }

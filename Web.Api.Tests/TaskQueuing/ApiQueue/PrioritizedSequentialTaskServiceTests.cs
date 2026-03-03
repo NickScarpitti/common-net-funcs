@@ -1,8 +1,7 @@
-﻿using System.Threading.Channels;
-using CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
+﻿using CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 using Moq;
-using Moq.Protected;
+using System.Threading.Channels;
 
 namespace Web.Api.Tests.TaskQueuing.ApiQueue;
 
@@ -15,7 +14,6 @@ public class PrioritizedSequentialTaskServiceTests
 	{
 		Mock<PrioritizedSequentialTaskProcessor> processorMock = new(MockBehavior.Strict, new BoundedChannelOptions(1), 1000);
 		processorMock.Setup(x => x.EnqueueWithPriorityAsync(It.IsAny<Func<CancellationToken, Task<int?>>>(), priority, priorityLevel, null, It.IsAny<CancellationToken>())).ReturnsAsync(priority);
-		processorMock.Protected().Setup("Dispose", ItExpr.IsAny<bool>());
 
 		PrioritizedSequentialTaskService service = new(processorMock.Object);
 

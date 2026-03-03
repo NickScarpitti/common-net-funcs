@@ -1,9 +1,9 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text;
-using CommonNetFuncs.Web.Requests.Rest.Options;
+﻿using CommonNetFuncs.Web.Requests.Rest.Options;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.ObjectPool;
 using NLog;
+using System.Runtime.CompilerServices;
+using System.Text;
 using static CommonNetFuncs.Web.Common.ContentTypes;
 using static CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper.WrapperHelpers;
 using static Newtonsoft.Json.JsonConvert;
@@ -40,7 +40,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		try
 		{
 			headers.Clear();
-			headers = GetHeaders(options, false);
+			PopulateHeaders(headers, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -108,7 +108,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		try
 		{
 			headers.Clear();
-			headers = GetHeaders(options, false);
+			PopulateHeaders(headers, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -190,7 +190,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		try
 		{
 			headers.Clear();
-			headers = GetHeaders(options, false);
+			PopulateHeaders(headers, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -259,7 +259,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		try
 		{
 			headers.Clear();
-			headers = GetHeaders(options, false);
+			PopulateHeaders(headers, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -337,7 +337,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		try
 		{
 			headers.Clear();
-			headers = GetHeaders(options, false);
+			PopulateHeaders(headers, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -407,7 +407,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		try
 		{
 			headers.Clear();
-			headers = GetHeaders(options, false);
+			PopulateHeaders(headers, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -484,7 +484,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		try
 		{
 			headers.Clear();
-			headers = GetHeaders(options, false);
+			PopulateHeaders(headers, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -564,7 +564,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		try
 		{
 			headers.Clear();
-			headers = GetHeaders(options, false);
+			PopulateHeaders(headers, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -578,7 +578,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 				}
 
 				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions<TEntity>(options, client.BaseAddress, headers, HttpMethod.Patch, bearerToken, default,
-								patchDocument: new StringContent(SerializeObject(patchDocument), Encoding.UTF8, Json)); //new StringContent(System.Text.Json.JsonSerializer.Serialize(patchDocument), Encoding.UTF8, Json)); // System.Text.Json has issues producing JsonPatchDocument in the correct format
+					patchDocument: new StringContent(SerializeObject(patchDocument), Encoding.UTF8, Json)); //new StringContent(System.Text.Json.JsonSerializer.Serialize(patchDocument), Encoding.UTF8, Json)); // System.Text.Json has issues producing JsonPatchDocument in the correct format
 
 				result = await client.RestObjectRequest<TEntity, TEntity>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -632,7 +632,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		try
 		{
 			headers.Clear();
-			headers = GetHeaders(options, false);
+			PopulateHeaders(headers, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -697,7 +697,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		try
 		{
 			headers.Clear();
-			headers = GetHeaders(options, false);
+			PopulateHeaders(headers, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)

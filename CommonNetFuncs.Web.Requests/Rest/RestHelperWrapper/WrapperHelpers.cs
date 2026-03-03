@@ -5,22 +5,14 @@ using CommonNetFuncs.Web.Requests.Rest.Options;
 using NLog;
 using static System.Net.HttpStatusCode;
 using static CommonNetFuncs.Compression.Streams;
-using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Random;
 using static CommonNetFuncs.Web.Common.ContentTypes;
 using static CommonNetFuncs.Web.Requests.Rest.RestHelperConstants;
-
 
 namespace CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 
 internal static class WrapperHelpers
 {
-	internal static Dictionary<string, string> GetHeaders(RestHelperOptions options, bool isStreaming)
-	{
-		Dictionary<string, string> headers = options.HttpHeaders?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, string>();
-		return SetCompressionHttpHeaders(headers, options.CompressionOptions, isStreaming).ToDictionary();
-	}
-
 	private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 	private static readonly ImmutableDictionary<string, string> MemPackHeadersWithGzip = ImmutableDictionary.CreateRange([MemPackContentHeader, MemPackAcceptHeader, GzipEncodingHeader]);
 	private static readonly ImmutableDictionary<string, string> MemPackHeadersWithBrotli = ImmutableDictionary.CreateRange([MemPackContentHeader, MemPackAcceptHeader, BrotliEncodingHeader]);
@@ -31,101 +23,118 @@ internal static class WrapperHelpers
 	private static readonly ImmutableDictionary<string, string> JsonHeadersWithGzip = ImmutableDictionary.CreateRange([JsonContentHeader, JsonAcceptHeader, GzipEncodingHeader]);
 	private static readonly ImmutableDictionary<string, string> JsonHeadersWithBrotli = ImmutableDictionary.CreateRange([JsonContentHeader, JsonAcceptHeader, BrotliEncodingHeader]);
 
-	internal static Dictionary<string, string> SetCompressionHttpHeaders(IDictionary<string, string>? httpHeaders, CompressionOptions? compressionOptions = null, bool isStreaming = false)
+	/// <summary>
+	/// Populates an existing dictionary with headers instead of creating a new one (for use with pooling).
+	/// </summary>
+	internal static void PopulateHeaders(Dictionary<string, string> headers, RestHelperOptions options, bool isStreaming)
 	{
-		Dictionary<string, string>? compressionHeaders = [];
-		try
+		// Add custom headers from options
+		if (options.HttpHeaders?.Count > 0)
 		{
-			if (!isStreaming)
+			foreach (KeyValuePair<string, string> header in options.HttpHeaders)
 			{
-				if (compressionOptions?.UseCompression == true)
+				headers[header.Key] = header.Value;
+			}
+		}
+
+		// Add compression headers
+		SetCompressionHttpHeadersInPlace(headers, options.CompressionOptions, isStreaming);
+	}
+
+	/// <summary>
+	/// Populates existing dictionary with compression headers instead of creating a new one.
+	/// </summary>
+	private static void SetCompressionHttpHeadersInPlace(Dictionary<string, string> headers, CompressionOptions? compressionOptions = null, bool isStreaming = false)
+	{
+		IEnumerable<KeyValuePair<string, string>>? compressionHeaders = null;
+
+		if (!isStreaming)
+		{
+			if (compressionOptions?.UseCompression == true)
+			{
+				if (compressionOptions.CompressionType != null)
 				{
-					if (compressionOptions.CompressionType != null)
+					if (compressionOptions.CompressionType == ECompressionType.Gzip)
 					{
-						if (compressionOptions.CompressionType == ECompressionType.Gzip)
+						if (compressionOptions.UseMemPack)
 						{
-							if (compressionOptions.UseMemPack)
-							{
-								compressionHeaders = new(MemPackHeadersWithGzip);
-							}
-							else if (compressionOptions.UseMsgPack)
-							{
-								compressionHeaders = new(MsgPackHeadersWithGzip);
-							}
-							else
-							{
-								compressionHeaders = new(JsonHeadersWithGzip);
-							}
+							compressionHeaders = MemPackHeadersWithGzip;
 						}
-						else if (compressionOptions.CompressionType == ECompressionType.Brotli)
+						else if (compressionOptions.UseMsgPack)
 						{
-							if (compressionOptions.UseMemPack)
-							{
-								compressionHeaders = new(MemPackHeadersWithBrotli);
-							}
-							else if (compressionOptions.UseMsgPack)
-							{
-								compressionHeaders = new(MsgPackHeadersWithBrotli);
-							}
-							else
-							{
-								compressionHeaders = new(JsonHeadersWithBrotli);
-							}
+							compressionHeaders = MsgPackHeadersWithGzip;
 						}
 						else
 						{
-							if (compressionOptions.UseMemPack)
-							{
-								compressionHeaders = new(MemPackHeadersWithGzip);
-							}
-							else if (compressionOptions.UseMsgPack)
-							{
-								compressionHeaders = new(MsgPackHeadersWithGzip);
-							}
-							else
-							{
-								compressionHeaders = new(JsonHeadersWithGzip);
-							}
+							compressionHeaders = JsonHeadersWithGzip;
+						}
+					}
+					else if (compressionOptions.CompressionType == ECompressionType.Brotli)
+					{
+						if (compressionOptions.UseMemPack)
+						{
+							compressionHeaders = MemPackHeadersWithBrotli;
+						}
+						else if (compressionOptions.UseMsgPack)
+						{
+							compressionHeaders = MsgPackHeadersWithBrotli;
+						}
+						else
+						{
+							compressionHeaders = JsonHeadersWithBrotli;
 						}
 					}
 					else
 					{
 						if (compressionOptions.UseMemPack)
 						{
-							compressionHeaders = new(MemPackHeaders);
+							compressionHeaders = MemPackHeadersWithGzip;
 						}
 						else if (compressionOptions.UseMsgPack)
 						{
-							compressionHeaders = new(MsgPackHeaders);
+							compressionHeaders = MsgPackHeadersWithGzip;
 						}
 						else
 						{
-							compressionHeaders = new(JsonHeaders);
+							compressionHeaders = JsonHeadersWithGzip;
 						}
 					}
 				}
-			}
-			else
-			{
-				compressionHeaders = new(JsonNoEncodeHeaders); //Need to use JSON with no compression when streaming data
+				else
+				{
+					if (compressionOptions.UseMemPack)
+					{
+						compressionHeaders = MemPackHeaders;
+					}
+					else if (compressionOptions.UseMsgPack)
+					{
+						compressionHeaders = MsgPackHeaders;
+					}
+					else
+					{
+						compressionHeaders = JsonHeaders;
+					}
+				}
 			}
 		}
-		catch (Exception ex)
+		else
 		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-
+			compressionHeaders = JsonNoEncodeHeaders; //Need to use JSON with no compression when streaming data
 		}
 
-		if (httpHeaders.AnyFast())
+		// Add compression headers to the existing dictionary if they don't already exist
+		if (compressionHeaders != null)
 		{
-			foreach (KeyValuePair<string, string> header in compressionHeaders.Where(header => !httpHeaders.ContainsKey(header.Key)))
+#pragma warning disable S3267 // Loops should be simplified using the "Where" LINQ method
+			foreach (KeyValuePair<string, string> header in compressionHeaders)
 			{
-				httpHeaders.TryAdd(header.Key, header.Value);
+				if (!headers.ContainsKey(header.Key))
+				{
+					headers[header.Key] = header.Value;
+				}
 			}
-
-			return (Dictionary<string, string>)httpHeaders ?? new Dictionary<string, string>();
+#pragma warning restore S3267 // Loops should be simplified using the "Where" LINQ method
 		}
-		return compressionHeaders;
 	}
 
 	internal static TimeSpan GetWaitTime(ResilienceOptions resilienceOptions, int attempts)

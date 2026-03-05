@@ -29,7 +29,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>3.8.38</Version>
+		<Version>3.8.42</Version>
 		<MinVerTagPrefix>hangfire-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -39,25 +39,25 @@
 		<EnablePackageValidation>true</EnablePackageValidation>
 	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
-    <PackageReference Include="Hangfire.Core" Version="1.8.23" />
+	<ItemGroup>
+		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
+		<PackageReference Include="Hangfire.Core" Version="1.8.23" />
 		<PackageReference Include="MinVer" Version="7.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.1" PrivateAssets="all" />
-  </ItemGroup>
+		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" PrivateAssets="all" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="TTLogo.png">
-	    <PackagePath>\</PackagePath>
-	    <Pack>True</Pack>
-	  </None>
+		<None Update="TTLogo.png">
+			<PackagePath>\</PackagePath>
+			<Pack>True</Pack>
+		</None>
 		<None Include="README.md">
 			<PackagePath>\</PackagePath>
 			<Pack>True</Pack>

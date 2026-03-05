@@ -6,6 +6,7 @@ using MailKit.Security;
 using MimeKit;
 using Newtonsoft.Json;
 using static CommonNetFuncs.Compression.Files;
+using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Email.EmailConstants;
 
 namespace CommonNetFuncs.Email;
@@ -130,7 +131,7 @@ public sealed class MailAttachmentBytes : IMailAttachment
 public sealed class SendEmailConfig(SmtpSettings? smtpSettings = null, EmailAddresses? emailAddresses = null, EmailContent? emailContent = null, bool readReceipt = false, string? readReceiptEmail = null)
 {
 	/// <summary>
-	/// Gets or sets the values to use for the SMTP server conncetion.
+	/// Gets or sets the values to use for the SMTP server connection.
 	/// </summary>
 	public SmtpSettings SmtpSettings { get; set; } = smtpSettings ?? new();
 
@@ -330,31 +331,55 @@ public static class Email
 			// Confirm emails
 			if (!sendEmailConfig.EmailAddresses.FromAddress.Email.IsValidEmail())
 			{
-				success = false;
+				throw new ArgumentException("From email address {email} is invalid", sendEmailConfig.EmailAddresses.FromAddress.Email.UrlEncodeReadable(cancellationToken: cancellationToken));
 			}
 
 			// Check that there is at least one recipient
-			success = (success && sendEmailConfig.EmailAddresses.ToAddresses.Length != 0) || sendEmailConfig.EmailAddresses.CcAddresses?.Length > 0 || sendEmailConfig.EmailAddresses.BccAddresses?.Length > 0;
+			if (sendEmailConfig.EmailAddresses.ToAddresses.Length == 0 && (sendEmailConfig.EmailAddresses.CcAddresses?.Length ?? 0) == 0 && (sendEmailConfig.EmailAddresses.BccAddresses?.Length ?? 0) == 0)
+			{
+				throw new ArgumentException("At least one recipient is required");
+			}
 
 			// Validate all recipient email addresses
 			success = success && sendEmailConfig.EmailAddresses.ToAddresses.All(mailAddress => mailAddress.Email.IsValidEmail());
+			if (!success)
+			{
+				IEnumerable<string> invalidToEmails = sendEmailConfig.EmailAddresses.ToAddresses.Where(mailAddress => !mailAddress.Email.IsValidEmail())
+					.Select(mailAddress => mailAddress.Email.UrlEncodeReadable(cancellationToken: cancellationToken) ?? "null");
+				throw new ArgumentException("The following To email addresses are invalid: {emails}", string.Join(", ", invalidToEmails));
+			}
+
 			success = success && (sendEmailConfig.EmailAddresses.CcAddresses?.All(mailAddress => mailAddress.Email.IsValidEmail()) != false);
+			if (!success && sendEmailConfig.EmailAddresses.CcAddresses != null)
+			{
+				IEnumerable<string> invalidCcEmails = sendEmailConfig.EmailAddresses.CcAddresses.Where(mailAddress => !mailAddress.Email.IsValidEmail())
+					.Select(mailAddress => mailAddress.Email.UrlEncodeReadable(cancellationToken: cancellationToken) ?? "null");
+				throw new ArgumentException("The following CC email addresses are invalid: {emails}", string.Join(", ", invalidCcEmails));
+			}
+
 			success = success && (sendEmailConfig.EmailAddresses.BccAddresses?.All(mailAddress => mailAddress.Email.IsValidEmail()) != false);
+			if (!success && sendEmailConfig.EmailAddresses.BccAddresses != null)
+			{
+				IEnumerable<string> invalidBccEmails = sendEmailConfig.EmailAddresses.BccAddresses.Where(mailAddress => !mailAddress.Email.IsValidEmail())
+					.Select(mailAddress => mailAddress.Email.UrlEncodeReadable(cancellationToken: cancellationToken) ?? "null");
+				throw new ArgumentException("The following BCC email addresses are invalid: {emails}", string.Join(", ", invalidBccEmails));
+			}
 
 			if (success)
 			{
 				MimeMessage email = new();
-				email.From.Add(new MailboxAddress(sendEmailConfig.EmailAddresses.FromAddress?.Name, sendEmailConfig.EmailAddresses.FromAddress?.Email));
-				email.To.AddRange(sendEmailConfig.EmailAddresses.ToAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+				email.From.Add(new MailboxAddress(sendEmailConfig.EmailAddresses.FromAddress.Name, sendEmailConfig.EmailAddresses.FromAddress.Email!));
+				email.To.AddRange(sendEmailConfig.EmailAddresses.ToAddresses.Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
 				if (sendEmailConfig.EmailAddresses.CcAddresses?.Length > 0)
 				{
-					email.Cc.AddRange(sendEmailConfig.EmailAddresses.CcAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+					email.Cc.AddRange(sendEmailConfig.EmailAddresses.CcAddresses.Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
 				}
 				if (sendEmailConfig.EmailAddresses.BccAddresses?.Length > 0)
 				{
-					email.Bcc.AddRange(sendEmailConfig.EmailAddresses.BccAddresses.Select(x => new MailboxAddress(x.Name, x.Email)).ToList());
+					email.Bcc.AddRange(sendEmailConfig.EmailAddresses.BccAddresses.Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
 				}
-				email.Subject = sendEmailConfig.EmailContent.Subject;
+
+				email.Subject = sendEmailConfig.EmailContent.Subject ?? throw new ArgumentException("Email subject is required");
 
 				BodyBuilder bodyBuilder = new();
 				if (sendEmailConfig.EmailContent.BodyIsHtml)
@@ -395,20 +420,22 @@ public static class Email
 					}
 					catch (Exception ex)
 					{
-						logger.Warn(ex, "{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error");
+						logger.Warn(ex, "{class}.{method} Error On Email Send Attempt {attempt}", nameof(Email), nameof(SendEmail), i + 1);
 						if (i == 7)
 						{
-							logger.Error("{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error\nFailed to send email.\nSMTP Server: {sendEmailConfig.SmtpSettings.SmtpServer} | SMTP Port: {sendEmailConfig.SmtpSettings.SmtpPort} | SMTP User: {sendEmailConfig.SmtpSettings.SmtpUser}");
+							logger.Error("{class}.{method} Error\nFailed to send email.\nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}",
+								nameof(Email), nameof(SendEmail), sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, sendEmailConfig.SmtpSettings.SmtpUser);
 							success = false; //Sets success to false when the email send fails on the last attempt
 						}
 					}
-					Thread.Sleep(500);
+					await Task.Delay(500, cancellationToken).ConfigureAwait(false);
 				}
 			}
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Email)}.{nameof(SendEmail)} Error\nFailed to send email.\nSMTP Server: {sendEmailConfig.SmtpSettings.SmtpServer} | SMTP Port: {sendEmailConfig.SmtpSettings.SmtpPort} | SMTP User: {sendEmailConfig.SmtpSettings.SmtpUser}");
+			logger.Error(ex, "{class}.{method} Error\nFailed to send email.\nSMTP Server: {smtpServer} | SMTP Port: {smtpPort} | SMTP User: {smtpUser}",
+				nameof(Email), nameof(SendEmail), sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, sendEmailConfig.SmtpSettings.SmtpUser);
 			success = false;
 		}
 
@@ -467,7 +494,7 @@ public static class Email
 		bool isValid = false;
 		try
 		{
-			isValid = Regex.IsMatch(email ?? string.Empty, EmailRegex, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
+			isValid = !string.IsNullOrWhiteSpace(email) && Regex.IsMatch(email, EmailRegex, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250));
 		}
 		catch (Exception ex)
 		{
@@ -509,20 +536,9 @@ public static class Email
 					await using MemoryStream memoryStream = new();
 					using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
 
-					await attachments.Where(x => !string.IsNullOrWhiteSpace(x.AttachmentName)).Select(x => (x.GetStream(), x.AttachmentName!)).AddFilesToZip(archive, CompressionLevel.SmallestSize, cancellationToken).ConfigureAwait(false);
+					await attachments.Where(x => !string.IsNullOrWhiteSpace(x.AttachmentName)).Select(x => (x.GetStream(), x.AttachmentName!))
+						.AddFilesToZip(archive, CompressionLevel.SmallestSize, cancellationToken).ConfigureAwait(false);
 
-					//foreach (MailAttachment attachment in attachments)
-					//{
-					//    //await attachment.AttachmentStream.AddZipToArchive(archive, attachment.AttachmentName, CompressionLevel.SmallestSize);
-					//    if (attachment.AttachmentStream != null)
-					//    {
-					//        attachment.AttachmentStream.Position = 0; //Must have this to prevent errors writing data to the attachment
-					//        ZipArchiveEntry entry = archive.CreateEntry(attachment.AttachmentName ?? $"File {archive.Entries.Count}", CompressionLevel.SmallestSize);
-					//        await using Stream entryStream = entry.Open();
-					//        await attachment.AttachmentStream.CopyToAsync(entryStream);
-					//        await entryStream.FlushAsync();
-					//    }
-					//}
 					archive.Dispose();
 					memoryStream.Position = 0;
 					await bodyBuilder.Attachments.AddAsync("Files.zip", memoryStream, cancellationToken).ConfigureAwait(false);

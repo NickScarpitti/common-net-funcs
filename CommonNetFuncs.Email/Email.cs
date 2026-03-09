@@ -8,7 +8,6 @@ using MailKit.Net.Proxy;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
-using Newtonsoft.Json;
 using static CommonNetFuncs.Compression.Files;
 using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Email.EmailConstants;
@@ -102,7 +101,7 @@ public sealed class MailAttachment : IMailAttachment, IAsyncDisposable, IDisposa
 
 public sealed class MailAttachmentBytes : IMailAttachment
 {
-	[JsonConstructor] // Required for Hangfire serialization
+	[Newtonsoft.Json.JsonConstructor] // Required for Hangfire serialization
 	public MailAttachmentBytes(string? AttachmentName = null, byte[]? AttachmentBytes = null)
 	{
 		this.AttachmentName = AttachmentName;
@@ -403,13 +402,13 @@ public static class Email
 			}
 
 			// Check that there is at least one recipient
-			if (sendEmailConfig.EmailAddresses.ToAddresses.Length == 0 && (sendEmailConfig.EmailAddresses.CcAddresses?.Length ?? 0) == 0 && (sendEmailConfig.EmailAddresses.BccAddresses?.Length ?? 0) == 0)
+			if (!sendEmailConfig.EmailAddresses.ToAddresses.Any(x => x != null) && (sendEmailConfig.EmailAddresses.CcAddresses?.Any(x => x != null) != true) && (sendEmailConfig.EmailAddresses.BccAddresses?.Any(x => x != null) != true))
 			{
 				throw new ArgumentException("At least one recipient is required");
 			}
 
 			// Validate all recipient email addresses
-			success = success && sendEmailConfig.EmailAddresses.ToAddresses.All(mailAddress => mailAddress.Email.IsValidEmail());
+			success = success && (!sendEmailConfig.EmailAddresses.ToAddresses.Any(x => x != null) || sendEmailConfig.EmailAddresses.ToAddresses.Where(x => x != null).All(mailAddress => mailAddress.Email.IsValidEmail()));
 			if (!success)
 			{
 				IEnumerable<string> invalidToEmails = sendEmailConfig.EmailAddresses.ToAddresses.Where(mailAddress => !mailAddress.Email.IsValidEmail())
@@ -417,7 +416,7 @@ public static class Email
 				throw new ArgumentException("The following To email addresses are invalid: {emails}", string.Join(", ", invalidToEmails));
 			}
 
-			success = success && (sendEmailConfig.EmailAddresses.CcAddresses?.All(mailAddress => mailAddress.Email.IsValidEmail()) != false);
+			success = success && (sendEmailConfig.EmailAddresses.CcAddresses?.Any(x => x != null) != true || sendEmailConfig.EmailAddresses.CcAddresses.Where(x => x != null).All(mailAddress => mailAddress.Email.IsValidEmail()));
 			if (!success && sendEmailConfig.EmailAddresses.CcAddresses != null)
 			{
 				IEnumerable<string> invalidCcEmails = sendEmailConfig.EmailAddresses.CcAddresses.Where(mailAddress => !mailAddress.Email.IsValidEmail())
@@ -425,7 +424,7 @@ public static class Email
 				throw new ArgumentException("The following CC email addresses are invalid: {emails}", string.Join(", ", invalidCcEmails));
 			}
 
-			success = success && (sendEmailConfig.EmailAddresses.BccAddresses?.All(mailAddress => mailAddress.Email.IsValidEmail()) != false);
+			success = success && (sendEmailConfig.EmailAddresses.BccAddresses?.Any(x => x != null) != true || sendEmailConfig.EmailAddresses.BccAddresses.Where(x => x != null).All(mailAddress => mailAddress.Email.IsValidEmail()));
 			if (!success && sendEmailConfig.EmailAddresses.BccAddresses != null)
 			{
 				IEnumerable<string> invalidBccEmails = sendEmailConfig.EmailAddresses.BccAddresses.Where(mailAddress => !mailAddress.Email.IsValidEmail())
@@ -437,14 +436,14 @@ public static class Email
 			{
 				MimeMessage email = new();
 				email.From.Add(new MailboxAddress(sendEmailConfig.EmailAddresses.FromAddress.Name, sendEmailConfig.EmailAddresses.FromAddress.Email!));
-				email.To.AddRange(sendEmailConfig.EmailAddresses.ToAddresses.Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
+				email.To.AddRange(sendEmailConfig.EmailAddresses.ToAddresses.Where(x => x != null).Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
 				if (sendEmailConfig.EmailAddresses.CcAddresses?.Length > 0)
 				{
-					email.Cc.AddRange(sendEmailConfig.EmailAddresses.CcAddresses.Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
+					email.Cc.AddRange(sendEmailConfig.EmailAddresses.CcAddresses.Where(x => x != null).Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
 				}
 				if (sendEmailConfig.EmailAddresses.BccAddresses?.Length > 0)
 				{
-					email.Bcc.AddRange(sendEmailConfig.EmailAddresses.BccAddresses.Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
+					email.Bcc.AddRange(sendEmailConfig.EmailAddresses.BccAddresses.Where(x => x != null).Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
 				}
 
 				email.Subject = sendEmailConfig.EmailContent.Subject ?? throw new ArgumentException("Email subject is required");
@@ -519,10 +518,12 @@ public static class Email
 					}
 					catch (Exception ex)
 					{
-						logger.Warn(ex, "{ErrorLocation} Error On Email Send Attempt {attempt}", ex.GetLocationOfException(), i + 1);
+						logger.Warn(ex, "{ErrorLocation} Error On Email Send Attempt {Attempt}", ex.GetLocationOfException(), i + 1);
 						if (i == 7)
 						{
-							logger.Error(ex, "{ErrorLocation} Error\nFailed to send email.\nSMTP Server: {SmtpServer} | SMTP Port: {SmtpPort} | SMTP User: {SmtpUser}", ex.GetLocationOfException(), sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, sendEmailConfig.SmtpSettings.SmtpUser);
+							string configText = GetConfigurationString(sendEmailConfig);
+							logger.Error(ex, "{ErrorLocation} Error\nFailed to send email.\nSMTP Server: {SmtpServer} | SMTP Port: {SmtpPort} | SMTP User: {SmtpUser}\n\tConfiguration: {ConfigText}", ex.GetLocationOfException(),
+								sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, sendEmailConfig.SmtpSettings.SmtpUser, configText);
 							success = false; //Sets success to false when the email send fails on the last attempt
 						}
 					}
@@ -532,7 +533,10 @@ public static class Email
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{ErrorLocation} Error\nFailed to send email.\nSMTP Server: {SmtpServer} | SMTP Port: {SmtpPort} | SMTP User: {SmtpUser}", ex.GetLocationOfException(), sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, sendEmailConfig.SmtpSettings.SmtpUser);
+			string configText = GetConfigurationString(sendEmailConfig);
+			logger.Error(ex, "{ErrorLocation} Error\nFailed to send email.\nSMTP Server: {SmtpServer} | SMTP Port: {SmtpPort} | SMTP User: {SmtpUser}\n\tConfiguration: {ConfigText}", ex.GetLocationOfException(),
+				sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, sendEmailConfig.SmtpSettings.SmtpUser, configText);
+
 			success = false;
 		}
 
@@ -552,6 +556,21 @@ public static class Email
 		}
 
 		return success;
+	}
+
+	private static readonly System.Text.Json.JsonSerializerOptions serializerOptions = new()
+	{
+		WriteIndented = true,
+	};
+
+	private static string GetConfigurationString(SendEmailConfig sendEmailConfig)
+	{
+		if (!sendEmailConfig.SmtpSettings.SmtpPassword.IsNullOrWhiteSpace())
+		{
+			sendEmailConfig.SmtpSettings.SmtpPassword = "REDACTED";
+		}
+
+		return System.Text.Json.JsonSerializer.Serialize(sendEmailConfig, serializerOptions);
 	}
 
 	/// <summary>

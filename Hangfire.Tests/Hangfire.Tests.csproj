@@ -18,7 +18,7 @@
     <PackageReference Include="FakeItEasy" Version="8.3.0" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
     <PackageReference Include="Hangfire.Core" Version="1.8.23" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.14" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" />
     <PackageReference Include="Shouldly" Version="4.3.0" />

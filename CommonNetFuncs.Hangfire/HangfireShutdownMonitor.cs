@@ -43,7 +43,7 @@ public sealed class HangfireShutdownMonitor(IServiceProvider serviceProvider, IH
 			if (totalPending > 0)
 			{
 				logger.Warn(
-					"Application shutting down with {total} pending Hangfire job(s): {processing} processing, {enqueued} enqueued, {scheduled} scheduled. " +
+					"Application shutting down with {Total} pending Hangfire job(s): {Processing} processing, {Enqueued} enqueued, {Scheduled} scheduled. " +
 					"Jobs will be persisted in database and resumed by next instance.",
 					totalPending, processingCount, enqueuedCount, scheduledCount);
 			}

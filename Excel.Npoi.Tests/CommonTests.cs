@@ -883,7 +883,7 @@ public sealed class CommonTests : IDisposable
 	[RetryTheory(3)]
 	[InlineData(CellType.Formula)]
 	[InlineData(CellType.Error)]
-	[InlineData(CellType.Unknown)]
+	[InlineData(CellType._None)]
 	public void GetStringValue_WithSpecialCellTypes_ReturnsExpectedValue(CellType cellType)
 	{
 		using XSSFWorkbook xlsxWorkbook = new();
@@ -900,7 +900,7 @@ public sealed class CommonTests : IDisposable
 			case CellType.Error:
 				cell.SetCellErrorValue(FormulaError.DIV0.Code);
 				break;
-			case CellType.Unknown:
+			case CellType._None:
 				// Leave as is for Unknown type
 				break;
 		}
@@ -1215,5 +1215,5 @@ public sealed class CommonTests : IDisposable
 		result.Columns[1].ColumnName.ShouldBe("Col2");
 	}
 
-  #endregion
+	#endregion
 }

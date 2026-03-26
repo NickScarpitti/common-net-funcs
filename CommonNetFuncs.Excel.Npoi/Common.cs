@@ -418,7 +418,7 @@ public static partial class Common
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{msg}", $"{nameof(Common)}.{nameof(GetCellFromReference)} Error");
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Common), nameof(GetCellFromReference));
 			return null;
 		}
 	}

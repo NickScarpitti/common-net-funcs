@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Compression;
+﻿using AutoFixture;
+using CommonNetFuncs.Compression;
 using static CommonNetFuncs.Compression.Streams;
 
 namespace Compression.Tests;

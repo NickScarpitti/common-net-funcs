@@ -2,6 +2,7 @@
 using System.Text;
 using CommonNetFuncs.Web.Requests.Rest;
 using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
+using FakeItEasy;
 
 namespace Web.Requests.Tests;
 

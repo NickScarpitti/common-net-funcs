@@ -1,4 +1,5 @@
 ﻿using CommonNetFuncs.Web.Middleware;
+using FakeItEasy;
 using FakeItEasy.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

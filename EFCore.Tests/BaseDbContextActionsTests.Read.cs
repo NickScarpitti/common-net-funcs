@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using AutoFixture;
 using CommonNetFuncs.EFCore;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -4384,9 +4385,7 @@ public sealed partial class BaseDbContextActionsTests
 		TestDbContextForFilters ctx = provider.GetRequiredService<TestDbContextForFilters>();
 		await ctx.Database.EnsureCreatedAsync(Current.CancellationToken);
 
-		TestEntityForFilters entity = fixture.Build<TestEntityForFilters>()
-			.With(x => x.CreatedDate, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc))
-			.Create();
+		TestEntityForFilters entity = fixture.Build<TestEntityForFilters>().With(x => x.CreatedDate, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)).Create();
 		await ctx.TestEntities.AddAsync(entity, Current.CancellationToken);
 		await ctx.SaveChangesAsync(Current.CancellationToken);
 

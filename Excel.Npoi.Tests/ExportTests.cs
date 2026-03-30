@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using AutoFixture;
 using CommonNetFuncs.Excel.Npoi;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.Streaming;

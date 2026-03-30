@@ -16,18 +16,19 @@
 		<CoverletExcludeByFile Include="**/bin/**" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.3" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.3" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.3" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
 		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" />
 		<PackageReference Include="AutoFixture" Version="4.18.1" />
-		<PackageReference Include="coverlet.collector" Version="8.0.0">
+		<PackageReference Include="coverlet.collector" Version="8.0.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.5" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
 		<PackageReference Include="NSubstitute" Version="5.3.0" />
 		<PackageReference Include="Shouldly" Version="4.3.0" />
@@ -37,7 +38,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="10.105.2.2" />
+		<PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="10.105.3" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -47,7 +48,6 @@
 	<ItemGroup>
 		<Using Include="Xunit" />
 		<Using Include="Shouldly" />
-		<Using Include="AutoFixture" />
 	</ItemGroup>
 
 </Project>

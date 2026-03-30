@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using AutoFixture;
 using static CommonNetFuncs.Compression.Files;
 using static CommonNetFuncs.Compression.Streams;
 

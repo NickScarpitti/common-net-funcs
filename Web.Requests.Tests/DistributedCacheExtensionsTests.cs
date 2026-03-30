@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Text.Json;
+using FakeItEasy;
 using Microsoft.Extensions.Caching.Distributed;
 using static CommonNetFuncs.Web.Requests.DistributedCacheExtensions;
 

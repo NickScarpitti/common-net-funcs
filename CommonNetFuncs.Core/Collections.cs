@@ -418,6 +418,7 @@ public static partial class Collections
 	/// <typeparam name="T">The type of elements in the array.</typeparam>
 	/// <param name="array">The array to clear and replace with an empty array.</param>
 	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+	[return: NotNullIfNotNull(nameof(array))]
 	public static void ClearTrim<T>(ref T[]? array, bool forceGc = false)
 	{
 		if (array == null)

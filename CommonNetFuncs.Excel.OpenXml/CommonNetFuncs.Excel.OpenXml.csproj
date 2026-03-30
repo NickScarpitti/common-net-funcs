@@ -29,7 +29,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>3.8.42</Version>
+		<Version>3.8.45</Version>
 		<MinVerTagPrefix>excel.openxml-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -76,7 +76,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="DocumentFormat.OpenXml" Version="3.4.1" />
+		<PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
 		<PackageReference Include="MinVer" Version="7.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

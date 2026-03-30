@@ -411,8 +411,30 @@ public static partial class Collections
 	}
 
 	/// <summary>
+	/// Clears the array, replaces it with an empty array, and optionally forces garbage collection.
+	/// </summary>
+	/// <remarks>Uses <see langword="ref"/> instead of <see langword="this"/> because extension methods cannot have <see langword="ref"/> parameters, and resizing an array requires replacing the reference.</remarks>
+	/// <typeparam name="T">The type of elements in the array.</typeparam>
+	/// <param name="array">The array to clear and replace with an empty array.</param>
+	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+	public static void ClearTrim<T>(ref T[]? array, bool forceGc = false)
+	{
+		if (array == null)
+		{
+			return;
+		}
+		array = [];
+
+		if (forceGc)
+		{
+			GC.Collect();
+		}
+	}
+
+	/// <summary>
 	/// Clears the <see cref="List{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
 	/// </summary>
+	/// <typeparam name="T">The type of elements in the list.</typeparam>
 	/// <param name="list">The list to run the Clear and TrimExcess actions on.</param>
 	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
 	public static void ClearTrim<T>(this List<T>? list, bool forceGc = false)
@@ -433,6 +455,8 @@ public static partial class Collections
 	/// <summary>
 	/// Clears the <see cref="Dictionary{TKey, TValue}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
 	/// </summary>
+	/// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
+	/// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
 	/// <param name="dict">The dictionary to run the Clear and TrimExcess actions on.</param>
 	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
 	public static void ClearTrim<TKey, TValue>(this Dictionary<TKey, TValue>? dict, bool forceGc = false) where TKey : notnull
@@ -453,6 +477,7 @@ public static partial class Collections
 	/// <summary>
 	/// Clears the <see cref="HashSet{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
 	/// </summary>
+	/// <typeparam name="T">The type of elements in the hash set.</typeparam>
 	/// <param name="hashSet">The hashSet to run the Clear and TrimExcess actions on.</param>
 	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
 	public static void ClearTrim<T>(this HashSet<T>? hashSet, bool forceGc = false)
@@ -473,6 +498,7 @@ public static partial class Collections
 	/// <summary>
 	/// Clears the <see cref="Stack{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
 	/// </summary>
+	/// <typeparam name="T">The type of elements in the stack.</typeparam>
 	/// <param name="stack">The stack to run the Clear and TrimExcess actions on.</param>
 	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
 	public static void ClearTrim<T>(this Stack<T>? stack, bool forceGc = false)
@@ -493,6 +519,7 @@ public static partial class Collections
 	/// <summary>
 	/// Clears the <see cref="Queue{T}"/>, shrinks the capacity back to the default, and optionally forces garbage collection.
 	/// </summary>
+	/// <typeparam name="T">The type of elements in the queue.</typeparam>
 	/// <param name="queue">The queue to run the Clear and TrimExcess actions on.</param>
 	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
 	public static void ClearTrim<T>(this Queue<T>? queue, bool forceGc = false)

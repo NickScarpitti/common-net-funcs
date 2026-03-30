@@ -1,4 +1,6 @@
-﻿namespace DeepClone.Tests;
+﻿using AutoFixture;
+
+namespace DeepClone.Tests;
 
 public sealed class ReferenceEqualityComparerTests
 {

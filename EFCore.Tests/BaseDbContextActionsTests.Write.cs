@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.EFCore;
+﻿using AutoFixture;
+using CommonNetFuncs.EFCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;

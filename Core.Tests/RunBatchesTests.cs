@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Core;
+﻿using AutoFixture;
+using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 

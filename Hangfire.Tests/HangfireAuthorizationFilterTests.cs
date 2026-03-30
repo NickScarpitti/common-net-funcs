@@ -1,6 +1,7 @@
 ﻿using System.Collections.Frozen;
 using System.Security.Claims;
 using CommonNetFuncs.Hangfire;
+using FakeItEasy;
 using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;

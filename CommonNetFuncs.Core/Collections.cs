@@ -412,6 +412,29 @@ public static partial class Collections
 	}
 
 	/// <summary>
+	/// Clears the array, replaces it with an empty array, and optionally forces garbage collection.
+	/// </summary>
+	/// <remarks>Uses <see langword="ref"/> instead of <see langword="this"/> because extension methods cannot have <see langword="ref"/> parameters, and resizing an array requires replacing the reference.</remarks>
+	/// <typeparam name="T">The type of elements in the array.</typeparam>
+	/// <param name="array">The array to clear and replace with an empty array.</param>
+	/// <param name="forceGc">If true, forces garbage collection after clearing and trimming.</param>
+	public static void ClearTrim<T>(ref T[]? array, bool forceGc = false)
+	{
+		if (array == null)
+		{
+			return;
+		}
+		array = [];
+
+		if (forceGc)
+		{
+#pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'.
+			GC.Collect();
+#pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'.
+		}
+	}
+
+	/// <summary>
 	/// Clears the <see cref="List{T}"/>, shrinks the capacity back to the default, and optionally performs optimized garbage collection.
 	/// </summary>
 	/// <param name="list">The list to run the Clear and TrimExcess actions on.</param>

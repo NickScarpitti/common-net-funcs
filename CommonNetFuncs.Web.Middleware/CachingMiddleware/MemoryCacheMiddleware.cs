@@ -265,7 +265,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 		RemoveCacheTags(key.ToString() ?? string.Empty, entry.Tags);
 		if (!cacheOptions.SuppressLogs)
 		{
-			logger.Info("Automatically evicting {key} for reason: {reason}", key.ToString()!.SanitizeForLog(), reason);
+			logger.Info("Automatically evicting {Key} for reason: {Reason}", key.ToString()!.SanitizeForLog(), reason);
 		}
 	}
 

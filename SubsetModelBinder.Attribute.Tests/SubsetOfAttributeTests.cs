@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using CommonNetFuncs.SubsetModelBinder;
 
-namespace SubsetModelBinder.Tests;
+namespace SubsetModelBinder.Attribute.Tests;
 
 public class SubsetOfAttributeTests
 {
@@ -26,9 +26,9 @@ public class SubsetOfAttributeTests
 	{
 		// Arrange
 		Type sourceType = typeof(int);
-		bool isMvcApp = true;
-		bool allowInheritedProperties = false;
-		bool ignoreType = true;
+		const bool isMvcApp = true;
+		const bool allowInheritedProperties = false;
+		const bool ignoreType = true;
 
 		// Act
 		SubsetOfAttribute attribute = new(sourceType, isMvcApp, allowInheritedProperties, ignoreType);
@@ -342,7 +342,5 @@ public class SubsetOfAttributeTests
 
 	// Test class with attribute applied
 	[SubsetOf(typeof(string), isMvcApp: true, allowInheritedProperties: false, ignoreType: true)]
-	private class TestClassWithAttribute
-	{
-	}
+	private class TestClassWithAttribute;
 }

@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Hangfire;
+﻿using AutoFixture;
+using CommonNetFuncs.Hangfire;
 
 namespace Hangfire.Tests;
 

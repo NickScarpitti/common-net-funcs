@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
+using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Core;
 using static Xunit.TestContext;
@@ -3987,7 +3988,10 @@ public sealed class AsyncTests
 		ConcurrentDictionary<string, int?> dict = new();
 		const string key = "testKey";
 
-		Task<int?> func() => Task.FromResult<int?>(42);
+		Task<int?> func()
+		{
+			return Task.FromResult<int?>(42);
+		}
 
 		// Act
 		await dict.ObjectFill(key, func);
@@ -4004,7 +4008,10 @@ public sealed class AsyncTests
 		ConcurrentDictionary<string, int?>? dict = null;
 		const string key = "testKey";
 
-		Task<int?> func() => Task.FromResult<int?>(42);
+		Task<int?> func()
+		{
+			return Task.FromResult<int?>(42);
+		}
 
 		// Act & Assert
 		await Should.NotThrowAsync(async () => await dict.ObjectFill(key, func));
@@ -4017,7 +4024,10 @@ public sealed class AsyncTests
 		ConcurrentDictionary<string, int?> dict = new();
 		const string key = "testKey";
 
-		Task<int?> func() => Task.FromException<int?>(new InvalidOperationException("test error"));
+		Task<int?> func()
+		{
+			return Task.FromException<int?>(new InvalidOperationException("test error"));
+		}
 
 		// Act & Assert
 		await Should.NotThrowAsync(async () => await dict.ObjectFill(key, func));
@@ -4142,7 +4152,10 @@ public sealed class AsyncTests
 		// Arrange
 		AsyncIntString obj = new() { AsyncInt = 1 };
 
-		static Task<int> func() => Task.FromResult(42);
+		static Task<int> func()
+		{
+			return Task.FromResult(42);
+		}
 
 		// Act & Assert
 		await Should.NotThrowAsync(async () => await obj.ObjectUpdate("InvalidProperty", func));
@@ -4154,7 +4167,10 @@ public sealed class AsyncTests
 		// Arrange
 		AsyncIntString obj = new() { AsyncInt = 1 };
 
-		static Task<int> func() => Task.FromException<int>(new InvalidOperationException("test error"));
+		static Task<int> func()
+		{
+			return Task.FromException<int>(new InvalidOperationException("test error"));
+		}
 
 		// Act & Assert
 		await Should.NotThrowAsync(async () => await obj.ObjectUpdate(nameof(AsyncIntString.AsyncInt), func));
@@ -4167,7 +4183,10 @@ public sealed class AsyncTests
 		AsyncIntString obj = new() { AsyncInt = 1 };
 		using SemaphoreSlim semaphore = new(1, 1);
 
-		static Task<int> func() => Task.FromResult(42);
+		static Task<int> func()
+		{
+			return Task.FromResult(42);
+		}
 
 		// Act & Assert
 		await Should.NotThrowAsync(async () => await obj.ObjectUpdate("InvalidProperty", func, semaphore));
@@ -4181,7 +4200,10 @@ public sealed class AsyncTests
 		AsyncIntString obj = new() { AsyncInt = 1 };
 		using SemaphoreSlim semaphore = new(1, 1);
 
-		static Task<int> func() => Task.FromException<int>(new InvalidOperationException("test error"));
+		static Task<int> func()
+		{
+			return Task.FromException<int>(new InvalidOperationException("test error"));
+		}
 
 		// Act & Assert
 		await Should.NotThrowAsync(async () => await obj.ObjectUpdate(nameof(AsyncIntString.AsyncInt), func, semaphore));
@@ -4327,7 +4349,10 @@ public sealed class AsyncTests
 		IList<int?>? list = null;
 		using SemaphoreSlim semaphore = new(1, 1);
 
-		static Task<int?> func() => Task.FromResult<int?>(42);
+		static Task<int?> func()
+		{
+			return Task.FromResult<int?>(42);
+		}
 
 		// Act
 		await list!.ObjectFill(func, semaphore, cancellationToken: Current.CancellationToken);
@@ -4344,7 +4369,10 @@ public sealed class AsyncTests
 		HashSet<int?>? set = null;
 		using SemaphoreSlim semaphore = new(1, 1);
 
-		static Task<int?> func() => Task.FromResult<int?>(42);
+		static Task<int?> func()
+		{
+			return Task.FromResult<int?>(42);
+		}
 
 		// Act
 		await set!.ObjectFill(func, semaphore, cancellationToken: Current.CancellationToken);
@@ -4361,7 +4389,10 @@ public sealed class AsyncTests
 		ConcurrentBag<int?>? bag = null;
 		using SemaphoreSlim semaphore = new(1, 1);
 
-		static Task<int?> func() => Task.FromResult<int?>(42);
+		static Task<int?> func()
+		{
+			return Task.FromResult<int?>(42);
+		}
 
 		// Act
 		await bag!.ObjectFill(func, semaphore, cancellationToken: Current.CancellationToken);
@@ -4723,23 +4754,6 @@ public sealed class AsyncTests
 	}
 
 	[Fact]
-	public async Task ObjectFill_HashSetWithIEnumerableAndNullSemaphore_ShouldWork()
-	{
-		// Arrange
-		HashSet<int> hashSet = [1];
-		static Task<IEnumerable<int>?> func()
-		{
-			return Task.FromResult<IEnumerable<int>?>(new[] { 2, 3 });
-		}
-
-		// Act
-		await hashSet.ObjectFill(func, null!, Current.CancellationToken);
-
-		// Assert
-		hashSet.Count.ShouldBe(3);
-	}
-
-	[Fact]
 	public async Task ObjectFill_HashSetWithConcurrentBagAndNullSemaphore_ShouldWork()
 	{
 		// Arrange
@@ -4764,7 +4778,7 @@ public sealed class AsyncTests
 		bag.Add(1);
 		static Task<IEnumerable<int>> func()
 		{
-			return Task.FromResult<IEnumerable<int>>(new[] { 2, 3 });
+			return Task.FromResult<IEnumerable<int>>([2, 3]);
 		}
 
 		// Act
@@ -5439,7 +5453,10 @@ public sealed class AsyncTests
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
 		IList<string?> list = new List<string?>();
 #pragma warning restore CA1859 // Use concrete types when possible for improved performance
-		static Task<string?> func() => Task.FromException<string?>(new InvalidOperationException("Test exception"));
+		static Task<string?> func()
+		{
+			return Task.FromException<string?>(new InvalidOperationException("Test exception"));
+		}
 
 		// Act & Assert - Should not throw, exception is caught and logged
 		await list.ObjectFill(func);

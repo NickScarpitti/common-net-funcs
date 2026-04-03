@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Linq.Expressions;
+using AutoFixture;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Core.CollectionClasses;
 using FastExpressionCompiler;
@@ -2888,6 +2889,51 @@ public sealed class CollectionsTests
 		queue.Enqueue(2);
 		Should.NotThrow(() => queue.ClearTrim(forceGc: true));
 		queue.Count.ShouldBe(0);
+	}
+
+	[Fact]
+	public void ClearTrim_Array_Null_DoesNothing()
+	{
+		int[]? array = null;
+		Should.NotThrow(() => Collections.ClearTrim(ref array));
+		Should.NotThrow(() => Collections.ClearTrim(ref array, forceGc: true));
+		array.ShouldBeNull();
+	}
+
+	[Fact]
+	public void ClearTrim_Array_ReplacesWithEmptyArray()
+	{
+		int[]? array = new[] { 1, 2, 3, 4 };
+		Collections.ClearTrim(ref array);
+		array.ShouldNotBeNull();
+		array.Length.ShouldBe(0);
+	}
+
+	[Fact]
+	public void ClearTrim_Array_ReplacesWithEmptyArray_WithForceGc()
+	{
+		int[]? array = new[] { 1, 2, 3, 4 };
+		Should.NotThrow(() => Collections.ClearTrim(ref array, forceGc: true));
+		array.ShouldNotBeNull();
+		array.Length.ShouldBe(0);
+	}
+
+	[Fact]
+	public void ClearTrim_Array_WithStringElements_ReplacesWithEmptyArray()
+	{
+		string[]? array = new[] { "a", "b", "c" };
+		Collections.ClearTrim(ref array);
+		array.ShouldNotBeNull();
+		array.Length.ShouldBe(0);
+	}
+
+	[Fact]
+	public void ClearTrim_Array_AlreadyEmpty_ReplacesWithEmptyArray()
+	{
+		int[]? array = Array.Empty<int>();
+		Collections.ClearTrim(ref array);
+		array.ShouldNotBeNull();
+		array.Length.ShouldBe(0);
 	}
 
 	#region ContainsDuplicates Tests

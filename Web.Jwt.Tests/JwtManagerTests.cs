@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Web.Jwt;
+﻿using AutoFixture;
+using CommonNetFuncs.Web.Jwt;
 
 namespace Web.Jwt.Tests;
 

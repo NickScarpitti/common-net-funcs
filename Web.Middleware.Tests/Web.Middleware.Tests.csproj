@@ -46,9 +46,6 @@
 
 	<ItemGroup>
 		<Using Include="Xunit" />
-		<Using Include="AutoFixture" />
-		<Using Include="AutoFixture.AutoFakeItEasy" />
-		<Using Include="FakeItEasy" />
 		<Using Include="Shouldly" />
 	</ItemGroup>
 

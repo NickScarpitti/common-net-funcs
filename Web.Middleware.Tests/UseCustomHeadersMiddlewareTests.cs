@@ -1,4 +1,5 @@
 ﻿using CommonNetFuncs.Web.Middleware;
+using FakeItEasy;
 using Microsoft.AspNetCore.Http;
 using xRetry.v3;
 

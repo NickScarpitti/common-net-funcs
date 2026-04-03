@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using AutoFixture;
 using CommonNetFuncs.Core;
 
 namespace Core.Tests;

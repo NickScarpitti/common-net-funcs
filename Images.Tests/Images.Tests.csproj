@@ -70,6 +70,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="MailKit" Version="4.15.1" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
 		<PackageReference Include="Shouldly" Version="4.3.0" />
@@ -91,8 +92,6 @@
 	<ItemGroup>
 		<Using Include="Xunit" />
 		<Using Include="Shouldly" />
-		<Using Include="AutoFixture" />
-		<Using Include="FakeItEasy" />
 	</ItemGroup>
 
 </Project>

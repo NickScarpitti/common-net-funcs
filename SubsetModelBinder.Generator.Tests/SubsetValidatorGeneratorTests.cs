@@ -1,4 +1,9 @@
-﻿namespace SubsetModelBinder.Generator.Tests;
+﻿using CommonNetFuncs.SubsetModelBinder;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using static Xunit.TestContext;
+
+namespace SubsetModelBinder.Generator.Tests;
 
 public class SubsetValidatorGeneratorTests
 {

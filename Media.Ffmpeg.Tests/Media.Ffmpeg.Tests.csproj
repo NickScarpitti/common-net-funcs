@@ -43,7 +43,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MailKit" Version="4.15.1" />
 		<PackageReference Include="Xabe.FFmpeg" Version="6.0.2" />
 		<PackageReference Include="xRetry.v3" Version="1.0.0-rc3" />
 		<PackageReference Include="xunit.v3" Version="3.2.2" />

@@ -342,5 +342,5 @@ public class SubsetOfAttributeTests
 
 	// Test class with attribute applied
 	[SubsetOf(typeof(string), isMvcApp: true, allowInheritedProperties: false, ignoreType: true)]
-	private class TestClassWithAttribute;
+	sealed class TestClassWithAttribute;
 }

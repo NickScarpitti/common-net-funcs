@@ -33,7 +33,7 @@
 		</PackageReference>
 		<PackageReference Include="CsvHelper" Version="33.1.0" PrivateAssets="all" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<ProjectReference Include="..\CommonNetFuncs.Csv\CommonNetFuncs.Csv.csproj" />
 	</ItemGroup>

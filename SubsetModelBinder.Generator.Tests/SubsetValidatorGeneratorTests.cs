@@ -7,6 +7,10 @@ namespace SubsetModelBinder.Generator.Tests;
 
 public class SubsetValidatorGeneratorTests
 {
+	private const string SG0001 = "SG0001";
+	private const string SG0002 = "SG0002";
+	private const string CompilationText = "compilation";
+
 	const string AttributeSource = @"
 		namespace CommonNetFuncs.SubsetModelBinder
 		{
@@ -94,7 +98,7 @@ public class SubsetValidatorGeneratorTests
 
 		// Assert
 		Diagnostic diagnostic = result.Diagnostics[0];
-		diagnostic.Id.ShouldBe("SG0001");
+		diagnostic.Id.ShouldBe(SG0001);
 		diagnostic.GetMessage().ShouldContain("has a different type than in the original class");
 	}
 
@@ -172,7 +176,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert
-		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0002");
+		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == SG0002);
 		diagnostic.ShouldNotBeNull();
 		diagnostic.GetMessage().ShouldContain("is not present in the parent class");
 	}
@@ -260,7 +264,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert
-		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0002");
+		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == SG0002);
 		diagnostic.ShouldNotBeNull();
 		diagnostic.GetMessage().ShouldContain("BaseProperty");
 	}
@@ -379,7 +383,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert - No type mismatch diagnostic should be reported
-		result.Diagnostics.Any(d => d.Id == "SG0001").ShouldBeFalse();
+		result.Diagnostics.Any(d => d.Id == SG0001).ShouldBeFalse();
 	}
 
 	[Fact]
@@ -416,7 +420,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert
-		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == "SG0001");
+		Diagnostic? diagnostic = result.Diagnostics.FirstOrDefault(d => d.Id == SG0001);
 		diagnostic.ShouldNotBeNull();
 		diagnostic.GetMessage().ShouldContain("has a different type");
 	}
@@ -630,8 +634,8 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert
-		result.Diagnostics.Count(d => d.Id == "SG0001").ShouldBe(1); // Type mismatch
-		result.Diagnostics.Count(d => d.Id == "SG0002").ShouldBe(1); // Property not found
+		result.Diagnostics.Count(d => d.Id == SG0001).ShouldBe(1); // Type mismatch
+		result.Diagnostics.Count(d => d.Id == SG0002).ShouldBe(1); // Property not found
 	}
 
 	[Fact]
@@ -753,7 +757,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert - Should only have one diagnostic for ExtraProperty
-		result.Diagnostics.Count(d => d.Id == "SG0002" && d.GetMessage().Contains("ExtraProperty")).ShouldBe(1);
+		result.Diagnostics.Count(d => d.Id == SG0002 && d.GetMessage().Contains("ExtraProperty")).ShouldBe(1);
 	}
 
 	[Fact]
@@ -787,8 +791,8 @@ public class SubsetValidatorGeneratorTests
 	{
 		// Arrange
 		const string source = @"
-			using System;
-			using CommonNetFuncs.SubsetModelBinder;
+using CommonNetFuncs.SubsetModelBinder;
+using System;
 
 			namespace TestNamespace
 			{
@@ -892,7 +896,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert - Should report one diagnostic per class
-		result.Diagnostics.Count(d => d.Id == "SG0001").ShouldBe(2);
+		result.Diagnostics.Count(d => d.Id == SG0001).ShouldBe(2);
 	}
 
 	[Fact]
@@ -1594,7 +1598,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert - no type mismatch errors due to ignoreType
-		result.Diagnostics.Any(d => d.Id == "SG0001").ShouldBeFalse();
+		result.Diagnostics.Any(d => d.Id == SG0001).ShouldBeFalse();
 	}
 
 	[Fact]
@@ -1602,8 +1606,8 @@ public class SubsetValidatorGeneratorTests
 	{
 		// Arrange
 		const string source = @"
-			#nullable enable
-			using CommonNetFuncs.SubsetModelBinder;
+#nullable enable
+using CommonNetFuncs.SubsetModelBinder;
 
 			namespace TestNamespace
 			{
@@ -1759,7 +1763,7 @@ public class SubsetValidatorGeneratorTests
 			}";
 
 		// Create compilation with System.Runtime reference for interfaces
-		CSharpCompilation compilation = CSharpCompilation.Create("compilation",
+		CSharpCompilation compilation = CSharpCompilation.Create(CompilationText,
 			new[] { CSharpSyntaxTree.ParseText(source, cancellationToken: Current.CancellationToken), CSharpSyntaxTree.ParseText(AttributeSource, cancellationToken: Current.CancellationToken) },
 			new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) },
 			new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
@@ -1898,8 +1902,8 @@ public class SubsetValidatorGeneratorTests
 	{
 		// Arrange - SubsetOf attribute in middle of attribute list
 		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-			using System;
+using CommonNetFuncs.SubsetModelBinder;
+using System;
 
 			namespace TestNamespace
 			{
@@ -1999,7 +2003,7 @@ public class SubsetValidatorGeneratorTests
 			}";
 
 		// Create compilation with additional references for System.Collections.Generic
-		CSharpCompilation compilation = CSharpCompilation.Create("compilation",
+		CSharpCompilation compilation = CSharpCompilation.Create(CompilationText,
 			new[] { CSharpSyntaxTree.ParseText(source, cancellationToken: Current.CancellationToken), CSharpSyntaxTree.ParseText(AttributeSource, cancellationToken: Current.CancellationToken) },
 			new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(List<>).Assembly.Location)
 			},
@@ -2024,8 +2028,8 @@ public class SubsetValidatorGeneratorTests
 	{
 		// Arrange
 		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
-			using System.Collections.Generic;
+using CommonNetFuncs.SubsetModelBinder;
+using System.Collections.Generic;
 
 			namespace TestNamespace
 			{
@@ -2042,7 +2046,7 @@ public class SubsetValidatorGeneratorTests
 			}";
 
 		// Create compilation
-		CSharpCompilation compilation = CSharpCompilation.Create("compilation",
+		CSharpCompilation compilation = CSharpCompilation.Create(CompilationText,
 			new[] { CSharpSyntaxTree.ParseText(source, cancellationToken: Current.CancellationToken), CSharpSyntaxTree.ParseText(AttributeSource, cancellationToken: Current.CancellationToken) },
 			new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(List<>).Assembly.Location) },
 			new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
@@ -2057,7 +2061,7 @@ public class SubsetValidatorGeneratorTests
 		GeneratorDriverRunResult result = driver.GetRunResult();
 
 		// Assert - should report type mismatch (List<string> vs List<int>)
-		result.Diagnostics.Any(d => d.Id == "SG0001").ShouldBeTrue();
+		result.Diagnostics.Any(d => d.Id == SG0001).ShouldBeTrue();
 	}
 
 	[Fact]
@@ -2108,7 +2112,7 @@ public class SubsetValidatorGeneratorTests
 	{
 		// Arrange
 		const string source = @"
-			using CommonNetFuncs.SubsetModelBinder;
+using CommonNetFuncs.SubsetModelBinder;
 
 			namespace TestNamespace
 			{
@@ -2144,7 +2148,7 @@ public class SubsetValidatorGeneratorTests
 
 	private static CSharpCompilation CreateCompilation(string source)
 	{
-		return CSharpCompilation.Create("compilation",
+		return CSharpCompilation.Create(CompilationText,
 			new[] { CSharpSyntaxTree.ParseText(source), CSharpSyntaxTree.ParseText(AttributeSource) },
 			new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) },
 			new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));

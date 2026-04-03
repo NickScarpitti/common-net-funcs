@@ -930,12 +930,10 @@ public static partial class Strings
 			return true;
 		}
 
-
 		if (s1 == null || s2 == null)
 		{
 			return string.Equals(string.Empty, (s1 ?? s2)?.Trim(), StringComparison.InvariantCultureIgnoreCase);
 		}
-
 
 		return string.Equals(s1.Trim(), s2.Trim(), StringComparison.InvariantCultureIgnoreCase);
 	}
@@ -1271,8 +1269,7 @@ public static partial class Strings
 	private static Delegate GetOrAddNormalizeObjectStringsCache<T>((Type, bool, NormalizationForm, bool) key, bool enableTrim = true, NormalizationForm normalizationForm = NormalizationForm.FormKD, bool recursive = false)
 	{
 		bool isLimitedCache = CacheManager.IsUsingLimitedCache();
-		if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(key, out Delegate? function) :
-						CacheManager.GetCache().TryGetValue(key, out function))
+		if (isLimitedCache ? CacheManager.GetLimitedCache().TryGetValue(key, out Delegate? function) : CacheManager.GetCache().TryGetValue(key, out function))
 		{
 			return function!;
 		}

@@ -277,7 +277,7 @@ public class BaseDbContextActionsScaleBenchmarks : IDisposable
 }
 
 /// <summary>
-/// Memory-focused benchmarks to identify allocation hotspots
+/// Memory-focused benchmarks to identify allocation hot spots
 /// </summary>
 [MemoryDiagnoser]
 [RankColumn]
@@ -354,6 +354,7 @@ public class BaseDbContextActionsMemoryBenchmarks : IDisposable
 			ConstantExpression constant = Expression.Constant(50, typeof(int));
 			BinaryExpression equality = Expression.Equal(property, constant);
 			Expression<Func<TestEntity, bool>> lambda = Expression.Lambda<Func<TestEntity, bool>>(equality, parameter);
+
 #pragma warning disable S1481 // Unused local variables should be removed
 #pragma warning disable IDE0059 // Unnecessary assignment of a value
 			Func<TestEntity, bool> compiled = lambda.Compile();

@@ -38,7 +38,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\CommonNetFuncs.Sql.Common\CommonNetFuncs.Sql.Common.csproj" />
-		<ProjectReference Include="..\SubsetModelBinder.Tests\SubsetModelBinder.Tests.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

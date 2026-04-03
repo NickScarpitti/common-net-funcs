@@ -1,13 +1,11 @@
-﻿using CommonNetFuncs.Core;
-using Microsoft.Extensions.Hosting;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Threading.Channels;
+using CommonNetFuncs.Core;
+using Microsoft.Extensions.Hosting;
 
 namespace CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 
-#pragma warning disable S3881 // "IDisposable" should be implemented correctly
-public class SequentialTaskProcessor : BackgroundService, IDisposable
-#pragma warning restore S3881 // "IDisposable" should be implemented correctly
+public class SequentialTaskProcessor : BackgroundService
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 	private readonly CancellationTokenSource cancellationTokenSource;
@@ -17,6 +15,7 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
 	private readonly List<TimeSpan> processingTimes = new();
 	private readonly Lock statsLock = new();
 	private readonly int processTimeWindow;
+	private bool disposed;
 
 	public SequentialTaskProcessor(BoundedChannelOptions boundedChannelOptions, int processTimeWindow = 1000)
 	{
@@ -68,7 +67,7 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
 			{
 				logger.Debug("Processing task {TaskId}", task.Id);
 
-				object? result = await task.TaskFunction(stoppingToken).ConfigureAwait(false);
+				object? result = await task.TaskFunction(cancellationTokenSource.Token).ConfigureAwait(false);
 				task.CompletionSource.SetResult(result);
 
 				lock (statsLock)
@@ -121,53 +120,60 @@ public class SequentialTaskProcessor : BackgroundService, IDisposable
 		}
 	}
 
-	public Task<QueueStats> GetAllQueueStatsAsync()
+	public virtual Task<QueueStats> GetAllQueueStatsAsync()
 	{
 		return Task.FromResult(stats);
 	}
 
-	private bool disposed;
-
 	public override void Dispose()
 	{
-		Dispose(true);
-		GC.SuppressFinalize(this);
-	}
-
-	private void Dispose(bool disposing)
-	{
-		if (!disposed)
+		if (disposed)
 		{
-			if (disposing)
-			{
-				writer.Complete();
-				cancellationTokenSource.Cancel();
-
-				try
-				{
-					while (reader.Count > 0)
-					{
-						if (!reader.TryRead(out QueuedTask? processingTask))
-						{
-							break;
-						}
-						// Wait for the processing task to complete
-						processingTask.CompletionSource.Task.Wait(TimeSpan.FromSeconds(5));
-					}
-				}
-				catch (Exception ex)
-				{
-					logger.Warn(ex, "Error waiting for processing queued task to complete");
-				}
-
-				cancellationTokenSource.Dispose();
-			}
-			disposed = true;
+			return;
 		}
-	}
 
-	~SequentialTaskProcessor()
-	{
-		Dispose(false);
+		disposed = true;
+
+		try
+		{
+			writer.Complete();
+		}
+		catch (Exception ex)
+		{
+			logger.Warn(ex, "Error completing writer channel");
+		}
+
+		try
+		{
+			// Wait for ExecuteAsync to finish processing
+			StopAsync(CancellationToken.None).Wait(TimeSpan.FromSeconds(10));
+		}
+		catch (Exception ex)
+		{
+			logger.Warn(ex, "Error stopping background service");
+		}
+
+		try
+		{
+			while (reader.Count > 0)
+			{
+				if (!reader.TryRead(out QueuedTask? processingTask))
+				{
+					break;
+				}
+				// Wait for the processing task to complete
+
+				processingTask.CompletionSource.Task.Wait(TimeSpan.FromSeconds(5));
+			}
+		}
+		catch (Exception ex)
+		{
+			logger.Warn(ex, "Error waiting for processing queued task to complete");
+		}
+
+		cancellationTokenSource.Cancel();
+		cancellationTokenSource.Dispose();
+		base.Dispose(); // Call the dispose method of the base class to ensure proper cleanup
+		GC.SuppressFinalize(this);
 	}
 }

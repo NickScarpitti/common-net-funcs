@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Threading.Channels;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using System.Threading.Channels;
 
 namespace CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 
@@ -53,7 +53,7 @@ public static class EndpointQueueExtensions
 			{
 				return Results.Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError, title: "Error retrieving endpoint queue metrics");
 			}
-		}).WithName("GetEndpointQueueMetrics");
+		}).WithName("GetEndpointQueueMetricsByKey");
 
 		return endpoints;
 	}

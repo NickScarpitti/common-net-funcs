@@ -15,23 +15,18 @@
 		<CoverletExcludeByFile Include="**/obj/**" />
 		<CoverletExcludeByFile Include="**/bin/**" />
 	</ItemGroup>
-
 	<ItemGroup>
-		<PackageReference Include="AutoFixture" Version="4.18.1" />
-		<PackageReference Include="AutoFixture.AutoFakeItEasy" Version="4.18.1" />
-		<PackageReference Include="FakeItEasy" Version="8.3.0" />
-		<PackageReference Include="AutoFixture.Xunit3" Version="4.19.0" />
-		<PackageReference Include="coverlet.collector" Version="8.0.1">
+		<PackageReference Include="coverlet.collector" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.5" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
-		<PackageReference Include="Moq" Version="4.20.72" />
-		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" />
-		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" />
 		<PackageReference Include="Shouldly" Version="4.3.0" />
-		<PackageReference Include="xRetry.v3" Version="1.0.0-rc3" />
 		<PackageReference Include="xunit.v3" Version="3.2.2" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
 			<PrivateAssets>all</PrivateAssets>
@@ -40,15 +35,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\CommonNetFuncs.Web.Common\CommonNetFuncs.Web.Common.csproj" />
-		<ProjectReference Include="..\CommonNetFuncs.Web.Middleware\CommonNetFuncs.Web.Middleware.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.SubsetModelBinder.Attribute\CommonNetFuncs.SubsetModelBinder.Attribute.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.SubsetModelBinder.Generator\CommonNetFuncs.SubsetModelBinder.Generator.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Using Include="Xunit" />
-		<Using Include="AutoFixture" />
-		<Using Include="AutoFixture.AutoFakeItEasy" />
-		<Using Include="FakeItEasy" />
 		<Using Include="Shouldly" />
 	</ItemGroup>
 

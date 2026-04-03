@@ -934,7 +934,7 @@ public sealed class CommonTests : IDisposable
 				cell.SetCellErrorValue(FormulaError.DIV0.Code);
 				break;
 			case CellType._None:
-				// Leave as is for Unknown type
+				// Leave as is for _None type
 				break;
 		}
 

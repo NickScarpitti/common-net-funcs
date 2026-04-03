@@ -35,7 +35,7 @@
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
 		<MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
 		<!-- Optional: Detect breaking changes from a previous stable version -->
-		<PackageValidationBaselineVersion>4.0.0</PackageValidationBaselineVersion>
+		<PackageValidationBaselineVersion>4.0.17</PackageValidationBaselineVersion>
 		<EnablePackageValidation>true</EnablePackageValidation>
 	</PropertyGroup>
 

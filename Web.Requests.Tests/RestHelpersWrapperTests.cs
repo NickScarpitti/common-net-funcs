@@ -1066,8 +1066,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 			Response = new HttpResponseMessage(HttpStatusCode.OK)
 		};
 
-		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
-			.Returns(Task.FromResult(restObject));
+		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._)).Returns(Task.FromResult(restObject));
 
 		RestHelperOptions options = new("test-endpoint", "TestApi", HttpHeaders: customHeaders);
 
@@ -1078,8 +1077,8 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		result.ShouldNotBeNull();
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(
 			A<RequestOptions<TestModel>>.That.Matches(r => r.HttpHeaders != null && r.HttpHeaders.ContainsKey("X-Custom-Header")),
-			A<CancellationToken>._))
-			.MustHaveHappenedOnceExactly();
+			A<CancellationToken>._)
+		).MustHaveHappenedOnceExactly();
 	}
 
 	#endregion

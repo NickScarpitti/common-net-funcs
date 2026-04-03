@@ -76,12 +76,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AWSSDK.S3" Version="4.0.18.6" PrivateAssets="all" />
+		<PackageReference Include="AWSSDK.S3" Version="4.0.20" PrivateAssets="all" />
 		<PackageReference Include="MinVer" Version="7.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.1" PrivateAssets="all" />
+		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>

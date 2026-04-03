@@ -1136,12 +1136,12 @@ public static partial class Common
 
 		return cell.CellType switch
 		{
-			CellType.Unknown => string.Empty,
+			CellType._None => string.Empty,
 			CellType.Numeric => cell.NumericCellValue.ToString(),
 			CellType.String => cell.StringCellValue,
 			CellType.Formula => cell.CachedFormulaResultType switch
 			{
-				CellType.Unknown => string.Empty,
+				CellType._None => string.Empty,
 				CellType.Numeric => cell.NumericCellValue.ToString(),
 				CellType.String => cell.StringCellValue,
 				CellType.Blank => string.Empty,

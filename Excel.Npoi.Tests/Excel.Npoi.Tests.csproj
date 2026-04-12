@@ -6,6 +6,7 @@
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
 		<LangVersion>latest</LangVersion>
+		<AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
 	</PropertyGroup>
 
 	<ItemGroup>

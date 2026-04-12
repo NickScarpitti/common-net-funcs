@@ -27,6 +27,7 @@
 		<PackageTags>dotnet;helpers;excel;npoi;office;msoffice;</PackageTags>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Configurations>Debug;Release;ReducedBuild</Configurations>
+		<AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -83,6 +84,8 @@
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" PrivateAssets="all" />
 		<PackageReference Include="NPOI" Version="2.8.0" />
+		<PackageReference Include="SkiaSharp" Version="3.119.2" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.2" />
 		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" PrivateAssets="all" />
 	</ItemGroup>
 

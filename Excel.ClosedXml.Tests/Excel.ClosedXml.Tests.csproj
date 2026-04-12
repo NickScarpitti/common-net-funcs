@@ -28,6 +28,7 @@
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
 		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" />
 		<PackageReference Include="Shouldly" Version="4.3.0" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
 		<PackageReference Include="xunit.v3" Version="3.2.2" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
 			<PrivateAssets>all</PrivateAssets>
@@ -37,6 +38,12 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\CommonNetFuncs.Excel.ClosedXml\CommonNetFuncs.Excel.ClosedXml.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="TestData\*.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>

@@ -633,7 +633,7 @@ public static class Email
 					sendEmailConfig.EmailContent.Subject,
 					BodyLength = sendEmailConfig.EmailContent.Body?.Length,
 					sendEmailConfig.EmailContent.BodyIsHtml,
-					AttachmentsCount = sendEmailConfig.EmailContent.Attachments?.Count(),
+					AttachmentsCount = sendEmailConfig.EmailContent.Attachments?.Length,
 					sendEmailConfig.EmailContent.ZipAttachments,
 					sendEmailConfig.EmailContent.AutoDisposeAttachments
 				},

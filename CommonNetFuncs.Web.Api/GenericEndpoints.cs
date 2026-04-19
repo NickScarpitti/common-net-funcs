@@ -188,7 +188,7 @@ public sealed class GenericEndpoints : ControllerBase
 		GlobalFilterOptions? globalFilterOptions = null) where TEntity : class?, new() where TContext : DbContext
 	{
 		TEntity? dbModel = await baseAppDbContextActions.GetByKey(primaryKey, globalFilterOptions: globalFilterOptions).ConfigureAwait(false);
-		return await PatchInternal(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
+		return await Patch(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
 	}
 
 	/// <summary>
@@ -204,7 +204,7 @@ public sealed class GenericEndpoints : ControllerBase
 		GlobalFilterOptions? globalFilterOptions = null) where TEntity : class?, new() where TContext : DbContext
 	{
 		TEntity? dbModel = await baseAppDbContextActions.GetByKey(primaryKey, globalFilterOptions: globalFilterOptions).ConfigureAwait(false);
-		return await PatchInternal(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
+		return await Patch(dbModel, patch, baseAppDbContextActions).ConfigureAwait(false);
 	}
 
 	/// <summary>
@@ -216,7 +216,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	private async Task<ActionResult<TEntity>> PatchInternal<TEntity, TContext>(TEntity? dbModel, JsonPatchDocument<TEntity> patch, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions) where TEntity : class?, new() where TContext : DbContext
+	public async Task<ActionResult<TEntity>> Patch<TEntity, TContext>(TEntity? dbModel, JsonPatchDocument<TEntity> patch, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions) where TEntity : class?, new() where TContext : DbContext
 	{
 		try
 		{

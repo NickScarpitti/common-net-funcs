@@ -1,4 +1,7 @@
-﻿using CommonNetFuncs.Web.Middleware;
+﻿using AutoFixture;
+using AutoFixture.AutoFakeItEasy;
+using CommonNetFuncs.Web.Middleware;
+using FakeItEasy;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

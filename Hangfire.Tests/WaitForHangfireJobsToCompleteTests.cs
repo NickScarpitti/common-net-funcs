@@ -1,4 +1,5 @@
 ﻿using CommonNetFuncs.Hangfire;
+using FakeItEasy;
 using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
 
@@ -251,9 +252,7 @@ public sealed class WaitForHangfireJobsToCompleteTests
 		StatisticsDto GetStatistics()
 		{
 			callCount++;
-			return callCount <= 3
-				? new StatisticsDto { Processing = 1 }
-				: new StatisticsDto { Processing = 0 };
+			return callCount <= 3 ? new StatisticsDto { Processing = 1 } : new StatisticsDto { Processing = 0 };
 		}
 
 		SetupHangfireStorageWithCallback(GetStatistics);

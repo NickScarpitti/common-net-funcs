@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using AutoFixture;
 using CommonNetFuncs.EFCore;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;

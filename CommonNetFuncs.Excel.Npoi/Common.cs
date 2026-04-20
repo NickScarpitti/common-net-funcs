@@ -7,6 +7,7 @@ using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using NPOI.HSSF.UserModel;
 using NPOI.HSSF.Util;
+using NPOI.OOXML.XSSF.UserModel;
 using NPOI.OpenXmlFormats.Spreadsheet;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS;
@@ -16,7 +17,6 @@ using NPOI.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using static System.Convert;
 using static System.Math;
 
@@ -83,6 +83,8 @@ public sealed class CellStyle : ICellStyle
 	public short Index { get; }
 
 	public short DataFormat { get; set; }
+
+	public string FormatString { get; set; } = string.Empty; // Nullable causes issues with NPOI 2.8+ when copying styles
 
 	public short FontIndex { get; private set; }
 
@@ -254,7 +256,12 @@ public static partial class Common
 				if ((style.HexColor?.Length == 7) && regex.IsMatch(style.HexColor))
 				{
 					byte[] rgb = [ToByte(style.HexColor.Substring(1, 2), 16), ToByte(style.HexColor.Substring(3, 2), 16), ToByte(style.HexColor.Substring(5, 2), 16)];
-					((XSSFCellStyle)newCellStyle).SetFillForegroundColor(new XSSFColor(new Rgb24(rgb[0], rgb[1], rgb[2])));
+					// ((XSSFCellStyle)newCellStyle).SetFillForegroundColor(new XSSFColor(new Rgb24(rgb[0], rgb[1], rgb[2])));
+
+					((XSSFCellStyle)newCellStyle).SetFillForegroundColor(new(new DefaultIndexedColorMap())
+					{
+						RGB = rgb
+					});
 				}
 				else
 				{

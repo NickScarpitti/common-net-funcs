@@ -1,4 +1,5 @@
 ﻿using CommonNetFuncs.Hangfire;
+using FakeItEasy;
 using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
 using Microsoft.Extensions.DependencyInjection;

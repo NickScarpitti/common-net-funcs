@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Media.Ffmpeg;
 using CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;

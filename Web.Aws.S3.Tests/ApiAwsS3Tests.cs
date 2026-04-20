@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using Amazon.S3;
 using Amazon.S3.Model;
+using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
 using CommonNetFuncs.Compression;
 using CommonNetFuncs.Core;

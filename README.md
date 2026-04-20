@@ -1,5 +1,5 @@
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
-[![Coverage Status](https://coveralls.io/repos/github/NickScarpitti/common-net-funcs/badge.svg?branch=main&flag=Compression.Tests)](https://coveralls.io/github/NickScarpitti/common-net-funcs?branch=main&flag=Compression.Tests)
+[![Coverage Status](https://coveralls.io/repos/github/NickScarpitti/common-net-funcs/badge.svg?branch=main)](https://coveralls.io/github/NickScarpitti/common-net-funcs?branch=main)
 
 # CommonNetFuncs is a collection of helper classes and methods that aim to make coding in C# easier with less boilerplate code
 
@@ -35,3 +35,4 @@
     7. [Requests](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Requests)
 13. Word
     1. [OpenXML](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Word.OpenXml)
+

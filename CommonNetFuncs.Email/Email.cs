@@ -384,6 +384,12 @@ public static class Email
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+	private static readonly System.Text.Json.JsonSerializerOptions serializerOptions = new()
+	{
+		WriteIndented = true,
+	};
+
+
 	/// <summary>
 	/// Sends an email using the SMTP server specified in the parameters.
 	/// </summary>
@@ -558,21 +564,6 @@ public static class Email
 		return success;
 	}
 
-	private static readonly System.Text.Json.JsonSerializerOptions serializerOptions = new()
-	{
-		WriteIndented = true,
-	};
-
-	private static string GetConfigurationString(SendEmailConfig sendEmailConfig)
-	{
-		if (!sendEmailConfig.SmtpSettings.SmtpPassword.IsNullOrWhiteSpace())
-		{
-			sendEmailConfig.SmtpSettings.SmtpPassword = "REDACTED";
-		}
-
-		return System.Text.Json.JsonSerializer.Serialize(sendEmailConfig, serializerOptions);
-	}
-
 	/// <summary>
 	/// Sends an email using the SMTP server specified in the parameters. This overload uses MailAttachmentBytes for serialization-friendly scenarios (e.g., Hangfire background jobs).
 	/// </summary>
@@ -598,6 +589,60 @@ public static class Email
 		);
 
 		return SendEmail(standardConfig, cancellationToken);
+	}
+
+	private static string GetConfigurationString(SendEmailConfig sendEmailConfig)
+	{
+		try
+		{
+			if (!sendEmailConfig.SmtpSettings.SmtpPassword.IsNullOrWhiteSpace())
+			{
+				sendEmailConfig.SmtpSettings.SmtpPassword = "REDACTED";
+			}
+
+			return System.Text.Json.JsonSerializer.Serialize(sendEmailConfig, serializerOptions);
+		}
+		catch (Exception ex)
+		{
+			logger.Warn(ex, "{ErrorLocation} Failed to serialize full email configuration for logging. Falling back to safe configuration summary.", ex.GetLocationOfException());
+
+			object safeConfig = new
+			{
+				SmtpSettings = new
+				{
+					sendEmailConfig.SmtpSettings.SmtpServer,
+					sendEmailConfig.SmtpSettings.SmtpPort,
+					sendEmailConfig.SmtpSettings.SmtpUser,
+					SmtpPassword = sendEmailConfig.SmtpSettings.SmtpPassword.IsNullOrWhiteSpace() ? sendEmailConfig.SmtpSettings.SmtpPassword : "REDACTED",
+					sendEmailConfig.SmtpSettings.ConnectionTimeout,
+					sendEmailConfig.SmtpSettings.RequireTLS,
+					SecureSocketOptions = sendEmailConfig.SmtpSettings.SecureSocketOptions?.ToString(),
+					sendEmailConfig.SmtpSettings.LocalDomain,
+					LocalEndPoint = sendEmailConfig.SmtpSettings.LocalEndPoint?.ToString(),
+					ClientCertificatesCount = sendEmailConfig.SmtpSettings.ClientCertificates?.Count
+				},
+				EmailAddresses = new
+				{
+					FromAddress = sendEmailConfig.EmailAddresses.FromAddress?.Email,
+					ToAddresses = sendEmailConfig.EmailAddresses.ToAddresses?.Select(x => x.Email),
+					CcAddresses = sendEmailConfig.EmailAddresses.CcAddresses?.Select(x => x.Email),
+					BccAddresses = sendEmailConfig.EmailAddresses.BccAddresses?.Select(x => x.Email)
+				},
+				EmailContent = new
+				{
+					sendEmailConfig.EmailContent.Subject,
+					BodyLength = sendEmailConfig.EmailContent.Body?.Length,
+					sendEmailConfig.EmailContent.BodyIsHtml,
+					AttachmentsCount = sendEmailConfig.EmailContent.Attachments?.Length,
+					sendEmailConfig.EmailContent.ZipAttachments,
+					sendEmailConfig.EmailContent.AutoDisposeAttachments
+				},
+				sendEmailConfig.ReadReceipt,
+				sendEmailConfig.ReadReceiptEmail
+			};
+
+			return System.Text.Json.JsonSerializer.Serialize(safeConfig, serializerOptions);
+		}
 	}
 
 	/// <summary>

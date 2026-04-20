@@ -1,4 +1,5 @@
 ﻿using CommonNetFuncs.Web.Api.OpenApiTransformers;
+using FakeItEasy;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Options;

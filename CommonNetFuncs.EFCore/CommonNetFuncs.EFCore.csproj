@@ -30,7 +30,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.27</Version>
+		<Version>4.0.29</Version>
 		<MinVerTagPrefix>efcore-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -77,17 +77,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.6" />
-		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="10.0.6" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.6" PrivateAssets="all" />
-		<PackageReference Include="MinVer" Version="7.0.0">
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" PrivateAssets="all" />
+		<PackageReference Include="MinVer">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" PrivateAssets="all" />
-		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" PrivateAssets="all" />
-		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.2" PrivateAssets="all" />
-		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="10.105.4" PrivateAssets="all" />
+		<PackageReference Include="Newtonsoft.Json" PrivateAssets="all" />
+		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
+		<PackageReference Include="System.Linq.Dynamic.Core" PrivateAssets="all" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>

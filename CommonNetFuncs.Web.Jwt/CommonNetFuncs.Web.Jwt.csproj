@@ -29,7 +29,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.25</Version>
+		<Version>4.0.29</Version>
 		<MinVerTagPrefix>web.jwt-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -80,10 +80,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MemoryPack" Version="1.21.4" />
-		<PackageReference Include="MessagePack" Version="3.1.4" />
-		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.17.0" PrivateAssets="all" />
-		<PackageReference Include="MinVer" Version="7.0.0">
+		<PackageReference Include="MemoryPack" />
+		<PackageReference Include="MessagePack" />
+		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" PrivateAssets="all" />
+		<PackageReference Include="MinVer">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

@@ -29,7 +29,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.27</Version>
+		<Version>4.0.29</Version>
 		<MinVerTagPrefix>web.aws.s3-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -76,12 +76,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AWSSDK.S3" Version="4.0.21.1" PrivateAssets="all" />
-		<PackageReference Include="MinVer" Version="7.0.0">
+		<PackageReference Include="AWSSDK.S3" PrivateAssets="all" />
+		<PackageReference Include="MinVer">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" PrivateAssets="all" />
+		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>

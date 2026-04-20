@@ -76,13 +76,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CliWrap" Version="3.10.1" PrivateAssets="all" />
-		<PackageReference Include="MinVer" Version="7.0.0">
+		<PackageReference Include="CliWrap" PrivateAssets="all" />
+		<PackageReference Include="MinVer">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
-		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" PrivateAssets="all" />
+		<PackageReference Include="SixLabors.ImageSharp" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>

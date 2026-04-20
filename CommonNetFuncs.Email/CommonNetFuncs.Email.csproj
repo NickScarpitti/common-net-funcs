@@ -76,9 +76,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MailKit" Version="4.16.0" />
-		<PackageReference Include="MimeKit" Version="4.16.0" />
-		<PackageReference Include="MinVer" Version="7.0.0">
+		<PackageReference Include="MailKit" />
+		<PackageReference Include="MimeKit" />
+		<PackageReference Include="MinVer">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

@@ -1,0 +1,31 @@
+<Project>
+	<PropertyGroup>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+	</PropertyGroup>
+	<ItemGroup>
+
+		<PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+		<PackageReference Include="ClosedXML" Version="0.105.0" />
+		<PackageReference Include="CsvHelper" Version="33.1.0" />
+		<PackageReference Include="FastExpressionCompiler" Version="5.4.1" />
+		<PackageReference Include="MailKit" Version="4.16.0" />
+
+		<PackageReference Include="Mapster" Version="10.0.7" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.6" />
+		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="10.0.6" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.6" />
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.6" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.6" />
+		<PackageReference Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.3.36812.1" />
+		<PackageReference Include="MimeKit" Version="4.16.0" />
+		<PackageReference Include="MinVer" Version="7.0.0"/>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+
+		<PackageReference Include="NLog" Version="6.1.2" />
+		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" />
+		<PackageReference Include="Riok.Mapperly" Version="4.3.1" />
+		<PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.2" PrivateAssets="all" />
+		<PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="10.105.2.2" PrivateAssets="all" />
+	</ItemGroup>
+</Project>

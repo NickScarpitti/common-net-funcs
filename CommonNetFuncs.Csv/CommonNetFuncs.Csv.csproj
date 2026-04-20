@@ -76,12 +76,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CsvHelper" Version="33.1.0" PrivateAssets="all" />
-		<PackageReference Include="MinVer" Version="7.0.0">
+		<PackageReference Include="CsvHelper" PrivateAssets="all" />
+		<PackageReference Include="MinVer">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="NLog.Extensions.Logging" Version="6.1.2" PrivateAssets="all" />
+		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1511,7 +1511,7 @@ public sealed class AsyncTests
 	public async Task ObjectFill_MemoryStreamWithFuncAndSemaphoreThrowing_ShouldHandleException()
 	{
 		// Arrange
-		using MemoryStream ms = new();
+		await using MemoryStream ms = new();
 		byte[] initialData = [1, 2, 3];
 		await ms.WriteAsync(initialData, Current.CancellationToken);
 		long initialLength = ms.Length;
@@ -4082,9 +4082,9 @@ public sealed class AsyncTests
 	public async Task ObjectFill_MemoryStream_WithDirectTask_ShouldWriteData()
 	{
 		// Arrange
-		using MemoryStream ms = new();
+		await using MemoryStream ms = new();
 		byte[] data = [1, 2, 3, 4, 5];
-		using MemoryStream resultMs = new(data);
+		await using MemoryStream resultMs = new(data);
 		Task<MemoryStream> task = Task.FromResult(resultMs);
 
 		// Act
@@ -4099,7 +4099,7 @@ public sealed class AsyncTests
 	public async Task ObjectFill_MemoryStream_WithDirectTask_WhenTaskThrows_ShouldHandleException()
 	{
 		// Arrange
-		using MemoryStream ms = new();
+		await using MemoryStream ms = new();
 		Task<MemoryStream> task = Task.FromException<MemoryStream>(new InvalidOperationException("test error"));
 
 		// Act & Assert
@@ -4565,7 +4565,7 @@ public sealed class AsyncTests
 	public async Task ObjectFill_WithSimpleTypeTask_ShouldNotCopyProperties()
 	{
 		// Arrange - Test that simple types don't go through CopyPropertiesTo path
-		string obj = "original";
+		const string obj = "original";
 		Task<string> task = Task.FromResult("updated");
 
 		// Act
@@ -4579,7 +4579,7 @@ public sealed class AsyncTests
 	public async Task ObjectFill_WithSimpleTypeFuncTask_ShouldNotCopyProperties()
 	{
 		// Arrange - Test Func<Task<T>> overload with simple type
-		string obj = "original";
+		const string obj = "original";
 		static Task<string> func()
 		{
 			return Task.FromResult("updated");
@@ -4596,7 +4596,7 @@ public sealed class AsyncTests
 	public async Task ObjectFill_WithSimpleTypeFuncTaskAndSemaphore_ShouldNotCopyProperties()
 	{
 		// Arrange - Test Func<Task<T>> with semaphore overload with simple type
-		string obj = "original";
+		const string obj = "original";
 		static Task<string> func()
 		{
 			return Task.FromResult("updated");
@@ -4615,7 +4615,7 @@ public sealed class AsyncTests
 	public async Task ObjectFill_WithSimpleTypeNullString_ShouldNotCopyProperties()
 	{
 		// Arrange - Test with null simple type
-		string? obj = null;
+		const string? obj = null;
 		Task<string?> task = Task.FromResult<string?>("value");
 
 		// Act & Assert
@@ -4626,7 +4626,7 @@ public sealed class AsyncTests
 	public async Task ObjectFill_WithSimpleTypeFuncTaskNullSemaphore_ShouldWork()
 	{
 		// Arrange - Test Func<Task<T>> with null semaphore and simple type
-		string obj = "test";
+		const string obj = "test";
 		static Task<string> func()
 		{
 			return Task.FromResult("new");
@@ -5838,7 +5838,7 @@ public sealed class AsyncTests
 	public async Task ObjectFill_MemoryStreamWithTaskAndNullResult_ShouldNotModify()
 	{
 		// Arrange
-		using MemoryStream ms = new();
+		await using MemoryStream ms = new();
 		ms.WriteByte(1);
 		long originalLength = ms.Length;
 		Task<MemoryStream> task = Task.FromResult<MemoryStream>(null!);
@@ -5852,7 +5852,7 @@ public sealed class AsyncTests
 	public async Task ObjectFill_MemoryStreamWithFuncAndNullResult_ShouldNotModify()
 	{
 		// Arrange
-		using MemoryStream ms = new();
+		await using MemoryStream ms = new();
 		ms.WriteByte(1);
 		long originalLength = ms.Length;
 		static Task<MemoryStream> func()

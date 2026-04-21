@@ -2211,7 +2211,7 @@ public sealed class AsyncTests
 		const string key = "testKey";
 		AsyncIntString expectedValue = new() { AsyncInt = 100, AsyncString = "TestValue" };
 
-		Task<AsyncIntString?> func()
+		static Task<AsyncIntString?> func()
 		{
 			return Task.FromResult<AsyncIntString?>(new AsyncIntString
 			{
@@ -3988,7 +3988,7 @@ public sealed class AsyncTests
 		ConcurrentDictionary<string, int?> dict = new();
 		const string key = "testKey";
 
-		Task<int?> func()
+		static Task<int?> func()
 		{
 			return Task.FromResult<int?>(42);
 		}
@@ -4008,7 +4008,7 @@ public sealed class AsyncTests
 		ConcurrentDictionary<string, int?>? dict = null;
 		const string key = "testKey";
 
-		Task<int?> func()
+		static Task<int?> func()
 		{
 			return Task.FromResult<int?>(42);
 		}
@@ -4024,7 +4024,7 @@ public sealed class AsyncTests
 		ConcurrentDictionary<string, int?> dict = new();
 		const string key = "testKey";
 
-		Task<int?> func()
+		static Task<int?> func()
 		{
 			return Task.FromException<int?>(new InvalidOperationException("test error"));
 		}
@@ -4644,7 +4644,9 @@ public sealed class AsyncTests
 	public async Task ObjectFill_IListWithNullTask_ShouldNotThrow()
 	{
 		// Arrange
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
 		IList<int?> list = new List<int?> { 1, 2 };
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
 		Task<int?> task = Task.FromResult<int?>(null);
 
 		// Act & Assert
@@ -4657,7 +4659,9 @@ public sealed class AsyncTests
 	public async Task ObjectFill_IListWithFuncTask_ShouldAddItem()
 	{
 		// Arrange
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
 		IList<string?> list = new List<string?> { "a" };
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
 		static Task<string?> func()
 		{
 			return Task.FromResult<string?>("b");
@@ -5110,7 +5114,7 @@ public sealed class AsyncTests
 		int result = await task.RunAsyncWithSemaphore(semaphore, null, false, "Error context");
 
 		// Assert
-		result.ShouldBe(default(int));
+		result.ShouldBe(default);
 		semaphore.CurrentCount.ShouldBe(1);
 	}
 
@@ -5126,7 +5130,7 @@ public sealed class AsyncTests
 		int result = await task.RunAsyncWithSemaphore(semaphore, cts, breakOnError: true, null);
 
 		// Assert
-		result.ShouldBe(default(int));
+		result.ShouldBe(default);
 		cts.Token.IsCancellationRequested.ShouldBeTrue();
 		semaphore.CurrentCount.ShouldBe(1);
 	}
@@ -5636,7 +5640,7 @@ public sealed class AsyncTests
 	{
 		// Arrange
 		ConcurrentBag<int>? bag = null;
-		Task<IEnumerable<int>?> task = Task.FromResult<IEnumerable<int>?>(new[] { 1, 2 });
+		Task<IEnumerable<int>?> task = Task.FromResult<IEnumerable<int>?>([1, 2]);
 
 		// Act & Assert
 		await Should.NotThrowAsync(async () => await bag.ObjectFill(task));
@@ -5649,7 +5653,7 @@ public sealed class AsyncTests
 		ConcurrentBag<int>? bag = null;
 		static Task<IEnumerable<int>?> func()
 		{
-			return Task.FromResult<IEnumerable<int>?>(new[] { 1, 2 });
+			return Task.FromResult<IEnumerable<int>?>([1, 2]);
 		}
 
 		// Act & Assert

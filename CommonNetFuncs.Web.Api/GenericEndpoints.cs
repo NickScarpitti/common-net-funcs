@@ -1,12 +1,12 @@
-﻿using CommonNetFuncs.Core;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
+using System.Net;
+using CommonNetFuncs.Core;
 using CommonNetFuncs.EFCore;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
-using System.ComponentModel.DataAnnotations;
-using System.Linq.Expressions;
-using System.Net;
 using static CommonNetFuncs.Core.Copy;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.DeepClone.ExpressionTrees;
@@ -237,7 +237,6 @@ public sealed class GenericEndpoints : ControllerBase
 			List<ValidationResult> failedValidations = [];
 			Validator.TryValidateObject(updateModel, new(updateModel), failedValidations);
 			if (failedValidations.AnyFast())
-			//if (!TryValidateModel(updateModel)) //Only works when this method is the controller endpoint being called
 			{
 				ActionResult result = ValidationProblem(ModelState);
 				if (result is ObjectResult objectResult)

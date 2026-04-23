@@ -880,4 +880,42 @@ public sealed class WrapperHelpersTests
 	}
 
 	#endregion
+
+	#region GetRequestOptions URL Construction Tests
+
+	[Theory]
+	[InlineData("/v1/endpoint", "http://api.test.com/", "http://api.test.com/v1/endpoint")]                              // Base trailing slash, relative leading slash
+	[InlineData("v1/endpoint", "http://api.test.com/", "http://api.test.com/v1/endpoint")]                               // Base trailing slash, relative no leading slash
+	[InlineData("/v1/endpoint", "http://api.test.com", "http://api.test.com/v1/endpoint")]                               // Base no trailing slash, relative leading slash
+	[InlineData("v1/endpoint", "http://api.test.com", "http://api.test.com/v1/endpoint")]                                // Base no trailing slash, relative no leading slash
+	[InlineData("/v1/endpoint", "http://api.test.com/myapp/", "http://api.test.com/myapp/v1/endpoint")]                  // Base with path prefix (trailing slash)
+	[InlineData("v1/endpoint", "http://api.test.com/myapp", "http://api.test.com/myapp/v1/endpoint")]                    // Base with path prefix (no trailing slash)
+	[InlineData("///v1/endpoint", "http://api.test.com/", "http://api.test.com/v1/endpoint")]                            // Multiple leading slashes on relative
+	[InlineData("v1/endpoint", null, "v1/endpoint")]                                                                     // Null base, no leading slash on relative
+	[InlineData("/v1/endpoint", null, "/v1/endpoint")]                                                                   // Null base, leading slash preserved on relative
+	[InlineData("v1/endpoint", "http://api.test.com:8080/", "http://api.test.com:8080/v1/endpoint")]                     // Base with port number
+	[InlineData("v1/endpoint", "https://secure.api.com/", "https://secure.api.com/v1/endpoint")]                         // HTTPS scheme
+	[InlineData("v1/resources/items/details", "http://api.test.com/", "http://api.test.com/v1/resources/items/details")] // Deep nested relative path
+	[InlineData("v1/endpoint?foo=bar&baz=1", "http://api.test.com/", "http://api.test.com/v1/endpoint?foo=bar&baz=1")]   // Query string on relative
+	[InlineData("endpoint", "http://api.test.com/app/v2/", "http://api.test.com/app/v2/endpoint")]                       // Deep base path prefix
+	[InlineData("items", "http://localhost/", "http://localhost/items")]                                                 // Simple base and relative (common happy path)
+	[InlineData("v1/my.endpoint", "http://api.test.com/", "http://api.test.com/v1/my.endpoint")]                         // Dot in path segment
+	public void GetRequestOptions_Url_CombinesBaseAndRelativeCorrectly(string optionsUrl, string? baseAddressString, string expectedUrl)
+	{
+		RestHelperOptions options = new(optionsUrl, "api");
+		Uri? baseAddress = baseAddressString != null ? new Uri(baseAddressString) : null;
+
+		RequestOptions<string> result = WrapperHelpers.GetRequestOptions<string>(options, baseAddress, new Dictionary<string, string>(), HttpMethod.Get, null);
+
+		result.Url.ShouldBe(expectedUrl);
+	}
+
+	// Empty Url is rejected by RestHelperOptions constructor
+	[Fact]
+	public void GetRequestOptions_Url_EmptyRelativePath_ThrowsOnConstruction()
+	{
+		Should.Throw<ArgumentException>(() => new RestHelperOptions("", "api"));
+	}
+
+	#endregion
 }

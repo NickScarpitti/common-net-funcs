@@ -1,9 +1,9 @@
-﻿using ClosedXML.Excel;
+﻿using System.Data;
+using ClosedXML.Excel;
 using ClosedXML.Excel.Drawings;
 using CommonNetFuncs.Excel.ClosedXml;
 using CommonNetFuncs.Excel.Common;
 using NSubstitute;
-using System.Data;
 
 namespace Excel.ClosedXml.Tests;
 
@@ -518,7 +518,7 @@ public sealed class CommonTests : IDisposable
 	{
 		List<string> options = ["Option1", "Option2"];
 		IXLRange range = sheet.Range("B1:B10");
-		sheet.AddDataValidation(range, options);
+		range.AddDataValidation(options);
 
 		sheet.DataValidations.Count().ShouldBe(1);
 	}

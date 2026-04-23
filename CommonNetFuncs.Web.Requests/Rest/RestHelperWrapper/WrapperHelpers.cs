@@ -247,7 +247,7 @@ internal static class WrapperHelpers
 	{
 		RequestOptions<T> baseRequestOptions = new()
 		{
-			Url = $"{baseAddress}{options.Url}",
+			Url = $"{baseAddress}{options.Url.TrimStart('/')}",
 			HttpMethod = httpMethod,
 			BearerToken = bearerToken,
 			Timeout = options.ResilienceOptions?.TimeoutValue?.TotalSeconds,

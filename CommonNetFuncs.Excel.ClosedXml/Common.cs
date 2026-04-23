@@ -337,7 +337,7 @@ public static class Common
 	/// <param name="ws">IXLWorksheet object to add data validation to</param>
 	/// <param name="range">IXLRange to apply validation to</param>
 	/// <param name="options">Options to be used as the valid choices in the drop down</param>
-	public static void AddDataValidation(this IXLWorksheet ws, IXLRange range, List<string> options)
+	public static void AddDataValidation(this IXLRange range, List<string> options)
 	{
 		IXLDataValidation validation = range.CreateDataValidation();
 		validation.List(string.Join(",", options.Select(o => $"\"{o}\"")), true);
@@ -512,10 +512,7 @@ public static class Common
 			}
 
 			// Get first table if not specified or not found
-			if (table == null)
-			{
-				table = allTables.FirstOrDefault();
-			}
+			table ??= allTables.FirstOrDefault();
 
 			if (table != null)
 			{

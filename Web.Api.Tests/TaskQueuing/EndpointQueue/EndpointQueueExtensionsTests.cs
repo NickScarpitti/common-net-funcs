@@ -266,7 +266,7 @@ public class EndpointQueueExtensionsTests
 		// Assert
 		result.ShouldBe(endpointsMock.Object);
 		// Verify that DataSources was accessed (which happens when endpoints are registered)
-		endpointsMock.Verify(x => x.DataSources, Moq.Times.AtLeastOnce);
+		endpointsMock.Verify(x => x.DataSources, Times.AtLeastOnce);
 	}
 
 	[Fact]

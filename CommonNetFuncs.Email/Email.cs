@@ -509,13 +509,13 @@ public static class Email
 
 						if (!sendEmailConfig.SmtpSettings.SmtpUser.IsNullOrWhiteSpace() && !sendEmailConfig.SmtpSettings.SmtpPassword.IsNullOrWhiteSpace())
 						{
-							await smtpClient.ConnectAsync(sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort,
+							await smtpClient.ConnectAsync(sendEmailConfig.SmtpSettings.SmtpServer ?? string.Empty, sendEmailConfig.SmtpSettings.SmtpPort,
 								sendEmailConfig.SmtpSettings.SecureSocketOptions ?? SecureSocketOptions.StartTls, cancellationToken).ConfigureAwait(false);
 							await smtpClient.AuthenticateAsync(sendEmailConfig.SmtpSettings.SmtpUser, sendEmailConfig.SmtpSettings.SmtpPassword, cancellationToken).ConfigureAwait(false);
 						}
 						else
 						{
-							await smtpClient.ConnectAsync(sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort,
+							await smtpClient.ConnectAsync(sendEmailConfig.SmtpSettings.SmtpServer ?? string.Empty, sendEmailConfig.SmtpSettings.SmtpPort,
 								sendEmailConfig.SmtpSettings.SecureSocketOptions ?? SecureSocketOptions.None, cancellationToken).ConfigureAwait(false);
 						}
 						await smtpClient.SendAsync(email, cancellationToken).ConfigureAwait(false);

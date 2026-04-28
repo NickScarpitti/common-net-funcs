@@ -29,7 +29,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.31</Version>
+		<Version>4.0.34</Version>
 		<MinVerTagPrefix>hangfire-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -40,6 +40,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="FastExpressionCompiler" />
 		<PackageReference Include="Hangfire.AspNetCore" />
 		<PackageReference Include="Hangfire.Core" />
 		<!-- Required to eliminate package vulnerability brought in by Hangfire -->

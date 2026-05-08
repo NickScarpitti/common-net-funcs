@@ -80,6 +80,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="MessagePack" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />

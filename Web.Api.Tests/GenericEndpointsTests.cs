@@ -47,7 +47,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await sut.CreateMany(models, dbContextActions, removeNavigationProps);
+		ActionResult<IEnumerable<TestEntity>> result = await sut.CreateMany(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -65,7 +65,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(false);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await sut.CreateMany(models, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await sut.CreateMany(models, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -103,7 +103,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.SaveChanges()).Returns(true);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await sut.DeleteMany(models, dbContextActions, removeNavigationProps);
+		ActionResult<IEnumerable<TestEntity>> result = await sut.DeleteMany(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -120,7 +120,7 @@ public sealed class GenericEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys)).Returns(true);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await sut.DeleteManyByKeys(keys, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await sut.DeleteManyByKeys(keys, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();

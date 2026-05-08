@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Net;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.EFCore;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static CommonNetFuncs.Core.Copy;
 using static CommonNetFuncs.Core.ExceptionLocation;
@@ -12,7 +12,7 @@ using static CommonNetFuncs.FastMap.FastMapper;
 
 namespace CommonNetFuncs.Web.Api;
 
-public sealed class GenericDtoEndpoints : ControllerBase
+public sealed class GenericMinimalDtoEndpoints
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -26,7 +26,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 	/// <param name="models">Entities to create.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
-	public async Task<ActionResult<IEnumerable<TOutDto>>> CreateMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
+	public static async Task<Results<Ok<IEnumerable<TOutDto>>, NoContent>> CreateMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
 		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		try
@@ -34,7 +34,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 			await baseAppDbContextActions.CreateMany(models.Select(x => x.FastMap<TInDto, TModel>()), removeNavigationProps).ConfigureAwait(false);
 			if (await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
 			{
-				return Ok(models.Select(x => x.FastMap<TInDto, TOutDto>()));
+				return TypedResults.Ok(models.Select(x => x.FastMap<TInDto, TOutDto>()));
 			}
 		}
 		catch (Exception ex)
@@ -42,7 +42,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 
 		}
-		return NoContent();
+		return TypedResults.NoContent();
 	}
 
 	/// <summary>
@@ -55,7 +55,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 	/// <param name="model">Entity to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
-	public async Task<ActionResult<TOutDto>> Delete<TModel, TContext, TInDto, TOutDto>(TInDto model, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
+	public static async Task<Results<Ok<TOutDto>, NoContent>> Delete<TModel, TContext, TInDto, TOutDto>(TInDto model, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
 		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		try
@@ -63,7 +63,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 			baseAppDbContextActions.DeleteByObject(model.FastMap<TInDto, TModel>(), removeNavigationProps);
 			if (await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
 			{
-				return Ok(model.FastMap<TInDto, TOutDto>());
+				return TypedResults.Ok(model.FastMap<TInDto, TOutDto>());
 			}
 		}
 		catch (Exception ex)
@@ -71,7 +71,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 
 		}
-		return NoContent();
+		return TypedResults.NoContent();
 	}
 
 	/// <summary>
@@ -84,14 +84,14 @@ public sealed class GenericDtoEndpoints : ControllerBase
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
-	public async Task<ActionResult<IEnumerable<TOutDto>>> DeleteMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
+	public static async Task<Results<Ok<IEnumerable<TOutDto>>, NoContent>> DeleteMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
 		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		try
 		{
 			if (models.Any() && baseAppDbContextActions.DeleteMany(models.Where(x => x != null).Select(x => x.FastMap<TInDto, TModel>()), removeNavigationProps) && await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
 			{
-				return Ok(models.Select(x => x.FastMap<TInDto, TOutDto>()));
+				return TypedResults.Ok(models.Select(x => x.FastMap<TInDto, TOutDto>()));
 			}
 		}
 		catch (Exception ex)
@@ -99,7 +99,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 
 		}
-		return NoContent();
+		return TypedResults.NoContent();
 	}
 
 	/// <summary>
@@ -111,14 +111,14 @@ public sealed class GenericDtoEndpoints : ControllerBase
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<IEnumerable<TOutDto>>> DeleteManyByKeys<TModel, TContext, TOutDto>(IEnumerable<object> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
+	public static async Task<Results<Ok<IEnumerable<TOutDto>>, NoContent>> DeleteManyByKeys<TModel, TContext, TOutDto>(IEnumerable<object> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TContext : DbContext where TOutDto : class?, new()
 	{
 		try
 		{
 			if (models.Any() && await baseAppDbContextActions.DeleteManyByKeys(models).ConfigureAwait(false)) //Does not work with PostgreSQL
 			{
-				return Ok(models.Select(x => x.FastMap<object, TOutDto>()));
+				return TypedResults.Ok(models.Select(x => x.FastMap<object, TOutDto>()));
 			}
 		}
 		catch (Exception ex)
@@ -126,7 +126,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 
 		}
-		return NoContent();
+		return TypedResults.NoContent();
 	}
 
 	/// <summary>
@@ -139,7 +139,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<TOutDto>> Patch<TModel, TContext, TOutDto>(object primaryKey, JsonPatchDocument<TModel> patch, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
+	public static async Task<Results<Ok<TOutDto>, NoContent, ValidationProblem>> Patch<TModel, TContext, TOutDto>(object primaryKey, JsonPatchDocument<TModel> patch, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TContext : DbContext where TOutDto : class?, new()
 	{
 		TModel? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
@@ -156,7 +156,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
-	public async Task<ActionResult<TOutDto>> Patch<TModel, TContext, TOutDto>(object[] primaryKey, JsonPatchDocument<TModel> patch, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
+	public static async Task<Results<Ok<TOutDto>, NoContent, ValidationProblem>> Patch<TModel, TContext, TOutDto>(object[] primaryKey, JsonPatchDocument<TModel> patch, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TContext : DbContext where TOutDto : class?, new()
 	{
 		TModel? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
@@ -173,19 +173,19 @@ public sealed class GenericDtoEndpoints : ControllerBase
 	/// <param name="patch">Patch document containing the updates to be made to the entity.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
-	private async Task<ActionResult<TOutDto>> PatchInternal<TModel, TContext, TOutDto>(TModel? dbModel, JsonPatchDocument<TModel> patch, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
+	private static async Task<Results<Ok<TOutDto>, NoContent, ValidationProblem>> PatchInternal<TModel, TContext, TOutDto>(TModel? dbModel, JsonPatchDocument<TModel> patch, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TContext : DbContext where TOutDto : class?, new()
 	{
 		try
 		{
 			if (dbModel == null)
 			{
-				return NoContent();
+				return TypedResults.NoContent();
 			}
 
 			if (patch.Operations.Count == 0)
 			{
-				return Ok(dbModel.FastMap<TModel, TOutDto>());
+				return TypedResults.Ok(dbModel.FastMap<TModel, TOutDto>());
 			}
 
 			TModel updateModel = dbModel.DeepClone();
@@ -193,22 +193,17 @@ public sealed class GenericDtoEndpoints : ControllerBase
 			patch.ApplyTo(updateModel);
 
 			List<ValidationResult> failedValidations = [];
-			Validator.TryValidateObject(updateModel, new(updateModel), failedValidations);
-			if (failedValidations.AnyFast())
+			if (!Validator.TryValidateObject(updateModel, new(updateModel), failedValidations))
 			{
-				ActionResult result = ValidationProblem(ModelState);
-				if (result is ObjectResult objectResult)
-				{
-					objectResult.StatusCode = (int)HttpStatusCode.BadRequest;
-				}
-				return result;
+				Dictionary<string, string[]> result = failedValidations.ToDictionary(x => x.MemberNames.FirstOrDefault() ?? "Error", x => new string[] { x.ErrorMessage! });
+				return TypedResults.ValidationProblem(result);
 			}
 
 			updateModel.CopyPropertiesTo(dbModel);
 			baseAppDbContextActions.Update(dbModel);
 			if (await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
 			{
-				return Ok(dbModel.FastMap<TModel, TOutDto>());
+				return TypedResults.Ok(dbModel.FastMap<TModel, TOutDto>());
 			}
 		}
 		catch (Exception ex)
@@ -216,7 +211,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 
 		}
-		return NoContent();
+		return TypedResults.NoContent();
 	}
 
 	/// <summary>
@@ -231,7 +226,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 	/// <param name="inDto">The input DTO containing the updated values for the entity. Cannot be null.</param>
 	/// <param name="baseAppDbContextActions">An object that provides database context actions for the specified entity and context types.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
-	public async Task<ActionResult<TOutDto>> Update<TModel, TContext, TInDto, TOutDto>(object primaryKey, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
+	public static async Task<Results<Ok<TOutDto>, NoContent, ValidationProblem>> Update<TModel, TContext, TInDto, TOutDto>(object primaryKey, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		TModel? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
@@ -249,7 +244,7 @@ public sealed class GenericDtoEndpoints : ControllerBase
 	/// <param name="inDto">The input DTO containing the updated values for the entity. Cannot be null.</param>
 	/// <param name="baseAppDbContextActions">An object that provides database context actions for the specified entity and context types.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
-	public async Task<ActionResult<TOutDto>> Update<TModel, TContext, TInDto, TOutDto>(object[] primaryKey, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
+	public static async Task<Results<Ok<TOutDto>, NoContent, ValidationProblem>> Update<TModel, TContext, TInDto, TOutDto>(object[] primaryKey, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		TModel? dbModel = await baseAppDbContextActions.GetByKey(primaryKey).ConfigureAwait(false);
@@ -267,36 +262,31 @@ public sealed class GenericDtoEndpoints : ControllerBase
 	/// <param name="inDto">Input DTO with updated values</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
-	private async Task<ActionResult<TOutDto>> UpdateInternal<TModel, TContext, TInDto, TOutDto>(TModel? dbModel, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
+	private static async Task<Results<Ok<TOutDto>, NoContent, ValidationProblem>> UpdateInternal<TModel, TContext, TInDto, TOutDto>(TModel? dbModel, TInDto? inDto, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		try
 		{
 			if (dbModel == null)
 			{
-				return NoContent();
+				return TypedResults.NoContent();
 			}
 
 			TModel updateModel = dbModel.DeepClone();
 			inDto.CopyPropertiesTo(updateModel);
 
 			List<ValidationResult> failedValidations = [];
-			Validator.TryValidateObject(updateModel, new(updateModel), failedValidations);
-			if (failedValidations.AnyFast())
+			if (!Validator.TryValidateObject(updateModel, new(updateModel), failedValidations))
 			{
-				ActionResult result = ValidationProblem(ModelState);
-				if (result is ObjectResult objectResult)
-				{
-					objectResult.StatusCode = (int)HttpStatusCode.BadRequest;
-				}
-				return result;
+				Dictionary<string, string[]> result = failedValidations.ToDictionary(x => x.MemberNames.FirstOrDefault() ?? "Error", x => new string[] { x.ErrorMessage! });
+				return TypedResults.ValidationProblem(result);
 			}
 
 			updateModel.CopyPropertiesTo(dbModel);
 			baseAppDbContextActions.Update(dbModel);
 			if (await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
 			{
-				return Ok(dbModel.FastMap<TModel, TOutDto>());
+				return TypedResults.Ok(dbModel.FastMap<TModel, TOutDto>());
 			}
 		}
 		catch (Exception ex)
@@ -304,6 +294,6 @@ public sealed class GenericDtoEndpoints : ControllerBase
 			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
 
 		}
-		return NoContent();
+		return TypedResults.NoContent();
 	}
 }

@@ -9,6 +9,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<CoverletExclude Include="[*.Tests]*" />
 		<CoverletExclude Include="[*]System.Text.RegularExpressions.Generated.*" />
 		<CoverletExcludeByFile Include="**/*.g.cs" />

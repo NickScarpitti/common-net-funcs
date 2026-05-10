@@ -13,7 +13,7 @@
 		<FileVersion>$(Version)</FileVersion>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Authors>NickScarpitti</Authors>
-		<PackageIcon>TTLogo.png</PackageIcon>
+		<PackageIcon>../NWeb_Logo.png</PackageIcon>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
@@ -30,7 +30,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.38</Version>
+		<Version>4.0.40</Version>
 		<MinVerTagPrefix>deepclone-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>

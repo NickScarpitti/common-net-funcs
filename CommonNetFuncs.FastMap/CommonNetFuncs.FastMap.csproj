@@ -12,7 +12,6 @@
 		<FileVersion>$(Version)</FileVersion>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Authors>NickScarpitti</Authors>
-		<PackageIcon>../NWeb_Logo.png</PackageIcon>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
@@ -76,10 +75,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Update="TTLogo.png">
-			<PackagePath>\</PackagePath>
-			<Pack>True</Pack>
-		</None>
 		<None Include="README.md">
 			<PackagePath>\</PackagePath>
 			<Pack>True</Pack>

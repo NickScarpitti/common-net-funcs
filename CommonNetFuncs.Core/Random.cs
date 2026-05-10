@@ -13,6 +13,12 @@ public static class Random
 {
 	public static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
 
+	private const string NumberToGenerateError = "Number to generate must be greater than 0.";
+	private const string MaxValueError = "Max value must be greater than 0.";
+
+	internal static readonly FrozenSet<char> DefaultCharSet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
 	/// <summary>
 	/// Generate a random integer between 0 and maxValue - 1
 	/// </summary>
@@ -25,7 +31,7 @@ public static class Random
 	{
 		if (maxValue <= 0)
 		{
-			throw new ArgumentOutOfRangeException(nameof(maxValue), "Max value must be greater than 0.");
+			throw new ArgumentOutOfRangeException(nameof(maxValue), MaxValueError);
 		}
 
 		if (minValue > maxValue)
@@ -68,6 +74,105 @@ public static class Random
 	}
 
 	/// <summary>
+	/// Generate a random integer between 0 and maxValue - 1
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="minValue">Min value (inclusive) to return. Must be greater >= 0</param>
+	/// <param name="maxValue">Max value (non-inclusive) to return</param>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <returns>Random number between minValue and maxValue - 1</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if maxValue is less than or equal to 0.</exception>
+	/// <exception cref="ArgumentException">Thrown if minValue is greater than maxValue.</exception>
+	public static int GetRepeatableRandomInt<TSeed>(int minValue, int maxValue, TSeed seed) where TSeed : notnull
+	{
+		return GetRepeatableRandomInt(minValue, maxValue, new System.Random(seed.GetHashCode()));
+	}
+
+	/// <summary>
+	/// Generate a random integer between 0 and maxValue - 1
+	/// </summary>
+	/// <param name="minValue">Min value (inclusive) to return. Must be greater >= 0</param>
+	/// <param name="maxValue">Max value (non-inclusive) to return</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <returns>Random number between minValue and maxValue - 1</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if maxValue is less than or equal to 0.</exception>
+	/// <exception cref="ArgumentException">Thrown if minValue is greater than maxValue.</exception>
+	public static int GetRepeatableRandomInt(int minValue, int maxValue, System.Random rnd)
+	{
+		if (maxValue <= 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(maxValue), MaxValueError);
+		}
+
+		if (minValue > maxValue)
+		{
+			throw new ArgumentException($"{nameof(minValue)} must be less than or equal to {nameof(maxValue)}", nameof(minValue));
+		}
+
+		if (minValue == maxValue)
+		{
+			return minValue; //There is only one possible value, so just return that
+		}
+
+		Span<byte> randomNumber = stackalloc byte[4]; // 4 bytes for an integer
+		rnd.NextBytes(randomNumber);
+		int result = BitConverter.ToInt32(randomNumber) & 0x7FFFFFFF; // Ensure it's non-negative
+		return minValue + (result % (maxValue - minValue));
+	}
+
+	/// <summary>
+	/// Generate a random integer between 0 and maxValue - 1
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="maxValue">Max value (non-inclusive) to return</param>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <returns>Random number between 0 and maxValue - 1</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if maxValue is less than or equal to 0.</exception>
+	/// <exception cref="ArgumentException">Thrown if minValue is greater than maxValue.</exception>
+	public static int GetRepeatableRandomInt<TSeed>(int maxValue, TSeed seed) where TSeed : notnull
+	{
+		return GetRepeatableRandomInt(0, maxValue, new System.Random(seed.GetHashCode()));
+	}
+
+	/// <summary>
+	/// Generate a random integer between 0 and maxValue - 1
+	/// </summary>
+	/// <param name="maxValue">Max value (non-inclusive) to return</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <returns>Random number between 0 and maxValue - 1</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if maxValue is less than or equal to 0.</exception>
+	/// <exception cref="ArgumentException">Thrown if minValue is greater than maxValue.</exception>
+	public static int GetRepeatableRandomInt(int maxValue, System.Random rnd)
+	{
+		return GetRepeatableRandomInt(0, maxValue, rnd);
+	}
+
+	/// <summary>
+	/// Generate a random integer between 0 and int.MaxValue - 1
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <returns>Random number between 0 and int.MaxValue - 1</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if maxValue is less than or equal to 0.</exception>
+	/// <exception cref="ArgumentException">Thrown if minValue is greater than maxValue.</exception>
+	public static int GetRepeatableRandomInt<TSeed>(TSeed seed) where TSeed : notnull
+	{
+		return GetRepeatableRandomInt(0, int.MaxValue, new(seed.GetHashCode()));
+	}
+
+	/// <summary>
+	/// Generate a random integer between 0 and int.MaxValue - 1
+	/// </summary>
+	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <returns>Random number between 0 and int.MaxValue - 1</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if maxValue is less than or equal to 0.</exception>
+	/// <exception cref="ArgumentException">Thrown if minValue is greater than maxValue.</exception>
+	public static int GetRepeatableRandomInt(System.Random rnd)
+	{
+		return GetRepeatableRandomInt(0, int.MaxValue, rnd);
+	}
+
+	/// <summary>
 	/// Generate a number of random integers between minValue and maxValue - 1
 	/// </summary>
 	/// <param name="numberToGenerate">The number of random integers to generate.</param>
@@ -81,7 +186,7 @@ public static class Random
 	{
 		if (numberToGenerate <= 0)
 		{
-			throw new ArgumentOutOfRangeException(nameof(numberToGenerate), "Number to generate must be greater than 0.");
+			throw new ArgumentOutOfRangeException(nameof(numberToGenerate), NumberToGenerateError);
 		}
 
 		return Enumerate();
@@ -92,6 +197,53 @@ public static class Random
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 				yield return GetRandomInt(minValue, maxValue);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Generate a number of random integers between minValue and maxValue - 1
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="numberToGenerate">The number of random integers to generate.</param>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <param name="minValue">Min value (inclusive) to return in result. Must be greater >= 0</param>
+	/// <param name="maxValue">Max value (non-inclusive) to return in result</param>
+	/// <param name="cancellationToken">The cancellation token for this operation.</param>
+	/// <returns>An enumerable of random number between minValue and maxValue - 1</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if numberToGenerate or maxValue is less than or equal to 0.</exception>
+	/// <exception cref="ArgumentException">Thrown if minValue is greater than maxValue.</exception>
+	public static IEnumerable<int> GetRepeatableRandomInts<TSeed>(int numberToGenerate, TSeed seed, int minValue = 0, int maxValue = int.MaxValue, CancellationToken cancellationToken = default) where TSeed : notnull
+	{
+		return GetRepeatableRandomInts(numberToGenerate, new(seed.GetHashCode()), minValue, maxValue, cancellationToken);
+	}
+
+	/// <summary>
+	/// Generate a number of random integers between minValue and maxValue - 1
+	/// </summary>
+	/// <param name="numberToGenerate">The number of random integers to generate.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <param name="minValue">Min value (inclusive) to return in result. Must be greater >= 0</param>
+	/// <param name="maxValue">Max value (non-inclusive) to return in result</param>
+	/// <param name="cancellationToken">The cancellation token for this operation.</param>
+	/// <returns>An enumerable of random number between minValue and maxValue - 1</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if numberToGenerate or maxValue is less than or equal to 0.</exception>
+	/// <exception cref="ArgumentException">Thrown if minValue is greater than maxValue.</exception>
+	public static IEnumerable<int> GetRepeatableRandomInts(int numberToGenerate, System.Random rnd, int minValue = 0, int maxValue = int.MaxValue, CancellationToken cancellationToken = default)
+	{
+		if (numberToGenerate <= 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(numberToGenerate), NumberToGenerateError);
+		}
+
+		return Enumerate(rnd);
+
+		IEnumerable<int> Enumerate(System.Random rnd)
+		{
+			for (int i = 0; i < numberToGenerate; i++)
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				yield return GetRepeatableRandomInt(minValue, maxValue, rnd);
 			}
 		}
 	}
@@ -127,6 +279,55 @@ public static class Random
 	}
 
 	/// <summary>
+	/// Generates a random, 15 decimal place double with no whole number component.
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <returns>A random 15 decimal place double with no whole number component.</returns>
+	public static double GetRepeatableRandomDouble<TSeed>(TSeed seed) where TSeed : notnull
+	{
+		return GetRepeatableRandomDouble(new System.Random(seed.GetHashCode()));
+	}
+
+	/// <summary>
+	/// Generates a random, 15 decimal place double with no whole number component.
+	/// </summary>
+	/// <returns>A random 15 decimal place double with no whole number component.</returns>
+	public static double GetRepeatableRandomDouble(System.Random rnd)
+	{
+		Span<byte> randomNumber = stackalloc byte[8]; // 8 bytes for a double
+		rnd.NextBytes(randomNumber);
+		ulong ulongResult = BitConverter.ToUInt64(randomNumber);
+		return ulongResult / (double)ulong.MaxValue; // Normalize to [0.0, 1.0)
+	}
+
+	/// <summary>
+	/// Generates a random double with the desired number of decimal places with no whole number component.
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <param name="decimalPlaces">Number of decimal places to include in the result (max of 15)</param>
+	/// <returns>A random double with the desired number of decimal places with no whole number component.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if decimalPlaces is less than or equal to 0.</exception>
+	public static double GetRepeatableRandomDouble<TSeed>(int decimalPlaces, TSeed seed) where TSeed : notnull
+	{
+		return GetRepeatableRandomDouble(decimalPlaces, new(seed.GetHashCode()));
+	}
+
+	/// <summary>
+	/// Generates a random double with the desired number of decimal places with no whole number component.
+	/// </summary>
+	/// <param name="rnd">Random number generator to use for repeatable randomization</param>
+	/// <param name="decimalPlaces">Number of decimal places to include in the result (max of 15)</param>
+	/// <returns>A random double with the desired number of decimal places with no whole number component.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if decimalPlaces is less than or equal to 0.</exception>
+	public static double GetRepeatableRandomDouble(int decimalPlaces, System.Random rnd)
+	{
+		double result = GetRepeatableRandomDouble(rnd);
+		return Round(result, decimalPlaces, MidpointRounding.AwayFromZero);
+	}
+
+	/// <summary>
 	/// Generates a number of random doubles with the desired number of decimal places with no whole number component.
 	/// </summary>
 	/// <param name="numberToGenerate">Number of random doubles to generate.</param>
@@ -138,7 +339,7 @@ public static class Random
 	{
 		if (numberToGenerate <= 0)
 		{
-			throw new ArgumentOutOfRangeException(nameof(numberToGenerate), "Number to generate must be greater than 0.");
+			throw new ArgumentOutOfRangeException(nameof(numberToGenerate), NumberToGenerateError);
 		}
 
 		return Enumerate();
@@ -149,6 +350,49 @@ public static class Random
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 				yield return GetRandomDouble(decimalPlaces);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Generates a number of random doubles with the desired number of decimal places with no whole number component.
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="numberToGenerate">Number of random doubles to generate.</param>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <param name="decimalPlaces">Number of decimal places to include in the results (max of 15)</param>
+	/// <param name="cancellationToken">Cancellation token for this operation.</param>
+	/// <returns>A random double with the desired number of decimal places with no whole number component.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if numberToGenerate is less than or equal to 0.</exception>
+	public static IEnumerable<double> GetRepeatableRandomDoubles<TSeed>(int numberToGenerate, TSeed seed, int decimalPlaces = 15, CancellationToken cancellationToken = default) where TSeed : notnull
+	{
+		return GetRepeatableRandomDoubles(numberToGenerate, new(seed.GetHashCode()), decimalPlaces, cancellationToken);
+	}
+
+	/// <summary>
+	/// Generates a number of random doubles with the desired number of decimal places with no whole number component.
+	/// </summary>
+	/// <param name="numberToGenerate">Number of random doubles to generate.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <param name="decimalPlaces">Number of decimal places to include in the results (max of 15)</param>
+	/// <param name="cancellationToken">Cancellation token for this operation.</param>
+	/// <returns>A random double with the desired number of decimal places with no whole number component.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if numberToGenerate is less than or equal to 0.</exception>
+	public static IEnumerable<double> GetRepeatableRandomDoubles(int numberToGenerate, System.Random rnd, int decimalPlaces = 15, CancellationToken cancellationToken = default)
+	{
+		if (numberToGenerate <= 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(numberToGenerate), NumberToGenerateError);
+		}
+
+		return Enumerate(rnd);
+
+		IEnumerable<double> Enumerate(System.Random rnd)
+		{
+			for (int i = 0; i < numberToGenerate; i++)
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				yield return GetRepeatableRandomDouble(decimalPlaces, rnd);
 			}
 		}
 	}
@@ -188,6 +432,67 @@ public static class Random
 	}
 
 	/// <summary>
+	/// Gets a random decimal 28 decimal places long with no whole number component.
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <returns>A random 28 decimal place decimal with no whole number component</returns>
+	public static decimal GetRepeatableRandomDecimal<TSeed>(TSeed seed) where TSeed : notnull
+	{
+		return GetRepeatableRandomDecimal(new(seed.GetHashCode()));
+	}
+
+	/// <summary>
+	/// Gets a random decimal 28 decimal places long with no whole number component.
+	/// </summary>
+	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <returns>A random 28 decimal place decimal with no whole number component</returns>
+	public static decimal GetRepeatableRandomDecimal(System.Random rnd)
+	{
+		Span<byte> randomBytes = stackalloc byte[16]; // 16 bytes for higher entropy
+		rnd.NextBytes(randomBytes);
+
+		// Convert the first 12 bytes to a ulong for the integer part
+		ulong intPart = BitConverter.ToUInt64(randomBytes) % 1000000000000000000; // Limit to 10^18
+		uint fracPart = BitConverter.ToUInt32(randomBytes[8..]); // Convert the next 4 bytes to a uint for the fractional part
+
+		// Combine the parts to create a decimal in the range [0, 1)
+		return (intPart / 1000000000000000000m) + ((decimal)fracPart / uint.MaxValue / 1000000000000000000m);
+	}
+
+	/// <summary>
+	/// Gets a random decimal with the specified number of decimal places with no whole number component.
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="decimalPlaces">Number of decimal places to include in the randomly generated number (max of 28)</param>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <returns>Random decimal with the specified number of decimal places with no whole number component.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if decimalPlaces is less than or equal to 0.</exception>
+	public static decimal GetRepeatableRandomDecimal<TSeed>(int decimalPlaces, TSeed seed) where TSeed : notnull
+	{
+		return GetRepeatableRandomDecimal(decimalPlaces, new(seed.GetHashCode()));
+	}
+
+	/// <summary>
+	/// Gets a random decimal with the specified number of decimal places with no whole number component.
+	/// </summary>
+	/// <param name="decimalPlaces">Number of decimal places to include in the randomly generated number (max of 28)</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <returns>Random decimal with the specified number of decimal places with no whole number component.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if decimalPlaces is less than or equal to 0.</exception>
+	public static decimal GetRepeatableRandomDecimal(int decimalPlaces, System.Random rnd)
+	{
+		if (decimalPlaces <= 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(decimalPlaces), "decimalPlaces must be greater than 0.");
+		}
+		decimalPlaces = decimalPlaces <= 28 ? decimalPlaces : 28;
+
+		decimal result = GetRepeatableRandomDecimal(rnd);
+		return Round(result, decimalPlaces, MidpointRounding.AwayFromZero);
+	}
+
+	/// <summary>
 	/// Gets a number of random decimals with the specified number of decimal places with no whole number component.
 	/// </summary>
 	/// <param name="numberToGenerate">Number of random decimals to generate.</param>
@@ -199,7 +504,7 @@ public static class Random
 	{
 		if (numberToGenerate <= 0)
 		{
-			throw new ArgumentOutOfRangeException(nameof(numberToGenerate), "Number to generate must be greater than 0.");
+			throw new ArgumentOutOfRangeException(nameof(numberToGenerate), NumberToGenerateError);
 		}
 
 		return Enumerate();
@@ -210,6 +515,49 @@ public static class Random
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 				yield return GetRandomDecimal(decimalPlaces);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Gets a number of random decimals with the specified number of decimal places with no whole number component.
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="numberToGenerate">Number of random decimals to generate.</param>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <param name="decimalPlaces">Number of decimal places to include in the randomly generated numbers (max of 28)</param>
+	/// <param name="cancellationToken">Cancellation token for this operation.</param>
+	/// <returns>An enumerable of random decimals with the specified number of decimal places with no whole number component.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if numberToGenerate or is less than or equal to 0.</exception>
+	public static IEnumerable<decimal> GetRepeatableRandomDecimals<TSeed>(int numberToGenerate, TSeed seed, int decimalPlaces = 28, CancellationToken cancellationToken = default) where TSeed : notnull
+	{
+		return GetRepeatableRandomDecimals(numberToGenerate, new(seed.GetHashCode()), decimalPlaces, cancellationToken);
+	}
+
+	/// <summary>
+	/// Gets a number of random decimals with the specified number of decimal places with no whole number component.
+	/// </summary>
+	/// <param name="numberToGenerate">Number of random decimals to generate.</param>
+	/// <param name="rnd">Random number generator to use for repeatable randomization</param>
+	/// <param name="decimalPlaces">Number of decimal places to include in the randomly generated numbers (max of 28)</param>
+	/// <param name="cancellationToken">Cancellation token for this operation.</param>
+	/// <returns>An enumerable of random decimals with the specified number of decimal places with no whole number component.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if numberToGenerate or is less than or equal to 0.</exception>
+	public static IEnumerable<decimal> GetRepeatableRandomDecimals(int numberToGenerate, System.Random rnd, int decimalPlaces = 28, CancellationToken cancellationToken = default)
+	{
+		if (numberToGenerate <= 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(numberToGenerate), NumberToGenerateError);
+		}
+
+		return Enumerate(rnd);
+
+		IEnumerable<decimal> Enumerate(System.Random rnd)
+		{
+			for (int i = 0; i < numberToGenerate; i++)
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				yield return GetRepeatableRandomDecimal(decimalPlaces, rnd);
 			}
 		}
 	}
@@ -229,6 +577,41 @@ public static class Random
 			cancellationToken.ThrowIfCancellationRequested();
 			n--;
 			int k = GetRandomInt(0, n + 1); //rngOld.Next(n + 1);
+			(list[n], list[k]) = (list[k], list[n]);
+		}
+		return list;
+	}
+
+	/// <summary>
+	/// Randomly shuffle a list of objects in place.
+	/// </summary>
+	/// <typeparam name="T">Type of objects being shuffled.</typeparam>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="list">List of objects to shuffle.</param>
+	/// <param name="seed">Seed to use for repeatable randomization.</param>
+	/// <param name="cancellationToken">The cancellation token for this operation.</param>
+	/// <returns>Shuffled list of items.</returns>
+	public static IList<T> RepeatableShuffleListInPlace<T, TSeed>(this IList<T> list, TSeed seed, CancellationToken cancellationToken = default) where TSeed : notnull
+	{
+		return RepeatableShuffleListInPlace(list, new System.Random(seed.GetHashCode()), cancellationToken);
+	}
+
+	/// <summary>
+	/// Randomly shuffle a list of objects in place.
+	/// </summary>
+	/// <typeparam name="T">Type of objects being shuffled.</typeparam>
+	/// <param name="list">List of objects to shuffle.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization.</param>
+	/// <param name="cancellationToken">The cancellation token for this operation.</param>
+	/// <returns>Shuffled list of items.</returns>
+	public static IList<T> RepeatableShuffleListInPlace<T>(this IList<T> list, System.Random rnd, CancellationToken cancellationToken = default)
+	{
+		int n = list.Count;
+		while (n > 1)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			n--;
+			int k = GetRepeatableRandomInt(0, n + 1, rnd); //rngOld.Next(n + 1);
 			(list[n], list[k]) = (list[k], list[n]);
 		}
 		return list;
@@ -307,6 +690,31 @@ public static class Random
 	/// <summary>
 	/// Select a random object from a IEnumerable of objects
 	/// </summary>
+	/// <typeparam name="T">Type of object to return</typeparam>
+	/// <Typeparam name="TSeed">Type of seed to use for repeatable randomization</typeparam>
+	/// <param name="items">Items to select from</param>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <returns>Randomly selected object</returns>
+	public static T? GetRepeatableRandomElement<T, TSeed>(this IEnumerable<T> items, TSeed seed) where TSeed : notnull
+	{
+		return GetRepeatableRandomElement(items, new System.Random(seed.GetHashCode()));
+	}
+
+	/// <summary>
+	/// Select a random object from a IEnumerable of objects
+	/// </summary>
+	/// <typeparam name="T">Type of object to return</typeparam>
+	/// <param name="items">Items to select from</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <returns>Randomly selected object</returns>
+	public static T? GetRepeatableRandomElement<T>(this IEnumerable<T> items, System.Random rnd)
+	{
+		return items.Skip(GetRepeatableRandomInt(0, items.Count(), rnd)).First();
+	}
+
+	/// <summary>
+	/// Select a random object from a IEnumerable of objects
+	/// </summary>
 	/// <typeparam name="T">Type of objects being shuffled</typeparam>
 	/// <param name="items">Items to select from</param>
 	/// <param name="selectQuantity">Number of items to select</param>
@@ -317,11 +725,41 @@ public static class Random
 	}
 
 	/// <summary>
+	/// Select a random object from a IEnumerable of objects
+	/// </summary>
+	/// <typeparam name="T">Type of objects being shuffled</typeparam>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization</typeparam>
+	/// <param name="items">Items to select from</param>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <param name="selectQuantity">Number of items to select</param>
+	/// <returns>Randomly selected objects</returns>
+	public static IEnumerable<T> GetRepeatableRandomElements<T, TSeed>(this IEnumerable<T> items, TSeed seed, int selectQuantity = 1) where TSeed : notnull
+	{
+		return GetRepeatableRandomElements(items, new(seed.GetHashCode()), selectQuantity);
+	}
+
+	/// <summary>
+	/// Select a random object from a IEnumerable of objects
+	/// </summary>
+	/// <typeparam name="T">Type of objects being shuffled</typeparam>
+	/// <param name="items">Items to select from</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <param name="selectQuantity">Number of items to select</param>
+	/// <returns>Randomly selected objects</returns>
+	public static IEnumerable<T> GetRepeatableRandomElements<T>(this IEnumerable<T> items, System.Random rnd, int selectQuantity = 1)
+	{
+		for (int i = 0; i < selectQuantity; i++)
+		{
+			yield return items.Skip(GetRepeatableRandomInt(0, items.Count(), rnd)).First();
+		}
+	}
+
+	/// <summary>
 	/// Select unique random objects from an <see cref="IEnumerable{T}"/> of objects.
 	/// </summary>
 	/// <typeparam name="T">Type of objects being shuffled.</typeparam>
 	/// <param name="items">Items to select from.</param>
-	/// <param name="selectQuantity">Maximum number of items to select. If there are fewer unique elements than this value, <paramref name="items"/> is simply shuffled and retuned.</param>
+	/// <param name="selectQuantity">Maximum number of items to select. If there are fewer unique elements than this value, <paramref name="items"/> is simply shuffled and returned.</param>
 	/// <returns><see cref="IEnumerable{T}"/> of randomly selected objects no larger than <paramref name="selectQuantity"/>.</returns>
 	/// <exception cref="ArgumentException">Throws when selectQuantity is less than 1.</exception>
 	public static IEnumerable<T> GetUniqueRandomElements<T>(this IEnumerable<T> items, int selectQuantity = 1)
@@ -357,6 +795,72 @@ public static class Random
 			for (int selectedCounter = 0; selectedCounter < selectQuantity; selectedCounter++)
 			{
 				int randomIndex = GetRandomInt(availableCount);
+				yield return uniqueList[randomIndex];
+
+				// Move used item to end of array and then exclude it from the available indexes by reducing availableCount by 1
+				(uniqueList[randomIndex], uniqueList[availableCount - 1]) = (uniqueList[availableCount - 1], uniqueList[randomIndex]);
+				availableCount--;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Select unique random objects from an <see cref="IEnumerable{T}"/> of objects.
+	/// </summary>
+	/// <typeparam name="T">Type of objects being shuffled.</typeparam>
+	/// <Typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="items">Items to select from.</param>
+	/// <param name="seed">Seed to use for repeatable randomization.</param>
+	/// <param name="selectQuantity">Maximum number of items to select. If there are fewer unique elements than this value, <paramref name="items"/> is simply shuffled and returned.</param>
+	/// <returns><see cref="IEnumerable{T}"/> of randomly selected objects no larger than <paramref name="selectQuantity"/>.</returns>
+	/// <exception cref="ArgumentException">Throws when selectQuantity is less than 1.</exception>
+	public static IEnumerable<T> GetRepeatableUniqueRandomElements<T, TSeed>(this IEnumerable<T> items, TSeed seed, int selectQuantity = 1) where TSeed : notnull
+	{
+		return GetRepeatableUniqueRandomElements(items, new(seed.GetHashCode()), selectQuantity);
+	}
+
+	/// <summary>
+	/// Select unique random objects from an <see cref="IEnumerable{T}"/> of objects.
+	/// </summary>
+	/// <typeparam name="T">Type of objects being shuffled.</typeparam>
+	/// <param name="items">Items to select from.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization.</param>
+	/// <param name="selectQuantity">Maximum number of items to select. If there are fewer unique elements than this value, <paramref name="items"/> is simply shuffled and returned.</param>
+	/// <returns><see cref="IEnumerable{T}"/> of randomly selected objects no larger than <paramref name="selectQuantity"/>.</returns>
+	/// <exception cref="ArgumentException">Throws when selectQuantity is less than 1.</exception>
+	public static IEnumerable<T> GetRepeatableUniqueRandomElements<T>(this IEnumerable<T> items, System.Random rnd, int selectQuantity = 1)
+	{
+		if (selectQuantity < 1)
+		{
+			throw new ArgumentException($"{nameof(selectQuantity)} must be greater than 0", nameof(selectQuantity));
+		}
+
+		return Enumerate(rnd);
+
+		IEnumerable<T> Enumerate(System.Random rnd)
+		{
+			if (!items.Any())
+			{
+				yield break;
+			}
+
+			HashSet<T> allUniqueItems = new(items);
+			if (selectQuantity >= allUniqueItems.Count)
+			{
+				foreach (T item in allUniqueItems.ToList().RepeatableShuffleListInPlace(rnd))
+				{
+					yield return item;
+				}
+				yield break;
+			}
+
+			T[] uniqueList = allUniqueItems.ToArray();
+			int availableCount = uniqueList.Length;
+
+			// Use reservoir sampling approach for efficiency
+			for (int selectedCounter = 0; selectedCounter < selectQuantity; selectedCounter++)
+			{
+				int randomIndex = GetRepeatableRandomInt(availableCount, rnd);
 				yield return uniqueList[randomIndex];
 
 				// Move used item to end of array and then exclude it from the available indexes by reducing availableCount by 1
@@ -439,6 +943,97 @@ public static class Random
 	}
 
 	/// <summary>
+	/// Generates a random string of the indicated length using a range of ASCII characters.
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="maxLength">Upper bound for length of strings to be generated.</param>
+	/// <param name="seed">Seed to use for repeatable randomization.</param>
+	/// <param name="minLength">Lower bound for length of strings to be generated.</param>
+	/// <param name="lowerAsciiBound">First decimal number for an ASCII character (inclusive) to use (max 126).</param>
+	/// <param name="upperAsciiBound">Last decimal number for an ASCII character (inclusive) to use (max 126).</param>
+	/// <param name="blacklistedCharacters">Characters that fall within the provided range that are to not be used.</param>
+	/// <param name="cancellationToken">The cancellation token for this operation.</param>
+	/// <returns>A random string of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if any of the provided bounds are invalid.</exception>
+	public static string GenerateRepeatableRandomString<TSeed>(int maxLength, TSeed seed, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, ISet<char>? blacklistedCharacters = null, CancellationToken cancellationToken = default) where TSeed : notnull
+	{
+		return GenerateRepeatableRandomString(maxLength, new(seed.GetHashCode()), minLength, lowerAsciiBound, upperAsciiBound, blacklistedCharacters, cancellationToken);
+	}
+
+	/// <summary>
+	/// Generates a random string of the indicated length using a range of ASCII characters.
+	/// </summary>
+	/// <param name="maxLength">Upper bound for length of strings to be generated.</param>
+	/// <param name="rng">Random instance to use for repeatable randomization.</param>
+	/// <param name="minLength">Lower bound for length of strings to be generated.</param>
+	/// <param name="lowerAsciiBound">First decimal number for an ASCII character (inclusive) to use (max 126).</param>
+	/// <param name="upperAsciiBound">Last decimal number for an ASCII character (inclusive) to use (max 126).</param>
+	/// <param name="blacklistedCharacters">Characters that fall within the provided range that are to not be used.</param>
+	/// <param name="cancellationToken">The cancellation token for this operation.</param>
+	/// <returns>A random string of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if any of the provided bounds are invalid.</exception>
+	public static string GenerateRepeatableRandomString(int maxLength, System.Random rng, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126, ISet<char>? blacklistedCharacters = null, CancellationToken cancellationToken = default)
+	{
+		if (lowerAsciiBound < 0 || upperAsciiBound > 127 || lowerAsciiBound >= upperAsciiBound)
+		{
+			throw new ArgumentOutOfRangeException(nameof(upperAsciiBound), "Bounds must be between 0 and 127, and lowerBound must be less than upperBound.");
+		}
+
+		if (maxLength < minLength)
+		{
+			throw new ArgumentOutOfRangeException(nameof(maxLength), "Max length must be greater than or equal to min length.");
+		}
+
+		if (maxLength <= 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(maxLength), "Max length must be greater than 0");
+		}
+
+		int length = minLength == -1 ? maxLength : GetRepeatableRandomInt(minLength, maxLength, rng);
+
+		StringBuilder result = new(length);
+
+		if (blacklistedCharacters == null || blacklistedCharacters.Count == 0)
+		{
+			for (int i = 0; i < length; i++)
+			{
+				result.Append((char)GetRepeatableRandomInt(lowerAsciiBound, upperAsciiBound + 1, rng));
+			}
+		}
+		else
+		{
+			HashSet<int> blackListCharVals = blacklistedCharacters.Select(x => (int)x).ToHashSet();
+			IEnumerable<int> whiteListCharVals = Enumerable.Range(lowerAsciiBound, upperAsciiBound - lowerAsciiBound);
+			if (whiteListCharVals.Intersect(blackListCharVals).Count() == whiteListCharVals.Count())
+			{
+				throw new ArgumentException("Black list contains all available values", nameof(blacklistedCharacters));
+			}
+
+			// Build a whitelist of allowed characters for efficiency and S127 compliance
+			Span<char> allowedChars = stackalloc char[upperAsciiBound - lowerAsciiBound + 1 - blackListCharVals.Count];
+			int allowedIndex = 0;
+			for (int i = lowerAsciiBound; i <= upperAsciiBound; i++)
+			{
+				if (blackListCharVals.Contains(i))
+				{
+					continue;
+				}
+				allowedChars[allowedIndex] = (char)i;
+				allowedIndex++;
+			}
+
+			for (int i = 0; i < length; i++)
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+				int randomIndex = GetRepeatableRandomInt(0, allowedChars.Length, rng);
+				result.Append(allowedChars[randomIndex]);
+			}
+		}
+
+		return result.ToString();
+	}
+
+	/// <summary>
 	/// Generates a number of random strings of the indicated length using a range of ASCII characters
 	/// </summary>
 	/// <param name="numberToGenerate">Number of random strings to be generated.</param>
@@ -459,8 +1054,47 @@ public static class Random
 		}
 	}
 
-	internal static readonly FrozenSet<char> DefaultCharSet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+	/// <summary>
+	/// Generates a number of random strings of the indicated length using a range of ASCII characters
+	/// </summary>
+	/// <Typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="numberToGenerate">Number of random strings to be generated.</param>
+	/// <param name="maxLength">Upper bound for length of strings to be generated.</param>
+	/// <param name="seed">Seed to use for repeatable randomization.</param>
+	/// <param name="minLength">Lower bound for length of strings to be generated.</param>
+	/// <param name="lowerAsciiBound">First decimal number for an ASCII character (inclusive) to use (max 126).</param>
+	/// <param name="upperAsciiBound">Last decimal number for an ASCII character (inclusive) to use (max 126).</param>
+	/// <param name="blacklistedCharacters">Characters that fall within the provided range that are to not be used.</param>
+	/// <param name="cancellationToken">The cancellation token for this operation.</param>
+	/// <returns>An enumerable of random strings of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if any of the provided bounds are invalid.</exception>
+	public static IEnumerable<string> GenerateRepeatableRandomStrings<TSeed>(int numberToGenerate, int maxLength, TSeed seed, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126,
+		ISet<char>? blacklistedCharacters = null, CancellationToken cancellationToken = default) where TSeed : notnull
+	{
+		return GenerateRepeatableRandomStrings(numberToGenerate, maxLength, new(seed.GetHashCode()), minLength, lowerAsciiBound, upperAsciiBound, blacklistedCharacters, cancellationToken);
+	}
+
+	/// <summary>
+	/// Generates a number of random strings of the indicated length using a range of ASCII characters
+	/// </summary>
+	/// <param name="numberToGenerate">Number of random strings to be generated.</param>
+	/// <param name="maxLength">Upper bound for length of strings to be generated.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization.</param>
+	/// <param name="minLength">Lower bound for length of strings to be generated.</param>
+	/// <param name="lowerAsciiBound">First decimal number for an ASCII character (inclusive) to use (max 126).</param>
+	/// <param name="upperAsciiBound">Last decimal number for an ASCII character (inclusive) to use (max 126).</param>
+	/// <param name="blacklistedCharacters">Characters that fall within the provided range that are to not be used.</param>
+	/// <param name="cancellationToken">The cancellation token for this operation.</param>
+	/// <returns>An enumerable of random strings of the given length comprised only of characters within the range of ASCII characters provided, and excluding any in the black list</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if any of the provided bounds are invalid.</exception>
+	public static IEnumerable<string> GenerateRepeatableRandomStrings(int numberToGenerate, int maxLength, System.Random rnd, int minLength = -1, int lowerAsciiBound = 32, int upperAsciiBound = 126,
+		ISet<char>? blacklistedCharacters = null, CancellationToken cancellationToken = default)
+	{
+		for (int i = 0; i < numberToGenerate; i++)
+		{
+			yield return GenerateRepeatableRandomString(maxLength, rnd, minLength, lowerAsciiBound, upperAsciiBound, blacklistedCharacters, cancellationToken);
+		}
+	}
 
 	/// <summary>
 	/// Generates a random string of the indicated length using either a custom character set, or the default of a-z A-Z 1-9.
@@ -485,6 +1119,50 @@ public static class Random
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 			char randomChar = charSetSpan[GetRandomInt(0, setLength)];
+			result.Append(randomChar);
+		}
+
+		return result.ToString();
+	}
+
+	/// <summary>
+	/// Generates a random string of the indicated length using either a custom character set, or the default of a-z A-Z 1-9.
+	/// </summary>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization.</typeparam>
+	/// <param name="length">Length of the random string to be generated.</param>
+	/// <param name="seed">Seed to use for repeatable randomization.</param>
+	/// <param name="charSet">Characters that are to be used in the generated string.</param>
+	/// <param name="cancellationToken">The cancellation token for this operation.</param>
+	/// <returns>A random string of the given length comprised only of characters in either the default or custom character set</returns>
+	public static string GenerateRepeatableRandomStringByCharSet<TSeed>(int length, TSeed seed, ISet<char>? charSet = null, CancellationToken cancellationToken = default) where TSeed : notnull
+	{
+		return GenerateRepeatableRandomStringByCharSet(length, new System.Random(seed.GetHashCode()), charSet, cancellationToken);
+	}
+
+	/// <summary>
+	/// Generates a random string of the indicated length using either a custom character set, or the default of a-z A-Z 1-9.
+	/// </summary>
+	/// <param name="length">Length of the random string to be generated.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization.</param>
+	/// <param name="charSet">Characters that are to be used in the generated string.</param>
+	/// <param name="cancellationToken">The cancellation token for this operation.</param>
+	/// <returns>A random string of the given length comprised only of characters in either the default or custom character set</returns>
+	public static string GenerateRepeatableRandomStringByCharSet(int length, System.Random rnd, ISet<char>? charSet = null, CancellationToken cancellationToken = default)
+	{
+		// Use a default character set if none is provided
+		if (charSet == null || charSet.Count == 0)
+		{
+			charSet = DefaultCharSet;
+		}
+
+		ReadOnlySpan<char> charSetSpan = new(charSet.ToArray());
+		int setLength = charSetSpan.Length;
+
+		StringBuilder result = new(length);
+		for (int i = 0; i < length; i++)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			char randomChar = charSetSpan[GetRepeatableRandomInt(0, setLength, rnd)];
 			result.Append(randomChar);
 		}
 

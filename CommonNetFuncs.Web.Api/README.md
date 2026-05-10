@@ -21,9 +21,11 @@ This project contains helper methods for several common functions required by AP
     - [GenericMinimalDtoEndpoints Usage Examples](#genericminimaldtoendpoints-usage-examples)
       - [CreateMany](#createmany-1)
       - [Update](#update)
-  - [MinimalMsgPackMiddleware](#minimalmsgpackmiddleware)
-    - [MinimalMsgPackMiddleware Usage Examples](#minimalmsgpackmiddleware-usage-examples)
-      - [UseContentNegotiationMiddleware](#usecontentnegotiationmiddleware)
+  - [MsgPack](#msgpack)
+    - [MsgPackRequestMiddleware](#msgpackrequestmiddleware)
+      - [UseMsgPackRequestBody](#usemsgpackrequestbody)
+    - [MsgPackOutputFilter](#msgpackoutputfilter)
+      - [WithMsgPackOutput](#withmsgpackoutput)
   - [Installation](#installation)
   - [License](#license)
 
@@ -110,26 +112,54 @@ app.MapPut("/entities/{id}", (int id, MyInDto dto, IBaseDbContextActions<MyEntit
 
 ---
 
-## MinimalMsgPackMiddleware
+---
 
-Middleware that adds transparent MessagePack content negotiation to minimal API endpoints. When a request carries `Content-Type: application/x-msgpack`, the body is converted to JSON before the endpoint handler runs so that standard `[FromBody]` binding works unchanged. When a request carries `Accept: application/x-msgpack`, the JSON response body is converted to MessagePack before it reaches the client.
+## MsgPack
 
-Register once on a route group or the whole application using the `UseContentNegotiationMiddleware` extension method.
+A set of focused components for adding MessagePack support to ASP.NET Core minimal API applications. Unlike a single monolithic middleware, the functionality is split into a request middleware and an endpoint output filter so each can be applied independently.
 
-### MinimalMsgPackMiddleware Usage Examples
+### MsgPackRequestMiddleware
+
+Converts a MessagePack-encoded request body to JSON before the endpoint handler runs, allowing standard `[FromBody]` parameter binding to work unchanged. Register it in the pipeline **before routing**.
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
 
-#### UseContentNegotiationMiddleware
+#### UseMsgPackRequestBody
 
-Registers the middleware globally so every endpoint in the application supports MessagePack request and response bodies.
+Registers `MsgPackRequestMiddleware` globally so every endpoint accepts MessagePack request bodies.
 
 ```cs
 // Program.cs
-app.UseContentNegotiationMiddleware();
+app.UseMsgPackRequestBody();
 
 app.MapPost("/entities", (MyEntity entity) => Results.Ok(entity));
+```
+
+</details>
+
+---
+
+### MsgPackOutputFilter
+
+An endpoint filter that intercepts the handler's return value before System.Text.Json serializes it. When the client's `Accept` header includes `application/x-msgpack`, the value is serialized directly to MessagePack with no JSON intermediate. Results that carry no body (204, 404 without body, redirects) and problem-detail results (`application/problem+json`) are passed through unchanged.
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
+
+#### WithMsgPackOutput
+
+Attaches `MsgPackOutputFilter` to an endpoint or route group. Optionally accepts custom `MessagePackSerializerOptions`; defaults to `MessagePackSerializer.DefaultOptions` when `null`.
+
+```cs
+// Apply to a single endpoint
+app.MapGet("/entities/{id}", (int id, IBaseDbContextActions<MyEntity, MyDbContext> db) =>
+    GenericMinimalEndpoints.GetById(id, db))
+    .WithMsgPackOutput();
+
+// Apply to an entire route group
+RouteGroupBuilder group = app.MapGroup("/entities").WithMsgPackOutput();
+group.MapGet("/{id}", (int id) => Results.Ok(myEntity));
 ```
 
 </details>

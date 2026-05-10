@@ -1,92 +1,52 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
-using CommonNetFuncs.Web.Api;
+using CommonNetFuncs.Web.Api.MsgPack;
 using MessagePack;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Web.Api.Tests;
 
-public sealed class MinimalMsgPackMiddlewareTests
+[MessagePackObject]
+public sealed class TestPayload
+{
+	[Key(0)]
+	public string Name { get; set; } = string.Empty;
+}
+
+// ---------------------------------------------------------------------------
+// MsgPackRequestMiddleware
+// ---------------------------------------------------------------------------
+
+public sealed class MsgPackRequestMiddlewareTests
 {
 	private const string MsgPackMimeType = "application/x-msgpack";
 	private const string JsonMimeType = "application/json";
 
-	private static async Task<(HttpClient Client, WebApplication App)> CreateTestApp(
-		RequestDelegate handler, bool useExtensionMethod = false)
+	private static async Task<(HttpClient Client, WebApplication App)> CreateMiddlewareApp(RequestDelegate handler)
 	{
 		WebApplicationBuilder builder = WebApplication.CreateBuilder();
 		builder.Logging.ClearProviders();
 		builder.WebHost.UseTestServer();
 		WebApplication app = builder.Build();
-
-		if (useExtensionMethod)
-			app.UseContentNegotiationMiddleware();
-		else
-			app.UseMiddleware<MinimalMsgPackMiddleware>();
-
+		app.UseMsgPackRequestBody();
 		app.Run(handler);
 		await app.StartAsync();
 		return (app.GetTestClient(), app);
 	}
 
-	// --- InvokeAsync ---
-
 	[Fact]
-	public async Task InvokeAsync_NonMsgPackAccept_CallsNextDirectly_ResponseUnchanged()
+	public async Task InvokeAsync_NullContentType_CallsNextDirectly()
 	{
-		// Non-msgpack Accept → next(context) called directly, no response buffering
-		const string responseJson = """{"name":"test"}""";
-		(HttpClient client, WebApplication app) = await CreateTestApp(async ctx =>
-		{
-			ctx.Response.ContentType = JsonMimeType;
-			await ctx.Response.WriteAsync(responseJson);
-		});
-		await using WebApplication _ = app;
-
-		using HttpRequestMessage request = new(HttpMethod.Get, "/");
-		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(JsonMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request);
-
-		string body = await response.Content.ReadAsStringAsync();
-		body.ShouldBe(responseJson);
-		response.Content.Headers.ContentType?.MediaType.ShouldBe(JsonMimeType);
-	}
-
-	[Fact]
-	public async Task InvokeAsync_MsgPackAccept_TransformsResponseToMsgPack()
-	{
-		// MsgPack Accept → TransformResponseToMsgPackAsync called, JSON converted to msgpack
-		const string responseJson = """{"name":"test"}""";
-		(HttpClient client, WebApplication app) = await CreateTestApp(async ctx =>
-		{
-			ctx.Response.ContentType = JsonMimeType;
-			await ctx.Response.WriteAsync(responseJson);
-		});
-		await using WebApplication _ = app;
-
-		using HttpRequestMessage request = new(HttpMethod.Get, "/");
-		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request);
-
-		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
-		byte[] responseBytes = await response.Content.ReadAsByteArrayAsync();
-		string roundTrippedJson = MessagePackSerializer.ConvertToJson(responseBytes);
-		roundTrippedJson.ShouldContain("test");
-	}
-
-	// --- TransformRequestBodyAsync ---
-
-	[Fact]
-	public async Task TransformRequestBody_NullContentType_SkipsTransform()
-	{
-		// GET request has no Content-Type → ContentType is null → ?? string.Empty → not msgpack → early return
+		// GET request has no Content-Type → not msgpack → next called directly
 		string capturedContentType = "NOT_SET";
-		(HttpClient client, WebApplication app) = await CreateTestApp(async ctx =>
+		(HttpClient client, WebApplication app) = await CreateMiddlewareApp(async ctx =>
 		{
 			capturedContentType = ctx.Request.ContentType ?? string.Empty;
 			ctx.Response.StatusCode = 200;
@@ -100,11 +60,11 @@ public sealed class MinimalMsgPackMiddlewareTests
 	}
 
 	[Fact]
-	public async Task TransformRequestBody_NonMsgPackContentType_SkipsTransform()
+	public async Task InvokeAsync_NonMsgPackContentType_CallsNextDirectly()
 	{
-		// Non-msgpack Content-Type → early return, body/ContentType unchanged
+		// Non-msgpack Content-Type → next called directly, body/ContentType unchanged
 		string capturedContentType = string.Empty;
-		(HttpClient client, WebApplication app) = await CreateTestApp(async ctx =>
+		(HttpClient client, WebApplication app) = await CreateMiddlewareApp(async ctx =>
 		{
 			capturedContentType = ctx.Request.ContentType ?? string.Empty;
 			ctx.Response.StatusCode = 200;
@@ -121,11 +81,11 @@ public sealed class MinimalMsgPackMiddlewareTests
 	}
 
 	[Fact]
-	public async Task TransformRequestBody_MsgPackContentType_EmptyBody_SkipsConversion()
+	public async Task InvokeAsync_MsgPackContentType_EmptyBody_ContentTypeUnchanged()
 	{
 		// MsgPack Content-Type but zero-length body → second early return, ContentType stays msgpack
 		string capturedContentType = string.Empty;
-		(HttpClient client, WebApplication app) = await CreateTestApp(async ctx =>
+		(HttpClient client, WebApplication app) = await CreateMiddlewareApp(async ctx =>
 		{
 			capturedContentType = ctx.Request.ContentType ?? string.Empty;
 			ctx.Response.StatusCode = 200;
@@ -143,12 +103,12 @@ public sealed class MinimalMsgPackMiddlewareTests
 	}
 
 	[Fact]
-	public async Task TransformRequestBody_MsgPackContentType_ValidBody_ConvertsBodyToJson()
+	public async Task InvokeAsync_MsgPackContentType_ValidBody_ConvertsBodyToJson()
 	{
-		// MsgPack Content-Type with valid msgpack body → body converted to JSON for handler
+		// MsgPack Content-Type with valid body → body converted to JSON, ContentType set to JSON
 		string capturedContentType = string.Empty;
 		string capturedBody = string.Empty;
-		(HttpClient client, WebApplication app) = await CreateTestApp(async ctx =>
+		(HttpClient client, WebApplication app) = await CreateMiddlewareApp(async ctx =>
 		{
 			capturedContentType = ctx.Request.ContentType ?? string.Empty;
 			using StreamReader reader = new(ctx.Request.Body, Encoding.UTF8);
@@ -169,166 +129,262 @@ public sealed class MinimalMsgPackMiddlewareTests
 		capturedBody.ShouldContain("msgpack");
 	}
 
-	// --- TransformResponseToMsgPackAsync ---
-
 	[Fact]
-	public async Task TransformResponseToMsgPack_InvalidJson_CatchBlock_FallsBackToJson()
+	public async Task UseMsgPackRequestBody_ExtensionMethod_RegistersMiddleware()
 	{
-		// JSON content-type with body that ConvertFromJson cannot parse → catch branch → original JSON returned
-		const string invalidJson = "NOT {VALID} JSON!!!";
-		(HttpClient client, WebApplication app) = await CreateTestApp(async ctx =>
+		// Extension method correctly registers MsgPackRequestMiddleware in the pipeline
+		string capturedContentType = string.Empty;
+		string capturedBody = string.Empty;
+		(HttpClient client, WebApplication app) = await CreateMiddlewareApp(async ctx =>
 		{
-			ctx.Response.ContentType = JsonMimeType;
-			await ctx.Response.WriteAsync(invalidJson);
+			capturedContentType = ctx.Request.ContentType ?? string.Empty;
+			using StreamReader reader = new(ctx.Request.Body, Encoding.UTF8);
+			capturedBody = await reader.ReadToEndAsync();
+			ctx.Response.StatusCode = 200;
+			await ctx.Response.CompleteAsync();
 		});
 		await using WebApplication _ = app;
 
+		byte[] msgPackBytes = MessagePackSerializer.ConvertFromJson("""{"name":"registered"}""");
+		using HttpRequestMessage request = new(HttpMethod.Post, "/");
+		ByteArrayContent content = new(msgPackBytes);
+		content.Headers.ContentType = new MediaTypeHeaderValue(MsgPackMimeType);
+		request.Content = content;
+		await client.SendAsync(request);
+
+		capturedContentType.ShouldContain(JsonMimeType);
+		capturedBody.ShouldContain("registered");
+	}
+}
+
+// ---------------------------------------------------------------------------
+// MsgPackOutputFilter
+// ---------------------------------------------------------------------------
+
+public sealed class MsgPackOutputFilterTests
+{
+	private const string MsgPackMimeType = "application/x-msgpack";
+	private const string JsonMimeType = "application/json";
+
+	private static async Task<WebApplication> BuildRouteApp(Action<WebApplication> configure)
+	{
+		WebApplicationBuilder builder = WebApplication.CreateBuilder();
+		builder.Logging.ClearProviders();
+		builder.WebHost.UseTestServer();
+		builder.Services.AddRouting();
+		WebApplication app = builder.Build();
+		app.UseRouting();
+		configure(app);
+		await app.StartAsync();
+		return app;
+	}
+
+	[Fact]
+	public async Task InvokeAsync_NoMsgPackAccept_ReturnsResultUnchanged()
+	{
+		// Client does not send Accept: application/x-msgpack → filter returns result unchanged (JSON)
+		WebApplication app = await BuildRouteApp(a =>
+			a.MapGet("/", () => Results.Ok(new TestPayload { Name = "test" })).WithMsgPackOutput());
+		await using WebApplication _ = app;
+
+		using HttpClient client = app.GetTestClient();
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
-		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
+		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(JsonMimeType));
 		using HttpResponseMessage response = await client.SendAsync(request);
 
-		string body = await response.Content.ReadAsStringAsync();
-		body.ShouldBe(invalidJson);
+		response.IsSuccessStatusCode.ShouldBeTrue();
 		response.Content.Headers.ContentType?.MediaType.ShouldBe(JsonMimeType);
 	}
 
 	[Fact]
-	public async Task TransformResponseToMsgPack_NonJsonResponse_ElseIfBranch_CopiedThrough()
+	public async Task InvokeAsync_MsgPackAccept_NonValueResult_PassesThroughUnchanged()
 	{
-		// Non-JSON ContentType with body → isJsonResponse=false, else-if branch copies buffer to original
-		const string responseText = "plain text response";
-		(HttpClient client, WebApplication app) = await CreateTestApp(async ctx =>
-		{
-			ctx.Response.ContentType = "text/plain";
-			await ctx.Response.WriteAsync(responseText);
-		});
+		// Result is not IValueHttpResult (NoContent) → filter skips conversion, 204 returned
+		WebApplication app = await BuildRouteApp(a =>
+			a.MapGet("/", () => Results.NoContent()).WithMsgPackOutput());
 		await using WebApplication _ = app;
 
-		using HttpRequestMessage request = new(HttpMethod.Get, "/");
-		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request);
-
-		string body = await response.Content.ReadAsStringAsync();
-		body.ShouldBe(responseText);
-	}
-
-	[Fact]
-	public async Task TransformResponseToMsgPack_EmptyResponse_NeitherBranchRuns_NothingWritten()
-	{
-		// Empty response buffer (length == 0) → neither if nor else-if branch runs
-		(HttpClient client, WebApplication app) = await CreateTestApp(ctx =>
-		{
-			ctx.Response.StatusCode = 204;
-			return Task.CompletedTask;
-		});
-		await using WebApplication _ = app;
-
+		using HttpClient client = app.GetTestClient();
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
 		using HttpResponseMessage response = await client.SendAsync(request);
 
 		response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+	}
+
+	[Fact]
+	public async Task InvokeAsync_MsgPackAccept_ProblemDetailResult_PassesThroughUnchanged()
+	{
+		// Result has ContentType: application/problem+json → filter skips conversion
+		WebApplication app = await BuildRouteApp(a =>
+			a.MapGet("/", () => Results.Problem("error")).WithMsgPackOutput());
+		await using WebApplication _ = app;
+
+		using HttpClient client = app.GetTestClient();
+		using HttpRequestMessage request = new(HttpMethod.Get, "/");
+		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
+		using HttpResponseMessage response = await client.SendAsync(request);
+
+		response.Content.Headers.ContentType?.MediaType.ShouldNotBe(MsgPackMimeType);
+	}
+
+	[Fact]
+	public async Task InvokeAsync_MsgPackAccept_OkValueResult_ConvertedToMsgPack()
+	{
+		// Results.Ok with value + MsgPack Accept → filter wraps in DirectMsgPackResult
+		WebApplication app = await BuildRouteApp(a =>
+			a.MapGet("/", () => Results.Ok(new TestPayload { Name = "hello" })).WithMsgPackOutput());
+		await using WebApplication _ = app;
+
+		using HttpClient client = app.GetTestClient();
+		using HttpRequestMessage request = new(HttpMethod.Get, "/");
+		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
+		using HttpResponseMessage response = await client.SendAsync(request);
+
+		response.StatusCode.ShouldBe(HttpStatusCode.OK);
+		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
+		byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+		TestPayload? deserialized = MessagePackSerializer.Deserialize<TestPayload>(bytes);
+		deserialized?.Name.ShouldBe("hello");
+	}
+
+	[Fact]
+	public async Task InvokeAsync_MsgPackAccept_CustomOptions_UsedForSerialization()
+	{
+		// Custom options passed to WithMsgPackOutput are forwarded to the serializer
+		MessagePackSerializerOptions customOptions = MessagePackSerializer.DefaultOptions;
+		WebApplication app = await BuildRouteApp(a =>
+			a.MapGet("/", () => Results.Ok(new TestPayload { Name = "custom" })).WithMsgPackOutput(customOptions));
+		await using WebApplication _ = app;
+
+		using HttpClient client = app.GetTestClient();
+		using HttpRequestMessage request = new(HttpMethod.Get, "/");
+		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
+		using HttpResponseMessage response = await client.SendAsync(request);
+
+		response.StatusCode.ShouldBe(HttpStatusCode.OK);
+		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
+		byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+		TestPayload? deserialized = MessagePackSerializer.Deserialize<TestPayload>(bytes, customOptions);
+		deserialized?.Name.ShouldBe("custom");
+	}
+
+	[Fact]
+	public async Task WithMsgPackOutput_NullOptions_FallsBackToDefaultOptions()
+	{
+		// Passing null options → uses MessagePackSerializer.DefaultOptions
+		WebApplication app = await BuildRouteApp(a =>
+			a.MapGet("/", () => Results.Ok(new TestPayload { Name = "default" })).WithMsgPackOutput(null));
+		await using WebApplication _ = app;
+
+		using HttpClient client = app.GetTestClient();
+		using HttpRequestMessage request = new(HttpMethod.Get, "/");
+		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
+		using HttpResponseMessage response = await client.SendAsync(request);
+
+		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
+		byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+		TestPayload? result = MessagePackSerializer.Deserialize<TestPayload>(bytes);
+		result?.Name.ShouldBe("default");
+	}
+
+	[Fact]
+	public async Task WithMsgPackOutput_OnRouteGroup_AppliesFilterToAllEndpoints()
+	{
+		// WithMsgPackOutput on a route group applies the filter to all endpoints in the group
+		WebApplication app = await BuildRouteApp(a =>
+		{
+			RouteGroupBuilder group = a.MapGroup("/items").WithMsgPackOutput();
+			group.MapGet("/one", IResult () => Results.Ok(new TestPayload { Name = "one" }));
+			group.MapGet("/two", IResult () => Results.Ok(new TestPayload { Name = "two" }));
+		});
+		await using WebApplication _ = app;
+
+		using HttpClient client = app.GetTestClient();
+
+		using HttpRequestMessage r1 = new(HttpMethod.Get, "/items/one");
+		r1.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
+		using HttpResponseMessage resp1 = await client.SendAsync(r1);
+		resp1.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
+
+		using HttpRequestMessage r2 = new(HttpMethod.Get, "/items/two");
+		r2.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
+		using HttpResponseMessage resp2 = await client.SendAsync(r2);
+		resp2.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
+	}
+}
+
+// ---------------------------------------------------------------------------
+// DirectMsgPackResult (tested indirectly via MsgPackOutputFilter + WithMsgPackOutput)
+// ---------------------------------------------------------------------------
+
+public sealed class DirectMsgPackResultTests
+{
+	private const string MsgPackMimeType = "application/x-msgpack";
+
+	private static async Task<(HttpClient Client, WebApplication App)> CreateApp(Action<WebApplication> configure)
+	{
+		WebApplicationBuilder builder = WebApplication.CreateBuilder();
+		builder.Logging.ClearProviders();
+		builder.WebHost.UseTestServer();
+		builder.Services.AddRouting();
+		WebApplication app = builder.Build();
+		app.UseRouting();
+		configure(app);
+		await app.StartAsync();
+		return (app.GetTestClient(), app);
+	}
+
+	[Fact]
+	public async Task ExecuteAsync_NullValue_WritesStatusCodeOnly_NoBody()
+	{
+		// Ok<TestPayload?>(null) → DirectMsgPackResult(null) → no body, no content-type set
+		(HttpClient client, WebApplication app) = await CreateApp(a =>
+			a.MapGet("/", () => Results.Ok<TestPayload?>(null)).WithMsgPackOutput());
+		await using WebApplication _ = app;
+
+		using HttpRequestMessage request = new(HttpMethod.Get, "/");
+		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
+		using HttpResponseMessage response = await client.SendAsync(request);
+
+		response.StatusCode.ShouldBe(HttpStatusCode.OK);
 		byte[] body = await response.Content.ReadAsByteArrayAsync();
 		body.Length.ShouldBe(0);
 	}
 
 	[Fact]
-	public async Task TransformResponseToMsgPack_NullContentType_WithBody_NullCoalescingBranch_CopiedThrough()
+	public async Task ExecuteAsync_NonNullValue_WritesMsgPackBodyWithCorrectContentType()
 	{
-		// ContentType is null → (ContentType ?? string.Empty) takes null branch → string.Empty doesn't contain json
-		// → isJsonResponse=false, else-if(buffer.Length > 0) copies buffer through
-		byte[] responseData = Encoding.UTF8.GetBytes("some content");
-		(HttpClient client, WebApplication app) = await CreateTestApp(async ctx =>
-		{
-			ctx.Response.ContentType = null;
-			await ctx.Response.Body.WriteAsync(responseData);
-		});
+		// DirectMsgPackResult with value → ContentType=application/x-msgpack, body serialized
+		(HttpClient client, WebApplication app) = await CreateApp(a =>
+			a.MapGet("/", () => Results.Ok(new TestPayload { Name = "direct" })).WithMsgPackOutput());
 		await using WebApplication _ = app;
 
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
 		using HttpResponseMessage response = await client.SendAsync(request);
 
-		byte[] body = await response.Content.ReadAsByteArrayAsync();
-		body.ShouldBe(responseData);
-	}
-
-	// --- Integration ---
-
-	[Fact]
-	public async Task TransformResponseToMsgPack_NextThrows_FinallyBlockStillExecutes()
-	{
-		// When next() throws, the compiler-generated state machine must execute the finally block
-		// with an exception in flight (restoring context.Response.Body) before rethrowing.
-		(HttpClient client, WebApplication app) = await CreateTestApp(
-			_ => throw new InvalidOperationException("simulated next failure"));
-		await using WebApplication _ = app;
-
-		using HttpRequestMessage request = new(HttpMethod.Get, "/");
-		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-
-		try
-		{
-			using HttpResponseMessage response = await client.SendAsync(request);
-			// If the server caught the exception, it returns 5xx
-			((int)response.StatusCode).ShouldBeGreaterThanOrEqualTo(500);
-		}
-		catch (Exception ex) when (ex is not ShouldAssertException)
-		{
-			// TestServer surfaces the unhandled handler exception — also valid
-		}
-	}
-
-	[Fact]
-	public async Task Integration_MsgPackRequestBodyAndAccept_BothTransformsApplied()
-	{
-		// MsgPack request body is converted to JSON for handler AND JSON response is converted to msgpack
-		string capturedBody = string.Empty;
-		(HttpClient client, WebApplication app) = await CreateTestApp(async ctx =>
-		{
-			using StreamReader reader = new(ctx.Request.Body, Encoding.UTF8);
-			capturedBody = await reader.ReadToEndAsync();
-			ctx.Response.ContentType = JsonMimeType;
-			await ctx.Response.WriteAsync("""{"result":"ok"}""");
-		});
-		await using WebApplication _ = app;
-
-		byte[] msgPackBody = MessagePackSerializer.ConvertFromJson("""{"input":"data"}""");
-		using HttpRequestMessage request = new(HttpMethod.Post, "/");
-		ByteArrayContent content = new(msgPackBody);
-		content.Headers.ContentType = new MediaTypeHeaderValue(MsgPackMimeType);
-		request.Content = content;
-		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request);
-
-		capturedBody.ShouldContain("data");
+		response.StatusCode.ShouldBe(HttpStatusCode.OK);
 		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
-		byte[] responseBytes = await response.Content.ReadAsByteArrayAsync();
-		string responseJson = MessagePackSerializer.ConvertToJson(responseBytes);
-		responseJson.ShouldContain("ok");
+		byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+		bytes.Length.ShouldBeGreaterThan(0);
+		TestPayload? deserialized = MessagePackSerializer.Deserialize<TestPayload>(bytes);
+		deserialized?.Name.ShouldBe("direct");
 	}
 
-	// --- Extension method ---
-
 	[Fact]
-	public async Task UseContentNegotiationMiddleware_RegistersMiddleware_TransformsResponse()
+	public async Task ExecuteAsync_StatusCodeFromWrappedResult_ReflectedInResponse()
 	{
-		// Extension method UseContentNegotiationMiddleware registers the middleware correctly
-		const string responseJson = """{"registered":true}""";
-		(HttpClient client, WebApplication app) = await CreateTestApp(async ctx =>
-		{
-			ctx.Response.ContentType = JsonMimeType;
-			await ctx.Response.WriteAsync(responseJson);
-		}, useExtensionMethod: true);
+		// Status code of the original IResult (Created=201) flows through DirectMsgPackResult
+		(HttpClient client, WebApplication app) = await CreateApp(a =>
+			a.MapGet("/", () => Results.Created("/entities/1", new TestPayload { Name = "created" })).WithMsgPackOutput());
 		await using WebApplication _ = app;
 
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
 		using HttpResponseMessage response = await client.SendAsync(request);
 
+		response.StatusCode.ShouldBe(HttpStatusCode.Created);
 		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
-		byte[] responseBytes = await response.Content.ReadAsByteArrayAsync();
-		string convertedJson = MessagePackSerializer.ConvertToJson(responseBytes);
-		convertedJson.ShouldContain("true");
 	}
 }

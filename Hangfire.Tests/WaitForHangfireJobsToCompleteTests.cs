@@ -5,6 +5,7 @@ using Hangfire.Storage.Monitoring;
 
 namespace Hangfire.Tests;
 
+[Collection("HangfireStaticStorage")]
 public sealed class WaitForHangfireJobsToCompleteTests
 {
 	[Fact]

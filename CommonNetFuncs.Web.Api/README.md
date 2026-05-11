@@ -11,15 +11,17 @@ This project contains helper methods for several common functions required by AP
 - [CommonNetFuncs.Web.Api](#commonnetfuncswebapi)
   - [Contents](#contents)
   - [GenericEndpoints](#genericendpoints)
-    - [\[Class Name\] Usage Examples](#class-name-usage-examples)
-      - [\[MethodNameHere\]](#methodnamehere)
+    - [GenericEndpoints Usage Examples](#genericendpoints-usage-examples)
+      - [CreateMany](#createmany)
+      - [Delete](#delete)
+      - [Patch](#patch)
   - [GenericMinimalEndpoints](#genericminimalendpoints)
     - [GenericMinimalEndpoints Usage Examples](#genericminimalendpoints-usage-examples)
-      - [CreateMany](#createmany)
-      - [Patch](#patch)
+      - [CreateMany Minimal API](#createmany-minimal-api)
+      - [Patch Minimal API](#patch-minimal-api)
   - [GenericMinimalDtoEndpoints](#genericminimaldtoendpoints)
     - [GenericMinimalDtoEndpoints Usage Examples](#genericminimaldtoendpoints-usage-examples)
-      - [CreateMany](#createmany-1)
+      - [CreateManyDto](#createmanydto)
       - [Update](#update)
   - [MsgPack](#msgpack)
     - [MsgPackRequestMiddleware](#msgpackrequestmiddleware)
@@ -33,19 +35,37 @@ This project contains helper methods for several common functions required by AP
 
 ## GenericEndpoints
 
-[Description here]
+Provides a set of reusable `ControllerBase` methods for common CRUD and patch operations in MVC controller-based API endpoints. Each method accepts an `IBaseDbContextActions` instance and returns an `ActionResult<T>`, making them easy to delegate to from thin controller actions.
 
-### [Class Name] Usage Examples
+### GenericEndpoints Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
 
-#### [MethodNameHere]
-
-[Method Description here]
+#### CreateMany
 
 ```cs
-//Code here
+[HttpPost("many")]
+public Task<ActionResult<IEnumerable<MyEntity>>> CreateMany(IEnumerable<MyEntity> models)
+    => _endpoints.CreateMany(models, _db);
+```
+
+#### Delete
+
+```cs
+[HttpDelete]
+public Task<ActionResult<MyEntity>> Delete(MyEntity model)
+    => _endpoints.Delete(model, _db);
+```
+
+#### Patch
+
+Applies a JSON Patch document to an entity located by primary key. Returns `Ok` with the patched entity or `NoContent` if not found.
+
+```cs
+[HttpPatch("{id}")]
+public Task<ActionResult<MyEntity>> Patch(int id, JsonPatchDocument<MyEntity> patch)
+    => _endpoints.Patch<MyEntity, MyDbContext>(id, patch, _db);
 ```
 
 </details>
@@ -59,7 +79,7 @@ Provides static methods for common CRUD and patch operations designed for use in
 <details>
 <summary><h3>Usage Examples</h3></summary>
 
-#### CreateMany
+#### CreateMany Minimal API
 
 Creates multiple entities and saves them to the database. Returns `Ok` with the created entities on success, or `NoContent` on failure.
 
@@ -68,7 +88,7 @@ app.MapPost("/entities", (IEnumerable<MyEntity> models, IBaseDbContextActions<My
     GenericMinimalEndpoints.CreateMany(models, db));
 ```
 
-#### Patch
+#### Patch Minimal API
 
 Applies a JSON Patch document to an existing entity located by primary key. Validates the patched model and returns `Ok` with the updated entity, `ValidationProblem` if validation fails, or `NoContent` if the entity is not found.
 
@@ -90,7 +110,7 @@ Provides static methods for common CRUD, patch, and update operations for minima
 <details>
 <summary><h3>Usage Examples</h3></summary>
 
-#### CreateMany
+#### CreateManyDto
 
 Creates multiple entities from input DTOs, saves them, and returns the created records mapped to the output DTO type.
 

@@ -10,6 +10,9 @@ using Hangfire.Storage.Monitoring;
 
 namespace Hangfire.Tests;
 
+[CollectionDefinition("HangfireStaticStorage", DisableParallelization = true)]
+public sealed class HangfireStaticStorageCollection { }
+
 // Helper interface used to create Hangfire Job objects for testing
 public interface ITestJobService
 {
@@ -19,6 +22,7 @@ public interface ITestJobService
 	void SingleArg(int value);
 }
 
+[Collection("HangfireStaticStorage")]
 public sealed class HangfireJobHelpersTests
 {
 	private readonly Fixture fixture = new();

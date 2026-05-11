@@ -9,30 +9,45 @@ This project contains helper methods for reading and writing Excel files using t
 ## Contents
 
 - [CommonNetFuncs.Excel.ClosedXml](#commonnetfuncsexcelclosedxml)
-	- [Contents](#contents)
-	- [\[Class Name\]](#class-name)
-		- [\[Class Name\] Usage Examples](#class-name-usage-examples)
-			- [\[MethodNameHere\]](#methodnamehere)
-	- [Installation](#installation)
-	- [License](#license)
+  - [Contents](#contents)
+  - [Export](#export)
+    - [Export Usage Examples](#export-usage-examples)
+      - [GenericExcelExport](#genericexcelexport)
+  - [Installation](#installation)
+  - [License](#license)
 
 ---
 
-## [Class Name]
+## Export
 
-[Description here]
+Provides a `GenericExcelExport` extension method that converts any `IEnumerable<T>` into a `.xlsx` `MemoryStream` using ClosedXML. Supports optional Excel table formatting (with configurable table style), custom sheet and table names, column exclusion, and text wrapping.
 
-### [Class Name] Usage Examples
+### Export Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
 
-#### [MethodNameHere]
-
-[Method Description here]
+#### GenericExcelExport
 
 ```cs
-//Code here
+using CommonNetFuncs.Excel.ClosedXml;
+
+List<MyRecord> data = GetData();
+
+// Basic export
+MemoryStream? stream = await data.GenericExcelExport();
+
+// Export as a formatted Excel table, skipping a column, with a custom sheet name
+MemoryStream? stream = await data.GenericExcelExport(
+    createTable: true,
+    sheetName: "Report",
+    tableName: "ReportTable",
+    skipColumnNames: ["InternalId"],
+    tableStyle: ETableStyle.TableStyleMedium9
+);
+
+// Return as a file download from an ASP.NET Core endpoint
+return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "report.xlsx");
 ```
 
 </details>

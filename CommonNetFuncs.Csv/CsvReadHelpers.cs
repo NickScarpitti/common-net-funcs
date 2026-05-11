@@ -17,11 +17,14 @@ public static class CsvReadHelpers
 	/// <param name="hasHeaders">Optional: Indicates file has headers. Default is true.</param>
 	/// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
 	/// <param name="bufferSize">Optional: Size of the buffer to use when reading the file. Default is 4096 bytes.</param>
-	/// <returns><see cref="List{T}"/> read from the CSV file</returns>
-	public static List<T> ReadCsv<T>(string filePath, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
+	/// <returns><see cref="IEnumerable{T}"/> read from the CSV file</returns>
+	public static IEnumerable<T> ReadCsv<T>(string filePath, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
 	{
 		using StreamReader reader = new(filePath);
-		return ReadCsv<T>(reader, hasHeaders, cultureInfo, bufferSize);
+		foreach (T item in ReadCsv<T>(reader, hasHeaders, cultureInfo, bufferSize))
+		{
+			yield return item;
+		}
 	}
 
 	/// <summary>
@@ -32,11 +35,14 @@ public static class CsvReadHelpers
 	/// <param name="hasHeaders">Optional: Indicates file has headers. Default is <see langword="true"/>.</param>
 	/// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
 	/// <param name="bufferSize">Optional: Size of the buffer to use when reading the file. Default is 4096 bytes.</param>
-	/// <returns><see cref="List{T}"/> of TObj read from the CSV <see cref="Stream"/></returns>
-	public static List<T> ReadCsv<T>(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
+	/// <returns><see cref="IEnumerable{T}"/> of TObj read from the CSV <see cref="Stream"/></returns>
+	public static IEnumerable<T> ReadCsv<T>(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
 	{
 		using StreamReader reader = new(stream, bufferSize: bufferSize);
-		return ReadCsv<T>(reader, hasHeaders, cultureInfo, bufferSize);
+		foreach (T item in ReadCsv<T>(reader, hasHeaders, cultureInfo, bufferSize))
+		{
+			yield return item;
+		}
 	}
 
 	/// <summary>
@@ -47,15 +53,19 @@ public static class CsvReadHelpers
 	/// <param name="hasHeaders">Optional: Indicates file has headers. Default is <see langword="true"/>.</param>
 	/// <param name="cultureInfo">Optional: Culture to read file with. Default is invariant culture.</param>
 	/// <param name="bufferSize">Optional: Size of the buffer to use when reading the file. Default is 4096 bytes.</param>
-	/// <returns><see cref="List{T}"/> of TObj read from the CSV <see cref="StreamReader"/></returns>
-	private static List<T> ReadCsv<T>(StreamReader reader, bool hasHeaders, CultureInfo? cultureInfo, int bufferSize)
+	/// <returns><see cref="IEnumerable{T}"/> of TObj read from the CSV <see cref="StreamReader"/></returns>
+	private static IEnumerable<T> ReadCsv<T>(StreamReader reader, bool hasHeaders, CultureInfo? cultureInfo, int bufferSize)
 	{
 		using CsvReader csv = new(reader, new CsvHelper.Configuration.CsvConfiguration(cultureInfo ?? CultureInfo.InvariantCulture)
 		{
 			HasHeaderRecord = hasHeaders,
 			BufferSize = bufferSize
 		});
-		return csv.GetRecords<T>().ToList();
+
+		foreach (T item in csv.GetRecords<T>())
+		{
+			yield return item;
+		}
 	}
 
 	/// <summary>

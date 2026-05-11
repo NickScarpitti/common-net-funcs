@@ -9,33 +9,182 @@ This project contains helper methods for several common functions required by AP
 ## Contents
 
 - [CommonNetFuncs.Web.Api](#commonnetfuncswebapi)
-	- [Contents](#contents)
-	- [GenericEndpoints](#genericendpoints)
-		- [\[Class Name\] Usage Examples](#class-name-usage-examples)
-			- [\[MethodNameHere\]](#methodnamehere)
-	- [Installation](#installation)
-	- [License](#license)
+  - [Contents](#contents)
+  - [GenericEndpoints](#genericendpoints)
+    - [GenericEndpoints Usage Examples](#genericendpoints-usage-examples)
+      - [CreateMany](#createmany)
+      - [Delete](#delete)
+      - [Patch](#patch)
+  - [GenericMinimalEndpoints](#genericminimalendpoints)
+    - [GenericMinimalEndpoints Usage Examples](#genericminimalendpoints-usage-examples)
+      - [CreateMany Minimal API](#createmany-minimal-api)
+      - [Patch Minimal API](#patch-minimal-api)
+  - [GenericMinimalDtoEndpoints](#genericminimaldtoendpoints)
+    - [GenericMinimalDtoEndpoints Usage Examples](#genericminimaldtoendpoints-usage-examples)
+      - [CreateManyDto](#createmanydto)
+      - [Update](#update)
+  - [MsgPack](#msgpack)
+    - [MsgPackRequestMiddleware](#msgpackrequestmiddleware)
+      - [UseMsgPackRequestBody](#usemsgpackrequestbody)
+    - [MsgPackOutputFilter](#msgpackoutputfilter)
+      - [WithMsgPackOutput](#withmsgpackoutput)
+  - [Installation](#installation)
+  - [License](#license)
 
 ---
 
 ## GenericEndpoints
 
-[Description here]
+Provides a set of reusable `ControllerBase` methods for common CRUD and patch operations in MVC controller-based API endpoints. Each method accepts an `IBaseDbContextActions` instance and returns an `ActionResult<T>`, making them easy to delegate to from thin controller actions.
 
-### [Class Name] Usage Examples
+### GenericEndpoints Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
 
-#### [MethodNameHere]
-
-[Method Description here]
+#### CreateMany
 
 ```cs
-//Code here
+[HttpPost("many")]
+public Task<ActionResult<IEnumerable<MyEntity>>> CreateMany(IEnumerable<MyEntity> models)
+    => _endpoints.CreateMany(models, _db);
+```
+
+#### Delete
+
+```cs
+[HttpDelete]
+public Task<ActionResult<MyEntity>> Delete(MyEntity model)
+    => _endpoints.Delete(model, _db);
+```
+
+#### Patch
+
+Applies a JSON Patch document to an entity located by primary key. Returns `Ok` with the patched entity or `NoContent` if not found.
+
+```cs
+[HttpPatch("{id}")]
+public Task<ActionResult<MyEntity>> Patch(int id, JsonPatchDocument<MyEntity> patch)
+    => _endpoints.Patch<MyEntity, MyDbContext>(id, patch, _db);
 ```
 
 </details>
+
+## GenericMinimalEndpoints
+
+Provides static methods for common CRUD and patch operations designed for use in ASP.NET Core minimal API endpoints. Each method accepts an `IBaseDbContextActions` instance and returns strongly-typed `Microsoft.AspNetCore.Http.HttpResults` results (`Results<Ok<T>, NoContent>` or `Results<Ok<T>, NoContent, ValidationProblem>`), making them directly usable as minimal API route handlers.
+
+### GenericMinimalEndpoints Usage Examples
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
+
+#### CreateMany Minimal API
+
+Creates multiple entities and saves them to the database. Returns `Ok` with the created entities on success, or `NoContent` on failure.
+
+```cs
+app.MapPost("/entities", (IEnumerable<MyEntity> models, IBaseDbContextActions<MyEntity, MyDbContext> db) =>
+    GenericMinimalEndpoints.CreateMany(models, db));
+```
+
+#### Patch Minimal API
+
+Applies a JSON Patch document to an existing entity located by primary key. Validates the patched model and returns `Ok` with the updated entity, `ValidationProblem` if validation fails, or `NoContent` if the entity is not found.
+
+```cs
+app.MapPatch("/entities/{id}", (int id, JsonPatchDocument<MyEntity> patch, IBaseDbContextActions<MyEntity, MyDbContext> db) =>
+    GenericMinimalEndpoints.Patch<MyEntity, MyDbContext>(id, patch, db));
+```
+
+</details>
+
+---
+
+## GenericMinimalDtoEndpoints
+
+Provides static methods for common CRUD, patch, and update operations for minimal API endpoints that use separate input and output DTO types. Input DTOs are mapped to the entity model before database operations and the result is mapped to the output DTO before returning. Returns `Results<Ok<TOutDto>, NoContent>` or `Results<Ok<TOutDto>, NoContent, ValidationProblem>`.
+
+### GenericMinimalDtoEndpoints Usage Examples
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
+
+#### CreateManyDto
+
+Creates multiple entities from input DTOs, saves them, and returns the created records mapped to the output DTO type.
+
+```cs
+app.MapPost("/entities", (IEnumerable<MyInDto> models, IBaseDbContextActions<MyEntity, MyDbContext> db) =>
+    GenericMinimalDtoEndpoints.CreateMany<MyEntity, MyDbContext, MyInDto, MyOutDto>(models, db));
+```
+
+#### Update
+
+Retrieves an existing entity by primary key, overwrites its properties from the input DTO, validates the result, and saves. Returns `Ok` with the updated record mapped to the output DTO, `ValidationProblem` if validation fails, or `NoContent` if the entity is not found.
+
+```cs
+app.MapPut("/entities/{id}", (int id, MyInDto dto, IBaseDbContextActions<MyEntity, MyDbContext> db) =>
+    GenericMinimalDtoEndpoints.Update<MyEntity, MyDbContext, MyInDto, MyOutDto>(id, dto, db));
+```
+
+</details>
+
+---
+
+---
+
+## MsgPack
+
+A set of focused components for adding MessagePack support to ASP.NET Core minimal API applications. Unlike a single monolithic middleware, the functionality is split into a request middleware and an endpoint output filter so each can be applied independently.
+
+### MsgPackRequestMiddleware
+
+Converts a MessagePack-encoded request body to JSON before the endpoint handler runs, allowing standard `[FromBody]` parameter binding to work unchanged. Register it in the pipeline **before routing**.
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
+
+#### UseMsgPackRequestBody
+
+Registers `MsgPackRequestMiddleware` globally so every endpoint accepts MessagePack request bodies.
+
+```cs
+// Program.cs
+app.UseMsgPackRequestBody();
+
+app.MapPost("/entities", (MyEntity entity) => Results.Ok(entity));
+```
+
+</details>
+
+---
+
+### MsgPackOutputFilter
+
+An endpoint filter that intercepts the handler's return value before System.Text.Json serializes it. When the client's `Accept` header includes `application/x-msgpack`, the value is serialized directly to MessagePack with no JSON intermediate. Results that carry no body (204, 404 without body, redirects) and problem-detail results (`application/problem+json`) are passed through unchanged.
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
+
+#### WithMsgPackOutput
+
+Attaches `MsgPackOutputFilter` to an endpoint or route group. Optionally accepts custom `MessagePackSerializerOptions`; defaults to `MessagePackSerializer.DefaultOptions` when `null`.
+
+```cs
+// Apply to a single endpoint
+app.MapGet("/entities/{id}", (int id, IBaseDbContextActions<MyEntity, MyDbContext> db) =>
+    GenericMinimalEndpoints.GetById(id, db))
+    .WithMsgPackOutput();
+
+// Apply to an entire route group
+RouteGroupBuilder group = app.MapGroup("/entities").WithMsgPackOutput();
+group.MapGet("/{id}", (int id) => Results.Ok(myEntity));
+```
+
+</details>
+
+---
 
 ## Installation
 

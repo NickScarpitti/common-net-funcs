@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Hangfire.Tests;
 
+[Collection("HangfireStaticStorage")]
 public sealed class HangfireShutdownMonitorTests
 {
 	[Fact]
@@ -71,6 +72,7 @@ public sealed class HangfireShutdownMonitorTests
 	{
 		// Arrange
 		await using ServiceProvider serviceProvider = SetupServiceProviderWithHangfire(processingCount, enqueuedCount, scheduledCount);
+		JobStorage storage = JobStorage.Current; // Capture before any parallel test can overwrite it
 		using CancellationTokenSource cts = new();
 		IHostApplicationLifetime lifetime = A.Fake<IHostApplicationLifetime>();
 		A.CallTo(() => lifetime.ApplicationStopping).Returns(cts.Token);
@@ -85,7 +87,6 @@ public sealed class HangfireShutdownMonitorTests
 		await Task.Delay(100, TestContext.Current.CancellationToken);
 
 		// Assert - Verify the monitoring API was called (proves callback executed)
-		JobStorage storage = JobStorage.Current;
 		A.CallTo(() => storage.GetMonitoringApi()).MustHaveHappened();
 	}
 
@@ -151,6 +152,7 @@ public sealed class HangfireShutdownMonitorTests
 	{
 		// Arrange
 		await using ServiceProvider serviceProvider = SetupServiceProviderWithHangfire(0, 0, 0);
+		JobStorage storage = JobStorage.Current; // Capture before any parallel test can overwrite it
 		using CancellationTokenSource cts = new();
 		IHostApplicationLifetime lifetime = A.Fake<IHostApplicationLifetime>();
 		A.CallTo(() => lifetime.ApplicationStopping).Returns(cts.Token);
@@ -165,7 +167,6 @@ public sealed class HangfireShutdownMonitorTests
 		await Task.Delay(100, TestContext.Current.CancellationToken);
 
 		// Assert - Verify the callback executed by checking the monitoring API was called
-		JobStorage storage = JobStorage.Current;
 		A.CallTo(() => storage.GetMonitoringApi()).MustHaveHappened();
 
 		// Also verify we can retrieve the server (shows it was registered)

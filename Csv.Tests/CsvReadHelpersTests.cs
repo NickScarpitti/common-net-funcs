@@ -35,7 +35,7 @@ public sealed class CsvReadHelpersTests
 		{
 			// Act
 #pragma warning disable S6966 // Awaitable method should be used
-			List<TestRecord> result = CsvReadHelpers.ReadCsv<TestRecord>(testFilePath, hasHeader, cultureInfo);
+			List<TestRecord> result = CsvReadHelpers.ReadCsv<TestRecord>(testFilePath, hasHeader, cultureInfo).ToList();
 #pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
@@ -61,7 +61,7 @@ public sealed class CsvReadHelpersTests
 		string invalidPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
 		// Act & Assert
-		Should.Throw<FileNotFoundException>(() => CsvReadHelpers.ReadCsv<TestRecord>(invalidPath));
+		Should.Throw<FileNotFoundException>(() => CsvReadHelpers.ReadCsv<TestRecord>(invalidPath).ToList());
 	}
 
 	[Theory]
@@ -78,7 +78,7 @@ public sealed class CsvReadHelpersTests
 		using MemoryStream stream = new(System.Text.Encoding.UTF8.GetBytes(csvContent));
 
 		// Act
-		List<TestRecord> result = CsvReadHelpers.ReadCsv<TestRecord>(stream, hasHeader, cultureInfo);
+		List<TestRecord> result = CsvReadHelpers.ReadCsv<TestRecord>(stream, hasHeader, cultureInfo).ToList();
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -95,7 +95,7 @@ public sealed class CsvReadHelpersTests
 	public void ReadCsvFromStream_WithNullStream_ShouldThrowArgumentNullException()
 	{
 		// Act & Assert
-		Should.Throw<ArgumentNullException>(() => CsvReadHelpers.ReadCsv<TestRecord>((Stream)null!));
+		Should.Throw<ArgumentNullException>(() => CsvReadHelpers.ReadCsv<TestRecord>((Stream)null!).ToList());
 	}
 
 	[Fact]
@@ -105,7 +105,7 @@ public sealed class CsvReadHelpersTests
 		using MemoryStream emptyStream = new();
 
 		// Act
-		List<TestRecord> result = CsvReadHelpers.ReadCsv<TestRecord>(emptyStream);
+		List<TestRecord> result = CsvReadHelpers.ReadCsv<TestRecord>(emptyStream).ToList();
 
 		// Assert
 		result.ShouldNotBeNull();

@@ -9,36 +9,36 @@ This project contains helper methods for several common Entity Framework Core op
 ## Contents
 
 - [CommonNetFuncs.EFCore](#commonnetfuncsefcore)
-	- [Contents](#contents)
-	- [BaseDbContextActions](#basedbcontextactions)
-		- [BaseDbContextActions Usage Examples](#basedbcontextactions-usage-examples)
-			- [GetByKey](#getbykey)
-			- [GetAll](#getall)
-			- [GetWithFilter](#getwithfilter)
-			- [GetNavigationWithFilter](#getnavigationwithfilter)
-		- [GetWithPagingFilter](#getwithpagingfilter)
-			- [GetOneWithFilter](#getonewithfilter)
-			- [GetMaxByOrder](#getmaxbyorder)
-			- [GetMinByOrder](#getminbyorder)
-			- [GetMax](#getmax)
-			- [GetMin](#getmin)
-			- [GetCount](#getcount)
-			- [Create](#create)
-			- [CreateMany](#createmany)
-			- [Update](#update)
-			- [UpdateMany](#updatemany)
-			- [DeleteByObject](#deletebyobject)
-			- [DeleteByKey](#deletebykey)
-			- [DeleteMany](#deletemany)
-			- [SaveChanges](#savechanges)
-	- [NavigationProperties](#navigationproperties)
-		- [NavigationProperties Usage Examples](#navigationproperties-usage-examples)
-			- [IncludeNavigationProperties](#includenavigationproperties)
-			- [GetNavigations](#getnavigations)
-			- [GetTopLevelNavigations](#gettoplevelnavigations)
-			- [RemoveNavigationProperties](#removenavigationproperties)
-	- [Installation](#installation)
-	- [License](#license)
+  - [Contents](#contents)
+  - [BaseDbContextActions](#basedbcontextactions)
+    - [BaseDbContextActions Usage Examples](#basedbcontextactions-usage-examples)
+      - [GetByKey](#getbykey)
+      - [GetAll](#getall)
+      - [GetWithFilter](#getwithfilter)
+      - [GetNavigationWithFilter](#getnavigationwithfilter)
+    - [GetWithPagingFilter](#getwithpagingfilter)
+      - [GetOneWithFilter](#getonewithfilter)
+      - [GetMaxByOrder](#getmaxbyorder)
+      - [GetMinByOrder](#getminbyorder)
+      - [GetMax](#getmax)
+      - [GetMin](#getmin)
+      - [GetCount](#getcount)
+      - [Create](#create)
+      - [CreateMany](#createmany)
+      - [Update](#update)
+      - [UpdateMany](#updatemany)
+      - [DeleteByObject](#deletebyobject)
+      - [DeleteByKey](#deletebykey)
+      - [DeleteMany](#deletemany)
+      - [SaveChanges](#savechanges)
+  - [NavigationProperties](#navigationproperties)
+    - [NavigationProperties Usage Examples](#navigationproperties-usage-examples)
+      - [IncludeNavigationProperties](#includenavigationproperties)
+      - [GetNavigations](#getnavigations)
+      - [GetTopLevelNavigations](#gettoplevelnavigations)
+      - [RemoveNavigationProperties](#removenavigationproperties)
+  - [Installation](#installation)
+  - [License](#license)
 
 ---
 
@@ -380,7 +380,7 @@ bool success = await actions.SaveChanges();
 
 ## NavigationProperties
 
-[Description here]
+A static utility class for automatically discovering and including navigation properties on EF Core entities using reflection and expression trees. Supports configurable maximum depth, attribute-based exclusion, and result caching to minimize repeated reflection overhead. Used internally by `BaseDbContextActions` "Full" queries and available directly for custom query composition.
 
 ### NavigationProperties Usage Examples
 
@@ -389,34 +389,45 @@ bool success = await actions.SaveChanges();
 
 #### IncludeNavigationProperties
 
-[Method Description here]
+Automatically appends `.Include()` / `.ThenInclude()` calls for all navigation properties reachable from `TEntity` up to the configured depth limit. Attributes listed in `NavPropAttributesToIgnore` are skipped.
 
 ```cs
-//Code example here
+BaseDbContextActions<TestEntity, TestDbContext> actions = new(serviceProvider);
+
+// Equivalent to manually calling .Include(x => x.Details).ThenInclude(...) for every navigation
+IQueryable<TestEntity> query = context.Set<TestEntity>()
+    .IncludeNavigationProperties(context, new NavigationPropertiesOptions(maxNavigationDepth: 3));
 ```
 
 #### GetNavigations
 
-[Method Description here]
+Returns the full set of dotted navigation-property paths (e.g. `"Details"`, `"Details.SubItems"`) for a given entity type up to the specified depth.
 
 ```cs
-//Code example here
+HashSet<string> paths = NavigationProperties.GetNavigations(
+    context,
+    typeof(TestEntity),
+    new NavigationPropertiesOptions(maxNavigationDepth: 2));
+// paths => { "Details", "Details.SubItems", "Owner", ... }
 ```
 
 #### GetTopLevelNavigations
 
-[Method Description here]
+Returns only the immediate (depth-1) navigation property names for an entity type — useful when you need a flat list of direct relationships without recursing into nested entities.
 
 ```cs
-//Code example here
+HashSet<string> topLevel = NavigationProperties.GetTopLevelNavigations(context, typeof(TestEntity));
+// topLevel => { "Details", "Owner" }
 ```
 
 #### RemoveNavigationProperties
 
-[Method Description here]
+Sets all navigation-property references on a tracked entity instance to their default value (`null` for reference types, empty collection for collections). Use this before saving when you want to avoid unintentional graph updates.
 
 ```cs
-//Code example here
+TestEntity entity = await actions.GetByKey(full: true, primaryKey: 1);
+entity.RemoveNavigationProperties(context); // clears Details, Owner, etc.
+await actions.SaveChanges();
 ```
 
 </details>

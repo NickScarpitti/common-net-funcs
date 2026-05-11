@@ -9,27 +9,27 @@ This project contains helper methods using Xabe.FFMpeg including file conversion
 ## Contents
 
 - [CommonNetFuncs.Media.Ffmpeg](#commonnetfuncsmediaffmpeg)
-	- [Contents](#contents)
-	- [ConversionTask](#conversiontask)
-		- [ConversionTask Usage Examples](#conversiontask-usage-examples)
-			- [FfmpegConversionTask](#ffmpegconversiontask)
-	- [Helpers](#helpers)
-		- [Helpers Usage Examples](#helpers-usage-examples)
-			- [GetTotalFps](#gettotalfps)
-			- [ParseFfmpegLogFps](#parseffmpeglogfps)
-			- [GetTotalFileDif](#gettotalfiledif)
-			- [RecordResults](#recordresults)
-			- [GetVideoMetadata](#getvideometadata)
-			- [GetFrameRate](#getframerate)
-			- [GetKeyFrameSpacing](#getkeyframespacing)
-	- [Installation](#installation)
-	- [License](#license)
+  - [Contents](#contents)
+  - [ConversionTask](#conversiontask)
+    - [ConversionTask Usage Examples](#conversiontask-usage-examples)
+      - [FfmpegConversionTask](#ffmpegconversiontask)
+  - [Helpers](#helpers)
+    - [Helpers Usage Examples](#helpers-usage-examples)
+      - [GetTotalFps](#gettotalfps)
+      - [ParseFfmpegLogFps](#parseffmpeglogfps)
+      - [GetTotalFileDif](#gettotalfiledif)
+      - [RecordResults](#recordresults)
+      - [GetVideoMetadata](#getvideometadata)
+      - [GetFrameRate](#getframerate)
+      - [GetKeyFrameSpacing](#getkeyframespacing)
+  - [Installation](#installation)
+  - [License](#license)
 
 ---
 
 ## ConversionTask
 
-[Description here]
+Provides a high-level wrapper around Xabe.FFmpeg for running FFmpeg conversions. Supports custom FFmpeg argument strings, hardware acceleration (NVENC, QSV, etc.), configurable encoding presets and thread counts, optional cancellation when the output file grows larger than the source, and per-task FPS tracking across concurrent conversions.
 
 ### ConversionTask Usage Examples
 

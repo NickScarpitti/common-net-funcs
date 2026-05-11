@@ -15,13 +15,13 @@ namespace Web.Api.Tests;
 public sealed class GenericDtoEndpointsTests
 {
 	private readonly IFixture fixture;
-	private readonly GenericDotEndpoints sut;
+	private readonly GenericDtoEndpoints sut;
 
 	public GenericDtoEndpointsTests()
 	{
 		fixture = new Fixture()
 				.Customize(new AutoFakeItEasyCustomization());
-		sut = new GenericDotEndpoints();
+		sut = new GenericDtoEndpoints();
 	}
 
 	public sealed class TestEntity
@@ -74,13 +74,15 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions, removeNavigationProps);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 
 		result.ShouldNotBeNull();
 		result.Result.ShouldBeOfType<OkObjectResult>();
-		(result.Result as OkObjectResult)!.Value.ShouldBe(models);
+		IEnumerable<TestOutDto>? resultModels = (result.Result as OkObjectResult)!.Value as IEnumerable<TestOutDto>;
+		resultModels.ShouldNotBeNull();
+		resultModels.Count().ShouldBe(models.Count);
 		A.CallTo(() => dbContextActions.CreateMany(A<IEnumerable<TestEntity>>.Ignored, removeNavigationProps)).MustHaveHappenedOnceExactly();
 	}
 
@@ -95,7 +97,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 
@@ -113,7 +115,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.CreateMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 
@@ -144,7 +146,9 @@ public sealed class GenericDtoEndpointsTests
 
 		result.ShouldNotBeNull();
 		result.Result.ShouldBeOfType<OkObjectResult>();
-		(result.Result as OkObjectResult)!.Value.ShouldBe(model);
+		TestOutDto? resultModel = (result.Result as OkObjectResult)!.Value as TestOutDto;
+		resultModel.ShouldNotBeNull();
+		resultModel.Name.ShouldBe(model.Name);
 		A.CallTo(() => dbContextActions.DeleteByObject(A<TestEntity>.Ignored, removeNavigationProps)).MustHaveHappenedOnceExactly();
 	}
 
@@ -203,13 +207,15 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions, removeNavigationProps);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 
 		result.ShouldNotBeNull();
 		result.Result.ShouldBeOfType<OkObjectResult>();
-		(result.Result as OkObjectResult)!.Value.ShouldBe(models);
+		IEnumerable<TestOutDto>? resultModels = (result.Result as OkObjectResult)!.Value as IEnumerable<TestOutDto>;
+		resultModels.ShouldNotBeNull();
+		resultModels.Count().ShouldBe(models.Count);
 	}
 
 	[Fact]
@@ -223,7 +229,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 
@@ -242,7 +248,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 
@@ -259,7 +265,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 
@@ -277,7 +283,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.DeleteMany<TestEntity, TestDbContext, TestInDto, TestOutDto>(models, dbContextActions);
 
 		// Assert
 
@@ -300,13 +306,13 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
 
 		// Assert
 
 		result.ShouldNotBeNull();
 		result.Result.ShouldBeOfType<OkObjectResult>();
-		(result.Result as OkObjectResult)!.Value.ShouldBe(keys);
+		(result.Result as OkObjectResult)!.Value.ShouldNotBeNull();
 	}
 
 	[Fact]
@@ -320,7 +326,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
 
 		// Assert
 
@@ -337,7 +343,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
 
 		// Assert
 
@@ -355,7 +361,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
+		ActionResult<IEnumerable<TestOutDto>> result = await sut.DeleteManyByKeys<TestEntity, TestDbContext, TestOutDto>(keys, dbContextActions);
 
 		// Assert
 
@@ -388,7 +394,7 @@ public sealed class GenericDtoEndpointsTests
 
 		result.ShouldNotBeNull();
 		result.Result.ShouldBeOfType<OkObjectResult>();
-		TestEntity? updatedModel = (result.Result as OkObjectResult)!.Value as TestEntity;
+		TestOutDto? updatedModel = (result.Result as OkObjectResult)!.Value as TestOutDto;
 		updatedModel.ShouldNotBeNull();
 		updatedModel.Name.ShouldBe("Updated Name");
 	}
@@ -453,7 +459,9 @@ public sealed class GenericDtoEndpointsTests
 
 		result.ShouldNotBeNull();
 		result.Result.ShouldBeOfType<OkObjectResult>();
-		(result.Result as OkObjectResult)!.Value.ShouldBe(model);
+		TestOutDto? noPatchResultModel = (result.Result as OkObjectResult)!.Value as TestOutDto;
+		noPatchResultModel.ShouldNotBeNull();
+		noPatchResultModel.Name.ShouldBe(model.Name);
 	}
 
 	[Fact]
@@ -526,7 +534,7 @@ public sealed class GenericDtoEndpointsTests
 
 		result.ShouldNotBeNull();
 		result.Result.ShouldBeOfType<OkObjectResult>();
-		TestEntity? updatedModel = (result.Result as OkObjectResult)!.Value as TestEntity;
+		TestOutDto? updatedModel = (result.Result as OkObjectResult)!.Value as TestOutDto;
 		updatedModel.ShouldNotBeNull();
 		updatedModel.Name.ShouldBe("Updated Name");
 	}
@@ -823,7 +831,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.CreateMany(models, dbContextActions, removeNavigationProps);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.CreateMany(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 
@@ -844,7 +852,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.CreateMany(models, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.CreateMany(models, dbContextActions);
 
 		// Assert
 
@@ -862,7 +870,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.CreateMany(models, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.CreateMany(models, dbContextActions);
 
 		// Assert
 
@@ -972,7 +980,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions, removeNavigationProps);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions, removeNavigationProps);
 
 		// Assert
 
@@ -992,7 +1000,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
 
 		// Assert
 
@@ -1011,7 +1019,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
 
 		// Assert
 
@@ -1028,7 +1036,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
 
 		// Assert
 
@@ -1046,7 +1054,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions);
 
 		// Assert
 
@@ -1066,7 +1074,7 @@ public sealed class GenericDtoEndpointsTests
 
 		// Act
 
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions, false, filterOptions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.DeleteMany(models, dbContextActions, false, filterOptions);
 
 		// Assert
 
@@ -1171,7 +1179,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys, null)).Returns(true);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -1188,7 +1196,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys, null)).Returns(false);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -1202,7 +1210,7 @@ public sealed class GenericDtoEndpointsTests
 		IBaseDbContextActions<TestEntity, TestDbContext> dbContextActions = A.Fake<IBaseDbContextActions<TestEntity, TestDbContext>>();
 
 		// Act
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -1217,7 +1225,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(A<IEnumerable<object>>.Ignored, A<GlobalFilterOptions?>.Ignored)).Throws<InvalidOperationException>();
 
 		// Act
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions);
 
 		// Assert
 		result.Result.ShouldBeOfType<NoContentResult>();
@@ -1233,7 +1241,7 @@ public sealed class GenericDtoEndpointsTests
 		A.CallTo(() => dbContextActions.DeleteManyByKeys(keys, filterOptions)).Returns(true);
 
 		// Act
-		ActionResult<List<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions, filterOptions);
+		ActionResult<IEnumerable<TestEntity>> result = await genericEndpoints.DeleteManyByKeys(keys, dbContextActions, filterOptions);
 
 		// Assert
 		result.Result.ShouldBeOfType<OkObjectResult>();

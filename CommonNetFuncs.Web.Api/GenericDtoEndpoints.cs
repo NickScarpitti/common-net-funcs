@@ -5,7 +5,6 @@ using CommonNetFuncs.EFCore;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 using static CommonNetFuncs.Core.Copy;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.DeepClone.ExpressionTrees;
@@ -13,7 +12,7 @@ using static CommonNetFuncs.FastMap.FastMapper;
 
 namespace CommonNetFuncs.Web.Api;
 
-public sealed class GenericDotEndpoints : ControllerBase
+public sealed class GenericDtoEndpoints : ControllerBase
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -27,7 +26,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="models">Entities to create.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
-	public async Task<ActionResult<List<TOutDto>>> CreateMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
+	public async Task<ActionResult<IEnumerable<TOutDto>>> CreateMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
 		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		try
@@ -35,7 +34,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 			await baseAppDbContextActions.CreateMany(models.Select(x => x.FastMap<TInDto, TModel>()), removeNavigationProps).ConfigureAwait(false);
 			if (await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
 			{
-				return Ok(models);
+				return Ok(models.Select(x => x.FastMap<TInDto, TOutDto>()));
 			}
 		}
 		catch (Exception ex)
@@ -64,7 +63,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 			baseAppDbContextActions.DeleteByObject(model.FastMap<TInDto, TModel>(), removeNavigationProps);
 			if (await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
 			{
-				return Ok(model);
+				return Ok(model.FastMap<TInDto, TOutDto>());
 			}
 		}
 		catch (Exception ex)
@@ -85,14 +84,14 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use.</param>
 	/// <returns>Ok if successful, otherwise NoContent.</returns>
-	public async Task<ActionResult<List<TOutDto>>> DeleteMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
+	public async Task<ActionResult<IEnumerable<TOutDto>>> DeleteMany<TModel, TContext, TInDto, TOutDto>(IEnumerable<TInDto> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions, bool removeNavigationProps = false)
 		where TModel : class?, new() where TContext : DbContext where TInDto : class, new() where TOutDto : class?, new()
 	{
 		try
 		{
 			if (models.Any() && baseAppDbContextActions.DeleteMany(models.Where(x => x != null).Select(x => x.FastMap<TInDto, TModel>()), removeNavigationProps) && await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
 			{
-				return Ok(models);
+				return Ok(models.Select(x => x.FastMap<TInDto, TOutDto>()));
 			}
 		}
 		catch (Exception ex)
@@ -112,14 +111,14 @@ public sealed class GenericDotEndpoints : ControllerBase
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<TOutDto>>> DeleteManyByKeys<TModel, TContext, TOutDto>(IEnumerable<object> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
+	public async Task<ActionResult<IEnumerable<TOutDto>>> DeleteManyByKeys<TModel, TContext, TOutDto>(IEnumerable<object> models, IBaseDbContextActions<TModel, TContext> baseAppDbContextActions)
 		where TModel : class?, new() where TContext : DbContext where TOutDto : class?, new()
 	{
 		try
 		{
 			if (models.Any() && await baseAppDbContextActions.DeleteManyByKeys(models).ConfigureAwait(false)) //Does not work with PostgreSQL
 			{
-				return Ok(models);
+				return Ok(models.Select(x => x.FastMap<object, TOutDto>()));
 			}
 		}
 		catch (Exception ex)
@@ -186,7 +185,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 
 			if (patch.Operations.Count == 0)
 			{
-				return Ok(dbModel);
+				return Ok(dbModel.FastMap<TModel, TOutDto>());
 			}
 
 			TModel updateModel = dbModel.DeepClone();
@@ -209,7 +208,7 @@ public sealed class GenericDotEndpoints : ControllerBase
 			baseAppDbContextActions.Update(dbModel);
 			if (await baseAppDbContextActions.SaveChanges().ConfigureAwait(false))
 			{
-				return Ok(dbModel);
+				return Ok(dbModel.FastMap<TModel, TOutDto>());
 			}
 		}
 		catch (Exception ex)

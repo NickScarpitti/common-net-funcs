@@ -23,7 +23,7 @@ public interface ISshFtpService : IDisposable
 
 	IAsyncEnumerable<string> GetFileListAsync(string path, string extension = "*", CancellationTokenSource? cancellationTokenSource = null);
 
-	List<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096);
+	IEnumerable<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096);
 
 	Task<List<T>> GetDataFromCsvAsync<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, CancellationToken cancellationToken = default);
 
@@ -111,7 +111,7 @@ public sealed class SshFtpService : ISshFtpService
 		return Client.GetDataFromCsvAsyncEnumerable<T>(remoteFilePath, csvHasHeaderRow, cultureInfo, bufferSize, cancellationToken);
 	}
 
-	public List<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
+	public IEnumerable<T> GetDataFromCsv<T>(string remoteFilePath, bool csvHasHeaderRow = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
 	{
 		return Client.GetDataFromCsv<T>(remoteFilePath, csvHasHeaderRow, cultureInfo, bufferSize);
 	}

@@ -13,7 +13,6 @@
 		<FileVersion>$(Version)</FileVersion>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Authors>NickScarpitti</Authors>
-		<PackageIcon>TTLogo.png</PackageIcon>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
@@ -31,7 +30,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.31</Version>
+		<Version>4.0.40</Version>
 		<MinVerTagPrefix>subsetmodelbinder-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -78,10 +77,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="TTLogo.png">
-			<Pack>true</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
 		<None Include="README.md">
 			<PackagePath>\</PackagePath>
 			<Pack>true</Pack>

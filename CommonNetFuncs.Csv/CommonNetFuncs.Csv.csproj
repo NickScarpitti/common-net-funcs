@@ -12,7 +12,6 @@
 		<FileVersion>$(Version)</FileVersion>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Authors>NickScarpitti</Authors>
-		<PackageIcon>TTLogo.png</PackageIcon>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
@@ -29,13 +28,13 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.31</Version>
+		<Version>4.0.41</Version>
 		<MinVerTagPrefix>csv-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
 		<MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
 		<!-- Optional: Detect breaking changes from a previous stable version -->
-		<PackageValidationBaselineVersion>4.0.0</PackageValidationBaselineVersion>
+		<PackageValidationBaselineVersion>4.0.40</PackageValidationBaselineVersion>
 		<EnablePackageValidation>true</EnablePackageValidation>
 	</PropertyGroup>
 
@@ -89,10 +88,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="TTLogo.png">
-			<PackagePath>\</PackagePath>
-			<Pack>True</Pack>
-		</None>
 		<None Include="README.md">
 			<PackagePath>\</PackagePath>
 			<Pack>True</Pack>

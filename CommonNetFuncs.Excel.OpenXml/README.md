@@ -10,29 +10,74 @@ This project contains helper methods for reading and writing Excel files using t
 
 - [CommonNetFuncs.Excel.OpenXml](#commonnetfuncsexcelopenxml)
 	- [Contents](#contents)
-	- [\[Class Name\]](#class-name)
-		- [\[Class Name\] Usage Examples](#class-name-usage-examples)
-			- [\[MethodNameHere\]](#methodnamehere)
+	- [Common](#common)
+		- [Common Usage Examples](#common-usage-examples)
+			- [InitializeExcelFile / CreateNewSheet](#initializeexcelfile--createnewsheet)
+	- [Export](#export)
+		- [Export Usage Examples](#export-usage-examples)
+			- [GenericExcelExport](#genericexcelexport)
 	- [Installation](#installation)
 	- [License](#license)
 
 ---
 
-## [Class Name]
+## Common
 
-[Description here]
+Low-level helpers for building and manipulating `SpreadsheetDocument` objects with the OpenXML SDK. Covers creating workbooks and sheets, reading and writing cell values, managing number formats, inserting images, and applying cell styles.
 
-### [Class Name] Usage Examples
+### Common Usage Examples
 
 <details>
 <summary><h3>Usage Examples</h3></summary>
 
-#### [MethodNameHere]
-
-[Method Description here]
+#### InitializeExcelFile / CreateNewSheet
 
 ```cs
-//Code here
+using DocumentFormat.OpenXml.Packaging;
+using CommonNetFuncs.Excel.OpenXml;
+
+using MemoryStream ms = new();
+using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook, true);
+
+uint sheetId = document.InitializeExcelFile("Sheet1"); // creates the workbook and first sheet
+uint sheet2Id = document.CreateNewSheet("Sheet2");     // appends a second sheet
+
+Worksheet? ws = document.GetWorksheetById(sheetId);
+```
+
+</details>
+
+---
+
+## Export
+
+Provides a `GenericExcelExport` extension method that converts any `IEnumerable<T>` into a `.xlsx` `MemoryStream` using the OpenXML SDK directly. Supports optional table formatting, custom sheet and table names, and column exclusion.
+
+### Export Usage Examples
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
+
+#### GenericExcelExport
+
+```cs
+using CommonNetFuncs.Excel.OpenXml;
+
+List<MyRecord> data = GetData();
+
+// Basic export
+MemoryStream? stream = data.GenericExcelExport();
+
+// Export as a formatted Excel table, skipping a column
+MemoryStream? stream = data.GenericExcelExport(
+    createTable: true,
+    sheetName: "Report",
+    tableName: "ReportTable",
+    skipColumnNames: ["InternalId"]
+);
+
+// Return as a file download from an ASP.NET Core endpoint
+return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "report.xlsx");
 ```
 
 </details>

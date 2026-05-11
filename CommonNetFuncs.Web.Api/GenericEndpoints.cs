@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
+using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Net;
@@ -25,7 +26,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="models">Entities to create</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<TEntity>>> CreateMany<TEntity, TContext>(IEnumerable<TEntity> models, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions, bool removeNavigationProps = false) where TEntity : class?, new() where TContext : DbContext
+	public async Task<ActionResult<IEnumerable<TEntity>>> CreateMany<TEntity, TContext>(IEnumerable<TEntity> models, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions, bool removeNavigationProps = false) where TEntity : class?, new() where TContext : DbContext
 	{
 		try
 		{
@@ -78,7 +79,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<TEntity>>> DeleteMany<TEntity, TContext>(IEnumerable<TEntity> models, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions,
+	public async Task<ActionResult<IEnumerable<TEntity>>> DeleteMany<TEntity, TContext>(IEnumerable<TEntity> models, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions,
 		bool removeNavigationProps = false, GlobalFilterOptions? globalFilterOptions = null) where TEntity : class?, new() where TContext : DbContext
 	{
 		try
@@ -130,7 +131,7 @@ public sealed class GenericEndpoints : ControllerBase
 	/// <param name="models">Entities to delete.</param>
 	/// <param name="baseAppDbContextActions">Instance of baseAppDbContextActions to use</param>
 	/// <returns>Ok if successful, otherwise NoContent</returns>
-	public async Task<ActionResult<List<TEntity>>> DeleteManyByKeys<TEntity, TContext>(IEnumerable<object> models, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions,
+	public async Task<ActionResult<IEnumerable<TEntity>>> DeleteManyByKeys<TEntity, TContext>(IEnumerable<object> models, IBaseDbContextActions<TEntity, TContext> baseAppDbContextActions,
 		GlobalFilterOptions? globalFilterOptions = null) where TEntity : class?, new() where TContext : DbContext
 	{
 		try

@@ -1,0 +1,10 @@
+<Project>
+	<!-- Shared package icon for all NuGet packages -->
+	<PropertyGroup Condition="'$(IsPackable)' != 'false'">
+		<PackageIcon>NWeb_Logo.png</PackageIcon>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(IsPackable)' != 'false'">
+		<None Include="$(MSBuildThisFileDirectory)NWeb_Logo.png" Pack="True" PackagePath="\" Visible="false" />
+	</ItemGroup>
+</Project>

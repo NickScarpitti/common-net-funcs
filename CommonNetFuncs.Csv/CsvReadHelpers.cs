@@ -21,7 +21,10 @@ public static class CsvReadHelpers
 	public static IEnumerable<T> ReadCsv<T>(string filePath, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
 	{
 		using StreamReader reader = new(filePath);
-		return ReadCsv<T>(reader, hasHeaders, cultureInfo, bufferSize);
+		foreach (T item in ReadCsv<T>(reader, hasHeaders, cultureInfo, bufferSize))
+		{
+			yield return item;
+		}
 	}
 
 	/// <summary>
@@ -36,7 +39,10 @@ public static class CsvReadHelpers
 	public static IEnumerable<T> ReadCsv<T>(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
 	{
 		using StreamReader reader = new(stream, bufferSize: bufferSize);
-		return ReadCsv<T>(reader, hasHeaders, cultureInfo, bufferSize);
+		foreach (T item in ReadCsv<T>(reader, hasHeaders, cultureInfo, bufferSize))
+		{
+			yield return item;
+		}
 	}
 
 	/// <summary>
@@ -55,7 +61,11 @@ public static class CsvReadHelpers
 			HasHeaderRecord = hasHeaders,
 			BufferSize = bufferSize
 		});
-		return csv.GetRecords<T>();
+
+		foreach (T item in csv.GetRecords<T>())
+		{
+			yield return item;
+		}
 	}
 
 	/// <summary>

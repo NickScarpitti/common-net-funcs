@@ -272,17 +272,17 @@ public class SshFtpTests
 	#region GetDataFromCsvCopyAsyncEnumerable Tests
 
 	[Fact]
-	public async Task GetDataFromCsvCopyAsyncEnumerable_WhenClientIsNull_ShouldThrowSshConnectionException()
+	public async Task GetDataFromCsvEnumerable_WhenClientIsNull_ShouldThrowSshConnectionException()
 	{
 		// Arrange
 		SftpClient? client = null;
 		const string path = "/test/file.csv";
 
 		// Act & Assert
-		await Should.ThrowAsync<SshConnectionException>(async () =>
+		Should.Throw<SshConnectionException>(() =>
 		{
 #pragma warning disable S108 // Nested blocks of code should not be left empty
-			await foreach (TestCsvModel _ in client.GetDataFromCsvCopyAsyncEnumerable<TestCsvModel>(path)) { }
+			foreach (TestCsvModel _ in client.GetDataFromCsvEnumerable<TestCsvModel>(path)) { }
 #pragma warning restore S108 // Nested blocks of code should not be left empty
 		});
 	}
@@ -290,16 +290,16 @@ public class SshFtpTests
 	[Theory]
 	[InlineData("/backup/data.csv")]
 	[InlineData("/tmp/export.csv")]
-	public async Task GetDataFromCsvCopyAsyncEnumerable_WhenClientIsNull_ShouldThrowForAnyCsvPath(string path)
+	public void GetDataFromCsvEnumerable_WhenClientIsNull_ShouldThrowForAnyCsvPath(string path)
 	{
 		// Arrange
 		SftpClient? client = null;
 
 		// Act & Assert
-		await Should.ThrowAsync<SshConnectionException>(async () =>
+		Should.Throw<SshConnectionException>(() =>
 		{
 #pragma warning disable S108 // Nested blocks of code should not be left empty
-			await foreach (TestCsvModel _ in client.GetDataFromCsvCopyAsyncEnumerable<TestCsvModel>(path)) { }
+			foreach (TestCsvModel _ in client.GetDataFromCsvEnumerable<TestCsvModel>(path)) { }
 #pragma warning restore S108 // Nested blocks of code should not be left empty
 		});
 	}

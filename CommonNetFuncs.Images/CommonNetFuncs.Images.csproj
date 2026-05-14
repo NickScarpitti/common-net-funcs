@@ -28,13 +28,13 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.40</Version>
+		<Version>4.0.43</Version>
 		<MinVerTagPrefix>images-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
 		<MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
 		<!-- Optional: Detect breaking changes from a previous stable version -->
-		<PackageValidationBaselineVersion>4.0.2</PackageValidationBaselineVersion>
+		<PackageValidationBaselineVersion>4.0.43</PackageValidationBaselineVersion>
 		<EnablePackageValidation>true</EnablePackageValidation>
 	</PropertyGroup>
 
@@ -81,7 +81,9 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
-		<PackageReference Include="SixLabors.ImageSharp" PrivateAssets="all" />
+		<PackageReference Include="SkiaSharp" PrivateAssets="all" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" PrivateAssets="all" />
+		<PackageReference Include="Svg.Skia" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>

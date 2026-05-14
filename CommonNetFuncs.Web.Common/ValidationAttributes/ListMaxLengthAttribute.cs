@@ -61,7 +61,7 @@ public sealed class ListMaxLengthAttribute : ValidationAttribute
 	/// <exception cref="InvalidOperationException">Length is zero or less than negative one.</exception>
 	private void EnsureLegalLengths()
 	{
-		if (Length is 0 or < (-1))
+		if (Length is 0 or < -1)
 		{
 			throw new InvalidOperationException("Length cannot be zero or less than negative one");
 		}

@@ -72,7 +72,8 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="Shouldly" />
-		<PackageReference Include="SixLabors.ImageSharp" />
+		<PackageReference Include="SkiaSharp" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
 		<PackageReference Include="xRetry.v3" />
 		<PackageReference Include="xunit.v3" />
 		<PackageReference Include="xunit.runner.visualstudio">

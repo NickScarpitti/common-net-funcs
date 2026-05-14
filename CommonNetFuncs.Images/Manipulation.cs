@@ -1,200 +1,314 @@
-﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Bmp;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Formats.Tiff;
-using SixLabors.ImageSharp.Metadata;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Processors.Transforms;
+﻿using SkiaSharp;
 using static CommonNetFuncs.Core.DimensionScale;
 
 namespace CommonNetFuncs.Images;
 
 /// <summary>
-/// Wrapper for ImageSharp image manipulation operations
+/// Represents image dimensions used in resize operations.
+/// </summary>
+public readonly struct ImageSize(int width, int height)
+{
+	public int Width { get; } = width;
+	public int Height { get; } = height;
+}
+
+/// <summary>
+/// Controls how an image is scaled to fit within the target dimensions.
+/// </summary>
+public enum ResizeMode
+{
+	/// <summary>Scale to exactly the specified dimensions (may distort).</summary>
+	Stretch = 0,
+	/// <summary>Scale to fit within the specified dimensions while preserving aspect ratio. Does not upscale.</summary>
+	Max = 1,
+	/// <summary>Scale to fill the target dimensions while preserving aspect ratio, then crop the excess.</summary>
+	Crop = 2,
+}
+
+/// <summary>
+/// Options controlling an image resize operation.
+/// </summary>
+public class ResizeOptions
+{
+	public ImageSize Size { get; set; }
+	public ResizeMode Mode { get; set; } = ResizeMode.Stretch;
+}
+
+/// <summary>
+/// Basic metadata read from an image.
+/// </summary>
+public class ImageInfo
+{
+	public int Width { get; init; }
+	public int Height { get; init; }
+	public SKEncodedImageFormat? EncodedFormat { get; init; }
+	public double HorizontalResolution { get; init; }
+	public double VerticalResolution { get; init; }
+}
+
+/// <summary>
+/// Wrapper for SkiaSharp image manipulation operations.
 /// </summary>
 public static class Manipulation
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 	private const string ReduceQualityErrorMessage = "Error reducing image quality to {Quality} with width {Width} and height {Height}";
+	private const int DefaultResizeQuality = 90;
+	private static readonly SKSamplingOptions DefaultSampling = new(SKCubicResampler.Mitchell);
 
-	private static void ResizeImageBase(this Image image, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, bool useDimsAsMax, bool resizeRequired)
+	// Decodes a bitmap using SkiaSharp. Throws InvalidOperationException for unsupported formats (e.g. TIFF).
+	private static SKBitmap DecodeBitmap(byte[] data)
 	{
+		SKBitmap? bitmap = null;
+		try { bitmap = SKBitmap.Decode(data); } catch { /* format not supported by SKBitmap.Decode */ }
+
+		if (bitmap != null)
+		{
+			return bitmap;
+		}
+
+		// Try SKCodec fallback
+		using SKData skData = SKData.CreateCopy(data);
+		using SKCodec? codec = SKCodec.Create(skData);
+		if (codec != null)
+		{
+			SKImageInfo info = codec.Info;
+			bitmap = new SKBitmap(info.Width, info.Height, info.ColorType, info.AlphaType);
+			SKCodecResult result = codec.GetPixels(info, bitmap.GetPixels());
+			if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput)
+			{
+				bitmap.Dispose();
+				throw new InvalidOperationException($"Failed to decode image pixels: {result}");
+			}
+			return bitmap;
+		}
+
+		throw new NotSupportedException("The image format is not supported. TIFF and other formats not handled by SkiaSharp cannot be decoded.");
+	}
+
+	// Returns a newly allocated resized (and optionally cropped) bitmap, or null if no resize is required.
+	private static SKBitmap? ResizeCore(SKBitmap source, ResizeOptions? resizeOptions, int? width, int? height,
+		SKSamplingOptions? sampling, bool useDimsAsMax, bool resizeRequired)
+	{
+		int targetW, targetH;
+		bool effectiveUseDimsAsMax = useDimsAsMax;
+		bool cropMode = false;
+
 		if (resizeOptions != null)
 		{
-			if (useDimsAsMax)
+			targetW = resizeOptions.Size.Width;
+			targetH = resizeOptions.Size.Height;
+			if (resizeOptions.Mode == ResizeMode.Max)
 			{
-				(width, height) = ScaleDimensionsToConstraint(image.Width, image.Height, resizeOptions.Size.Width, resizeOptions.Size.Height);
-				if (width == image.Width && height == image.Height)
-				{
-					return; // Return if no scaling is needed
-				}
-				resizeOptions.Size = new Size(width.Value, height.Value);
+				effectiveUseDimsAsMax = true;
 			}
-
-			image.Mutate(x => x.Resize(resizeOptions));
+			else if (resizeOptions.Mode == ResizeMode.Crop)
+			{
+				cropMode = true;
+			}
 		}
-		else if (width != null && height != null && (width > 0 || height > 0))
+		else if (width.HasValue && height.HasValue && (width.Value > 0 || height.Value > 0))
 		{
-			if (useDimsAsMax)
-			{
-				(width, height) = ScaleDimensionsToConstraint(image.Width, image.Height, (int)width, (int)height);
-				if (width == image.Width && height == image.Height)
-				{
-					return; // Return if no scaling is needed
-				}
-			}
-
-			image.Mutate(x => x.Resize((int)width, (int)height, resampler ?? KnownResamplers.Robidoux));
+			targetW = width.Value;
+			targetH = height.Value;
 		}
 		else if (resizeRequired)
 		{
 			throw new ArgumentException("Either resizeOptions or width and height must be provided for resizing the image.");
 		}
+		else
+		{
+			return null;
+		}
+
+		if (cropMode)
+		{
+			return ResizeCrop(source, targetW, targetH, sampling);
+		}
+
+		if (effectiveUseDimsAsMax)
+		{
+			(targetW, targetH) = ScaleDimensionsToConstraint(source.Width, source.Height, targetW, targetH, scaleUpToFit: false);
+		}
+
+		if (targetW == source.Width && targetH == source.Height)
+		{
+			return null; // No resize needed
+		}
+
+		SKImageInfo info = new(targetW, targetH, source.ColorType, source.AlphaType);
+		return source.Resize(info, sampling ?? DefaultSampling);
 	}
 
-	internal static bool ResizeImageBase(string inputFilePath, string outputFilePath, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
-		IImageEncoder? imageEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
+	// Scale-to-fill then center-crop to the target dimensions.
+	private static SKBitmap ResizeCrop(SKBitmap source, int targetW, int targetH, SKSamplingOptions? sampling)
 	{
-		Image? image = null;
+		// Compute scale factor to fill the target box (scale up so neither dimension is smaller than target)
+		double scaleX = (double)targetW / source.Width;
+		double scaleY = (double)targetH / source.Height;
+		double scale = Math.Max(scaleX, scaleY);
+
+		int scaledW = (int)Math.Ceiling(source.Width * scale);
+		int scaledH = (int)Math.Ceiling(source.Height * scale);
+
+		// Resize to scaled dimensions
+		SKImageInfo scaledInfo = new(scaledW, scaledH, source.ColorType, source.AlphaType);
+		using SKBitmap scaled = source.Resize(scaledInfo, sampling ?? DefaultSampling)
+			?? throw new InvalidOperationException("Failed to resize image for crop operation.");
+
+		// Center-crop to target dimensions
+		int cropX = (scaledW - targetW) / 2;
+		int cropY = (scaledH - targetH) / 2;
+
+		SKBitmap cropped = new(targetW, targetH, source.ColorType, source.AlphaType);
+		scaled.ExtractSubset(cropped, new SKRectI(cropX, cropY, cropX + targetW, cropY + targetH));
+		return cropped;
+	}
+
+	// Saves a bitmap to a file stream in the given format.
+	private static void SaveToFile(SKBitmap bitmap, string outputFilePath, SKEncodedImageFormat format, int quality)
+	{
+		using FileStream fs = new(outputFilePath, FileMode.Create, FileAccess.Write);
+		if (!bitmap.Encode(fs, format, quality))
+		{
+			throw new InvalidOperationException($"Failed to encode image as {format}. The format may not be supported for encoding.");
+		}
+	}
+
+	// Saves a bitmap to an output stream in the given format, then resets both streams to position 0 if seekable.
+	private static void SaveToStream(SKBitmap bitmap, Stream outputStream, SKEncodedImageFormat format, int quality, Stream? inputStreamToReset = null)
+	{
+		if (!bitmap.Encode(outputStream, format, quality))
+		{
+			throw new InvalidOperationException($"Failed to encode image as {format}. The format may not be supported for encoding.");
+		}
+
+		if (inputStreamToReset?.CanSeek == true)
+		{
+			inputStreamToReset.Position = 0;
+		}
+
+		if (outputStream.CanSeek)
+		{
+			outputStream.Position = 0;
+		}
+	}
+
+	internal static bool ResizeImageBase(string inputFilePath, string outputFilePath, ResizeOptions? resizeOptions, int? width, int? height,
+		SKSamplingOptions? samplingOptions, SKEncodedImageFormat? outputFormat, bool useDimsAsMax, Func<SKBitmap, SKBitmap>? mutate)
+	{
+		SKBitmap? original = null;
+		SKBitmap? resized = null;
+		SKBitmap? mutated = null;
 		try
 		{
-			image = Image.Load(inputFilePath);
-
-			ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
+			original = DecodeBitmap(File.ReadAllBytes(inputFilePath)) ?? throw new InvalidOperationException($"Failed to load image from {inputFilePath}");
+			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, true);
+			SKBitmap current = resized ?? original;
 
 			if (mutate != null)
 			{
-				image.Mutate(mutate);
+				mutated = mutate(current);
+				current = mutated;
 			}
 
-			if (imageEncoder == null)
-			{
-				image.Save(outputFilePath);
-			}
-			else
-			{
-				image.Save(outputFilePath, imageEncoder);
-			}
-
+			SKEncodedImageFormat format = outputFormat ?? GetImageFormatByExtension(Path.GetExtension(outputFilePath));
+			SaveToFile(current, outputFilePath, format, DefaultResizeQuality);
 			return true;
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "Error resizing image from {InputFilePath} to {OutputFilePath} with width {Width} and height {Height}", inputFilePath, outputFilePath, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
+			logger.Error(ex, "Error resizing image from {InputFilePath} to {OutputFilePath} with width {Width} and height {Height}",
+				inputFilePath, outputFilePath, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
 		}
 		finally
 		{
-			image?.Dispose();
+			mutated?.Dispose();
+			resized?.Dispose();
+			original?.Dispose();
 		}
 
 		return false;
 	}
 
-	internal static bool ResizeImageBase(Stream inputStream, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler, IImageEncoder? imageEncoder,
-			IImageFormat? imageFormat, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
+	internal static bool ResizeImageBase(Stream inputStream, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height,
+		SKSamplingOptions? samplingOptions, SKEncodedImageFormat outputFormat, bool useDimsAsMax, Func<SKBitmap, SKBitmap>? mutate)
 	{
-		Image? image = null;
+		SKBitmap? original = null;
+		SKBitmap? resized = null;
+		SKBitmap? mutated = null;
 		try
 		{
-			image = Image.Load(inputStream);
-
-			ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
+			byte[] _streamBytes;
+			using (MemoryStream _ms = new()) { inputStream.CopyTo(_ms); _streamBytes = _ms.ToArray(); }
+			if (inputStream.CanSeek) inputStream.Position = 0;
+			original = DecodeBitmap(_streamBytes) ?? throw new InvalidOperationException("Failed to load image from stream");
+			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, true);
+			SKBitmap current = resized ?? original;
 
 			if (mutate != null)
 			{
-				image.Mutate(mutate);
+				mutated = mutate(current);
+				current = mutated;
 			}
 
-			if (imageEncoder != null)
-			{
-				image.Save(outputStream, imageEncoder);
-			}
-			else if (imageFormat != null)
-			{
-				image.Save(outputStream, imageFormat);
-			}
-			else
-			{
-				throw new ArgumentException("Either imageEncoder or imageFormat must be provided for saving the resized image.");
-			}
-
-			if (inputStream.CanSeek)
-			{
-				inputStream.Position = 0;
-			}
-
-			if (outputStream.CanSeek)
-			{
-				outputStream.Position = 0;
-			}
-
+			SaveToStream(current, outputStream, outputFormat, DefaultResizeQuality, inputStream);
 			return true;
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "Error resizing image with width {Width} and height {Height}", resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
+			logger.Error(ex, "Error resizing image with width {Width} and height {Height}",
+				resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
 		}
 		finally
 		{
-			image?.Dispose();
+			mutated?.Dispose();
+			resized?.Dispose();
+			original?.Dispose();
 		}
 
 		return false;
 	}
 
-	internal static bool ResizeImageBase(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
-			IImageEncoder? imageEncoder, IImageFormat? imageFormat, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
+	internal static bool ResizeImageBase(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height,
+		SKSamplingOptions? samplingOptions, SKEncodedImageFormat outputFormat, bool useDimsAsMax, Func<SKBitmap, SKBitmap>? mutate)
 	{
-		Image? image = null;
+		SKBitmap? original = null;
+		SKBitmap? resized = null;
+		SKBitmap? mutated = null;
 		try
 		{
-			image = Image.Load(inputSpan);
-
-			ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
+			original = DecodeBitmap(inputSpan.ToArray()) ?? throw new InvalidOperationException("Failed to load image from span");
+			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, true);
+			SKBitmap current = resized ?? original;
 
 			if (mutate != null)
 			{
-				image.Mutate(mutate);
+				mutated = mutate(current);
+				current = mutated;
 			}
 
-			if (imageEncoder != null)
-			{
-				image.Save(outputStream, imageEncoder);
-			}
-			else if (imageFormat != null)
-			{
-				image.Save(outputStream, imageFormat);
-			}
-			else
-			{
-				throw new ArgumentException("Either imageEncoder or imageFormat must be provided for saving the resized image.");
-			}
-
-			if (outputStream.CanSeek)
-			{
-				outputStream.Position = 0;
-			}
-
+			SaveToStream(current, outputStream, outputFormat, DefaultResizeQuality);
 			return true;
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "Error resizing image with width {Width} and height {Height}", resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
+			logger.Error(ex, "Error resizing image with width {Width} and height {Height}",
+				resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
 		}
 		finally
 		{
-			image?.Dispose();
+			mutated?.Dispose();
+			resized?.Dispose();
+			original?.Dispose();
 		}
 
 		return false;
 	}
 
-	internal static bool ReduceImageQualityBase(string inputFilePath, string outputFilePath, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
-			IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
+	internal static bool ReduceImageQualityBase(string inputFilePath, string outputFilePath, int quality, ResizeOptions? resizeOptions, int? width, int? height,
+		SKSamplingOptions? samplingOptions, SKEncodedImageFormat? outputImageFormat, bool useDimsAsMax, Func<SKBitmap, SKBitmap>? mutate)
 	{
 		if (quality is < 1 or > 100)
 		{
@@ -205,37 +319,24 @@ public static class Manipulation
 		bool isSameFile = string.Equals(Path.GetFullPath(inputFilePath), Path.GetFullPath(outputFilePath), StringComparison.OrdinalIgnoreCase);
 		string tempFilePath = isSameFile ? Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp") : outputFilePath;
 
-		Image? image = null;
+		SKBitmap? original = null;
+		SKBitmap? resized = null;
+		SKBitmap? mutated = null;
 		try
 		{
-			image = Image.Load(inputFilePath);
-
-			ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
+			original = DecodeBitmap(File.ReadAllBytes(inputFilePath)) ?? throw new InvalidOperationException($"Failed to load image from {inputFilePath}");
+			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, false);
+			SKBitmap current = resized ?? original;
 
 			if (mutate != null)
 			{
-				image.Mutate(mutate);
+				mutated = mutate(current);
+				current = mutated;
 			}
 
-			if (outputImageFormat == null || outputImageFormat == JpegFormat.Instance)
-			{
-				image.Save(tempFilePath, jpegEncoder ?? new() { Quality = quality });
-			}
-			else
-			{
-				using Stream internalStream = new MemoryStream();
-				image.Save(internalStream, jpegEncoder ?? new() { Quality = quality });
-				internalStream.Position = 0;
-				using Image reducedImage = Image.Load(internalStream);
-				using MemoryStream reducedStream = new();
-				reducedImage.Save(reducedStream, outputImageFormat);
-				reducedStream.Position = 0;
-				using FileStream fileStream = new(tempFilePath, FileMode.Create, FileAccess.Write);
-				fileStream.Write(reducedStream.ToArray());
-				fileStream.Flush();
-			}
+			SKEncodedImageFormat format = outputImageFormat ?? SKEncodedImageFormat.Jpeg;
+			SaveToFile(current, tempFilePath, format, quality);
 
-			// If we used a temp file, replace the original atomically
 			if (isSameFile)
 			{
 				File.Move(tempFilePath, outputFilePath, true);
@@ -247,7 +348,6 @@ public static class Manipulation
 		{
 			logger.Error(ex, "Error reducing image quality from {InputFilePath} to {OutputFilePath} with quality {Quality}", inputFilePath, outputFilePath, quality);
 
-			// Clean up temp file if it exists
 			if (isSameFile && File.Exists(tempFilePath))
 			{
 				try { File.Delete(tempFilePath); } catch { /* Ignore cleanup errors */ }
@@ -255,56 +355,42 @@ public static class Manipulation
 		}
 		finally
 		{
-			image?.Dispose();
+			mutated?.Dispose();
+			resized?.Dispose();
+			original?.Dispose();
 		}
 
 		return false;
 	}
 
-	internal static bool ReduceImageQualityBase(Stream inputStream, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
-			IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
+	internal static bool ReduceImageQualityBase(Stream inputStream, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height,
+		SKSamplingOptions? samplingOptions, SKEncodedImageFormat? outputImageFormat, bool useDimsAsMax, Func<SKBitmap, SKBitmap>? mutate)
 	{
 		if (quality is < 1 or > 100)
 		{
 			throw new ArgumentException($"{nameof(quality)} must be between 1 and 100 (inclusive)", nameof(quality));
 		}
 
-		Image? image = null;
+		SKBitmap? original = null;
+		SKBitmap? resized = null;
+		SKBitmap? mutated = null;
 		try
 		{
-			image = Image.Load(inputStream);
-
-			ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
+			byte[] _streamBytes;
+			using (MemoryStream _ms = new()) { inputStream.CopyTo(_ms); _streamBytes = _ms.ToArray(); }
+			if (inputStream.CanSeek) inputStream.Position = 0;
+			original = DecodeBitmap(_streamBytes) ?? throw new InvalidOperationException("Failed to load image from stream");
+			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, false);
+			SKBitmap current = resized ?? original;
 
 			if (mutate != null)
 			{
-				image.Mutate(mutate);
+				mutated = mutate(current);
+				current = mutated;
 			}
 
-			if (outputImageFormat == null || outputImageFormat == JpegFormat.Instance)
-			{
-				image.Save(outputStream, jpegEncoder ?? new() { Quality = quality });
-			}
-			else
-			{
-				using Stream internalStream = new MemoryStream();
-				image.Save(internalStream, jpegEncoder ?? new() { Quality = quality });
-				internalStream.Position = 0;
-				using Image reducedImage = Image.Load(internalStream);
-				using MemoryStream reducedStream = new();
-				reducedImage.Save(outputStream, outputImageFormat);
-			}
-
-			if (inputStream.CanSeek)
-			{
-				inputStream.Position = 0;
-			}
-
-			if (outputStream.CanSeek)
-			{
-				outputStream.Position = 0;
-			}
-
+			SKEncodedImageFormat format = outputImageFormat ?? SKEncodedImageFormat.Jpeg;
+			SaveToStream(current, outputStream, format, quality, inputStream);
 			return true;
 		}
 		catch (Exception ex)
@@ -313,51 +399,39 @@ public static class Manipulation
 		}
 		finally
 		{
-			image?.Dispose();
+			mutated?.Dispose();
+			resized?.Dispose();
+			original?.Dispose();
 		}
 
 		return false;
 	}
 
-	internal static bool ReduceImageQualityBase(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
-			IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
+	internal static bool ReduceImageQualityBase(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height,
+		SKSamplingOptions? samplingOptions, SKEncodedImageFormat? outputImageFormat, bool useDimsAsMax, Func<SKBitmap, SKBitmap>? mutate)
 	{
 		if (quality is < 1 or > 100)
 		{
 			throw new ArgumentException($"{nameof(quality)} must be between 1 and 100 (inclusive)", nameof(quality));
 		}
 
-		Image? image = null;
+		SKBitmap? original = null;
+		SKBitmap? resized = null;
+		SKBitmap? mutated = null;
 		try
 		{
-			image = Image.Load(inputSpan);
-
-			ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
+			original = DecodeBitmap(inputSpan.ToArray()) ?? throw new InvalidOperationException("Failed to load image from span");
+			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, false);
+			SKBitmap current = resized ?? original;
 
 			if (mutate != null)
 			{
-				image.Mutate(mutate);
+				mutated = mutate(current);
+				current = mutated;
 			}
 
-			if (outputImageFormat == null || outputImageFormat == JpegFormat.Instance)
-			{
-				image.Save(outputStream, jpegEncoder ?? new() { Quality = quality });
-			}
-			else
-			{
-				using Stream internalStream = new MemoryStream();
-				image.Save(internalStream, jpegEncoder ?? new() { Quality = quality });
-				internalStream.Position = 0;
-				using Image reducedImage = Image.Load(internalStream);
-				using MemoryStream reducedStream = new();
-				reducedImage.Save(outputStream, outputImageFormat);
-			}
-
-			if (outputStream.CanSeek)
-			{
-				outputStream.Position = 0;
-			}
-
+			SKEncodedImageFormat format = outputImageFormat ?? SKEncodedImageFormat.Jpeg;
+			SaveToStream(current, outputStream, format, quality);
 			return true;
 		}
 		catch (Exception ex)
@@ -366,225 +440,36 @@ public static class Manipulation
 		}
 		finally
 		{
-			image?.Dispose();
+			mutated?.Dispose();
+			resized?.Dispose();
+			original?.Dispose();
 		}
 
 		return false;
 	}
 
-	internal static async Task<bool> ResizeImageBaseAsync(string inputFilePath, string outputFilePath, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
-			IImageEncoder? imageEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
+	internal static Task<bool> ResizeImageBaseAsync(string inputFilePath, string outputFilePath, ResizeOptions? resizeOptions, int? width, int? height,
+		SKSamplingOptions? samplingOptions, SKEncodedImageFormat? outputFormat, bool useDimsAsMax, Func<SKBitmap, SKBitmap>? mutate)
 	{
-		Image? image = null;
-		try
-		{
-			image = await Image.LoadAsync(inputFilePath).ConfigureAwait(false);
-
-			ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
-
-			if (mutate != null)
-			{
-				image.Mutate(mutate);
-			}
-
-			if (imageEncoder == null)
-			{
-				await image.SaveAsync(outputFilePath).ConfigureAwait(false);
-			}
-			else
-			{
-				await image.SaveAsync(outputFilePath, imageEncoder).ConfigureAwait(false);
-			}
-
-			return true;
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, "Error resizing image from {InputFilePath} to {OutputFilePath} with width {Width} and height {Height}", inputFilePath, outputFilePath, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
-		}
-		finally
-		{
-			image?.Dispose();
-		}
-
-		return false;
+		return Task.Run(() => ResizeImageBase(inputFilePath, outputFilePath, resizeOptions, width, height, samplingOptions, outputFormat, useDimsAsMax, mutate));
 	}
 
-	internal static async Task<bool> ResizeImageBaseAsync(Stream inputStream, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
-			IImageEncoder? imageEncoder, IImageFormat? imageFormat, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
+	internal static Task<bool> ResizeImageBaseAsync(Stream inputStream, Stream outputStream, ResizeOptions? resizeOptions, int? width, int? height,
+		SKSamplingOptions? samplingOptions, SKEncodedImageFormat outputFormat, bool useDimsAsMax, Func<SKBitmap, SKBitmap>? mutate)
 	{
-		Image? image = null;
-		try
-		{
-			image = await Image.LoadAsync(inputStream).ConfigureAwait(false);
-
-			ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, true);
-
-			if (mutate != null)
-			{
-				image.Mutate(mutate);
-			}
-
-			if (imageEncoder != null)
-			{
-				await image.SaveAsync(outputStream, imageEncoder).ConfigureAwait(false);
-			}
-			else if (imageFormat != null)
-			{
-				await image.SaveAsync(outputStream, imageFormat).ConfigureAwait(false);
-			}
-			else
-			{
-				throw new ArgumentException("Either imageEncoder or imageFormat must be provided for saving the resized image.");
-			}
-
-			if (inputStream.CanSeek)
-			{
-				inputStream.Position = 0;
-			}
-
-			if (outputStream.CanSeek)
-			{
-				outputStream.Position = 0;
-			}
-
-			return true;
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, "Error resizing image with width {Width} and height {Height}", resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
-		}
-		finally
-		{
-			image?.Dispose();
-		}
-
-		return false;
+		return Task.Run(() => ResizeImageBase(inputStream, outputStream, resizeOptions, width, height, samplingOptions, outputFormat, useDimsAsMax, mutate));
 	}
 
-	internal static async Task<bool> ReduceImageQualityBaseAsync(string inputFilePath, string outputFilePath, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
-			IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
+	internal static Task<bool> ReduceImageQualityBaseAsync(string inputFilePath, string outputFilePath, int quality, ResizeOptions? resizeOptions, int? width, int? height,
+		SKSamplingOptions? samplingOptions, SKEncodedImageFormat? outputImageFormat, bool useDimsAsMax, Func<SKBitmap, SKBitmap>? mutate)
 	{
-		if (quality is < 1 or > 100)
-		{
-			throw new ArgumentException($"{nameof(quality)} must be between 1 and 100 (inclusive)", nameof(quality));
-		}
-
-		// If input and output paths are the same, use a temporary file to avoid corruption
-		bool isSameFile = string.Equals(Path.GetFullPath(inputFilePath), Path.GetFullPath(outputFilePath), StringComparison.OrdinalIgnoreCase);
-		string tempFilePath = isSameFile ? Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp") : outputFilePath;
-
-		Image? image = null;
-		try
-		{
-			image = await Image.LoadAsync(inputFilePath).ConfigureAwait(false);
-
-			ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
-
-			if (mutate != null)
-			{
-				image.Mutate(mutate);
-			}
-
-			if (outputImageFormat == null || outputImageFormat == JpegFormat.Instance)
-			{
-				await image.SaveAsync(tempFilePath, jpegEncoder ?? new() { Quality = quality }).ConfigureAwait(false);
-			}
-			else
-			{
-				await using Stream internalStream = new MemoryStream();
-				await image.SaveAsync(internalStream, jpegEncoder ?? new() { Quality = quality }).ConfigureAwait(false);
-				internalStream.Position = 0;
-				using Image reducedImage = await Image.LoadAsync(internalStream).ConfigureAwait(false);
-				await using MemoryStream reducedStream = new();
-				await reducedImage.SaveAsync(reducedStream, outputImageFormat).ConfigureAwait(false);
-				reducedStream.Position = 0;
-				await using FileStream fileStream = new(tempFilePath, FileMode.Create, FileAccess.Write);
-				await fileStream.WriteAsync(reducedStream.ToArray()).ConfigureAwait(false);
-				await fileStream.FlushAsync().ConfigureAwait(false);
-			}
-
-			// If we used a temp file, replace the original atomically
-			if (isSameFile)
-			{
-				File.Move(tempFilePath, outputFilePath, true);
-			}
-
-			return true;
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ReduceQualityErrorMessage, quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
-
-			// Clean up temp file if it exists
-			if (isSameFile && File.Exists(tempFilePath))
-			{
-				try { File.Delete(tempFilePath); } catch { /* Ignore cleanup errors */ }
-			}
-		}
-		finally
-		{
-			image?.Dispose();
-		}
-
-		return false;
+		return Task.Run(() => ReduceImageQualityBase(inputFilePath, outputFilePath, quality, resizeOptions, width, height, samplingOptions, outputImageFormat, useDimsAsMax, mutate));
 	}
 
-	internal static async Task<bool> ReduceImageQualityBaseAsync(Stream inputStream, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height, IResampler? resampler,
-			IImageFormat? outputImageFormat, JpegEncoder? jpegEncoder, bool useDimsAsMax, Action<IImageProcessingContext>? mutate)
+	internal static Task<bool> ReduceImageQualityBaseAsync(Stream inputStream, Stream outputStream, int quality, ResizeOptions? resizeOptions, int? width, int? height,
+		SKSamplingOptions? samplingOptions, SKEncodedImageFormat? outputImageFormat, bool useDimsAsMax, Func<SKBitmap, SKBitmap>? mutate)
 	{
-		if (quality is < 1 or > 100)
-		{
-			throw new ArgumentException($"{nameof(quality)} must be between 1 and 100 (inclusive)", nameof(quality));
-		}
-
-		Image? image = null;
-		try
-		{
-			image = await Image.LoadAsync(inputStream).ConfigureAwait(false);
-
-			ResizeImageBase(image, resizeOptions, width, height, resampler, useDimsAsMax, false);
-
-			if (mutate != null)
-			{
-				image.Mutate(mutate);
-			}
-
-			if (outputImageFormat == null || outputImageFormat == JpegFormat.Instance)
-			{
-				await image.SaveAsync(outputStream, jpegEncoder ?? new() { Quality = quality }).ConfigureAwait(false);
-			}
-			else
-			{
-				await using Stream internalStream = new MemoryStream();
-				await image.SaveAsync(internalStream, jpegEncoder ?? new() { Quality = quality }).ConfigureAwait(false);
-				internalStream.Position = 0;
-				using Image reducedImage = await Image.LoadAsync(internalStream).ConfigureAwait(false);
-				await reducedImage.SaveAsync(outputStream, outputImageFormat).ConfigureAwait(false);
-			}
-
-			if (inputStream.CanSeek)
-			{
-				inputStream.Position = 0;
-			}
-
-			if (outputStream.CanSeek)
-			{
-				outputStream.Position = 0;
-			}
-
-			return true;
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ReduceQualityErrorMessage, quality, resizeOptions?.Size.Width ?? width, resizeOptions?.Size.Height ?? height);
-		}
-		finally
-		{
-			image?.Dispose();
-		}
-
-		return false;
+		return Task.Run(() => ReduceImageQualityBase(inputStream, outputStream, quality, resizeOptions, width, height, samplingOptions, outputImageFormat, useDimsAsMax, mutate));
 	}
 
 	/// <summary>
@@ -594,17 +479,17 @@ public static class Manipulation
 	/// <param name="outputFilePath">Path to output resized image file to.</param>
 	/// <param name="width">Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
 	/// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="imageEncoder">Optional: Encoder to use for the resizing operation.</param>
-	/// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
+	/// <param name="outputFormat">Optional: Output format. If null, inferred from the output file extension.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ResizeImage(string inputFilePath, string outputFilePath, int width, int height, IImageEncoder? imageEncoder = null, IResampler? resampler = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ResizeImage(string inputFilePath, string outputFilePath, int width, int height, SKEncodedImageFormat? outputFormat = null,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ResizeImageBase(inputFilePath, outputFilePath, null, width, height, resampler, imageEncoder, useDimsAsMax, mutate);
+		return ResizeImageBase(inputFilePath, outputFilePath, null, width, height, samplingOptions, outputFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
@@ -612,17 +497,17 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputFilePath">Path to image file to resize.</param>
 	/// <param name="outputFilePath">Path to output resized image file to.</param>
-	/// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="imageEncoder">Optional: Encoder to use for the resizing operation.</param>
+	/// <param name="resizeOptions">Settings for the resize operation.</param>
+	/// <param name="outputFormat">Optional: Output format. If null, inferred from the output file extension.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ResizeImage(string inputFilePath, string outputFilePath, ResizeOptions resizeOptions, IImageEncoder? imageEncoder = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ResizeImage(string inputFilePath, string outputFilePath, ResizeOptions resizeOptions, SKEncodedImageFormat? outputFormat = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ResizeImageBase(inputFilePath, outputFilePath, resizeOptions, null, null, null, imageEncoder, useDimsAsMax, mutate);
+		return ResizeImageBase(inputFilePath, outputFilePath, resizeOptions, null, null, null, outputFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
@@ -632,17 +517,17 @@ public static class Manipulation
 	/// <param name="outputStream">Stream to output resized image stream to.</param>
 	/// <param name="width">Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
 	/// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
-	/// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
+	/// <param name="outputFormat">Output format for the resized image.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ResizeImage(Stream inputStream, Stream outputStream, int width, int height, IImageEncoder imageEncoder, IResampler? resampler = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ResizeImage(Stream inputStream, Stream outputStream, int width, int height, SKEncodedImageFormat outputFormat,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ResizeImageBase(inputStream, outputStream, null, width, height, resampler, imageEncoder, null, useDimsAsMax, mutate);
+		return ResizeImageBase(inputStream, outputStream, null, width, height, samplingOptions, outputFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
@@ -650,55 +535,17 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputStream">Stream filled with image file to resize.</param>
 	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
+	/// <param name="resizeOptions">Settings for the resize operation.</param>
+	/// <param name="outputFormat">Output format for the resized image.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ResizeImage(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageEncoder imageEncoder,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ResizeImage(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, SKEncodedImageFormat outputFormat,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ResizeImageBase(inputStream, outputStream, resizeOptions, null, null, null, imageEncoder, null, useDimsAsMax, mutate);
-	}
-
-	/// <summary>
-	/// Resizes an image to the specified width and height.
-	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="width">Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="imageFormat">Output format to use for the resizing operation.</param>
-	/// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-	/// <param name="useDimsAsMax">
-	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
-	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
-	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ResizeImage(Stream inputStream, Stream outputStream, int width, int height, IImageFormat imageFormat, IResampler? resampler = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
-	{
-		return ResizeImageBase(inputStream, outputStream, null, width, height, resampler, null, imageFormat, useDimsAsMax, mutate);
-	}
-
-	/// <summary>
-	/// Resizes an image to the specified width and height.
-	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="imageFormat">Output format to use for the resizing operation.</param>
-	/// <param name="useDimsAsMax">
-	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
-	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
-	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ResizeImage(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageFormat imageFormat,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
-	{
-		return ResizeImageBase(inputStream, outputStream, resizeOptions, null, null, null, null, imageFormat, useDimsAsMax, mutate);
+		return ResizeImageBase(inputStream, outputStream, resizeOptions, null, null, null, outputFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
@@ -708,17 +555,17 @@ public static class Manipulation
 	/// <param name="outputStream">Stream to output resized image stream to.</param>
 	/// <param name="width">Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
 	/// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
-	/// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
+	/// <param name="outputFormat">Output format for the resized image.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, int width, int height, IImageEncoder imageEncoder, IResampler? resampler = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, int width, int height, SKEncodedImageFormat outputFormat,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ResizeImageBase(inputSpan, outputStream, null, width, height, resampler, imageEncoder, null, useDimsAsMax, mutate);
+		return ResizeImageBase(inputSpan, outputStream, null, width, height, samplingOptions, outputFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
@@ -726,295 +573,252 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputSpan">Span filled with image file to resize.</param>
 	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
+	/// <param name="resizeOptions">Settings for the resize operation.</param>
+	/// <param name="outputFormat">Output format for the resized image.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions resizeOptions, IImageEncoder imageEncoder,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions resizeOptions, SKEncodedImageFormat outputFormat,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ResizeImageBase(inputSpan, outputStream, resizeOptions, null, null, null, imageEncoder, null, useDimsAsMax, mutate);
+		return ResizeImageBase(inputSpan, outputStream, resizeOptions, null, null, null, outputFormat, useDimsAsMax, mutate);
+	}
+
+
+	/// <summary>
+	/// Reduces the quality of an image to the specified quality level.
+	/// </summary>
+	/// <param name="inputFilePath">Path to image file to reduce quality of.</param>
+	/// <param name="outputFilePath">Path to output reduced quality image file to.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="width">Optional: Width of resized image. If less than 1, will not resize.</param>
+	/// <param name="height">Optional: Height of resized image. If less than 1, will not resize.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, int quality = 75, int width = -1, int height = -1,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
+	{
+		return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, null, width, height, samplingOptions, null, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
-	/// Resizes an image to the specified width and height.
+	/// Reduces the quality of an image to the specified quality level.
 	/// </summary>
-	/// <param name="inputSpan">Span filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="width">Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="imageFormat">Output format to use for the resizing operation.</param>
-	/// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
+	/// <param name="inputFilePath">Path to image file to reduce quality of.</param>
+	/// <param name="outputFilePath">Path to output reduced quality image file to.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="resizeOptions">Optional: Settings for the resize operation.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, int width, int height, IImageFormat imageFormat, IResampler? resampler = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, int quality = 75, ResizeOptions? resizeOptions = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ResizeImageBase(inputSpan, outputStream, null, width, height, resampler, null, imageFormat, useDimsAsMax, mutate);
-	}
-
-	/// <summary>
-	/// Resizes an image to the specified width and height.
-	/// </summary>
-	/// <param name="inputSpan">Span filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="imageFormat">Output format to use for the resizing operation.</param>
-	/// <param name="useDimsAsMax">
-	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
-	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
-	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ResizeImage(ReadOnlySpan<byte> inputSpan, Stream outputStream, ResizeOptions resizeOptions, IImageFormat imageFormat,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
-	{
-		return ResizeImageBase(inputSpan, outputStream, resizeOptions, null, null, null, null, imageFormat, useDimsAsMax, mutate);
-	}
-
-	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image.
-	/// </summary>
-	/// <param name="inputFilePath">Path to image file to resize.</param>
-	/// <param name="outputFilePath">Path to output resized image file to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	/// <param name="useDimsAsMax">
-	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
-	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
-	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null,
-			JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
-	{
-		return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, null, width, height, resampler, null, jpegEncoder, useDimsAsMax, mutate);
-	}
-
-	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image.
-	/// </summary>
-	/// <param name="inputFilePath">Path to image file to resize.</param>
-	/// <param name="outputFilePath">Path to output resized image file to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	/// <param name="useDimsAsMax">
-	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
-	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
-	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
-	{
-		return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, null, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, null, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
 	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified.
 	/// </summary>
-	/// <param name="inputFilePath">Path to image file to resize.</param>
-	/// <param name="outputFilePath">Path to output resized image file to.</param>
+	/// <param name="inputFilePath">Path to image file to reduce quality of.</param>
+	/// <param name="outputFilePath">Path to output reduced quality image file to.</param>
 	/// <param name="outputImageFormat">The format of the output image.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="width">Optional: Width of resized image. If less than 1, will not resize.</param>
+	/// <param name="height">Optional: Height of resized image. If less than 1, will not resize.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
-			IResampler? resampler = null, JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, SKEncodedImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, null, width, height, samplingOptions, outputImageFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
 	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified.
 	/// </summary>
-	/// <param name="inputFilePath">Path to image file to resize.</param>
-	/// <param name="outputFilePath">Path to output resized image file to.</param>
+	/// <param name="inputFilePath">Path to image file to reduce quality of.</param>
+	/// <param name="outputFilePath">Path to output reduced quality image file to.</param>
 	/// <param name="outputImageFormat">The format of the output image.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="resizeOptions">Optional: Settings for the resize operation.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
-			JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(string inputFilePath, string outputFilePath, SKEncodedImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBase(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, outputImageFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image.
+	/// Reduces the quality of an image to the specified quality level.
 	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	/// <param name="useDimsAsMax">
-	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
-	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
-	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null,
-			JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
-	{
-		return ReduceImageQualityBase(inputStream, outputStream, quality, null, width, height, resampler, null, jpegEncoder, useDimsAsMax, mutate);
-	}
-
-	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image.
-	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	/// <param name="useDimsAsMax">
-	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
-	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
-	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
-	{
-		return ReduceImageQualityBase(inputStream, outputStream, quality, resizeOptions, null, null, null, null, jpegEncoder, useDimsAsMax, mutate);
-	}
-
-	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified.
-	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="outputImageFormat">The format of the output image.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	/// <param name="useDimsAsMax">
-	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
-	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
-	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
-			IResampler? resampler = null, JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
-	{
-		return ReduceImageQualityBase(inputStream, outputStream, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
-	}
-
-	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified.
-	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="outputImageFormat">The format of the output image.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	/// <param name="useDimsAsMax">
-	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
-	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
-	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
-			JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
-	{
-		return ReduceImageQualityBase(inputStream, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
-	}
-
-	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image.
-	/// </summary>
-	/// <param name="inputSpan">Span filled with image file to reduce image quality of.</param>
+	/// <param name="inputStream">Stream filled with image file to reduce quality of.</param>
 	/// <param name="outputStream">Stream to output reduced quality image to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="width">Optional: Width of resized image. If less than 1, will not resize.</param>
+	/// <param name="height">Optional: Height of resized image. If less than 1, will not resize.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null,
-			JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, int quality = 75, int width = -1, int height = -1,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBase(inputSpan, outputStream, quality, null, width, height, resampler, null, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBase(inputStream, outputStream, quality, null, width, height, samplingOptions, null, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image.
+	/// Reduces the quality of an image to the specified quality level.
 	/// </summary>
-	/// <param name="inputSpan">Span filled with image file to reduce image quality of.</param>
+	/// <param name="inputStream">Stream filled with image file to reduce quality of.</param>
 	/// <param name="outputStream">Stream to output reduced quality image to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="resizeOptions">Optional: Settings for the resize operation.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBase(inputSpan, outputStream, quality, resizeOptions, null, null, null, null, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBase(inputStream, outputStream, quality, resizeOptions, null, null, null, null, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image.
+	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified.
 	/// </summary>
-	/// <param name="inputSpan">Span filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
+	/// <param name="inputStream">Stream filled with image file to reduce quality of.</param>
+	/// <param name="outputStream">Stream to output reduced quality image to.</param>
 	/// <param name="outputImageFormat">The format of the output image.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="width">Optional: Width of resized image. If less than 1, will not resize.</param>
+	/// <param name="height">Optional: Height of resized image. If less than 1, will not resize.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
-			IResampler? resampler = null, JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, SKEncodedImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBase(inputSpan, outputStream, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBase(inputStream, outputStream, quality, null, width, height, samplingOptions, outputImageFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image.
+	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified.
 	/// </summary>
-	/// <param name="inputSpan">Span filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
+	/// <param name="inputStream">Stream filled with image file to reduce quality of.</param>
+	/// <param name="outputStream">Stream to output reduced quality image to.</param>
 	/// <param name="outputImageFormat">The format of the output image.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="resizeOptions">Optional: Settings for the resize operation.</param>
 	/// <param name="useDimsAsMax">
 	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
 	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
 	/// </param>
-	/// <param name="mutate">Optional: Apply optional mutations to the image using SixLabors Image Sharp mutations</param>
-	public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
-			JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(Stream inputStream, Stream outputStream, SKEncodedImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBase(inputSpan, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBase(inputStream, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, useDimsAsMax, mutate);
+	}
+
+	/// <summary>
+	/// Reduces the quality of an image to the specified quality level.
+	/// </summary>
+	/// <param name="inputSpan">Span filled with image file to reduce quality of.</param>
+	/// <param name="outputStream">Stream to output reduced quality image to.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="width">Optional: Width of resized image. If less than 1, will not resize.</param>
+	/// <param name="height">Optional: Height of resized image. If less than 1, will not resize.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality = 75, int width = -1, int height = -1,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
+	{
+		return ReduceImageQualityBase(inputSpan, outputStream, quality, null, width, height, samplingOptions, null, useDimsAsMax, mutate);
+	}
+
+	/// <summary>
+	/// Reduces the quality of an image to the specified quality level.
+	/// </summary>
+	/// <param name="inputSpan">Span filled with image file to reduce quality of.</param>
+	/// <param name="outputStream">Stream to output reduced quality image to.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="resizeOptions">Optional: Settings for the resize operation.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
+	{
+		return ReduceImageQualityBase(inputSpan, outputStream, quality, resizeOptions, null, null, null, null, useDimsAsMax, mutate);
+	}
+
+	/// <summary>
+	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified.
+	/// </summary>
+	/// <param name="inputSpan">Span filled with image file to reduce quality of.</param>
+	/// <param name="outputStream">Stream to output reduced quality image to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="width">Optional: Width of resized image. If less than 1, will not resize.</param>
+	/// <param name="height">Optional: Height of resized image. If less than 1, will not resize.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, SKEncodedImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
+	{
+		return ReduceImageQualityBase(inputSpan, outputStream, quality, null, width, height, samplingOptions, outputImageFormat, useDimsAsMax, mutate);
+	}
+
+	/// <summary>
+	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified.
+	/// </summary>
+	/// <param name="inputSpan">Span filled with image file to reduce quality of.</param>
+	/// <param name="outputStream">Stream to output reduced quality image to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="resizeOptions">Optional: Settings for the resize operation.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ReduceImageQuality(ReadOnlySpan<byte> inputSpan, Stream outputStream, SKEncodedImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
+	{
+		return ReduceImageQualityBase(inputSpan, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
@@ -1023,18 +827,18 @@ public static class Manipulation
 	/// <param name="imagePath">Path to the image to detect image type of.</param>
 	/// <param name="format">The format of the image if detected, otherwise null.</param>
 	/// <returns><see langword="true"/> if the image format was successfully read.</returns>
-	public static bool TryDetectImageType(string imagePath, out IImageFormat? format)
+	public static bool TryDetectImageType(string imagePath, out SKEncodedImageFormat? format)
 	{
 		format = null;
-		Image? image = null;
+		SKCodec? codec = null;
 		try
 		{
 			if (imagePath.Length < 4)
 			{
-				return false; // Not enough data to determine format
+				return false;
 			}
-			image = Image.Load(imagePath);
-			format = image.Metadata.DecodedImageFormat;
+			codec = SKCodec.Create(imagePath);
+			format = codec?.EncodedFormat;
 		}
 		catch (Exception ex)
 		{
@@ -1042,7 +846,7 @@ public static class Manipulation
 		}
 		finally
 		{
-			image?.Dispose();
+			codec?.Dispose();
 		}
 
 		return format != null;
@@ -1054,62 +858,67 @@ public static class Manipulation
 	/// <param name="imageStream">Stream containing the image data to detect image type of.</param>
 	/// <param name="format">The format of the image if detected, otherwise null.</param>
 	/// <returns><see langword="true"/> if the image format was successfully read.</returns>
-	public static bool TryDetectImageType(Stream imageStream, out IImageFormat? format)
+	public static bool TryDetectImageType(Stream imageStream, out SKEncodedImageFormat? format)
 	{
 		format = null;
-		Image? image = null;
 		try
 		{
-			if (imageStream.Length < 4)
+			long? startPosition = imageStream.CanSeek ? imageStream.Position : null;
+
+			if (imageStream.CanSeek && (imageStream.Length - startPosition!.Value) < 4)
 			{
-				return false; // Not enough data to determine format
+				return false;
 			}
-			image = Image.Load(imageStream);
-			format = image.Metadata.DecodedImageFormat;
+
+			using MemoryStream ms = new();
+			imageStream.CopyTo(ms);
+			byte[] bytes = ms.ToArray();
+
+			if (imageStream.CanSeek)
+			{
+				imageStream.Position = startPosition!.Value;
+			}
+
+			if (bytes.Length < 4)
+			{
+				return false;
+			}
+
+			using SKData data = SKData.CreateCopy(bytes);
+			using SKCodec? codec = SKCodec.Create(data);
+			format = codec?.EncodedFormat;
 		}
 		catch (Exception ex)
 		{
 			logger.Error(ex, "Error detecting image type for stream");
-		}
-		finally
-		{
-			image?.Dispose();
-		}
-
-		if (imageStream.CanSeek)
-		{
-			imageStream.Position = 0;
 		}
 
 		return format != null;
 	}
 
 	/// <summary>
-	/// Attempt to detect the image type from a stream of the image data.
+	/// Attempt to detect the image type from image data.
 	/// </summary>
 	/// <param name="imageData">Span containing the image data to detect image type of.</param>
 	/// <param name="format">The format of the image if detected, otherwise null.</param>
 	/// <returns><see langword="true"/> if the image format was successfully read.</returns>
-	public static bool TryDetectImageType(ReadOnlySpan<byte> imageData, out IImageFormat? format)
+	public static bool TryDetectImageType(ReadOnlySpan<byte> imageData, out SKEncodedImageFormat? format)
 	{
-		Image? image = null;
 		format = null;
 		try
 		{
 			if (imageData.Length < 4)
 			{
-				return false; // Not enough data to determine format
+				return false;
 			}
-			image = Image.Load(imageData);
-			format = image.Metadata.DecodedImageFormat;
+
+			using SKData data = SKData.CreateCopy(imageData.ToArray());
+			using SKCodec? codec = SKCodec.Create(data);
+			format = codec?.EncodedFormat;
 		}
 		catch (Exception ex)
 		{
 			logger.Error(ex, "Error trying to detect image type");
-		}
-		finally
-		{
-			image?.Dispose();
 		}
 
 		return format != null;
@@ -1121,19 +930,34 @@ public static class Manipulation
 	/// <param name="imagePath">Image path for the file to get metadata from.</param>
 	/// <param name="metadata">Metadata read from the image.</param>
 	/// <returns><see langword="true"/> if the metadata was successfully read.</returns>
-	public static bool TryGetMetadata(string imagePath, out ImageMetadata metadata)
+	public static bool TryGetMetadata(string imagePath, out ImageInfo metadata)
 	{
-		metadata = new ImageMetadata();
-		Image? image = null;
+		metadata = new ImageInfo();
+		SKBitmap? bitmap = null;
+		SKCodec? codec = null;
 		try
 		{
 			if (imagePath.Length < 4)
 			{
-				return false; // Not enough data to determine format
+				return false;
 			}
-			image = Image.Load(imagePath);
-			metadata = image.Metadata;
-			return true;
+			codec = SKCodec.Create(imagePath);
+			if (codec == null) return false;
+			try { bitmap = DecodeBitmap(File.ReadAllBytes(imagePath)); } catch { /* fallback to codec info */ }
+			int w = bitmap?.Width ?? codec.Info.Width;
+			int h = bitmap?.Height ?? codec.Info.Height;
+			if (w > 0 && h > 0)
+			{
+				metadata = new ImageInfo
+				{
+					Width = w,
+					Height = h,
+					EncodedFormat = codec.EncodedFormat,
+					HorizontalResolution = 96.0,
+					VerticalResolution = 96.0,
+				};
+				return true;
+			}
 		}
 		catch (Exception ex)
 		{
@@ -1141,37 +965,65 @@ public static class Manipulation
 		}
 		finally
 		{
-			image?.Dispose();
+			bitmap?.Dispose();
+			codec?.Dispose();
 		}
 
 		return false;
 	}
 
 	/// <summary>
-	/// Attempts to read metadata from an image file.
+	/// Attempts to read metadata from an image stream.
 	/// </summary>
 	/// <param name="imageStream">Stream containing the image data to get metadata from.</param>
 	/// <param name="metadata">Metadata read from the image.</param>
 	/// <returns><see langword="true"/> if the metadata was successfully read.</returns>
-	public static bool TryGetMetadata(Stream imageStream, out ImageMetadata metadata)
+	public static bool TryGetMetadata(Stream imageStream, out ImageInfo metadata)
 	{
-		metadata = new ImageMetadata();
-		Image? image = null;
+		metadata = new ImageInfo();
+		SKData? data = null;
+		SKCodec? codec = null;
+		SKBitmap? bitmap = null;
 		try
 		{
-			if (imageStream.Length < 4)
+			if (imageStream.CanSeek && imageStream.Length < 4)
 			{
-				return false; // Not enough data to determine format
+				return false;
 			}
-			image = Image.Load(imageStream);
-			metadata = image.Metadata;
+
+			// Buffer the stream so we can both detect format and decode the bitmap
+			using MemoryStream ms = new();
+			imageStream.CopyTo(ms);
+			byte[] bytes = ms.ToArray();
 
 			if (imageStream.CanSeek)
 			{
 				imageStream.Position = 0;
 			}
 
-			return true;
+			if (bytes.Length < 4)
+			{
+				return false;
+			}
+
+			data = SKData.CreateCopy(bytes);
+			codec = SKCodec.Create(data);
+			if (codec == null) return false;
+			try { bitmap = DecodeBitmap(bytes); } catch { /* fallback to codec info */ }
+			int w = bitmap?.Width ?? codec.Info.Width;
+			int h = bitmap?.Height ?? codec.Info.Height;
+			if (w > 0 && h > 0)
+			{
+				metadata = new ImageInfo
+				{
+					Width = w,
+					Height = h,
+					EncodedFormat = codec.EncodedFormat,
+					HorizontalResolution = 96.0,
+					VerticalResolution = 96.0,
+				};
+				return true;
+			}
 		}
 		catch (Exception ex)
 		{
@@ -1179,31 +1031,52 @@ public static class Manipulation
 		}
 		finally
 		{
-			image?.Dispose();
+			bitmap?.Dispose();
+			codec?.Dispose();
+			data?.Dispose();
 		}
 
 		return false;
 	}
 
 	/// <summary>
-	/// Attempts to read metadata from an image file.
+	/// Attempts to read metadata from image data.
 	/// </summary>
 	/// <param name="imageData">Span containing the image data to get metadata from.</param>
 	/// <param name="metadata">Metadata read from the image.</param>
 	/// <returns><see langword="true"/> if the metadata was successfully read.</returns>
-	public static bool TryGetMetadata(ReadOnlySpan<byte> imageData, out ImageMetadata metadata)
+	public static bool TryGetMetadata(ReadOnlySpan<byte> imageData, out ImageInfo metadata)
 	{
-		metadata = new ImageMetadata();
-		Image? image = null;
+		metadata = new ImageInfo();
+		SKData? data = null;
+		SKCodec? codec = null;
+		SKBitmap? bitmap = null;
 		try
 		{
 			if (imageData.Length < 4)
 			{
-				return false; // Not enough data to determine format
+				return false;
 			}
-			image = Image.Load(imageData);
-			metadata = image.Metadata;
-			return true;
+
+			byte[] arr = imageData.ToArray();
+			data = SKData.CreateCopy(arr);
+			codec = SKCodec.Create(data);
+			if (codec == null) return false;
+			try { bitmap = DecodeBitmap(arr); } catch { /* fallback to codec info */ }
+			int w = bitmap?.Width ?? codec.Info.Width;
+			int h = bitmap?.Height ?? codec.Info.Height;
+			if (w > 0 && h > 0)
+			{
+				metadata = new ImageInfo
+				{
+					Width = w,
+					Height = h,
+					EncodedFormat = codec.EncodedFormat,
+					HorizontalResolution = 96.0,
+					VerticalResolution = 96.0,
+				};
+				return true;
+			}
 		}
 		catch (Exception ex)
 		{
@@ -1211,10 +1084,23 @@ public static class Manipulation
 		}
 		finally
 		{
-			image?.Dispose();
+			bitmap?.Dispose();
+			codec?.Dispose();
+			data?.Dispose();
 		}
 
-		return metadata != null;
+		return false;
+	}
+
+	/// <summary>
+	/// Converts an image from one format to another, inferring the output format from the output file extension.
+	/// </summary>
+	/// <param name="inputFilePath">Path to image file to re-format.</param>
+	/// <param name="outputFilePath">Path to output re-formatted image file to.</param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ConvertImageFormat(string inputFilePath, string outputFilePath, Func<SKBitmap, SKBitmap>? mutate = null)
+	{
+		return ConvertImageFormat(inputFilePath, outputFilePath, GetImageFormatByExtension(Path.GetExtension(outputFilePath)), mutate);
 	}
 
 	/// <summary>
@@ -1222,37 +1108,33 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputFilePath">Path to image file to re-format.</param>
 	/// <param name="outputFilePath">Path to output re-formatted image file to.</param>
-	public static bool ConvertImageFormat(string inputFilePath, string outputFilePath)
+	/// <param name="outputFormat">Image format to convert to.</param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ConvertImageFormat(string inputFilePath, string outputFilePath, SKEncodedImageFormat outputFormat, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ConvertImageFormat(inputFilePath, outputFilePath, GetImageFormatByExtension(Path.GetExtension(outputFilePath)));
-	}
-
-	/// <summary>
-	/// Converts an image from one format to another.
-	/// </summary>
-	/// <param name="inputFilePath">Path to image file to re-format.</param>
-	/// <param name="outputFilePath">Path to output re-formatted image file to.</param>
-	/// <param name="outputImageFormat">Image format to convert to</param>
-	public static bool ConvertImageFormat(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat)
-	{
-		Image? image = null;
-		FileStream? fileStream = null;
+		SKBitmap? bitmap = null;
+		SKBitmap? mutated = null;
 		try
 		{
-			image = Image.Load(inputFilePath);
-			fileStream = new(outputFilePath, FileMode.Create, FileAccess.Write);
-			image.Save(fileStream, outputImageFormat);
-			fileStream.Flush();
+			bitmap = DecodeBitmap(File.ReadAllBytes(inputFilePath)) ?? throw new InvalidOperationException($"Failed to load image from {inputFilePath}");
+			SKBitmap current = bitmap;
+			if (mutate != null)
+			{
+				mutated = mutate(current);
+				current = mutated;
+			}
+			SaveToFile(current, outputFilePath, outputFormat, 100);
 			return true;
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "Error converting image format from {InputFilePath} to {OutputFilePath} with output format {OutputImageFormat}", inputFilePath, outputFilePath, outputImageFormat.Name);
+			logger.Error(ex, "Error converting image format from {InputFilePath} to {OutputFilePath} with output format {OutputFormat}",
+				inputFilePath, outputFilePath, outputFormat);
 		}
 		finally
 		{
-			image?.Dispose();
-			fileStream?.Dispose();
+			mutated?.Dispose();
+			bitmap?.Dispose();
 		}
 
 		return false;
@@ -1262,33 +1144,36 @@ public static class Manipulation
 	/// Converts an image from one format to another.
 	/// </summary>
 	/// <param name="inputStream">Stream containing the image data to re-format.</param>
-	/// <param name="outputStream">Stream to output re-formatted image file to.</param>
-	/// <param name="outputImageFormat">Image format to convert to</param>
-	public static bool ConvertImageFormat(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat)
+	/// <param name="outputStream">Stream to output re-formatted image to.</param>
+	/// <param name="outputFormat">Image format to convert to.</param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ConvertImageFormat(Stream inputStream, Stream outputStream, SKEncodedImageFormat outputFormat, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		Image? image = null;
+		SKBitmap? bitmap = null;
+		SKBitmap? mutated = null;
 		try
 		{
-			image = Image.Load(inputStream);
-			image.Save(outputStream, outputImageFormat);
-			if (inputStream.CanSeek)
+			byte[] _bytes;
+			using (MemoryStream _ms = new()) { inputStream.CopyTo(_ms); _bytes = _ms.ToArray(); }
+			if (inputStream.CanSeek) inputStream.Position = 0;
+			bitmap = DecodeBitmap(_bytes) ?? throw new InvalidOperationException("Failed to load image from stream");
+			SKBitmap current = bitmap;
+			if (mutate != null)
 			{
-				inputStream.Position = 0;
+				mutated = mutate(current);
+				current = mutated;
 			}
-
-			if (outputStream.CanSeek)
-			{
-				outputStream.Position = 0;
-			}
+			SaveToStream(current, outputStream, outputFormat, 100, inputStream);
 			return true;
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "Error converting image format from stream to output stream with output format {OutputImageFormat}", outputImageFormat.Name);
+			logger.Error(ex, "Error converting image format from stream with output format {OutputFormat}", outputFormat);
 		}
 		finally
 		{
-			image?.Dispose();
+			mutated?.Dispose();
+			bitmap?.Dispose();
 		}
 
 		return false;
@@ -1297,31 +1182,34 @@ public static class Manipulation
 	/// <summary>
 	/// Converts an image from one format to another.
 	/// </summary>
-	/// <param name="inputStream">Stream containing the image data to re-format.</param>
-	/// <param name="outputStream">Stream to output re-formatted image file to.</param>
-	/// <param name="outputImageFormat">Image format to convert to</param>
-	public static bool ConvertImageFormat(ReadOnlySpan<byte> inputStream, Stream outputStream, IImageFormat outputImageFormat)
+	/// <param name="inputData">Span containing the image data to re-format.</param>
+	/// <param name="outputStream">Stream to output re-formatted image to.</param>
+	/// <param name="outputFormat">Image format to convert to.</param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static bool ConvertImageFormat(ReadOnlySpan<byte> inputData, Stream outputStream, SKEncodedImageFormat outputFormat, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		Image? image = null;
+		SKBitmap? bitmap = null;
+		SKBitmap? mutated = null;
 		try
 		{
-			image = Image.Load(inputStream);
-			image.Save(outputStream, outputImageFormat);
-
-			if (outputStream.CanSeek)
+			bitmap = DecodeBitmap(inputData.ToArray()) ?? throw new InvalidOperationException("Failed to load image from span");
+			SKBitmap current = bitmap;
+			if (mutate != null)
 			{
-				outputStream.Position = 0;
+				mutated = mutate(current);
+				current = mutated;
 			}
-
+			SaveToStream(current, outputStream, outputFormat, 100);
 			return true;
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "Error converting image format from span to output stream with output format {OutputImageFormat}", outputImageFormat.Name);
+			logger.Error(ex, "Error converting image format from span with output format {OutputFormat}", outputFormat);
 		}
 		finally
 		{
-			image?.Dispose();
+			mutated?.Dispose();
+			bitmap?.Dispose();
 		}
 
 		return false;
@@ -1336,11 +1224,17 @@ public static class Manipulation
 	/// <param name="outputFilePath">Path to output resized image file to.</param>
 	/// <param name="width">Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
 	/// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="imageEncoder">Optional: Encoder to use for the resizing operation.</param>
-	/// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-	public static Task<bool> ResizeImageAsync(string inputFilePath, string outputFilePath, int width, int height, IImageEncoder? imageEncoder = null, IResampler? resampler = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="outputFormat">Optional: Output format. If null, inferred from the output file extension.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ResizeImageAsync(string inputFilePath, string outputFilePath, int width, int height, SKEncodedImageFormat? outputFormat = null,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ResizeImageBaseAsync(inputFilePath, outputFilePath, null, width, height, resampler, imageEncoder, useDimsAsMax, mutate);
+		return ResizeImageBaseAsync(inputFilePath, outputFilePath, null, width, height, samplingOptions, outputFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
@@ -1348,39 +1242,17 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputFilePath">Path to image file to resize.</param>
 	/// <param name="outputFilePath">Path to output resized image file to.</param>
-	/// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="imageEncoder">Optional: Encoder to use for the resizing operation.</param>
-	public static Task<bool> ResizeImageAsync(string inputFilePath, string outputFilePath, ResizeOptions resizeOptions, IImageEncoder? imageEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="resizeOptions">Settings for the resize operation.</param>
+	/// <param name="outputFormat">Optional: Output format. If null, inferred from the output file extension.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ResizeImageAsync(string inputFilePath, string outputFilePath, ResizeOptions resizeOptions, SKEncodedImageFormat? outputFormat = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ResizeImageBaseAsync(inputFilePath, outputFilePath, resizeOptions, null, null, null, imageEncoder, useDimsAsMax, mutate);
-	}
-
-	/// <summary>
-	/// Resizes an image to the specified width and height asynchronously.
-	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="width">Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
-	/// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-	public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, int width, int height, IImageEncoder imageEncoder, IResampler? resampler = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
-	{
-		return ResizeImageBaseAsync(inputStream, outputStream, null, width, height, resampler, imageEncoder, null, useDimsAsMax, mutate);
-	}
-
-	/// <summary>
-	/// Resizes an image to the specified width and height asynchronously.
-	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="imageEncoder">Encoder to use for the resizing operation.</param>
-	public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageEncoder imageEncoder,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
-	{
-		return ResizeImageBaseAsync(inputStream, outputStream, resizeOptions, null, null, null, imageEncoder, null, useDimsAsMax, mutate);
+		return ResizeImageBaseAsync(inputFilePath, outputFilePath, resizeOptions, null, null, null, outputFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
@@ -1390,12 +1262,17 @@ public static class Manipulation
 	/// <param name="outputStream">Stream to output resized image stream to.</param>
 	/// <param name="width">Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
 	/// <param name="height">Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="imageFormat">Output format to use for the resizing operation.</param>
-	/// <param name="resampler">Optional: Resampler to use for resizing. If null, defaults to Robidoux resampler.</param>
-	public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, int width, int height, IImageFormat imageFormat, IResampler? resampler = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="outputFormat">Output format for the resized image.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, int width, int height, SKEncodedImageFormat outputFormat,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ResizeImageBaseAsync(inputStream, outputStream, null, width, height, resampler, null, imageFormat, useDimsAsMax, mutate);
+		return ResizeImageBaseAsync(inputStream, outputStream, null, width, height, samplingOptions, outputFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
@@ -1403,128 +1280,173 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputStream">Stream filled with image file to resize.</param>
 	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="resizeOptions">Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="imageFormat">Output format to use for the resizing operation.</param>
-	public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, IImageFormat imageFormat,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="resizeOptions">Settings for the resize operation.</param>
+	/// <param name="outputFormat">Output format for the resized image.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ResizeImageAsync(Stream inputStream, Stream outputStream, ResizeOptions resizeOptions, SKEncodedImageFormat outputFormat,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ResizeImageBaseAsync(inputStream, outputStream, resizeOptions, null, null, null, null, imageFormat, useDimsAsMax, mutate);
+		return ResizeImageBaseAsync(inputStream, outputStream, resizeOptions, null, null, null, outputFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image asynchronously.
+	/// Reduces the quality of an image to the specified quality level asynchronously.
 	/// </summary>
-	/// <param name="inputFilePath">Path to image file to resize.</param>
-	/// <param name="outputFilePath">Path to output resized image file to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null,
-			JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="inputFilePath">Path to image file to reduce quality of.</param>
+	/// <param name="outputFilePath">Path to output reduced quality image file to.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="width">Optional: Width of resized image. If less than 1, will not resize.</param>
+	/// <param name="height">Optional: Height of resized image. If less than 1, will not resize.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, int quality = 75, int width = -1, int height = -1,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, null, width, height, resampler, null, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, null, width, height, samplingOptions, null, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image asynchronously.
+	/// Reduces the quality of an image to the specified quality level asynchronously.
 	/// </summary>
-	/// <param name="inputFilePath">Path to image file to resize.</param>
-	/// <param name="outputFilePath">Path to output resized image file to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="inputFilePath">Path to image file to reduce quality of.</param>
+	/// <param name="outputFilePath">Path to output reduced quality image file to.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="resizeOptions">Optional: Settings for the resize operation.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, int quality = 75, ResizeOptions? resizeOptions = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, null, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, null, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
 	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified asynchronously.
 	/// </summary>
-	/// <param name="inputFilePath">Path to image file to resize.</param>
-	/// <param name="outputFilePath">Path to output resized image file to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
-			IResampler? resampler = null, JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="inputFilePath">Path to image file to reduce quality of.</param>
+	/// <param name="outputFilePath">Path to output reduced quality image file to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="width">Optional: Width of resized image. If less than 1, will not resize.</param>
+	/// <param name="height">Optional: Height of resized image. If less than 1, will not resize.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, SKEncodedImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, null, width, height, samplingOptions, outputImageFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
 	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified asynchronously.
 	/// </summary>
-	/// <param name="inputFilePath">Path to image file to resize.</param>
-	/// <param name="outputFilePath">Path to output resized image file to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
-			JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="inputFilePath">Path to image file to reduce quality of.</param>
+	/// <param name="outputFilePath">Path to output reduced quality image file to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="resizeOptions">Optional: Settings for the resize operation.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ReduceImageQualityAsync(string inputFilePath, string outputFilePath, SKEncodedImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBaseAsync(inputFilePath, outputFilePath, quality, resizeOptions, null, null, null, outputImageFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image asynchronously.
+	/// Reduces the quality of an image to the specified quality level asynchronously.
 	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, int quality = 75, int width = -1, int height = -1, IResampler? resampler = null,
-			JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="inputStream">Stream filled with image file to reduce quality of.</param>
+	/// <param name="outputStream">Stream to output reduced quality image to.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="width">Optional: Width of resized image. If less than 1, will not resize.</param>
+	/// <param name="height">Optional: Height of resized image. If less than 1, will not resize.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, int quality = 75, int width = -1, int height = -1,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, null, width, height, resampler, null, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, null, width, height, samplingOptions, null, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
-	/// Reduces the quality of an image to the specified quality level and outputs a JPEG encoded image asynchronously.
+	/// Reduces the quality of an image to the specified quality level asynchronously.
 	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null, JpegEncoder? jpegEncoder = null,
-			bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="inputStream">Stream filled with image file to reduce quality of.</param>
+	/// <param name="outputStream">Stream to output reduced quality image to.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="resizeOptions">Optional: Settings for the resize operation.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, int quality = 75, ResizeOptions? resizeOptions = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, resizeOptions, null, null, null, null, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, resizeOptions, null, null, null, null, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
-	///  Reduces the quality of an image to the specified quality level and outputs image of the type specified asynchronously.
+	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified asynchronously.
 	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="width">Optional: Width of resized image. If 0, will scale to height, keeping original aspect ratio.</param>
-	/// <param name="height">Optional: Height of resized image. If 0, will scale to width, keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
-			IResampler? resampler = null, JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="inputStream">Stream filled with image file to reduce quality of.</param>
+	/// <param name="outputStream">Stream to output reduced quality image to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="width">Optional: Width of resized image. If less than 1, will not resize.</param>
+	/// <param name="height">Optional: Height of resized image. If less than 1, will not resize.</param>
+	/// <param name="samplingOptions">Optional: Sampling options for resizing. If null, defaults to Mitchell bicubic.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, SKEncodedImageFormat outputImageFormat, int quality = 75, int width = -1, int height = -1,
+		SKSamplingOptions? samplingOptions = null, bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, null, width, height, resampler, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, null, width, height, samplingOptions, outputImageFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
-	///  Reduces the quality of an image to the specified quality level and outputs image of the type specified asynchronously.
+	/// Reduces the quality of an image to the specified quality level and outputs image of the type specified asynchronously.
 	/// </summary>
-	/// <param name="inputStream">Stream filled with image file to resize.</param>
-	/// <param name="outputStream">Stream to output resized image stream to.</param>
-	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75</param>
-	/// <param name="resizeOptions">Optional: Settings for the resize operation. If width or height is 0, will scale to the non-zero dimension keeping original aspect ratio.</param>
-	/// <param name="jpegEncoder">Optional: JPEG encoder to use for this operation. If unpopulated, will create a new JpegEncoder for the conversion</param>
-	public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
-			JpegEncoder? jpegEncoder = null, bool useDimsAsMax = false, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="inputStream">Stream filled with image file to reduce quality of.</param>
+	/// <param name="outputStream">Stream to output reduced quality image to.</param>
+	/// <param name="outputImageFormat">The format of the output image.</param>
+	/// <param name="quality">Optional: Value between 1 and 100 to indicate quality level %. Default is 75.</param>
+	/// <param name="resizeOptions">Optional: Settings for the resize operation.</param>
+	/// <param name="useDimsAsMax">
+	/// <para>Optional: Use dimensions as a maximum value so dimensions will scale keeping the same aspect ratio so both height and width fit within the provided values.</para>
+	/// <para>If the provided dimensions are both larger than the current image dimensions, no scaling will occur.</para>
+	/// </param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ReduceImageQualityAsync(Stream inputStream, Stream outputStream, SKEncodedImageFormat outputImageFormat, int quality = 75, ResizeOptions? resizeOptions = null,
+		bool useDimsAsMax = false, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, jpegEncoder, useDimsAsMax, mutate);
+		return ReduceImageQualityBaseAsync(inputStream, outputStream, quality, resizeOptions, null, null, null, outputImageFormat, useDimsAsMax, mutate);
 	}
 
 	/// <summary>
@@ -1532,29 +1454,13 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="imagePath">Path to the image to detect image type of.</param>
 	/// <returns>Image format if the image format was successfully read, otherwise null.</returns>
-	public static async Task<IImageFormat?> TryDetectImageTypeAsync(string imagePath)
+	public static Task<SKEncodedImageFormat?> TryDetectImageTypeAsync(string imagePath)
 	{
-		IImageFormat? format = null;
-		Image? image = null;
-		try
+		return Task.Run(() =>
 		{
-			if (imagePath.Length < 4)
-			{
-				return format; // Not enough data to determine format
-			}
-			image = await Image.LoadAsync(imagePath).ConfigureAwait(false);
-			format = image.Metadata.DecodedImageFormat;
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, "Error detecting image type for file {ImagePath}", imagePath);
-		}
-		finally
-		{
-			image?.Dispose();
-		}
-
-		return format;
+			TryDetectImageType(imagePath, out SKEncodedImageFormat? format);
+			return format;
+		});
 	}
 
 	/// <summary>
@@ -1562,99 +1468,44 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="imageStream">Stream containing the image data to detect image type of.</param>
 	/// <returns>Image format if the image format was successfully read, otherwise null.</returns>
-	public static async Task<IImageFormat?> TryDetectImageTypeAsync(Stream imageStream)
+	public static Task<SKEncodedImageFormat?> TryDetectImageTypeAsync(Stream imageStream)
 	{
-		IImageFormat? format = null;
-		Image? image = null;
-		try
+		return Task.Run(() =>
 		{
-			if (imageStream.Length < 4)
-			{
-				return format; // Not enough data to determine format
-			}
-			image = await Image.LoadAsync(imageStream).ConfigureAwait(false);
-			format = image.Metadata.DecodedImageFormat;
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, "Error detecting image type for stream");
-		}
-		finally
-		{
-			image?.Dispose();
-		}
-
-		if (imageStream.CanSeek)
-		{
-			imageStream.Position = 0;
-		}
-
-		return format;
+			TryDetectImageType(imageStream, out SKEncodedImageFormat? format);
+			return format;
+		});
 	}
 
 	/// <summary>
 	/// Attempts to read metadata from an image file asynchronously.
 	/// </summary>
 	/// <param name="imagePath">Image path for the file to get metadata from.</param>
-	/// <returns>Metadata was successfully read, otherwise null.</returns>
-	public static async Task<ImageMetadata?> TryGetMetadataAsync(string imagePath)
+	/// <returns>Metadata if successfully read, otherwise null.</returns>
+	public static Task<ImageInfo?> TryGetMetadataAsync(string imagePath)
 	{
-		ImageMetadata? metadata = null;
-		Image? image = null;
-		try
-		{
-			if (imagePath.Length < 4)
-			{
-				return metadata; // Not enough data to determine format
-			}
-			image = await Image.LoadAsync(imagePath).ConfigureAwait(false);
-			metadata = image.Metadata;
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, "Error reading metadata from image file {ImagePath}", imagePath);
-		}
-		finally
-		{
-			image?.Dispose();
-		}
-
-		return metadata;
+		return Task.Run<ImageInfo?>(() => TryGetMetadata(imagePath, out ImageInfo metadata) ? metadata : null);
 	}
 
 	/// <summary>
-	/// Attempts to read metadata from an image file asynchronously.
+	/// Attempts to read metadata from an image stream asynchronously.
 	/// </summary>
 	/// <param name="imageStream">Stream containing the image data to get metadata from.</param>
-	/// <returns>Metadata was successfully read, otherwise null.</returns>
-	public static async Task<ImageMetadata?> TryGetMetadataAsync(Stream imageStream)
+	/// <returns>Metadata if successfully read, otherwise null.</returns>
+	public static Task<ImageInfo?> TryGetMetadataAsync(Stream imageStream)
 	{
-		ImageMetadata? metadata = null;
-		Image? image = null;
-		try
-		{
-			if (imageStream.Length < 4)
-			{
-				return metadata; // Not enough data to determine format
-			}
-			image = await Image.LoadAsync(imageStream).ConfigureAwait(false);
-			metadata = image.Metadata;
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, "Error reading metadata from image stream");
-		}
-		finally
-		{
-			image?.Dispose();
-		}
+		return Task.Run<ImageInfo?>(() => TryGetMetadata(imageStream, out ImageInfo metadata) ? metadata : null);
+	}
 
-		if (imageStream.CanSeek)
-		{
-			imageStream.Position = 0;
-		}
-
-		return metadata;
+	/// <summary>
+	/// Converts an image from one format to another asynchronously, inferring the output format from the output file extension.
+	/// </summary>
+	/// <param name="inputFilePath">Path to image file to re-format.</param>
+	/// <param name="outputFilePath">Path to output re-formatted image file to.</param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ConvertImageFormatAsync(string inputFilePath, string outputFilePath, Func<SKBitmap, SKBitmap>? mutate = null)
+	{
+		return Task.Run(() => ConvertImageFormat(inputFilePath, outputFilePath, mutate));
 	}
 
 	/// <summary>
@@ -1662,96 +1513,50 @@ public static class Manipulation
 	/// </summary>
 	/// <param name="inputFilePath">Path to image file to re-format.</param>
 	/// <param name="outputFilePath">Path to output re-formatted image file to.</param>
-	/// <param name="outputImageFormat">Image format to convert to</param>
-	public static async Task<bool> ConvertImageFormatAsync(string inputFilePath, string outputFilePath, IImageFormat outputImageFormat, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="outputFormat">Image format to convert to.</param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ConvertImageFormatAsync(string inputFilePath, string outputFilePath, SKEncodedImageFormat outputFormat, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		Image? image = null;
-		try
-		{
-			image = await Image.LoadAsync(inputFilePath).ConfigureAwait(false);
-			if (mutate != null)
-			{
-				image.Mutate(mutate);
-			}
-
-			await using FileStream fileStream = new(outputFilePath, FileMode.Create, FileAccess.Write);
-			await image.SaveAsync(fileStream, outputImageFormat).ConfigureAwait(false);
-			await fileStream.FlushAsync().ConfigureAwait(false);
-			return true;
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, "Error converting image format from {InputFilePath} to {OutputFilePath} with output format {OutputImageFormat}", inputFilePath, outputFilePath, outputImageFormat.Name);
-		}
-		finally
-		{
-			image?.Dispose();
-		}
-
-		return false;
+		return Task.Run(() => ConvertImageFormat(inputFilePath, outputFilePath, outputFormat, mutate));
 	}
 
 	/// <summary>
 	/// Converts an image from one format to another asynchronously.
 	/// </summary>
 	/// <param name="inputStream">Stream containing the image data to re-format.</param>
-	/// <param name="outputStream">Stream to output re-formatted image file to.</param>
-	/// <param name="outputImageFormat">Image format to convert to</param>
-	public static async Task<bool> ConvertImageFormatAsync(Stream inputStream, Stream outputStream, IImageFormat outputImageFormat, Action<IImageProcessingContext>? mutate = null)
+	/// <param name="outputStream">Stream to output re-formatted image to.</param>
+	/// <param name="outputFormat">Image format to convert to.</param>
+	/// <param name="mutate">Optional: Apply optional mutations to the image as a function that receives and returns an SKBitmap.</param>
+	public static Task<bool> ConvertImageFormatAsync(Stream inputStream, Stream outputStream, SKEncodedImageFormat outputFormat, Func<SKBitmap, SKBitmap>? mutate = null)
 	{
-		Image? image = null;
-		try
-		{
-			image = await Image.LoadAsync(inputStream).ConfigureAwait(false);
-			if (mutate != null)
-			{
-				image.Mutate(mutate);
-			}
-
-			await image.SaveAsync(outputStream, outputImageFormat).ConfigureAwait(false);
-
-			if (outputStream.CanSeek)
-			{
-				outputStream.Position = 0;
-			}
-
-			if (inputStream.CanSeek)
-			{
-				inputStream.Position = 0;
-			}
-
-			return true;
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, "Error converting image format from stream to output stream with output format {OutputImageFormat}", outputImageFormat.Name);
-		}
-		finally
-		{
-			image?.Dispose();
-		}
-
-		return false;
+		return Task.Run(() => ConvertImageFormat(inputStream, outputStream, outputFormat, mutate));
 	}
 
 	#endregion
 
-	public static IImageFormat GetImageFormatByExtension(string ext)
+	/// <summary>
+	/// Gets the <see cref="SKEncodedImageFormat"/> corresponding to a file extension.
+	/// </summary>
+	/// <param name="ext">File extension, with or without leading dot.</param>
+	/// <returns>The corresponding <see cref="SKEncodedImageFormat"/>.</returns>
+	/// <exception cref="ArgumentException">Thrown if the extension is null, empty, or too short.</exception>
+	/// <exception cref="NotSupportedException">Thrown if the extension maps to a format that SkiaSharp cannot encode (e.g. GIF, TIFF) or is unknown.</exception>
+	public static SKEncodedImageFormat GetImageFormatByExtension(string ext)
 	{
 		if (string.IsNullOrEmpty(ext) || ext.Length < 2)
 		{
 			throw new ArgumentException("Extension must be at least 2 characters long.", nameof(ext));
 		}
 
-		return (ext[..1] != "." ? ext.ToLowerInvariant() : ext[1..].ToLowerInvariant()) switch
+		return (ext[0] != '.' ? ext.ToLowerInvariant() : ext[1..].ToLowerInvariant()) switch
 		{
-			"bmp" => BmpFormat.Instance,
-			"gif" => GifFormat.Instance,
-			"jpeg" => JpegFormat.Instance,
-			"jpg" => JpegFormat.Instance,
-			"png" => PngFormat.Instance,
-			"tiff" => TiffFormat.Instance,
-			_ => throw new NotSupportedException($"Unsupported format: {ext}")
+			"bmp" => SKEncodedImageFormat.Bmp,
+			"jpeg" or "jpg" => SKEncodedImageFormat.Jpeg,
+			"png" => SKEncodedImageFormat.Png,
+			"webp" => SKEncodedImageFormat.Webp,
+			"gif" => throw new NotSupportedException("GIF encoding is not supported by SkiaSharp."),
+			"tiff" or "tif" => throw new NotSupportedException("TIFF encoding is not supported by SkiaSharp."),
+			_ => throw new NotSupportedException($"Unsupported image format extension: {ext}"),
 		};
 	}
 }

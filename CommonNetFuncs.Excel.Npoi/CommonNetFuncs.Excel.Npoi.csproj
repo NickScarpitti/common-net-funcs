@@ -30,7 +30,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.40</Version>
+		<Version>4.0.43</Version>
 		<MinVerTagPrefix>excel.npoi-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -83,9 +83,8 @@
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
 		<PackageReference Include="NPOI" />
-		<PackageReference Include="SkiaSharp" />
-		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
-		<PackageReference Include="SixLabors.ImageSharp" PrivateAssets="all" />
+		<PackageReference Include="SkiaSharp" PrivateAssets="all" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" PrivateAssets="all" />
 		<PackageReference Include="System.Security.Cryptography.Xml" />
 	</ItemGroup>
 

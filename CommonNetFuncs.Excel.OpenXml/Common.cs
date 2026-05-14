@@ -1,18 +1,18 @@
-﻿using CommonNetFuncs.Core;
+﻿using System.Collections.Concurrent;
+using System.Data;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
+using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using SixLabors.ImageSharp;
-using System.Collections.Concurrent;
-using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
+using SkiaSharp;
 using static CommonNetFuncs.Core.ExceptionLocation;
 //Aliased to prevent issue with DocumentFormat.OpenXml.Spreadsheet.Color
+using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
 using Dwg = DocumentFormat.OpenXml.Drawing;
 using Xdr = DocumentFormat.OpenXml.Drawing.Spreadsheet;
-using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
 
 namespace CommonNetFuncs.Excel.OpenXml;
 
@@ -1567,9 +1567,10 @@ public static partial class Common
 		// Set cells to standard font to ensure cell sizes are gotten correctly
 		Cell? cell = worksheetPart.Worksheet?.GetCellFromReference(mergedCellArea.FirstCell);
 		cell?.StyleIndex = cellStyleIndex;
-		using Image image = Image.Load(imageData);
-		int imgWidthPx = image.Width;
-		int imgHeightPx = image.Height;
+
+		SKImageInfo bounds = SKBitmap.DecodeBounds(imageData);
+		int imgWidthPx = bounds.Width;
+		int imgHeightPx = bounds.Height;
 
 		decimal imgAspect = ((decimal)imgWidthPx) / imgHeightPx;
 

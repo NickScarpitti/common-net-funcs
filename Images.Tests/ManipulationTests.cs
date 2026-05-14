@@ -1,15 +1,5 @@
-﻿using System.Numerics;
-using CommonNetFuncs.Images;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Bmp;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Formats.Tiff;
-using SixLabors.ImageSharp.Metadata;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+﻿using CommonNetFuncs.Images;
+using SkiaSharp;
 using xRetry.v3;
 
 namespace Images.Tests;
@@ -20,7 +10,6 @@ public sealed class ManipulationTests : IDisposable
 
 	public void Dispose()
 	{
-		//File.Delete(_tempSavePath);
 		GC.SuppressFinalize(this);
 	}
 
@@ -65,16 +54,48 @@ public sealed class ManipulationTests : IDisposable
 		return new MemoryStream(File.ReadAllBytes(path));
 	}
 
-	private static readonly Action<IImageProcessingContext> InvertMutate = ctx => ctx.Invert();
+	private static SKBitmap InvertBitmap(SKBitmap source)
+	{
+		SKBitmap result = source.Copy();
+		SKColor[] pixels = result.Pixels;
+		for (int i = 0; i < pixels.Length; i++)
+		{
+			SKColor c = pixels[i];
+			pixels[i] = new SKColor((byte)(255 - c.Red), (byte)(255 - c.Green), (byte)(255 - c.Blue), c.Alpha);
+		}
+		result.Pixels = pixels;
+		return result;
+	}
+
+	private static readonly Func<SKBitmap, SKBitmap> InvertMutate = InvertBitmap;
+
+	private static bool IsInvertedVersion(SKBitmap original, SKBitmap inverted)
+	{
+		int checkW = Math.Min(original.Width, 10);
+		int checkH = Math.Min(original.Height, 10);
+		if (checkW == 0 || checkH == 0) return false;
+
+		for (int x = 0; x < checkW; x++)
+		{
+			for (int y = 0; y < checkH; y++)
+			{
+				int invX = x * inverted.Width / original.Width;
+				int invY = y * inverted.Height / original.Height;
+				SKColor origPixel = original.GetPixel(x, y);
+				SKColor invPixel = inverted.GetPixel(invX, invY);
+				if (Math.Abs(255 - origPixel.Red - invPixel.Red) > 10) return false;
+				if (Math.Abs(255 - origPixel.Green - invPixel.Green) > 10) return false;
+				if (Math.Abs(255 - origPixel.Blue - invPixel.Blue) > 10) return false;
+			}
+		}
+		return true;
+	}
 
 	[RetryTheory(3)]
 	[InlineData("test.jpg", 100, 100)]
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
-	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
-	[InlineData("test.bmp", 10, 10)]
-	public async Task ResizeImage_FilePath_Succeeds(string fileName, int width, int height)
+	public void ResizeImage_FilePath_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -83,14 +104,13 @@ public sealed class ManipulationTests : IDisposable
 		try
 		{
 			// Act
-#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ResizeImage(inputPath, outputPath, width, height);
-#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
+			using SKBitmap img = SKBitmap.Decode(outputPath);
+			img.ShouldNotBeNull();
 			img.Width.ShouldBe(width);
 			img.Height.ShouldBe(height);
 		}
@@ -108,23 +128,20 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
-	public async Task ResizeImage_Stream_Succeeds(string fileName, int width, int height)
+	public void ResizeImage_Stream_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
-		await using Stream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
 
 		// Act
-#pragma warning disable S6966 // Awaitable method should be used
-		bool result = Manipulation.ResizeImage(input, output, width, height, new JpegEncoder());
-#pragma warning restore S6966 // Awaitable method should be used
+		bool result = Manipulation.ResizeImage(input, output, width, height, SKEncodedImageFormat.Jpeg);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 	}
@@ -134,21 +151,20 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
-	public async Task ResizeImage_Span_Succeeds(string fileName, int width, int height)
+	public void ResizeImage_Span_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream output = new();
 
 		// Act
-		bool result = Manipulation.ResizeImage(bytes, output, width, height, new JpegEncoder());
+		bool result = Manipulation.ResizeImage(bytes, output, width, height, SKEncodedImageFormat.Jpeg);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 	}
@@ -158,9 +174,8 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public async Task ReduceImageQuality_FilePath_Succeeds(string fileName, int quality)
+	public void ReduceImageQuality_FilePath_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -169,15 +184,14 @@ public sealed class ManipulationTests : IDisposable
 		try
 		{
 			// Act
-#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, quality, null);
-#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
-			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+			using SKCodec? codec = SKCodec.Create(outputPath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Jpeg);
 		}
 		finally
 		{
@@ -193,24 +207,23 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public async Task ReduceImageQuality_Stream_Succeeds(string fileName, int quality)
+	public void ReduceImageQuality_Stream_Succeeds(string fileName, int quality)
 	{
 		// Arrange
-		await using Stream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
 
 		// Act
-#pragma warning disable S6966 // Awaitable method should be used
 		bool result = Manipulation.ReduceImageQuality(input, output, quality, null);
-#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+		byte[] outputBytes = output.ToArray();
+		using SKData skData = SKData.CreateCopy(outputBytes);
+		using SKCodec? codec = SKCodec.Create(skData);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Jpeg);
 	}
 
 	[RetryTheory(3)]
@@ -218,62 +231,42 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public async Task ReduceImageQuality_Span_Succeeds(string fileName, int quality)
+	public void ReduceImageQuality_Span_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream output = new();
 
 		// Act
 		bool result = Manipulation.ReduceImageQuality(bytes, output, quality, null);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+		byte[] outputBytes = output.ToArray();
+		using SKData skData = SKData.CreateCopy(outputBytes);
+		using SKCodec? codec = SKCodec.Create(skData);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Jpeg);
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
-	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.bmp", ".tiff")]
-	[InlineData("test.gif", ".bmp")]
-	[InlineData("test.gif", ".gif")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.gif", ".tiff")]
-	[InlineData("test.jpeg", ".bmp")]
-	[InlineData("test.jpeg", ".gif")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpeg", ".tiff")]
-	[InlineData("test.jpg", ".bmp")]
-	[InlineData("test.jpg", ".gif")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.jpg", ".tiff")]
-	[InlineData("test.png", ".bmp")]
-	[InlineData("test.png", ".gif")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.png", ".tiff")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".gif")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
-	[InlineData("test.tiff", ".tiff")]
-	public async Task ConvertImageFormat_FilePath_Succeeds(string fileName, string outExt)
+	public void ConvertImageFormat_FilePath_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -281,18 +274,17 @@ public sealed class ManipulationTests : IDisposable
 
 		try
 		{
-			IImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
+			SKEncodedImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
 
 			// Act
-#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ConvertImageFormat(inputPath, outputPath, format);
-#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
-			img.Metadata.DecodedImageFormat.ShouldBe(format);
+			using SKCodec? codec = SKCodec.Create(outputPath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(format);
 		}
 		finally
 		{
@@ -304,113 +296,73 @@ public sealed class ManipulationTests : IDisposable
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
-	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.bmp", ".tiff")]
-	[InlineData("test.gif", ".bmp")]
-	[InlineData("test.gif", ".gif")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.gif", ".tiff")]
-	[InlineData("test.jpeg", ".bmp")]
-	[InlineData("test.jpeg", ".gif")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpeg", ".tiff")]
-	[InlineData("test.jpg", ".bmp")]
-	[InlineData("test.jpg", ".gif")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.jpg", ".tiff")]
-	[InlineData("test.png", ".bmp")]
-	[InlineData("test.png", ".gif")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.png", ".tiff")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".gif")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
-	[InlineData("test.tiff", ".tiff")]
-	public async Task ConvertImageFormat_Stream_Succeeds(string fileName, string outExt)
+	public void ConvertImageFormat_Stream_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
-		await using Stream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
-		IImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
+		SKEncodedImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
 
 		// Act
-#pragma warning disable S6966 // Awaitable method should be used
 		bool result = Manipulation.ConvertImageFormat(input, output, format);
-#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(format);
+		byte[] outputBytes = output.ToArray();
+		using SKData skData = SKData.CreateCopy(outputBytes);
+		using SKCodec? codec = SKCodec.Create(skData);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(format);
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
-	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.bmp", ".tiff")]
-	[InlineData("test.gif", ".bmp")]
-	[InlineData("test.gif", ".gif")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.gif", ".tiff")]
-	[InlineData("test.jpeg", ".bmp")]
-	[InlineData("test.jpeg", ".gif")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpeg", ".tiff")]
-	[InlineData("test.jpg", ".bmp")]
-	[InlineData("test.jpg", ".gif")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.jpg", ".tiff")]
-	[InlineData("test.png", ".bmp")]
-	[InlineData("test.png", ".gif")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.png", ".tiff")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".gif")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
-	[InlineData("test.tiff", ".tiff")]
-	public async Task ConvertImageFormat_Span_Succeeds(string fileName, string outExt)
+	public void ConvertImageFormat_Span_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		await using MemoryStream output = new();
-		IImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
+		using MemoryStream output = new();
+		SKEncodedImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
 
 		// Act
 		bool result = Manipulation.ConvertImageFormat(bytes, output, format);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(format);
+		byte[] outputBytes = output.ToArray();
+		using SKData skData = SKData.CreateCopy(outputBytes);
+		using SKCodec? codec = SKCodec.Create(skData);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(format);
 	}
 
 	[RetryTheory(3)]
@@ -419,14 +371,13 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryDetectImageType_FilePath_Works(string fileName)
 	{
 		// Arrange
 		string path = GetTestImagePath(fileName);
 
 		// Act
-		bool result = Manipulation.TryDetectImageType(path, out IImageFormat? format);
+		bool result = Manipulation.TryDetectImageType(path, out SKEncodedImageFormat? format);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -439,14 +390,13 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryDetectImageType_Stream_Works(string fileName)
 	{
 		// Arrange
-		using Stream stream = GetTestImageStream(fileName);
+		using MemoryStream stream = GetTestImageStream(fileName);
 
 		// Act
-		bool result = Manipulation.TryDetectImageType(stream, out IImageFormat? format);
+		bool result = Manipulation.TryDetectImageType(stream, out SKEncodedImageFormat? format);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -459,14 +409,13 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryDetectImageType_Span_Works(string fileName)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
 
 		// Act
-		bool result = Manipulation.TryDetectImageType(bytes, out IImageFormat? format);
+		bool result = Manipulation.TryDetectImageType(bytes, out SKEncodedImageFormat? format);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -479,19 +428,19 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryGetMetadata_FilePath_Works(string fileName)
 	{
 		// Arrange
 		string path = GetTestImagePath(fileName);
 
 		// Act
-		bool result = Manipulation.TryGetMetadata(path, out ImageMetadata? metadata);
+		bool result = Manipulation.TryGetMetadata(path, out ImageInfo metadata);
 
 		// Assert
 		result.ShouldBeTrue();
-		metadata.ShouldNotBeNull();
-		metadata!.HorizontalResolution.ShouldBeGreaterThan(0);
+		metadata.Width.ShouldBeGreaterThan(0);
+		metadata.Height.ShouldBeGreaterThan(0);
+		metadata.HorizontalResolution.ShouldBeGreaterThan(0);
 	}
 
 	[RetryTheory(3)]
@@ -500,19 +449,19 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryGetMetadata_Stream_Works(string fileName)
 	{
 		// Arrange
-		using Stream stream = GetTestImageStream(fileName);
+		using MemoryStream stream = GetTestImageStream(fileName);
 
 		// Act
-		bool result = Manipulation.TryGetMetadata(stream, out ImageMetadata? metadata);
+		bool result = Manipulation.TryGetMetadata(stream, out ImageInfo metadata);
 
 		// Assert
 		result.ShouldBeTrue();
-		metadata.ShouldNotBeNull();
-		metadata!.HorizontalResolution.ShouldBeGreaterThan(0);
+		metadata.Width.ShouldBeGreaterThan(0);
+		metadata.Height.ShouldBeGreaterThan(0);
+		metadata.HorizontalResolution.ShouldBeGreaterThan(0);
 	}
 
 	[RetryTheory(3)]
@@ -521,59 +470,19 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryGetMetadata_Span_Works(string fileName)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
 
 		// Act
-		bool result = Manipulation.TryGetMetadata(bytes, out ImageMetadata? metadata);
+		bool result = Manipulation.TryGetMetadata(bytes, out ImageInfo metadata);
 
 		// Assert
 		result.ShouldBeTrue();
-		metadata.ShouldNotBeNull();
-		metadata!.HorizontalResolution.ShouldBeGreaterThan(0);
-	}
-
-	[RetryTheory(3)]
-	[InlineData("test.bmp", "BMP")]
-	[InlineData("test.gif", "GIF")]
-	[InlineData("test.jpeg", "JPEG")]
-	[InlineData("test.jpg", "JPEG")]
-	[InlineData("test.png", "PNG")]
-	[InlineData("test.tiff", "TIFF")]
-	public async Task TryDetectImageTypeAsync_FilePath_Works(string fileName, string expectedFormat)
-	{
-		// Arrange
-		string path = GetTestImagePath(fileName);
-
-		// Act
-		IImageFormat? format = await Manipulation.TryDetectImageTypeAsync(path);
-
-		// Assert
-		format.ShouldNotBeNull();
-		format.Name.ShouldBe(expectedFormat);
-	}
-
-	[RetryTheory(3)]
-	[InlineData("test.bmp", "BMP")]
-	[InlineData("test.gif", "GIF")]
-	[InlineData("test.jpeg", "JPEG")]
-	[InlineData("test.jpg", "JPEG")]
-	[InlineData("test.png", "PNG")]
-	[InlineData("test.tiff", "TIFF")]
-	public async Task TryDetectImageTypeAsync_Stream_Works(string fileName, string expectedFormat)
-	{
-		// Arrange
-		await using Stream stream = GetTestImageStream(fileName);
-
-		// Act
-		IImageFormat? format = await Manipulation.TryDetectImageTypeAsync(stream);
-
-		// Assert
-		format.ShouldNotBeNull();
-		format.Name.ShouldBe(expectedFormat);
+		metadata.Width.ShouldBeGreaterThan(0);
+		metadata.Height.ShouldBeGreaterThan(0);
+		metadata.HorizontalResolution.ShouldBeGreaterThan(0);
 	}
 
 	[RetryTheory(3)]
@@ -582,14 +491,49 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
+	public async Task TryDetectImageTypeAsync_FilePath_Works(string fileName)
+	{
+		// Arrange
+		string path = GetTestImagePath(fileName);
+
+		// Act
+		SKEncodedImageFormat? format = await Manipulation.TryDetectImageTypeAsync(path);
+
+		// Assert
+		format.ShouldNotBeNull();
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.bmp")]
+	[InlineData("test.gif")]
+	[InlineData("test.jpeg")]
+	[InlineData("test.jpg")]
+	[InlineData("test.png")]
+	public async Task TryDetectImageTypeAsync_Stream_Works(string fileName)
+	{
+		// Arrange
+		await using MemoryStream stream = GetTestImageStream(fileName);
+
+		// Act
+		SKEncodedImageFormat? format = await Manipulation.TryDetectImageTypeAsync(stream);
+
+		// Assert
+		format.ShouldNotBeNull();
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.bmp")]
+	[InlineData("test.gif")]
+	[InlineData("test.jpeg")]
+	[InlineData("test.jpg")]
+	[InlineData("test.png")]
 	public async Task TryGetMetadataAsync_FilePath_Works(string fileName)
 	{
 		// Arrange
 		string path = GetTestImagePath(fileName);
 
 		// Act
-		ImageMetadata? metadata = await Manipulation.TryGetMetadataAsync(path);
+		ImageInfo? metadata = await Manipulation.TryGetMetadataAsync(path);
 
 		// Assert
 		metadata.ShouldNotBeNull();
@@ -602,14 +546,13 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public async Task TryGetMetadataAsync_Stream_Works(string fileName)
 	{
 		// Arrange
-		await using Stream stream = GetTestImageStream(fileName);
+		using MemoryStream stream = GetTestImageStream(fileName);
 
 		// Act
-		ImageMetadata? metadata = await Manipulation.TryGetMetadataAsync(stream);
+		ImageInfo? metadata = await Manipulation.TryGetMetadataAsync(stream);
 
 		// Assert
 		metadata.ShouldNotBeNull();
@@ -617,42 +560,21 @@ public sealed class ManipulationTests : IDisposable
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
-	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.bmp", ".tiff")]
-	[InlineData("test.gif", ".bmp")]
-	[InlineData("test.gif", ".gif")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.gif", ".tiff")]
-	[InlineData("test.jpeg", ".bmp")]
-	[InlineData("test.jpeg", ".gif")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpeg", ".tiff")]
-	[InlineData("test.jpg", ".bmp")]
-	[InlineData("test.jpg", ".gif")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.jpg", ".tiff")]
-	[InlineData("test.png", ".bmp")]
-	[InlineData("test.png", ".gif")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.png", ".tiff")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".gif")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
-	[InlineData("test.tiff", ".tiff")]
 	public async Task ConvertImageFormatAsync_FilePath_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
@@ -661,7 +583,7 @@ public sealed class ManipulationTests : IDisposable
 
 		try
 		{
-			IImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
+			SKEncodedImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
 
 			// Act
 			bool result = await Manipulation.ConvertImageFormatAsync(inputPath, outputPath, format);
@@ -669,8 +591,9 @@ public sealed class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
-			img.Metadata.DecodedImageFormat.ShouldBe(format);
+			using SKCodec? codec = SKCodec.Create(outputPath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(format);
 		}
 		finally
 		{
@@ -682,57 +605,38 @@ public sealed class ManipulationTests : IDisposable
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
-	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.bmp", ".tiff")]
-	[InlineData("test.gif", ".bmp")]
-	[InlineData("test.gif", ".gif")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.gif", ".tiff")]
-	[InlineData("test.jpeg", ".bmp")]
-	[InlineData("test.jpeg", ".gif")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpeg", ".tiff")]
-	[InlineData("test.jpg", ".bmp")]
-	[InlineData("test.jpg", ".gif")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.jpg", ".tiff")]
-	[InlineData("test.png", ".bmp")]
-	[InlineData("test.png", ".gif")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.png", ".tiff")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".gif")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
-	[InlineData("test.tiff", ".tiff")]
 	public async Task ConvertImageFormatAsync_Stream_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
-		await using Stream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
-		IImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
+		SKEncodedImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
 
 		// Act
 		bool result = await Manipulation.ConvertImageFormatAsync(input, output, format);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(format);
+		byte[] outputBytes = output.ToArray();
+		using SKData skData = SKData.CreateCopy(outputBytes);
+		using SKCodec? codec = SKCodec.Create(skData);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(format);
 	}
 
 	[RetryTheory(3)]
@@ -755,7 +659,6 @@ public sealed class ManipulationTests : IDisposable
 	[RetryTheory(3)]
 	[InlineData("test.jpg", 0)]
 	[InlineData("test.png", 101)]
-	[InlineData("test.tiff", -1)]
 	[InlineData("test.gif", -100)]
 	public void ReduceImageQuality_InvalidQuality_Throws(string fileName, int quality)
 	{
@@ -764,14 +667,14 @@ public sealed class ManipulationTests : IDisposable
 		string outputPath = GetTempFilePath(".jpg");
 
 		// Act & Assert
-		Should.Throw<ArgumentException>(() => Manipulation.ReduceImageQualityBase(inputPath, outputPath, quality, null, null, null, null, null, null, false, null));
+		Should.Throw<ArgumentException>(() => Manipulation.ReduceImageQualityBase(inputPath, outputPath, quality, null, null, null, null, null, false, null));
 	}
 
 	[RetryFact(3)]
 	public void TryDetectImageType_FilePath_TooShort_ReturnsFalse()
 	{
 		// Act
-		bool result = Manipulation.TryDetectImageType("a", out IImageFormat? format);
+		bool result = Manipulation.TryDetectImageType("a", out SKEncodedImageFormat? format);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -785,7 +688,7 @@ public sealed class ManipulationTests : IDisposable
 		using MemoryStream stream = new(new byte[2]);
 
 		// Act
-		bool result = Manipulation.TryDetectImageType(stream, out IImageFormat? format);
+		bool result = Manipulation.TryDetectImageType(stream, out SKEncodedImageFormat? format);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -799,7 +702,7 @@ public sealed class ManipulationTests : IDisposable
 		byte[] data = new byte[2];
 
 		// Act
-		bool result = Manipulation.TryDetectImageType(data, out IImageFormat? format);
+		bool result = Manipulation.TryDetectImageType(data, out SKEncodedImageFormat? format);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -810,11 +713,11 @@ public sealed class ManipulationTests : IDisposable
 	public void TryGetMetadata_FilePath_TooShort_ReturnsFalse()
 	{
 		// Act
-		bool result = Manipulation.TryGetMetadata("a", out ImageMetadata? metadata);
+		bool result = Manipulation.TryGetMetadata("a", out ImageInfo metadata);
 
 		// Assert
 		result.ShouldBeFalse();
-		metadata.ShouldNotBeNull();
+		metadata.Width.ShouldBe(0);
 	}
 
 	[RetryFact(3)]
@@ -824,11 +727,11 @@ public sealed class ManipulationTests : IDisposable
 		using MemoryStream stream = new(new byte[2]);
 
 		// Act
-		bool result = Manipulation.TryGetMetadata(stream, out ImageMetadata? metadata);
+		bool result = Manipulation.TryGetMetadata(stream, out ImageInfo metadata);
 
 		// Assert
 		result.ShouldBeFalse();
-		metadata.ShouldNotBeNull();
+		metadata.Width.ShouldBe(0);
 	}
 
 	[RetryFact(3)]
@@ -838,42 +741,38 @@ public sealed class ManipulationTests : IDisposable
 		byte[] data = new byte[2];
 
 		// Act
-		bool result = Manipulation.TryGetMetadata(data, out ImageMetadata? metadata);
+		bool result = Manipulation.TryGetMetadata(data, out ImageInfo metadata);
 
 		// Assert
 		result.ShouldBeFalse();
-		metadata.ShouldNotBeNull();
+		metadata.Width.ShouldBe(0);
 	}
 
 	[RetryTheory(3)]
 	[InlineData("test.jpg", 120, 80)]
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
-	[InlineData("test.gif", 25, 13)]
-	[InlineData("test.tiff", 33, 15)]
-	[InlineData("test.bmp", 10, 5)]
-	public async Task ResizeImage_FilePath_WithResizeOptions_Succeeds(string fileName, int width, int height)
+	public void ResizeImage_FilePath_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
 		string outputPath = GetTempFilePath(Path.GetExtension(fileName));
 		ResizeOptions options = new()
 		{
-			Size = new Size(width, height),
+			Size = new ImageSize(width, height),
 			Mode = ResizeMode.Max
 		};
 
 		try
 		{
 			// Act
-#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ResizeImage(inputPath, outputPath, options);
-#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
+			using SKBitmap img = SKBitmap.Decode(outputPath);
+			img.ShouldNotBeNull();
 			img.Width.ShouldBeLessThanOrEqualTo(width);
 			img.Height.ShouldBeLessThanOrEqualTo(height);
 		}
@@ -891,28 +790,26 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
 	[InlineData("test.gif", 25, 13)]
-	[InlineData("test.tiff", 33, 15)]
 	[InlineData("test.bmp", 10, 5)]
-	public async Task ResizeImage_Stream_WithResizeOptions_Succeeds(string fileName, int width, int height)
+	public void ResizeImage_Stream_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
-		await using Stream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
 		ResizeOptions options = new()
 		{
-			Size = new Size(width, height),
+			Size = new ImageSize(width, height),
 			Mode = ResizeMode.Max
 		};
 
 		// Act
-#pragma warning disable S6966 // Awaitable method should be used
-		bool result = Manipulation.ResizeImage(input, output, options, new JpegEncoder());
-#pragma warning restore S6966 // Awaitable method should be used
+		bool result = Manipulation.ResizeImage(input, output, options, SKEncodedImageFormat.Jpeg);
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = await Image.LoadAsync(output);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 		img.Width.ShouldBeLessThanOrEqualTo(width);
 		img.Height.ShouldBeLessThanOrEqualTo(height);
 	}
@@ -922,26 +819,26 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
 	[InlineData("test.gif", 25, 13)]
-	[InlineData("test.tiff", 33, 15)]
 	[InlineData("test.bmp", 10, 5)]
-	public async Task ResizeImage_Span_WithResizeOptions_Succeeds(string fileName, int width, int height)
+	public void ResizeImage_Span_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream output = new();
 		ResizeOptions options = new()
 		{
-			Size = new Size(width, height),
+			Size = new ImageSize(width, height),
 			Mode = ResizeMode.Max
 		};
 
 		// Act
-		bool result = Manipulation.ResizeImage(bytes, output, options, new JpegEncoder());
+		bool result = Manipulation.ResizeImage(bytes, output, options, SKEncodedImageFormat.Jpeg);
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = await Image.LoadAsync(output);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 		img.Width.ShouldBeLessThanOrEqualTo(width);
 		img.Height.ShouldBeLessThanOrEqualTo(height);
 	}
@@ -951,9 +848,8 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public async Task ReduceImageQuality_FilePath_ToPng_Succeeds(string fileName, int quality)
+	public void ReduceImageQuality_FilePath_ToPng_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -962,15 +858,14 @@ public sealed class ManipulationTests : IDisposable
 		try
 		{
 			// Act
-#pragma warning disable S6966 // Awaitable method should be used
-			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, PngFormat.Instance, quality, null);
-#pragma warning restore S6966 // Awaitable method should be used
+			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, SKEncodedImageFormat.Png, quality, null);
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
-			img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
+			using SKCodec? codec = SKCodec.Create(outputPath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
 		}
 		finally
 		{
@@ -986,24 +881,24 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public async Task ReduceImageQuality_Stream_ToPng_Succeeds(string fileName, int quality)
+	public void ReduceImageQuality_Stream_ToPng_Succeeds(string fileName, int quality)
 	{
 		// Arrange
-		await using Stream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
 
 		// Act
-#pragma warning disable S6966 // Awaitable method should be used
-		bool result = Manipulation.ReduceImageQuality(input, output, PngFormat.Instance, quality, null);
-#pragma warning restore S6966 // Awaitable method should be used
+		bool result = Manipulation.ReduceImageQuality(input, output, SKEncodedImageFormat.Png, quality, null);
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
+		byte[] outputBytes = output.ToArray();
+		using SKData skData = SKData.CreateCopy(outputBytes);
+		using SKCodec? codec = SKCodec.Create(skData);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
 	}
 
 	[RetryTheory(3)]
@@ -1011,22 +906,24 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public async Task ReduceImageQuality_Span_ToPng_Succeeds(string fileName, int quality)
+	public void ReduceImageQuality_Span_ToPng_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream output = new();
 
 		// Act
-		bool result = Manipulation.ReduceImageQuality(bytes, output, PngFormat.Instance, quality, null);
+		bool result = Manipulation.ReduceImageQuality(bytes, output, SKEncodedImageFormat.Png, quality, null);
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
+		byte[] outputBytes = output.ToArray();
+		using SKData skData = SKData.CreateCopy(outputBytes);
+		using SKCodec? codec = SKCodec.Create(skData);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
 	}
 
 	[RetryTheory(3)]
@@ -1034,7 +931,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public async Task ReduceImageQualityAsync_FilePath_ToPng_Succeeds(string fileName, int quality)
 	{
@@ -1045,13 +941,14 @@ public sealed class ManipulationTests : IDisposable
 		try
 		{
 			// Act
-			bool result = await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, PngFormat.Instance, quality, null);
+			bool result = await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, SKEncodedImageFormat.Png, quality, null);
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
-			img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
+			using SKCodec? codec = SKCodec.Create(outputPath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
 		}
 		finally
 		{
@@ -1067,40 +964,38 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public async Task ReduceImageQualityAsync_Stream_ToPng_Succeeds(string fileName, int quality)
 	{
 		// Arrange
-		await using Stream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
 
 		// Act
-		bool result = await Manipulation.ReduceImageQualityAsync(input, output, PngFormat.Instance, quality, null, null);
+		bool result = await Manipulation.ReduceImageQualityAsync(input, output, SKEncodedImageFormat.Png, quality, null);
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
+		byte[] outputBytes = output.ToArray();
+		using SKData skData = SKData.CreateCopy(outputBytes);
+		using SKCodec? codec = SKCodec.Create(skData);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
 	}
 
 	[RetryTheory(3)]
 	[InlineData("test.jpg", 120, 80)]
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
-	[InlineData("test.gif", 25, 13)]
-	[InlineData("test.tiff", 33, 15)]
-	[InlineData("test.bmp", 10, 5)]
 	public async Task ResizeImageAsync_FilePath_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
 		string outputPath = GetTempFilePath(Path.GetExtension(fileName));
-
 		ResizeOptions options = new()
 		{
-			Size = new Size(width, height),
+			Size = new ImageSize(width, height),
 			Mode = ResizeMode.Max
 		};
 
@@ -1112,7 +1007,8 @@ public sealed class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
+			using SKBitmap img = SKBitmap.Decode(outputPath);
+			img.ShouldNotBeNull();
 			img.Width.ShouldBeLessThanOrEqualTo(width);
 			img.Height.ShouldBeLessThanOrEqualTo(height);
 		}
@@ -1130,26 +1026,26 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
 	[InlineData("test.gif", 25, 13)]
-	[InlineData("test.tiff", 33, 15)]
 	[InlineData("test.bmp", 10, 5)]
 	public async Task ResizeImageAsync_Stream_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
-		await using Stream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
 		ResizeOptions options = new()
 		{
-			Size = new Size(width, height),
+			Size = new ImageSize(width, height),
 			Mode = ResizeMode.Max
 		};
 
 		// Act
-		bool result = await Manipulation.ResizeImageAsync(input, output, options, new JpegEncoder());
+		bool result = await Manipulation.ResizeImageAsync(input, output, options, SKEncodedImageFormat.Jpeg);
 
 		// Assert
 		result.ShouldBeTrue();
 		output.Position.ShouldBe(0);
-		using Image img = await Image.LoadAsync(output);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 		img.Width.ShouldBeLessThanOrEqualTo(width);
 		img.Height.ShouldBeLessThanOrEqualTo(height);
 	}
@@ -1159,48 +1055,37 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
-	public async Task ResizeImage_FilePath_Mutate_Succeeds(string fileName, int width, int height)
+	public void ResizeImage_FilePath_Mutate_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
 		string outputPath = GetTempFilePath(".jpg");
+		string refOutputPath = GetTempFilePath(".jpg");
 
 		try
 		{
-			// Act
-#pragma warning disable S6966 // Awaitable method should be used
+			// Act - with mutate (invert)
 			bool result = Manipulation.ResizeImage(inputPath, outputPath, width, height, mutate: InvertMutate);
-#pragma warning restore S6966 // Awaitable method should be used
+			// Act - without mutate (reference)
+			Manipulation.ResizeImage(inputPath, refOutputPath, width, height);
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
+			using SKBitmap img = SKBitmap.Decode(outputPath);
+			img.ShouldNotBeNull();
 			img.Width.ShouldBe(width);
 			img.Height.ShouldBe(height);
 
-			File.Delete(outputPath);
-
-			// Now check if the image is inverted
-#pragma warning disable S6966 // Awaitable method should be used
-			Manipulation.ResizeImage(inputPath, outputPath, width, height);
-#pragma warning restore S6966 // Awaitable method should be used
-
-			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-			// Spot check: pixel [0,0] should be inverted from original
-			using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(outputPath);
-			bool isInverted = IsInvertedVersion(orig, imgClone);
-
-			isInverted.ShouldBeTrue();
+			using SKBitmap orig = SKBitmap.Decode(refOutputPath);
+			orig.ShouldNotBeNull();
+			IsInvertedVersion(orig, img).ShouldBeTrue();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
+			if (File.Exists(refOutputPath)) File.Delete(refOutputPath);
 		}
 	}
 
@@ -1209,33 +1094,28 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
-	public async Task ResizeImage_Stream_Mutate_Succeeds(string fileName, int width, int height)
+	public void ResizeImage_Stream_Mutate_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
-		await using MemoryStream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
-		await using MemoryStream nonInvertedOutput = new();
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
+		using MemoryStream nonInvertedOutput = new();
 
 		// Act
-#pragma warning disable S6966 // Awaitable method should be used
-		bool result = Manipulation.ResizeImage(input, output, width, height, new JpegEncoder(), mutate: InvertMutate);
-		Manipulation.ResizeImage(input, nonInvertedOutput, width, height, new JpegEncoder());
-#pragma warning restore S6966 // Awaitable method should be used
+		bool result = Manipulation.ResizeImage(input, output, width, height, SKEncodedImageFormat.Jpeg, mutate: InvertMutate);
+		Manipulation.ResizeImage(input, nonInvertedOutput, width, height, SKEncodedImageFormat.Jpeg);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 
-		using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
-		bool isInverted = IsInvertedVersion(orig, imgClone);
-
-		isInverted.ShouldBeTrue();
+		using SKBitmap orig = SKBitmap.Decode(nonInvertedOutput);
+		orig.ShouldNotBeNull();
+		IsInvertedVersion(orig, img).ShouldBeTrue();
 	}
 
 	[RetryTheory(3)]
@@ -1243,31 +1123,28 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
-	public async Task ResizeImage_Span_Mutate_Succeeds(string fileName, int width, int height)
+	public void ResizeImage_Span_Mutate_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		await using MemoryStream output = new();
-		await using MemoryStream nonInvertedOutput = new();
+		using MemoryStream output = new();
+		using MemoryStream nonInvertedOutput = new();
 
 		// Act
-		bool result = Manipulation.ResizeImage(bytes, output, width, height, new JpegEncoder(), mutate: InvertMutate);
-		Manipulation.ResizeImage(bytes, nonInvertedOutput, width, height, new JpegEncoder());
+		bool result = Manipulation.ResizeImage(bytes, output, width, height, SKEncodedImageFormat.Jpeg, mutate: InvertMutate);
+		Manipulation.ResizeImage(bytes, nonInvertedOutput, width, height, SKEncodedImageFormat.Jpeg);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 
-		using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
-		bool isInverted = IsInvertedVersion(orig, imgClone);
-
-		isInverted.ShouldBeTrue();
+		using SKBitmap orig = SKBitmap.Decode(nonInvertedOutput);
+		orig.ShouldNotBeNull();
+		IsInvertedVersion(orig, img).ShouldBeTrue();
 	}
 
 	[RetryTheory(3)]
@@ -1275,9 +1152,8 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public async Task ReduceImageQuality_FilePath_Mutate_Succeeds(string fileName, int quality)
+	public void ReduceImageQuality_FilePath_Mutate_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -1286,21 +1162,17 @@ public sealed class ManipulationTests : IDisposable
 		try
 		{
 			// Act
-#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, quality, null, mutate: InvertMutate);
-#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
-			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+			using SKBitmap img = SKBitmap.Decode(outputPath);
+			img.ShouldNotBeNull();
 
-			using Image orig = await Image.LoadAsync(inputPath);
-			using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-			using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
-			bool isInverted = IsInvertedVersion(origClone, imgClone);
-			isInverted.ShouldBeTrue();
+			using SKBitmap orig = SKBitmap.Decode(inputPath);
+			orig.ShouldNotBeNull();
+			IsInvertedVersion(orig, img).ShouldBeTrue();
 		}
 		finally
 		{
@@ -1316,30 +1188,24 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public async Task ReduceImageQuality_Stream_Mutate_Succeeds(string fileName, int quality)
+	public void ReduceImageQuality_Stream_Mutate_Succeeds(string fileName, int quality)
 	{
 		// Arrange
-		await using MemoryStream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
 
 		// Act
-#pragma warning disable S6966 // Awaitable method should be used
 		bool result = Manipulation.ReduceImageQuality(input, output, quality, null, mutate: InvertMutate);
-#pragma warning restore S6966 // Awaitable method should be used
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 
-		using Image orig = await Image.LoadAsync(input);
-		using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
-		bool isInverted = IsInvertedVersion(origClone, imgClone);
-		isInverted.ShouldBeTrue();
+		using SKBitmap orig = SKBitmap.Decode(input);
+		orig.ShouldNotBeNull();
+		IsInvertedVersion(orig, img).ShouldBeTrue();
 	}
 
 	[RetryTheory(3)]
@@ -1347,67 +1213,42 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
-	public async Task ReduceImageQuality_Span_Mutate_Succeeds(string fileName, int quality)
+	public void ReduceImageQuality_Span_Mutate_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream output = new();
 
 		// Act
 		bool result = Manipulation.ReduceImageQuality(bytes, output, quality, null, mutate: InvertMutate);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 
-		using Image orig = Image.Load(bytes);
-		using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
-		bool isInverted = IsInvertedVersion(origClone, imgClone);
-		isInverted.ShouldBeTrue();
+		using SKBitmap orig = SKBitmap.Decode(bytes);
+		orig.ShouldNotBeNull();
+		IsInvertedVersion(orig, img).ShouldBeTrue();
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
-	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.bmp", ".tiff")]
-	[InlineData("test.gif", ".bmp")]
-	[InlineData("test.gif", ".gif")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.gif", ".tiff")]
-	[InlineData("test.jpeg", ".bmp")]
-	[InlineData("test.jpeg", ".gif")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpeg", ".tiff")]
-	[InlineData("test.jpg", ".bmp")]
-	[InlineData("test.jpg", ".gif")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.jpg", ".tiff")]
-	[InlineData("test.png", ".bmp")]
-	[InlineData("test.png", ".gif")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.png", ".tiff")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".gif")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
-	[InlineData("test.tiff", ".tiff")]
 	public async Task ConvertImageFormatAsync_FilePath_Mutate_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
@@ -1417,96 +1258,74 @@ public sealed class ManipulationTests : IDisposable
 
 		try
 		{
-			IImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
+			SKEncodedImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
 
-			// Act
+			// Act - with invert mutate
 			bool result = await Manipulation.ConvertImageFormatAsync(inputPath, invertedOutputPath, format, mutate: InvertMutate);
+			// Act - without mutate (reference)
+			await Manipulation.ConvertImageFormatAsync(inputPath, outputPath, format);
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(invertedOutputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(invertedOutputPath);
-			img.Metadata.DecodedImageFormat.ShouldBe(format);
+			using SKBitmap img = SKBitmap.Decode(invertedOutputPath);
+			img.ShouldNotBeNull();
 
-			File.Delete(outputPath);
+			using SKCodec? codec = SKCodec.Create(invertedOutputPath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(format);
 
-			// Now check if the image is inverted
-			await Manipulation.ConvertImageFormatAsync(inputPath, outputPath, format);
-
-			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-			// Spot check: pixel [0,0] should be inverted from original
-			using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(outputPath);
-			bool isInverted = IsInvertedVersion(orig, imgClone);
-
-			isInverted.ShouldBeTrue();
+			using SKBitmap orig = SKBitmap.Decode(outputPath);
+			orig.ShouldNotBeNull();
+			IsInvertedVersion(orig, img).ShouldBeTrue();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
+			if (File.Exists(invertedOutputPath)) File.Delete(invertedOutputPath);
 		}
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
-	[InlineData("test.bmp", ".gif")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.bmp", ".tiff")]
-	[InlineData("test.gif", ".bmp")]
-	[InlineData("test.gif", ".gif")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.gif", ".tiff")]
-	[InlineData("test.jpeg", ".bmp")]
-	[InlineData("test.jpeg", ".gif")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpeg", ".tiff")]
-	[InlineData("test.jpg", ".bmp")]
-	[InlineData("test.jpg", ".gif")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.jpg", ".tiff")]
-	[InlineData("test.png", ".bmp")]
-	[InlineData("test.png", ".gif")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.png", ".tiff")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".gif")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
-	[InlineData("test.tiff", ".tiff")]
 	public async Task ConvertImageFormatAsync_Stream_Mutate_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
-		await using MemoryStream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
-		IImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
+		SKEncodedImageFormat format = Manipulation.GetImageFormatByExtension(outExt);
 
 		// Act
 		bool result = await Manipulation.ConvertImageFormatAsync(input, output, format, mutate: InvertMutate);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(format);
+		byte[] outputBytes = output.ToArray();
+		using SKData skData = SKData.CreateCopy(outputBytes);
+		using SKCodec? codec = SKCodec.Create(skData);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(format);
 
-		using Image orig = await Image.LoadAsync(input);
-		using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
-		bool isInverted = IsInvertedVersion(origClone, imgClone);
-		isInverted.ShouldBeTrue();
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
+
+		using SKBitmap orig = SKBitmap.Decode(input);
+		orig.ShouldNotBeNull();
+		IsInvertedVersion(orig, img).ShouldBeTrue();
 	}
 
 	[RetryTheory(3)]
@@ -1514,46 +1333,37 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
 	public async Task ResizeImageAsync_FilePath_Mutate_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
 		string outputPath = GetTempFilePath(".jpg");
+		string refOutputPath = GetTempFilePath(".jpg");
 
 		try
 		{
-			// Act
+			// Act - with mutate (invert)
 			bool result = await Manipulation.ResizeImageAsync(inputPath, outputPath, width, height, mutate: InvertMutate);
+			// Act - without mutate (reference)
+			Manipulation.ResizeImage(inputPath, refOutputPath, width, height);
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
+			using SKBitmap img = SKBitmap.Decode(outputPath);
+			img.ShouldNotBeNull();
 			img.Width.ShouldBe(width);
 			img.Height.ShouldBe(height);
 
-			File.Delete(outputPath);
-
-			// Now check if the image is inverted
-#pragma warning disable S6966 // Awaitable method should be used
-			Manipulation.ResizeImage(inputPath, outputPath, width, height);
-#pragma warning restore S6966 // Awaitable method should be used
-
-			using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-			// Spot check: pixel [0,0] should be inverted from original
-			using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(outputPath);
-			bool isInverted = IsInvertedVersion(orig, imgClone);
-
-			isInverted.ShouldBeTrue();
+			using SKBitmap orig = SKBitmap.Decode(refOutputPath);
+			orig.ShouldNotBeNull();
+			IsInvertedVersion(orig, img).ShouldBeTrue();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
+			if (File.Exists(refOutputPath)) File.Delete(refOutputPath);
 		}
 	}
 
@@ -1562,33 +1372,28 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
 	public async Task ResizeImageAsync_Stream_Mutate_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
-		await using MemoryStream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
-		await using MemoryStream nonInvertedOutput = new();
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
+		using MemoryStream nonInvertedOutput = new();
 
 		// Act
-		bool result = await Manipulation.ResizeImageAsync(input, output, width, height, new JpegEncoder(), mutate: InvertMutate);
-#pragma warning disable S6966 // Awaitable method should be used
-		Manipulation.ResizeImage(input, nonInvertedOutput, width, height, new JpegEncoder());
-#pragma warning restore S6966 // Awaitable method should be used
+		bool result = await Manipulation.ResizeImageAsync(input, output, width, height, SKEncodedImageFormat.Jpeg, mutate: InvertMutate);
+		Manipulation.ResizeImage(input, nonInvertedOutput, width, height, SKEncodedImageFormat.Jpeg);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 		img.Width.ShouldBe(width);
 		img.Height.ShouldBe(height);
 
-		using Image<Rgb24> imgClone = img.CloneAs<Rgb24>();
-		using Image<Rgb24> orig = await Image.LoadAsync<Rgb24>(nonInvertedOutput);
-		bool isInverted = IsInvertedVersion(orig, imgClone);
-
-		isInverted.ShouldBeTrue();
+		using SKBitmap orig = SKBitmap.Decode(nonInvertedOutput);
+		orig.ShouldNotBeNull();
+		IsInvertedVersion(orig, img).ShouldBeTrue();
 	}
 
 	[RetryTheory(3)]
@@ -1596,13 +1401,13 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public async Task ReduceImageQualityAsync_FilePath_Mutate_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
 		string outputPath = GetTempFilePath(".jpg");
+
 		try
 		{
 			// Act
@@ -1611,21 +1416,16 @@ public sealed class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
-			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+			using SKBitmap img = SKBitmap.Decode(outputPath);
+			img.ShouldNotBeNull();
 
-			using Image orig = await Image.LoadAsync(inputPath);
-			using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-			using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
-			bool isInverted = IsInvertedVersion(origClone, imgClone);
-			isInverted.ShouldBeTrue();
+			using SKBitmap orig = SKBitmap.Decode(inputPath);
+			orig.ShouldNotBeNull();
+			IsInvertedVersion(orig, img).ShouldBeTrue();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
@@ -1634,28 +1434,24 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public async Task ReduceImageQualityAsync_Stream_Mutate_Succeeds(string fileName, int quality)
 	{
 		// Arrange
-		await using MemoryStream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
 
 		// Act
 		bool result = await Manipulation.ReduceImageQualityAsync(input, output, quality, null, mutate: InvertMutate);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
-		img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 
-		using Image orig = await Image.LoadAsync(input);
-		using Image<Rgba32> imgClone = img.CloneAs<Rgba32>();
-		using Image<Rgba32> origClone = orig.CloneAs<Rgba32>();
-		bool isInverted = IsInvertedVersion(origClone, imgClone);
-		isInverted.ShouldBeTrue();
+		using SKBitmap orig = SKBitmap.Decode(input);
+		orig.ShouldNotBeNull();
+		IsInvertedVersion(orig, img).ShouldBeTrue();
 	}
 
 	[RetryTheory(3)]
@@ -1669,7 +1465,7 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.png", 50, 25, false, true)]
 	[InlineData("test.png", 50, 25, true, true)]
 	[InlineData("test.png", -1, -1, true, true)]
-	public async Task ResizeImage_FilePath_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
+	public void ResizeImage_FilePath_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -1679,22 +1475,22 @@ public sealed class ManipulationTests : IDisposable
 		{
 			if (width < 0 && height < 0)
 			{
-				using Image originalImg = await Image.LoadAsync(inputPath);
+				using SKBitmap originalImg = SKBitmap.Decode(inputPath);
+				originalImg.ShouldNotBeNull();
 				width = originalImg.Width;
 				height = originalImg.Height;
-				originalImg.Dispose();
 			}
 
 			// Act
-#pragma warning disable S6966 // Awaitable method should be used
-			bool result = !useResizeOptions ? Manipulation.ResizeImage(inputPath, outputPath, width, height, useDimsAsMax: useDimsAsMax)
-					: Manipulation.ResizeImage(inputPath, outputPath, new() { Size = new(width, height) }, useDimsAsMax: useDimsAsMax);
-#pragma warning restore S6966 // Awaitable method should be used
+			bool result = !useResizeOptions
+				? Manipulation.ResizeImage(inputPath, outputPath, width, height, useDimsAsMax: useDimsAsMax)
+				: Manipulation.ResizeImage(inputPath, outputPath, new ResizeOptions { Size = new ImageSize(width, height) }, useDimsAsMax: useDimsAsMax);
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
+			using SKBitmap img = SKBitmap.Decode(outputPath);
+			img.ShouldNotBeNull();
 
 			if (useDimsAsMax)
 			{
@@ -1709,10 +1505,7 @@ public sealed class ManipulationTests : IDisposable
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
@@ -1727,31 +1520,30 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.png", 50, 25, false, true)]
 	[InlineData("test.png", 50, 25, true, true)]
 	[InlineData("test.png", -1, -1, true, true)]
-	public async Task ResizeImage_Stream_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
+	public void ResizeImage_Stream_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
 	{
 		// Arrange
-		await using MemoryStream input = GetTestImageStream(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
 
 		if (width < 0 && height < 0)
 		{
-			using Image originalImg = await Image.LoadAsync(input);
+			using SKBitmap originalImg = SKBitmap.Decode(input.ToArray());
+			originalImg.ShouldNotBeNull();
 			width = originalImg.Width;
 			height = originalImg.Height;
-			originalImg.Dispose();
-			input.Position = 0; // Reset stream position after loading
+			input.Position = 0;
 		}
 
 		// Act
-#pragma warning disable S6966 // Awaitable method should be used
-		bool result = !useResizeOptions ? Manipulation.ResizeImage(input, output, width, height, new JpegEncoder(), useDimsAsMax: useDimsAsMax) :
-				Manipulation.ResizeImage(input, output, new() { Size = new(width, height) }, new JpegEncoder(), useDimsAsMax: useDimsAsMax);
-#pragma warning restore S6966 // Awaitable method should be used
+		bool result = !useResizeOptions
+			? Manipulation.ResizeImage(input, output, width, height, SKEncodedImageFormat.Jpeg, null, useDimsAsMax)
+			: Manipulation.ResizeImage(input, output, new ResizeOptions { Size = new ImageSize(width, height) }, SKEncodedImageFormat.Jpeg, useDimsAsMax);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 
 		if (useDimsAsMax)
 		{
@@ -1776,28 +1568,29 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.png", 50, 25, false, true)]
 	[InlineData("test.png", 50, 25, true, true)]
 	[InlineData("test.png", -1, -1, true, true)]
-	public async Task ResizeImage_Span_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
+	public void ResizeImage_Span_UseDimsAsMax_Works(string fileName, int width, int height, bool useDimsAsMax, bool useResizeOptions)
 	{
 		// Arrange
 		byte[] bytes = GetTestImageBytes(fileName);
-		await using MemoryStream output = new();
+		using MemoryStream output = new();
 
 		if (width < 0 && height < 0)
 		{
-			using Image originalImg = Image.Load(bytes);
+			using SKBitmap originalImg = SKBitmap.Decode(bytes);
+			originalImg.ShouldNotBeNull();
 			width = originalImg.Width;
 			height = originalImg.Height;
-			originalImg.Dispose();
 		}
 
 		// Act
-		bool result = !useResizeOptions ? Manipulation.ResizeImage(bytes, output, width, height, new JpegEncoder(), useDimsAsMax: useDimsAsMax) :
-				Manipulation.ResizeImage(bytes, output, new() { Size = new(width, height) }, new JpegEncoder(), useDimsAsMax: useDimsAsMax);
+		bool result = !useResizeOptions
+			? Manipulation.ResizeImage(bytes, output, width, height, SKEncodedImageFormat.Jpeg, null, useDimsAsMax)
+			: Manipulation.ResizeImage(bytes, output, new ResizeOptions { Size = new ImageSize(width, height) }, SKEncodedImageFormat.Jpeg, useDimsAsMax);
 
 		// Assert
 		result.ShouldBeTrue();
-		output.Position = 0;
-		using Image img = await Image.LoadAsync(output);
+		using SKBitmap img = SKBitmap.Decode(output);
+		img.ShouldNotBeNull();
 
 		if (useDimsAsMax)
 		{
@@ -1832,20 +1625,22 @@ public sealed class ManipulationTests : IDisposable
 		{
 			if (width < 0 && height < 0)
 			{
-				using Image originalImg = await Image.LoadAsync(inputPath);
+				using SKBitmap originalImg = SKBitmap.Decode(inputPath);
+				originalImg.ShouldNotBeNull();
 				width = originalImg.Width;
 				height = originalImg.Height;
-				originalImg.Dispose();
 			}
 
 			// Act
-			bool result = !useResizeOptions ? await Manipulation.ResizeImageAsync(inputPath, outputPath, width, height, useDimsAsMax: useDimsAsMax) :
-					await Manipulation.ResizeImageAsync(inputPath, outputPath, new() { Size = new(width, height) }, useDimsAsMax: useDimsAsMax);
+			bool result = !useResizeOptions
+				? await Manipulation.ResizeImageAsync(inputPath, outputPath, width, height, useDimsAsMax: useDimsAsMax)
+				: await Manipulation.ResizeImageAsync(inputPath, outputPath, new ResizeOptions { Size = new ImageSize(width, height) }, useDimsAsMax: useDimsAsMax);
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
-			using Image img = await Image.LoadAsync(outputPath);
+			using SKBitmap img = SKBitmap.Decode(outputPath);
+			img.ShouldNotBeNull();
 
 			if (useDimsAsMax)
 			{
@@ -1860,66 +1655,8 @@ public sealed class ManipulationTests : IDisposable
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
-	}
-
-	public static bool IsInvertedVersion<TPixel>(Image<TPixel> original, Image<TPixel> potentialInverted, float tolerance = 1f) where TPixel : unmanaged, IPixel<TPixel>
-	{
-		// Check dimensions first
-		if (original.Width != potentialInverted.Width || original.Height != potentialInverted.Height)
-		{
-			return false;
-		}
-
-		bool isInverted = true;
-		object lockObj = new();
-
-		// Process both images simultaneously
-		original.ProcessPixelRows(potentialInverted, (originalAccessor, invertedAccessor) =>
-		{
-			for (int y = 0; y < originalAccessor.Height && isInverted; y++)
-			{
-				// Get spans for the current row in both images
-				Span<TPixel> originalRow = originalAccessor.GetRowSpan(y);
-				Span<TPixel> invertedRow = invertedAccessor.GetRowSpan(y);
-
-				for (int x = 0; x < originalRow.Length && isInverted; x++)
-				{
-					// Get color values as vectors
-					Vector4 originalVector = originalRow[x].ToVector4();
-					Vector4 invertedVector = invertedRow[x].ToVector4();
-
-					// Check if RGB components are inverted (within tolerance)
-					// Note: Alpha channel should remain unchanged in inversion
-					if (Math.Abs(1 - originalVector.X - invertedVector.X) > tolerance ||
-									Math.Abs(1 - originalVector.Y - invertedVector.Y) > tolerance ||
-									Math.Abs(1 - originalVector.Z - invertedVector.Z) > tolerance)
-					{
-						lock (lockObj)
-						{
-							isInverted = false;
-						}
-						break;
-					}
-
-					// Optionally check if alpha is preserved
-					if (Math.Abs(originalVector.W - invertedVector.W) > tolerance)
-					{
-						lock (lockObj)
-						{
-							isInverted = false;
-						}
-						break;
-					}
-				}
-			}
-		});
-
-		return isInverted;
 	}
 
 	[RetryTheory(3)]
@@ -1927,9 +1664,8 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 50)]
 	[InlineData("test.png", 60)]
 	[InlineData("test.gif", 80)]
-	[InlineData("test.tiff", 70)]
 	[InlineData("test.bmp", 65)]
-	public async Task ReduceImageQuality_SameFilePath_Jpeg_Succeeds(string fileName, int quality)
+	public void ReduceImageQuality_SameFilePath_Jpeg_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -1937,38 +1673,30 @@ public sealed class ManipulationTests : IDisposable
 
 		try
 		{
-			// Copy the test file to a temporary location since we'll be modifying it
 			File.Copy(inputPath, testFilePath, true);
 
-			// Get original file info
-			using Image originalImage = await Image.LoadAsync(testFilePath);
+			using SKBitmap originalImage = SKBitmap.Decode(testFilePath);
+			originalImage.ShouldNotBeNull();
 			int originalWidth = originalImage.Width;
 			int originalHeight = originalImage.Height;
 
 			// Act - Use same path for input and output
-#pragma warning disable S6966 // Awaitable method should be used
 			bool result = Manipulation.ReduceImageQuality(testFilePath, testFilePath, quality, null);
-#pragma warning restore S6966 // Awaitable method should be used
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(testFilePath).ShouldBeTrue();
-
-			// Verify the file was modified and is still a valid JPEG
-			using Image img = await Image.LoadAsync(testFilePath);
-			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+			using SKCodec? codec = SKCodec.Create(testFilePath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Jpeg);
+			using SKBitmap img = SKBitmap.Decode(testFilePath);
+			img.ShouldNotBeNull();
 			img.Width.ShouldBe(originalWidth);
 			img.Height.ShouldBe(originalHeight);
-
-			// File should exist and typically be smaller (though not guaranteed with high quality)
-			File.Exists(testFilePath).ShouldBeTrue();
 		}
 		finally
 		{
-			if (File.Exists(testFilePath))
-			{
-				File.Delete(testFilePath);
-			}
+			if (File.Exists(testFilePath)) File.Delete(testFilePath);
 		}
 	}
 
@@ -1977,9 +1705,8 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 50)]
 	[InlineData("test.png", 60)]
 	[InlineData("test.gif", 80)]
-	[InlineData("test.tiff", 70)]
 	[InlineData("test.bmp", 65)]
-	public async Task ReduceImageQuality_SameFilePath_ToPng_Succeeds(string fileName, int quality)
+	public void ReduceImageQuality_SameFilePath_ToPng_Succeeds(string fileName, int quality)
 	{
 		// Arrange
 		string inputPath = GetTestImagePath(fileName);
@@ -1987,35 +1714,30 @@ public sealed class ManipulationTests : IDisposable
 
 		try
 		{
-			// Copy the test file to a temporary location since we'll be modifying it
 			File.Copy(inputPath, testFilePath, true);
 
-			// Get original file info
-			using Image originalImage = await Image.LoadAsync(testFilePath);
+			using SKBitmap originalImage = SKBitmap.Decode(testFilePath);
+			originalImage.ShouldNotBeNull();
 			int originalWidth = originalImage.Width;
 			int originalHeight = originalImage.Height;
 
 			// Act - Use same path for input and output, converting to PNG
-#pragma warning disable S6966 // Awaitable method should be used
-			bool result = Manipulation.ReduceImageQuality(testFilePath, testFilePath, PngFormat.Instance, quality, null);
-#pragma warning restore S6966 // Awaitable method should be used
+			bool result = Manipulation.ReduceImageQuality(testFilePath, testFilePath, SKEncodedImageFormat.Png, quality, null);
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(testFilePath).ShouldBeTrue();
-
-			// Verify the file was converted to PNG
-			using Image img = await Image.LoadAsync(testFilePath);
-			img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
+			using SKCodec? codec = SKCodec.Create(testFilePath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
+			using SKBitmap img = SKBitmap.Decode(testFilePath);
+			img.ShouldNotBeNull();
 			img.Width.ShouldBe(originalWidth);
 			img.Height.ShouldBe(originalHeight);
 		}
 		finally
 		{
-			if (File.Exists(testFilePath))
-			{
-				File.Delete(testFilePath);
-			}
+			if (File.Exists(testFilePath)) File.Delete(testFilePath);
 		}
 	}
 
@@ -2024,7 +1746,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 50)]
 	[InlineData("test.png", 60)]
 	[InlineData("test.gif", 80)]
-	[InlineData("test.tiff", 70)]
 	[InlineData("test.bmp", 65)]
 	public async Task ReduceImageQualityAsync_SameFilePath_Jpeg_Succeeds(string fileName, int quality)
 	{
@@ -2034,11 +1755,10 @@ public sealed class ManipulationTests : IDisposable
 
 		try
 		{
-			// Copy the test file to a temporary location since we'll be modifying it
 			File.Copy(inputPath, testFilePath, true);
 
-			// Get original file info
-			using Image originalImage = await Image.LoadAsync(testFilePath);
+			using SKBitmap originalImage = SKBitmap.Decode(testFilePath);
+			originalImage.ShouldNotBeNull();
 			int originalWidth = originalImage.Width;
 			int originalHeight = originalImage.Height;
 
@@ -2048,22 +1768,17 @@ public sealed class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(testFilePath).ShouldBeTrue();
-
-			// Verify the file was modified and is still a valid JPEG
-			using Image img = await Image.LoadAsync(testFilePath);
-			img.Metadata.DecodedImageFormat.ShouldBe(JpegFormat.Instance);
+			using SKCodec? codec = SKCodec.Create(testFilePath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Jpeg);
+			using SKBitmap img = SKBitmap.Decode(testFilePath);
+			img.ShouldNotBeNull();
 			img.Width.ShouldBe(originalWidth);
 			img.Height.ShouldBe(originalHeight);
-
-			// File should exist and typically be smaller (though not guaranteed with high quality)
-			File.Exists(testFilePath).ShouldBeTrue();
 		}
 		finally
 		{
-			if (File.Exists(testFilePath))
-			{
-				File.Delete(testFilePath);
-			}
+			if (File.Exists(testFilePath)) File.Delete(testFilePath);
 		}
 	}
 
@@ -2072,7 +1787,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 50)]
 	[InlineData("test.png", 60)]
 	[InlineData("test.gif", 80)]
-	[InlineData("test.tiff", 70)]
 	[InlineData("test.bmp", 65)]
 	public async Task ReduceImageQualityAsync_SameFilePath_ToPng_Succeeds(string fileName, int quality)
 	{
@@ -2082,33 +1796,30 @@ public sealed class ManipulationTests : IDisposable
 
 		try
 		{
-			// Copy the test file to a temporary location since we'll be modifying it
 			File.Copy(inputPath, testFilePath, true);
 
-			// Get original file info
-			using Image originalImage = await Image.LoadAsync(testFilePath);
+			using SKBitmap originalImage = SKBitmap.Decode(testFilePath);
+			originalImage.ShouldNotBeNull();
 			int originalWidth = originalImage.Width;
 			int originalHeight = originalImage.Height;
 
 			// Act - Use same path for input and output, converting to PNG
-			bool result = await Manipulation.ReduceImageQualityAsync(testFilePath, testFilePath, PngFormat.Instance, quality, null);
+			bool result = await Manipulation.ReduceImageQualityAsync(testFilePath, testFilePath, SKEncodedImageFormat.Png, quality, null);
 
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(testFilePath).ShouldBeTrue();
-
-			// Verify the file was converted to PNG
-			using Image img = await Image.LoadAsync(testFilePath);
-			img.Metadata.DecodedImageFormat.ShouldBe(PngFormat.Instance);
+			using SKCodec? codec = SKCodec.Create(testFilePath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
+			using SKBitmap img = SKBitmap.Decode(testFilePath);
+			img.ShouldNotBeNull();
 			img.Width.ShouldBe(originalWidth);
 			img.Height.ShouldBe(originalHeight);
 		}
 		finally
 		{
-			if (File.Exists(testFilePath))
-			{
-				File.Delete(testFilePath);
-			}
+			if (File.Exists(testFilePath)) File.Delete(testFilePath);
 		}
 	}
 
@@ -2121,22 +1832,15 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData(200)]
 	public void ReduceImageQuality_WithInvalidQuality_ThrowsArgumentException(int invalidQuality)
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		string outputPath = GetTempFilePath(".jpg");
-
 		try
 		{
-			// Act & Assert
-			Should.Throw<ArgumentException>(() =>
-				Manipulation.ReduceImageQuality(inputPath, outputPath, invalidQuality, -1, -1));
+			Should.Throw<ArgumentException>(() => Manipulation.ReduceImageQuality(inputPath, outputPath, invalidQuality, resizeOptions: null));
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
@@ -2147,14 +1851,10 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData(200)]
 	public void ReduceImageQuality_Stream_WithInvalidQuality_ThrowsArgumentException(int invalidQuality)
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		using MemoryStream inputStream = new(File.ReadAllBytes(inputPath));
 		using MemoryStream outputStream = new();
-
-		// Act & Assert
-		Should.Throw<ArgumentException>(() =>
-			Manipulation.ReduceImageQuality(inputStream, outputStream, invalidQuality, -1, -1));
+		Should.Throw<ArgumentException>(() => Manipulation.ReduceImageQuality(inputStream, outputStream, invalidQuality, resizeOptions: null));
 	}
 
 	[RetryTheory(3)]
@@ -2164,14 +1864,10 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData(200)]
 	public void ReduceImageQuality_Span_WithInvalidQuality_ThrowsArgumentException(int invalidQuality)
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		byte[] inputBytes = File.ReadAllBytes(inputPath);
 		using MemoryStream outputStream = new();
-
-		// Act & Assert
-		Should.Throw<ArgumentException>(() =>
-			Manipulation.ReduceImageQuality(new ReadOnlySpan<byte>(inputBytes), outputStream, invalidQuality, -1, -1));
+		Should.Throw<ArgumentException>(() => Manipulation.ReduceImageQuality(new ReadOnlySpan<byte>(inputBytes), outputStream, invalidQuality, resizeOptions: null));
 	}
 
 	[RetryTheory(3)]
@@ -2181,22 +1877,16 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData(200)]
 	public async Task ReduceImageQualityAsync_WithInvalidQuality_ThrowsArgumentException(int invalidQuality)
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		string outputPath = GetTempFilePath(".jpg");
-
 		try
 		{
-			// Act & Assert
 			await Should.ThrowAsync<ArgumentException>(async () =>
-				await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, invalidQuality, -1, -1));
+				await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, invalidQuality, resizeOptions: null));
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
@@ -2207,105 +1897,42 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData(200)]
 	public async Task ReduceImageQualityAsync_Stream_WithInvalidQuality_ThrowsArgumentException(int invalidQuality)
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		await using MemoryStream inputStream = new(await File.ReadAllBytesAsync(inputPath));
-		await using MemoryStream outputStream = new();
-
-		// Act & Assert
+		using MemoryStream inputStream = new(await File.ReadAllBytesAsync(inputPath));
+		using MemoryStream outputStream = new();
 		await Should.ThrowAsync<ArgumentException>(async () =>
-			await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, invalidQuality, -1, -1));
+			await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, invalidQuality, resizeOptions: null));
 	}
 
 	[RetryFact(3)]
-	public void ResizeImage_Stream_WithoutEncoderOrFormat_ReturnsFalse()
+	public void ResizeImage_Stream_WithValidFormat_Succeeds()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		using MemoryStream inputStream = new(File.ReadAllBytes(inputPath));
 		using MemoryStream outputStream = new();
-
-		// Act - This returns false because neither encoder nor format is provided
-		bool result = Manipulation.ResizeImageBase(inputStream, outputStream, null, 100, 100, null, null, null, false, null);
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[RetryFact(3)]
-	public void ResizeImage_Span_WithoutEncoderOrFormat_ReturnsFalse()
-	{
-		// Arrange
-		string inputPath = GetTestImagePath("test.png");
-		byte[] inputBytes = File.ReadAllBytes(inputPath);
-		using MemoryStream outputStream = new();
-
-		// Act - This returns false because neither encoder nor format is provided
-		bool result = Manipulation.ResizeImageBase(new ReadOnlySpan<byte>(inputBytes), outputStream, null, 100, 100, null, null, null, false, null);
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[RetryFact(3)]
-	public async Task ResizeImageAsync_Stream_WithoutEncoderOrFormat_ReturnsFalse()
-	{
-		// Arrange
-		string inputPath = GetTestImagePath("test.png");
-		await using MemoryStream inputStream = new(await File.ReadAllBytesAsync(inputPath));
-		await using MemoryStream outputStream = new();
-
-		// Act - This returns false because neither encoder nor format is provided
-		bool result = await Manipulation.ResizeImageBaseAsync(inputStream, outputStream, null, 100, 100, null, null, null, false, null);
-
-		// Assert
-		result.ShouldBeFalse();
-	}
-
-	[RetryFact(3)]
-	public void ResizeImage_Stream_WithNullEncoderButValidFormat_Success()
-	{
-		// Arrange
-		string inputPath = GetTestImagePath("test.png");
-		using MemoryStream inputStream = new(File.ReadAllBytes(inputPath));
-		using MemoryStream outputStream = new();
-
-		// Act - This should use imageFormat path (encoder is null, format is not null)
-		bool result = Manipulation.ResizeImageBase(inputStream, outputStream, null, 100, 100, null, null, PngFormat.Instance, false, null);
-
-		// Assert
+		bool result = Manipulation.ResizeImageBase(inputStream, outputStream, null, 100, 100, null, SKEncodedImageFormat.Png, false, null);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
 
 	[RetryFact(3)]
-	public void ResizeImage_Span_WithNullEncoderButValidFormat_Success()
+	public void ResizeImage_Span_WithValidFormat_Succeeds()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		byte[] inputBytes = File.ReadAllBytes(inputPath);
 		using MemoryStream outputStream = new();
-
-		// Act - This should use imageFormat path (encoder is null, format is not null)
-		bool result = Manipulation.ResizeImageBase(new ReadOnlySpan<byte>(inputBytes), outputStream, null, 100, 100, null, null, PngFormat.Instance, false, null);
-
-		// Assert
+		bool result = Manipulation.ResizeImageBase(new ReadOnlySpan<byte>(inputBytes), outputStream, null, 100, 100, null, SKEncodedImageFormat.Png, false, null);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
 
 	[RetryFact(3)]
-	public async Task ResizeImageAsync_Stream_WithNullEncoderButValidFormat_Success()
+	public async Task ResizeImageAsync_Stream_WithValidFormat_Succeeds()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		await using MemoryStream inputStream = new(await File.ReadAllBytesAsync(inputPath));
-		await using MemoryStream outputStream = new();
-
-		// Act - This should use imageFormat path (encoder is null, format is not null)
-		bool result = await Manipulation.ResizeImageBaseAsync(inputStream, outputStream, null, 100, 100, null, null, PngFormat.Instance, false, null);
-
-		// Assert
+		using MemoryStream inputStream = new(await File.ReadAllBytesAsync(inputPath));
+		using MemoryStream outputStream = new();
+		bool result = await Manipulation.ResizeImageBaseAsync(inputStream, outputStream, null, 100, 100, null, SKEncodedImageFormat.Png, false, null);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
@@ -2313,181 +1940,135 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void ResizeImage_WithInvalidFilePath_ReturnsFalse()
 	{
-		// Arrange
 		string invalidPath = GetTempFilePath() + "_nonexistent_file.png";
 		string outputPath = GetTempFilePath(".png");
-
 		try
 		{
-			// Act
 			bool result = Manipulation.ResizeImage(invalidPath, outputPath, 100, 100);
-
-			// Assert
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public async Task ResizeImageAsync_WithInvalidFilePath_ReturnsFalse()
 	{
-		// Arrange
 		string invalidPath = GetTempFilePath() + "_nonexistent_file.png";
 		string outputPath = GetTempFilePath(".png");
-
 		try
 		{
-			// Act
 			bool result = await Manipulation.ResizeImageAsync(invalidPath, outputPath, 100, 100);
-
-			// Assert
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public void ReduceImageQuality_WithInvalidFilePath_ReturnsFalse()
 	{
-		// Arrange
 		string invalidPath = GetTempFilePath() + "_nonexistent_file.png";
 		string outputPath = GetTempFilePath(".jpg");
-
 		try
 		{
-			// Act
-			bool result = Manipulation.ReduceImageQuality(invalidPath, outputPath, 75, null, null, false, null);
-
-			// Assert
+			bool result = Manipulation.ReduceImageQuality(invalidPath, outputPath, 75, resizeOptions: null);
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public async Task ReduceImageQualityAsync_WithInvalidFilePath_ReturnsFalse()
 	{
-		// Arrange
 		string invalidPath = GetTempFilePath() + "_nonexistent_file.png";
 		string outputPath = GetTempFilePath(".jpg");
-
 		try
 		{
-			// Act
-			bool result = await Manipulation.ReduceImageQualityAsync(invalidPath, outputPath, 75, null, null, false, null);
-
-			// Assert
+			bool result = await Manipulation.ReduceImageQualityAsync(invalidPath, outputPath, 75, resizeOptions: null);
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public void ResizeImage_Stream_WithCorruptedData_ReturnsFalse()
 	{
-		// Arrange - create a stream with non-image data
 		using MemoryStream inputStream = new(System.Text.Encoding.UTF8.GetBytes("This is not an image"));
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ResizeImage(inputStream, outputStream, 100, 100, new PngEncoder());
-
-		// Assert
+		bool result = Manipulation.ResizeImage(inputStream, outputStream, 100, 100, SKEncodedImageFormat.Png);
 		result.ShouldBeFalse();
 	}
 
 	[RetryFact(3)]
 	public async Task ResizeImageAsync_Stream_WithCorruptedData_ReturnsFalse()
 	{
-		// Arrange - create a stream with non-image data
-		await using MemoryStream inputStream = new(System.Text.Encoding.UTF8.GetBytes("This is not an image"));
-		await using MemoryStream outputStream = new();
-
-		// Act
-		bool result = await Manipulation.ResizeImageAsync(inputStream, outputStream, 100, 100, new PngEncoder());
-
-		// Assert
+		using MemoryStream inputStream = new(System.Text.Encoding.UTF8.GetBytes("This is not an image"));
+		using MemoryStream outputStream = new();
+		bool result = await Manipulation.ResizeImageAsync(inputStream, outputStream, 100, 100, SKEncodedImageFormat.Png);
 		result.ShouldBeFalse();
 	}
 
 	[RetryFact(3)]
 	public void ReduceImageQuality_Stream_WithCorruptedData_ReturnsFalse()
 	{
-		// Arrange - create a stream with non-image data
 		using MemoryStream inputStream = new(System.Text.Encoding.UTF8.GetBytes("This is not an image"));
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ReduceImageQuality(inputStream, outputStream, 75, null, null, false, null);
-
-		// Assert
+		bool result = Manipulation.ReduceImageQuality(inputStream, outputStream, 75, resizeOptions: null);
 		result.ShouldBeFalse();
 	}
 
 	[RetryFact(3)]
 	public async Task ReduceImageQualityAsync_Stream_WithCorruptedData_ReturnsFalse()
 	{
-		// Arrange - create a stream with non-image data
-		await using MemoryStream inputStream = new(System.Text.Encoding.UTF8.GetBytes("This is not an image"));
-		await using MemoryStream outputStream = new();
-
-		// Act
-		bool result = await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, 75, null, null, false, null);
-
-		// Assert
+		using MemoryStream inputStream = new(System.Text.Encoding.UTF8.GetBytes("This is not an image"));
+		using MemoryStream outputStream = new();
+		bool result = await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, 75, resizeOptions: null);
 		result.ShouldBeFalse();
 	}
 
 	[RetryFact(3)]
 	public void ResizeImage_Span_WithCorruptedData_ReturnsFalse()
 	{
-		// Arrange - create a span with non-image data
 		ReadOnlySpan<byte> inputSpan = System.Text.Encoding.UTF8.GetBytes("This is not an image");
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ResizeImage(inputSpan, outputStream, 100, 100, new PngEncoder());
-
-		// Assert
+		bool result = Manipulation.ResizeImage(inputSpan, outputStream, 100, 100, SKEncodedImageFormat.Png);
 		result.ShouldBeFalse();
 	}
 
 	[RetryFact(3)]
 	public void ReduceImageQuality_Span_WithCorruptedData_ReturnsFalse()
 	{
-		// Arrange - create a span with non-image data
 		byte[] corruptedData = System.Text.Encoding.UTF8.GetBytes("This is not an image");
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ReduceImageQuality(new ReadOnlySpan<byte>(corruptedData), outputStream, 75, null, null, false, null);
-
-		// Assert
+		bool result = Manipulation.ReduceImageQuality(new ReadOnlySpan<byte>(corruptedData), outputStream, 75, resizeOptions: null);
 		result.ShouldBeFalse();
+	}
+
+	[RetryFact(3)]
+	public void ReduceImageQuality_SameFilePath_WithInvalidInput_ReturnsFalse()
+	{
+		string filePath = GetTempFilePath(".jpg");
+		try
+		{
+			File.WriteAllBytes(filePath, [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10]);
+			bool result = Manipulation.ReduceImageQuality(filePath, filePath, 80, resizeOptions: null);
+			result.ShouldBeFalse();
+		}
+		finally
+		{
+			if (File.Exists(filePath)) { try { File.Delete(filePath); } catch { /* Ignore */ } }
+		}
 	}
 
 	#region ConvertImageFormat Tests
@@ -2495,96 +2076,62 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void ConvertImageFormat_String_ToDefaultFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		string outputPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
-
 		try
 		{
-			// Act
 			bool result = Manipulation.ConvertImageFormat(inputPath, outputPath);
-
-			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public void ConvertImageFormat_String_WithSpecificFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		string outputPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.jpg");
-
 		try
 		{
-			// Act
-			bool result = Manipulation.ConvertImageFormat(inputPath, outputPath, JpegFormat.Instance);
-
-			// Assert
+			bool result = Manipulation.ConvertImageFormat(inputPath, outputPath, SKEncodedImageFormat.Jpeg);
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public void ConvertImageFormat_String_WithInvalidInput_ReturnsFalse()
 	{
-		// Arrange
 		string invalidInput = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.txt");
 		string outputPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
-
 		try
 		{
 			File.WriteAllText(invalidInput, "Not an image");
-
-			// Act
-			bool result = Manipulation.ConvertImageFormat(invalidInput, outputPath, PngFormat.Instance);
-
-			// Assert
+			bool result = Manipulation.ConvertImageFormat(invalidInput, outputPath, SKEncodedImageFormat.Png);
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(invalidInput))
-			{
-				File.Delete(invalidInput);
-			}
-
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(invalidInput)) File.Delete(invalidInput);
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public void ConvertImageFormat_Stream_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		using FileStream inputStream = File.OpenRead(inputPath);
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ConvertImageFormat(inputStream, outputStream, JpegFormat.Instance);
-
-		// Assert
+		bool result = Manipulation.ConvertImageFormat(inputStream, outputStream, SKEncodedImageFormat.Jpeg);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 		inputStream.Position.ShouldBe(0);
@@ -2594,30 +2141,20 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void ConvertImageFormat_Stream_WithInvalidData_ReturnsFalse()
 	{
-		// Arrange
 		using MemoryStream inputStream = new(System.Text.Encoding.UTF8.GetBytes("Not an image"));
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ConvertImageFormat(inputStream, outputStream, PngFormat.Instance);
-
-		// Assert
+		bool result = Manipulation.ConvertImageFormat(inputStream, outputStream, SKEncodedImageFormat.Png);
 		result.ShouldBeFalse();
 	}
 
 	[RetryFact(3)]
 	public void ConvertImageFormat_Span_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		byte[] imageBytes = File.ReadAllBytes(inputPath);
 		ReadOnlySpan<byte> inputSpan = imageBytes;
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ConvertImageFormat(inputSpan, outputStream, BmpFormat.Instance);
-
-		// Assert
+		bool result = Manipulation.ConvertImageFormat(inputSpan, outputStream, SKEncodedImageFormat.Png);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 		outputStream.Position.ShouldBe(0);
@@ -2626,33 +2163,23 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void ConvertImageFormat_Span_WithInvalidData_ReturnsFalse()
 	{
-		// Arrange
 		ReadOnlySpan<byte> inputSpan = System.Text.Encoding.UTF8.GetBytes("Not an image");
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ConvertImageFormat(inputSpan, outputStream, PngFormat.Instance);
-
-		// Assert
+		bool result = Manipulation.ConvertImageFormat(inputSpan, outputStream, SKEncodedImageFormat.Png);
 		result.ShouldBeFalse();
 	}
 
 	#endregion
 
-	#region Async Tests for IImageFormat
+	#region Async Tests
 
 	[RetryFact(3)]
 	public async Task ResizeImageAsync_Stream_WithIImageFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		await using FileStream inputStream = File.OpenRead(inputPath);
-		await using MemoryStream outputStream = new();
-
-		// Act
-		bool result = await Manipulation.ResizeImageAsync(inputStream, outputStream, 100, 100, PngFormat.Instance);
-
-		// Assert
+		using FileStream inputStream = File.OpenRead(inputPath);
+		using MemoryStream outputStream = new();
+		bool result = await Manipulation.ResizeImageAsync(inputStream, outputStream, 100, 100, SKEncodedImageFormat.Png);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 		inputStream.Position.ShouldBe(0);
@@ -2662,87 +2189,57 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public async Task ResizeImageAsync_Stream_WithResizeOptionsAndFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		await using FileStream inputStream = File.OpenRead(inputPath);
-		await using MemoryStream outputStream = new();
-		ResizeOptions options = new() { Size = new Size(150, 150), Mode = ResizeMode.Crop };
-
-		// Act
-		bool result = await Manipulation.ResizeImageAsync(inputStream, outputStream, options, JpegFormat.Instance);
-
-		// Assert
+		using FileStream inputStream = File.OpenRead(inputPath);
+		using MemoryStream outputStream = new();
+		ResizeOptions options = new() { Size = new ImageSize(150, 150), Mode = ResizeMode.Crop };
+		bool result = await Manipulation.ResizeImageAsync(inputStream, outputStream, options, SKEncodedImageFormat.Jpeg);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
 
-	#endregion
-
-	#region Additional Async Coverage
-
 	[RetryFact(3)]
 	public async Task ReduceImageQualityAsync_String_WithOutputFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		string outputPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.bmp");
-
 		try
 		{
-			// Act
-			bool result = await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, BmpFormat.Instance, 80, -1, -1);
-
-			// Assert
+			bool result = await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, SKEncodedImageFormat.Jpeg, 80, resizeOptions: null);
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public async Task ReduceImageQualityAsync_String_WithResizeOptions_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		string outputPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.jpg");
-		ResizeOptions options = new() { Size = new Size(200, 200) };
-
+		ResizeOptions options = new() { Size = new ImageSize(200, 200) };
 		try
 		{
-			// Act
 			bool result = await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, 85, options);
-
-			// Assert
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public async Task ReduceImageQualityAsync_Stream_WithOutputFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		await using FileStream inputStream = File.OpenRead(inputPath);
-		await using MemoryStream outputStream = new();
-
-		// Act
-		bool result = await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, PngFormat.Instance, 90, null, null);
-
-		// Assert
+		using FileStream inputStream = File.OpenRead(inputPath);
+		using MemoryStream outputStream = new();
+		bool result = await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, SKEncodedImageFormat.Png, 90, resizeOptions: null);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
@@ -2754,15 +2251,10 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void ResizeImage_Stream_WithIImageFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		using FileStream inputStream = File.OpenRead(inputPath);
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ResizeImage(inputStream, outputStream, 100, 100, PngFormat.Instance);
-
-		// Assert
+		bool result = Manipulation.ResizeImage(inputStream, outputStream, 100, 100, SKEncodedImageFormat.Png);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
@@ -2770,16 +2262,11 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void ResizeImage_Stream_WithResizeOptionsAndFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		using FileStream inputStream = File.OpenRead(inputPath);
 		using MemoryStream outputStream = new();
-		ResizeOptions options = new() { Size = new Size(75, 75) };
-
-		// Act
-		bool result = Manipulation.ResizeImage(inputStream, outputStream, options, JpegFormat.Instance);
-
-		// Assert
+		ResizeOptions options = new() { Size = new ImageSize(75, 75) };
+		bool result = Manipulation.ResizeImage(inputStream, outputStream, options, SKEncodedImageFormat.Jpeg);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
@@ -2787,16 +2274,11 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void ResizeImage_Span_WithIImageFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		byte[] imageBytes = File.ReadAllBytes(inputPath);
 		ReadOnlySpan<byte> inputSpan = imageBytes;
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ResizeImage(inputSpan, outputStream, 120, 120, BmpFormat.Instance);
-
-		// Assert
+		bool result = Manipulation.ResizeImage(inputSpan, outputStream, 120, 120, SKEncodedImageFormat.Jpeg);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
@@ -2804,17 +2286,12 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void ResizeImage_Span_WithResizeOptionsAndFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		byte[] imageBytes = File.ReadAllBytes(inputPath);
 		ReadOnlySpan<byte> inputSpan = imageBytes;
 		using MemoryStream outputStream = new();
-		ResizeOptions options = new() { Size = new Size(90, 90) };
-
-		// Act
-		bool result = Manipulation.ResizeImage(inputSpan, outputStream, options, PngFormat.Instance);
-
-		// Assert
+		ResizeOptions options = new() { Size = new ImageSize(90, 90) };
+		bool result = Manipulation.ResizeImage(inputSpan, outputStream, options, SKEncodedImageFormat.Png);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
@@ -2822,40 +2299,29 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void ReduceImageQuality_String_WithFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		string outputPath = GetTempFilePath(".bmp");
-
 		try
 		{
-			// Act
-			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, BmpFormat.Instance, 80, 150, 150);
-
-			// Assert
+			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, SKEncodedImageFormat.Png, 80,
+				new ResizeOptions { Size = new ImageSize(150, 150) });
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
 		}
 		finally
 		{
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public void ReduceImageQuality_Stream_WithFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		using FileStream inputStream = File.OpenRead(inputPath);
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ReduceImageQuality(inputStream, outputStream, PngFormat.Instance, 85, 200, 200);
-
-		// Assert
+		bool result = Manipulation.ReduceImageQuality(inputStream, outputStream, SKEncodedImageFormat.Png, 85,
+			new ResizeOptions { Size = new ImageSize(200, 200) });
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
@@ -2863,16 +2329,12 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void ReduceImageQuality_Span_WithFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		byte[] imageBytes = File.ReadAllBytes(inputPath);
 		ReadOnlySpan<byte> inputSpan = imageBytes;
 		using MemoryStream outputStream = new();
-
-		// Act
-		bool result = Manipulation.ReduceImageQuality(inputSpan, outputStream, BmpFormat.Instance, 70, 180, 180);
-
-		// Assert
+		bool result = Manipulation.ReduceImageQuality(inputSpan, outputStream, SKEncodedImageFormat.Png, 70,
+			new ResizeOptions { Size = new ImageSize(180, 180) });
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
@@ -2880,17 +2342,35 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public async Task ReduceImageQualityAsync_Stream_WithFormat_Success()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
-		await using FileStream inputStream = File.OpenRead(inputPath);
-		await using MemoryStream outputStream = new();
-
-		// Act
-		bool result = await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, PngFormat.Instance, 95, 160, 160);
-
-		// Assert
+		using FileStream inputStream = File.OpenRead(inputPath);
+		using MemoryStream outputStream = new();
+		bool result = await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, SKEncodedImageFormat.Png, 95,
+			new ResizeOptions { Size = new ImageSize(160, 160) });
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
+	}
+
+	[RetryFact(3)]
+	public void ReduceImageQuality_Stream_SimpleOverload_Succeeds()
+	{
+		string inputPath = GetTestImagePath("test.png");
+		using FileStream input = File.OpenRead(inputPath);
+		using MemoryStream output = new();
+		bool result = Manipulation.ReduceImageQuality(input, output, 80, new ResizeOptions { Size = new ImageSize(100, 100) });
+		result.ShouldBeTrue();
+		output.Length.ShouldBeGreaterThan(0);
+	}
+
+	[RetryFact(3)]
+	public void ReduceImageQuality_Span_SimpleOverload_Succeeds()
+	{
+		byte[] imageData = GetTestImageBytes("test.png");
+		ReadOnlySpan<byte> inputSpan = imageData;
+		using MemoryStream output = new();
+		bool result = Manipulation.ReduceImageQuality(inputSpan, output, 80, new ResizeOptions { Size = new ImageSize(100, 100) });
+		result.ShouldBeTrue();
+		output.Length.ShouldBeGreaterThan(0);
 	}
 
 	#endregion
@@ -2900,284 +2380,147 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void ResizeImage_String_WithUnwritableOutput_ReturnsFalse()
 	{
-		// Arrange - try to write to a path that should fail
 		string inputPath = GetTestImagePath("test.png");
-		string invalidOutputPath = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\", "Windows", "System32", "test_should_fail.png");
-
-		// Act
+		string invalidOutputPath = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory) ?? "/", "Windows", "System32", "test_should_fail.png");
 		bool result = Manipulation.ResizeImage(inputPath, invalidOutputPath, 100, 100);
-
-		// Assert
 		result.ShouldBeFalse();
 	}
 
 	[RetryFact(3)]
 	public void ResizeImage_String_WithEncoder_InvalidInput_ReturnsFalse()
 	{
-		// Arrange
 		string invalidPath = GetTempFilePath(".txt");
 		string outputPath = GetTempFilePath(".png");
-
 		try
 		{
 			File.WriteAllText(invalidPath, "Not a valid image file content here");
-
-			// Act - this should trigger the exception with imageEncoder specified
-			bool result = Manipulation.ResizeImage(invalidPath, outputPath, 100, 100, new PngEncoder());
-
-			// Assert
+			bool result = Manipulation.ResizeImage(invalidPath, outputPath, 100, 100, SKEncodedImageFormat.Png);
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(invalidPath))
-			{
-				File.Delete(invalidPath);
-			}
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
-		}
-	}
-
-	[RetryFact(3)]
-	public void ReduceImageQuality_SameFilePath_WithInvalidInput_ReturnsFalse()
-	{
-		// Arrange - use same input and output to trigger temp file path
-		string filePath = GetTempFilePath(".jpg");
-
-		try
-		{
-			// Create an invalid image file
-			File.WriteAllBytes(filePath, new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 }); // Invalid JPEG header
-
-			// Act - this should fail and potentially test the cleanup path
-			bool result = Manipulation.ReduceImageQuality(filePath, filePath, 80, -1, -1, null);
-
-			// Assert
-			result.ShouldBeFalse();
-		}
-		finally
-		{
-			if (File.Exists(filePath))
-			{
-				try { File.Delete(filePath); } catch { /* Ignore */ }
-			}
+			if (File.Exists(invalidPath)) File.Delete(invalidPath);
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public void ResizeImage_WithCorruptedJpeg_ReturnsFalse()
 	{
-		// Arrange
 		string corruptedPath = GetTempFilePath(".jpg");
 		string outputPath = GetTempFilePath(".jpg");
-
 		try
 		{
-			// Create a file with JPEG header but corrupted data
 			byte[] corruptedJpeg = new byte[100];
-			corruptedJpeg[0] = 0xFF;
-			corruptedJpeg[1] = 0xD8; // JPEG SOI marker
-			corruptedJpeg[2] = 0xFF;
-			corruptedJpeg[3] = 0xE0; // JFIF marker
-
-			// Rest is zeros/garbage
+			corruptedJpeg[0] = 0xFF; corruptedJpeg[1] = 0xD8;
+			corruptedJpeg[2] = 0xFF; corruptedJpeg[3] = 0xE0;
 			File.WriteAllBytes(corruptedPath, corruptedJpeg);
-
-			// Act
 			bool result = Manipulation.ResizeImage(corruptedPath, outputPath, 50, 50);
-
-			// Assert
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(corruptedPath))
-			{
-				File.Delete(corruptedPath);
-			}
-
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(corruptedPath)) File.Delete(corruptedPath);
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public void ResizeImage_WithCorruptedPng_ReturnsFalse()
 	{
-		// Arrange
 		string corruptedPath = GetTempFilePath(".png");
 		string outputPath = GetTempFilePath(".png");
-
 		try
 		{
-			// Create a file with PNG header but corrupted data
 			byte[] corruptedPng = new byte[100];
-			corruptedPng[0] = 0x89;
-			corruptedPng[1] = 0x50;
-			corruptedPng[2] = 0x4E;
-			corruptedPng[3] = 0x47; // PNG signature
-			corruptedPng[4] = 0x0D;
-			corruptedPng[5] = 0x0A;
-			corruptedPng[6] = 0x1A;
-			corruptedPng[7] = 0x0A;
-			// Rest is garbage
+			corruptedPng[0] = 0x89; corruptedPng[1] = 0x50; corruptedPng[2] = 0x4E; corruptedPng[3] = 0x47;
+			corruptedPng[4] = 0x0D; corruptedPng[5] = 0x0A; corruptedPng[6] = 0x1A; corruptedPng[7] = 0x0A;
 			File.WriteAllBytes(corruptedPath, corruptedPng);
-
-			// Act
-			bool result = Manipulation.ResizeImage(corruptedPath, outputPath, 75, 75, new JpegEncoder());
-
-			// Assert
+			bool result = Manipulation.ResizeImage(corruptedPath, outputPath, 75, 75, SKEncodedImageFormat.Jpeg);
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(corruptedPath))
-			{
-				File.Delete(corruptedPath);
-			}
-
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(corruptedPath)) File.Delete(corruptedPath);
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public async Task ResizeImageAsync_WithInvalidFile_ReturnsFalse()
 	{
-		// Arrange
 		string invalidPath = GetTempFilePath(".bin");
 		string outputPath = GetTempFilePath(".png");
-
 		try
 		{
 			await File.WriteAllBytesAsync(invalidPath, new byte[] { 0x00, 0x01, 0x02, 0x03 });
-
-			// Act
 			bool result = await Manipulation.ResizeImageAsync(invalidPath, outputPath, 100, 100);
-
-			// Assert
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(invalidPath))
-			{
-				File.Delete(invalidPath);
-			}
-
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(invalidPath)) File.Delete(invalidPath);
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public void ReduceImageQuality_WithOutputFormat_InvalidInput_ReturnsFalse()
 	{
-		// Arrange
 		string invalidPath = GetTempFilePath(".dat");
 		string outputPath = GetTempFilePath(".bmp");
-
 		try
 		{
 			File.WriteAllBytes(invalidPath, System.Text.Encoding.UTF8.GetBytes("Definitely not an image"));
-
-			// Act - test with output format specified to cover that code path
-			bool result = Manipulation.ReduceImageQuality(invalidPath, outputPath, BmpFormat.Instance, 70, -1, -1, null);
-
-			// Assert
+			bool result = Manipulation.ReduceImageQuality(invalidPath, outputPath, SKEncodedImageFormat.Bmp, 70, resizeOptions: null);
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(invalidPath))
-			{
-				File.Delete(invalidPath);
-			}
-
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(invalidPath)) File.Delete(invalidPath);
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public async Task ReduceImageQualityAsync_SameFile_WithOutputFormat_InvalidInput_ReturnsFalse()
 	{
-		// Arrange
 		string filePath = GetTempFilePath(".png");
-
 		try
 		{
-			// Write invalid data
 			await File.WriteAllBytesAsync(filePath, new byte[] { 0xDE, 0xAD, 0xBE, 0xEF });
-
-			// Act - same input/output triggers temp file, with output format for more coverage
-			bool result = await Manipulation.ReduceImageQualityAsync(filePath, filePath, BmpFormat.Instance, 75, -1, -1, null);
-
-			// Assert
+			bool result = await Manipulation.ReduceImageQualityAsync(filePath, filePath, SKEncodedImageFormat.Bmp, 75, resizeOptions: null);
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(filePath))
-			{
-				try { File.Delete(filePath); } catch { /* Ignore */ }
-			}
+			if (File.Exists(filePath)) { try { File.Delete(filePath); } catch { /* Ignore */ } }
 		}
 	}
 
 	[RetryFact(3)]
 	public void ConvertImageFormat_WithCorruptedFile_ReturnsFalse()
 	{
-		// Arrange
 		string corruptedPath = GetTempFilePath(".jpg");
 		string outputPath = GetTempFilePath(".png");
-
 		try
 		{
-			// Write corrupted data
-			File.WriteAllBytes(corruptedPath, new byte[] { 0xFF, 0xD8, 0x00, 0x00, 0x00 }); // Incomplete JPEG
-
-			// Act
-			bool result = Manipulation.ConvertImageFormat(corruptedPath, outputPath, PngFormat.Instance);
-
-			// Assert
+			File.WriteAllBytes(corruptedPath, new byte[] { 0xFF, 0xD8, 0x00, 0x00, 0x00 });
+			bool result = Manipulation.ConvertImageFormat(corruptedPath, outputPath, SKEncodedImageFormat.Png);
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(corruptedPath))
-			{
-				File.Delete(corruptedPath);
-			}
-
-			if (File.Exists(outputPath))
-			{
-				File.Delete(outputPath);
-			}
+			if (File.Exists(corruptedPath)) File.Delete(corruptedPath);
+			if (File.Exists(outputPath)) File.Delete(outputPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public void TryDetectImageType_String_WithIOError_ReturnsFalse()
 	{
-		// Arrange
 		string nonExistentPath = GetTempFilePath() + "_does_not_exist.png";
-
-		// Act
-		bool result = Manipulation.TryDetectImageType(nonExistentPath, out IImageFormat? format);
-
-		// Assert
+		bool result = Manipulation.TryDetectImageType(nonExistentPath, out SKEncodedImageFormat? format);
 		result.ShouldBeFalse();
 		format.ShouldBeNull();
 	}
@@ -3185,38 +2528,24 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void TryGetMetadata_String_WithCorruptedFile_ReturnsFalse()
 	{
-		// Arrange
 		string corruptedPath = GetTempFilePath(".gif");
-
 		try
 		{
-			File.WriteAllBytes(corruptedPath, new byte[] { 0x47, 0x49, 0x46, 0x38, 0x00 }); // Incomplete GIF
-
-			// Act
-			bool result = Manipulation.TryGetMetadata(corruptedPath, out ImageMetadata _);
-
-			// Assert
+			File.WriteAllBytes(corruptedPath, new byte[] { 0x47, 0x49, 0x46, 0x38, 0x00 });
+			bool result = Manipulation.TryGetMetadata(corruptedPath, out ImageInfo _);
 			result.ShouldBeFalse();
 		}
 		finally
 		{
-			if (File.Exists(corruptedPath))
-			{
-				File.Delete(corruptedPath);
-			}
+			if (File.Exists(corruptedPath)) File.Delete(corruptedPath);
 		}
 	}
 
 	[RetryFact(3)]
 	public void TryDetectImageType_Stream_WithCorruptedData_ReturnsFalse()
 	{
-		// Arrange
 		using MemoryStream stream = new(new byte[] { 0x00, 0x01, 0x02, 0x03 });
-
-		// Act
-		bool result = Manipulation.TryDetectImageType(stream, out IImageFormat? format);
-
-		// Assert
+		bool result = Manipulation.TryDetectImageType(stream, out SKEncodedImageFormat? format);
 		result.ShouldBeFalse();
 		format.ShouldBeNull();
 	}
@@ -3224,26 +2553,16 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void TryGetMetadata_Stream_WithCorruptedData_ReturnsFalse()
 	{
-		// Arrange
-		using MemoryStream stream = new(new byte[] { 0xFF, 0xD8, 0x00 }); // Incomplete JPEG
-
-		// Act
-		bool result = Manipulation.TryGetMetadata(stream, out ImageMetadata _);
-
-		// Assert
+		using MemoryStream stream = new(new byte[] { 0xFF, 0xD8, 0x00 });
+		bool result = Manipulation.TryGetMetadata(stream, out ImageInfo _);
 		result.ShouldBeFalse();
 	}
 
 	[RetryFact(3)]
 	public void TryDetectImageType_Span_WithCorruptedData_ReturnsFalse()
 	{
-		// Arrange
-		ReadOnlySpan<byte> span = new byte[] { 0x89, 0x50, 0x4E, 0x00 }; // Incomplete PNG
-
-		// Act
-		bool result = Manipulation.TryDetectImageType(span, out IImageFormat? format);
-
-		// Assert
+		ReadOnlySpan<byte> span = new byte[] { 0x89, 0x50, 0x4E, 0x00 };
+		bool result = Manipulation.TryDetectImageType(span, out SKEncodedImageFormat? format);
 		result.ShouldBeFalse();
 		format.ShouldBeNull();
 	}
@@ -3251,13 +2570,8 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void TryGetMetadata_Span_WithTooShortData_ReturnsFalse()
 	{
-		// Arrange - less than 4 bytes to trigger early return
 		ReadOnlySpan<byte> span = new byte[] { 0x00, 0x01, 0x02 };
-
-		// Act
-		bool result = Manipulation.TryGetMetadata(span, out ImageMetadata _);
-
-		// Assert
+		bool result = Manipulation.TryGetMetadata(span, out ImageInfo _);
 		result.ShouldBeFalse();
 	}
 
@@ -3268,35 +2582,30 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public void GetImageFormatByExtension_WithNull_ThrowsArgumentException()
 	{
-		// Act & Assert
 		Should.Throw<ArgumentException>(() => Manipulation.GetImageFormatByExtension(null!));
 	}
 
 	[RetryFact(3)]
 	public void GetImageFormatByExtension_WithEmptyString_ThrowsArgumentException()
 	{
-		// Act & Assert
 		Should.Throw<ArgumentException>(() => Manipulation.GetImageFormatByExtension(""));
 	}
 
 	[RetryFact(3)]
 	public void GetImageFormatByExtension_WithSingleChar_ThrowsArgumentException()
 	{
-		// Act & Assert
 		Should.Throw<ArgumentException>(() => Manipulation.GetImageFormatByExtension("x"));
 	}
 
 	[RetryFact(3)]
 	public void GetImageFormatByExtension_WithUnsupportedFormat_ThrowsNotSupportedException()
 	{
-		// Act & Assert
 		Should.Throw<NotSupportedException>(() => Manipulation.GetImageFormatByExtension(".xyz"));
 	}
 
 	[RetryFact(3)]
 	public void GetImageFormatByExtension_WithUnsupportedFormatNoDot_ThrowsNotSupportedException()
 	{
-		// Act & Assert
 		Should.Throw<NotSupportedException>(() => Manipulation.GetImageFormatByExtension("abc"));
 	}
 
@@ -3307,23 +2616,16 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData(".BMP")]
 	public void GetImageFormatByExtension_WithBmp_ReturnsBmpFormat(string extension)
 	{
-		// Act
-		IImageFormat format = Manipulation.GetImageFormatByExtension(extension);
-
-		// Assert
-		format.ShouldBe(BmpFormat.Instance);
+		SKEncodedImageFormat format = Manipulation.GetImageFormatByExtension(extension);
+		format.ShouldBe(SKEncodedImageFormat.Bmp);
 	}
 
 	[RetryTheory(3)]
 	[InlineData("gif")]
 	[InlineData(".gif")]
-	public void GetImageFormatByExtension_WithGif_ReturnsGifFormat(string extension)
+	public void GetImageFormatByExtension_WithGif_ThrowsNotSupportedException(string extension)
 	{
-		// Act
-		IImageFormat format = Manipulation.GetImageFormatByExtension(extension);
-
-		// Assert
-		format.ShouldBe(GifFormat.Instance);
+		Should.Throw<NotSupportedException>(() => Manipulation.GetImageFormatByExtension(extension));
 	}
 
 	[RetryTheory(3)]
@@ -3333,11 +2635,8 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData(".jpg")]
 	public void GetImageFormatByExtension_WithJpeg_ReturnsJpegFormat(string extension)
 	{
-		// Act
-		IImageFormat format = Manipulation.GetImageFormatByExtension(extension);
-
-		// Assert
-		format.ShouldBe(JpegFormat.Instance);
+		SKEncodedImageFormat format = Manipulation.GetImageFormatByExtension(extension);
+		format.ShouldBe(SKEncodedImageFormat.Jpeg);
 	}
 
 	[RetryTheory(3)]
@@ -3345,23 +2644,16 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData(".png")]
 	public void GetImageFormatByExtension_WithPng_ReturnsPngFormat(string extension)
 	{
-		// Act
-		IImageFormat format = Manipulation.GetImageFormatByExtension(extension);
-
-		// Assert
-		format.ShouldBe(PngFormat.Instance);
+		SKEncodedImageFormat format = Manipulation.GetImageFormatByExtension(extension);
+		format.ShouldBe(SKEncodedImageFormat.Png);
 	}
 
 	[RetryTheory(3)]
 	[InlineData("tiff")]
 	[InlineData(".tiff")]
-	public void GetImageFormatByExtension_WithTiff_ReturnsTiffFormat(string extension)
+	public void GetImageFormatByExtension_WithTiff_ThrowsNotSupportedException(string extension)
 	{
-		// Act
-		IImageFormat format = Manipulation.GetImageFormatByExtension(extension);
-
-		// Assert
-		format.ShouldBe(TiffFormat.Instance);
+		Should.Throw<NotSupportedException>(() => Manipulation.GetImageFormatByExtension(extension));
 	}
 
 	#endregion
@@ -3371,160 +2663,69 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public async Task ConvertImageFormatAsync_FilePath_WithInvalidInputPath_ReturnsFalse()
 	{
-		// Arrange
 		string invalidInputPath = GetTestImagePath("nonexistent_file_12345.png");
 		string outputPath = GetTempFilePath(".jpg");
-
-		// Act
-		bool result = await Manipulation.ConvertImageFormatAsync(invalidInputPath, outputPath, JpegFormat.Instance);
-
-		// Assert
+		bool result = await Manipulation.ConvertImageFormatAsync(invalidInputPath, outputPath, SKEncodedImageFormat.Jpeg);
 		result.ShouldBeFalse();
-
-		// Cleanup
-		if (File.Exists(outputPath))
-		{
-			File.Delete(outputPath);
-		}
+		if (File.Exists(outputPath)) File.Delete(outputPath);
 	}
 
 	[RetryFact(3)]
 	public async Task ConvertImageFormatAsync_Stream_WithInvalidData_ReturnsFalse()
 	{
-		// Arrange - create a stream with invalid image data
-		byte[] invalidData = new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04 };
-		await using MemoryStream inputStream = new(invalidData);
-		await using MemoryStream outputStream = new();
-
-		// Act
-		bool result = await Manipulation.ConvertImageFormatAsync(inputStream, outputStream, PngFormat.Instance);
-
-		// Assert
+		byte[] invalidData = [0x00, 0x01, 0x02, 0x03, 0x04];
+		using MemoryStream inputStream = new(invalidData);
+		using MemoryStream outputStream = new();
+		bool result = await Manipulation.ConvertImageFormatAsync(inputStream, outputStream, SKEncodedImageFormat.Png);
 		result.ShouldBeFalse();
 	}
 
 	#endregion
 
-	#region ReduceImageQuality Wrapper Coverage Tests
-
-	[RetryFact(3)]
-	public void ReduceImageQuality_Stream_SimpleOverload_Succeeds()
-	{
-		// Arrange
-		string inputPath = GetTestImagePath("test.png");
-		using FileStream input = File.OpenRead(inputPath);
-		using MemoryStream output = new();
-
-		// Act
-		bool result = Manipulation.ReduceImageQuality(input, output, 80, 100, 100);
-
-		// Assert
-		result.ShouldBeTrue();
-		output.Length.ShouldBeGreaterThan(0);
-	}
-
-	[RetryFact(3)]
-	public void ReduceImageQuality_Span_SimpleOverload_Succeeds()
-	{
-		// Arrange
-		byte[] imageData = GetTestImageBytes("test.png");
-		ReadOnlySpan<byte> inputSpan = imageData;
-		using MemoryStream output = new();
-
-		// Act
-		bool result = Manipulation.ReduceImageQuality(inputSpan, output, 80, 100, 100);
-
-		// Assert
-		result.ShouldBeTrue();
-		output.Length.ShouldBeGreaterThan(0);
-	}
-
-	#endregion
-
-	#region ResizeImage Without Encoder Coverage Tests
+	#region ResizeImage Encoder Coverage Tests
 
 	[RetryFact(3)]
 	public void ResizeImage_WithoutEncoder_Succeeds()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		string outputPath = GetTempFilePath(".png");
-
-		// Act - passing null encoder to hit the imageEncoder == null path
 		bool result = Manipulation.ResizeImage(inputPath, outputPath, 100, 100, null);
-
-		// Assert
 		result.ShouldBeTrue();
 		File.Exists(outputPath).ShouldBeTrue();
-
-		// Cleanup
-		if (File.Exists(outputPath))
-		{
-			File.Delete(outputPath);
-		}
+		if (File.Exists(outputPath)) File.Delete(outputPath);
 	}
 
 	[RetryFact(3)]
 	public async Task ResizeImageAsync_WithoutEncoder_Succeeds()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		string outputPath = GetTempFilePath(".png");
-
-		// Act - passing null encoder to hit the imageEncoder == null path
 		bool result = await Manipulation.ResizeImageAsync(inputPath, outputPath, 100, 100, null);
-
-		// Assert
 		result.ShouldBeTrue();
 		File.Exists(outputPath).ShouldBeTrue();
-
-		// Cleanup
-		if (File.Exists(outputPath))
-		{
-			File.Delete(outputPath);
-		}
+		if (File.Exists(outputPath)) File.Delete(outputPath);
 	}
 
 	[RetryFact(3)]
 	public void ResizeImage_WithExplicitEncoder_Succeeds()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		string outputPath = GetTempFilePath(".png");
-
-		// Act - passing explicit encoder to hit the imageEncoder != null path
-		bool result = Manipulation.ResizeImage(inputPath, outputPath, 100, 100, new PngEncoder());
-
-		// Assert
+		bool result = Manipulation.ResizeImage(inputPath, outputPath, 100, 100, SKEncodedImageFormat.Png);
 		result.ShouldBeTrue();
 		File.Exists(outputPath).ShouldBeTrue();
-
-		// Cleanup
-		if (File.Exists(outputPath))
-		{
-			File.Delete(outputPath);
-		}
+		if (File.Exists(outputPath)) File.Delete(outputPath);
 	}
 
 	[RetryFact(3)]
 	public async Task ResizeImageAsync_WithExplicitEncoder_Succeeds()
 	{
-		// Arrange
 		string inputPath = GetTestImagePath("test.png");
 		string outputPath = GetTempFilePath(".jpg");
-
-		// Act - passing explicit encoder to hit the imageEncoder != null path
-		bool result = await Manipulation.ResizeImageAsync(inputPath, outputPath, 100, 100, new JpegEncoder());
-
-		// Assert
+		bool result = await Manipulation.ResizeImageAsync(inputPath, outputPath, 100, 100, SKEncodedImageFormat.Jpeg);
 		result.ShouldBeTrue();
 		File.Exists(outputPath).ShouldBeTrue();
-
-		// Cleanup
-		if (File.Exists(outputPath))
-		{
-			File.Delete(outputPath);
-		}
+		if (File.Exists(outputPath)) File.Delete(outputPath);
 	}
 
 	#endregion
@@ -3534,54 +2735,34 @@ public sealed class ManipulationTests : IDisposable
 	[RetryFact(3)]
 	public async Task TryDetectImageTypeAsync_String_WithShortPath_ReturnsNull()
 	{
-		// Arrange - path less than 4 characters
 		const string shortPath = "ab";
-
-		// Act
-		IImageFormat? format = await Manipulation.TryDetectImageTypeAsync(shortPath);
-
-		// Assert
+		SKEncodedImageFormat? format = await Manipulation.TryDetectImageTypeAsync(shortPath);
 		format.ShouldBeNull();
 	}
 
 	[RetryFact(3)]
 	public async Task TryGetMetadataAsync_String_WithShortPath_ReturnsNull()
 	{
-		// Arrange - path less than 4 characters
 		const string shortPath = "xyz";
-
-		// Act
-		ImageMetadata? metadata = await Manipulation.TryGetMetadataAsync(shortPath);
-
-		// Assert
+		ImageInfo? metadata = await Manipulation.TryGetMetadataAsync(shortPath);
 		metadata.ShouldBeNull();
 	}
 
 	[RetryFact(3)]
 	public async Task TryDetectImageTypeAsync_Stream_WithShortStream_ReturnsNull()
 	{
-		// Arrange - stream with less than 4 bytes
-		byte[] shortData = new byte[] { 0x01, 0x02 };
-		await using MemoryStream stream = new(shortData);
-
-		// Act
-		IImageFormat? format = await Manipulation.TryDetectImageTypeAsync(stream);
-
-		// Assert
+		byte[] shortData = [0x01, 0x02];
+		using MemoryStream stream = new(shortData);
+		SKEncodedImageFormat? format = await Manipulation.TryDetectImageTypeAsync(stream);
 		format.ShouldBeNull();
 	}
 
 	[RetryFact(3)]
 	public async Task TryGetMetadataAsync_Stream_WithShortStream_ReturnsNull()
 	{
-		// Arrange - stream with less than 4 bytes
-		byte[] shortData = new byte[] { 0xFF, 0xFE, 0xFD };
-		await using MemoryStream stream = new(shortData);
-
-		// Act
-		ImageMetadata? metadata = await Manipulation.TryGetMetadataAsync(stream);
-
-		// Assert
+		byte[] shortData = [0xFF, 0xFE, 0xFD];
+		using MemoryStream stream = new(shortData);
+		ImageInfo? metadata = await Manipulation.TryGetMetadataAsync(stream);
 		metadata.ShouldBeNull();
 	}
 

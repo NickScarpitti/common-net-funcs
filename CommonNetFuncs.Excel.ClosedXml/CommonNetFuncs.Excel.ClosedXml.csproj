@@ -28,7 +28,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.40</Version>
+		<Version>4.0.43</Version>
 		<MinVerTagPrefix>excel.closedxml-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -76,12 +76,14 @@
 
 	<ItemGroup>
 		<PackageReference Include="ClosedXML" />
-		<PackageReference Include="SixLabors.ImageSharp" PrivateAssets="all" />
 		<PackageReference Include="MinVer">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
+		<PackageReference Include="SkiaSharp" PrivateAssets="all" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" PrivateAssets="all" />
+
 	</ItemGroup>
 
 	<ItemGroup>

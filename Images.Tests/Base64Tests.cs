@@ -1,5 +1,5 @@
 ﻿using CommonNetFuncs.Images;
-using SixLabors.ImageSharp;
+using SkiaSharp;
 using xRetry.v3;
 
 namespace Images.Tests;
@@ -211,7 +211,7 @@ public sealed class Base64Tests : IDisposable
 		File.Exists(tempSavePath).ShouldBeTrue();
 		result.ShouldBeTrue();
 		File.Exists(tempSavePath).ShouldBeTrue();
-		using Image image = await Image.LoadAsync(tempSavePath);
+		using SKBitmap image = SKBitmap.Decode(tempSavePath);
 
 		image.Height.ShouldBeGreaterThan(0);
 	}
@@ -307,7 +307,7 @@ public sealed class Base64Tests : IDisposable
 		// Assert
 		result.ShouldBeTrue();
 		File.Exists(tempSavePath).ShouldBeTrue();
-		using Image image = await Image.LoadAsync(tempSavePath);
+		using SKBitmap image = SKBitmap.Decode(tempSavePath);
 		image.Height.ShouldBeGreaterThan(0);
 	}
 

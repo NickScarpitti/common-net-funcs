@@ -16,7 +16,7 @@ using NPOI.SS.Util;
 using NPOI.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
-using SixLabors.ImageSharp;
+using SkiaSharp;
 using static System.Convert;
 using static System.Math;
 
@@ -1356,18 +1356,9 @@ public static partial class Common
 			int imgWidth;
 			int imgHeight;
 
-			// Using old GDI+ System.Drawing
-			// using (MemoryStream ms = new(imageData[i]))
-			// {
-			// using Image img = Image.FromStream(ms);
-			// imgWidth = img?.Width ?? 0;
-			// imgHeight = img?.Height ?? 0;
-			// }
-
-
-			using Image image = Image.Load(imageData);
-			imgWidth = image.Width;
-			imgHeight = image.Height;
+			SKImageInfo bounds = SKBitmap.DecodeBounds(imageData);
+			imgWidth = bounds.Width;
+			imgHeight = bounds.Height;
 
 			decimal imgAspect = ((decimal)imgWidth) / imgHeight;
 

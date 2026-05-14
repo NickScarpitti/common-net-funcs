@@ -1,8 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
-using SixLabors.ImageSharp;
-
+using SkiaSharp;
 using static System.Convert;
 using static CommonNetFuncs.Core.ExceptionLocation;
 
@@ -58,8 +57,8 @@ public static partial class Base64
 					ms.Position = 0;
 				}
 
-				using Image image = Image.Load(ms);
-				if (image?.Height > 0 && image.Width > 0)
+				SKImageInfo bounds = SKBitmap.DecodeBounds(ms);
+				if (bounds.Height > 0 && bounds.Width > 0)
 				{
 					ReadOnlySpan<byte> imageBytes = ms.ToArray();
 					return ToBase64String(imageBytes);
@@ -95,8 +94,8 @@ public static partial class Base64
 					ms.Position = 0;
 				}
 
-				using Image image = await Image.LoadAsync(ms);
-				if (image?.Height > 0 && image.Width > 0)
+				SKImageInfo bounds = SKBitmap.DecodeBounds(ms);
+				if (bounds.Height > 0 && bounds.Width > 0)
 				{
 					ReadOnlySpan<byte> imageBytes = ms.ToArray();
 					return ToBase64String(imageBytes);
@@ -203,17 +202,29 @@ public static partial class Base64
 	/// </summary>
 	/// <param name="imageBase64">Base 64 string representation of an image</param>
 	/// <param name="savePath">Path (including file name) to save image to</param>
+	/// <param name="quality">Quality of the saved image (0-100)</param>
 	/// <returns><see langword="true"/> if the image was saved successfully, otherwise false</returns>
-	public static bool ImageSaveToFile(this string imageBase64, string savePath)
+	public static bool ImageSaveToFile(this string imageBase64, string savePath, SKEncodedImageFormat format = SKEncodedImageFormat.Jpeg, short quality = 100)
 	{
+		if (quality is < 0 or > 100)
+		{
+			throw new ArgumentOutOfRangeException(nameof(quality), "Quality must be between 0 and 100.");
+		}
+
 		try
 		{
 			ReadOnlySpan<byte> bytes = FromBase64String(imageBase64);
 
-			using Image image = Image.Load(bytes);
+			using SKBitmap image = SKBitmap.Decode(bytes);
+			// using Image image = Image.Load(bytes);
 			if (image?.Width > 0 && image.Height > 0)
 			{
-				image.Save(savePath);
+				using FileStream fileStream = File.OpenWrite(savePath);
+				image.Encode(format, quality).SaveTo(fileStream);
+				fileStream.Flush();
+				fileStream.Close();
+				fileStream.Dispose();
+				// image.Save(savePath);
 			}
 
 			return true;
@@ -230,17 +241,28 @@ public static partial class Base64
 	/// </summary>
 	/// <param name="imageBase64">Base 64 string representation of an image</param>
 	/// <param name="savePath">Path (including file name) to save image to</param>
+	/// <param name="quality">Quality of the saved image (0-100)</param>
 	/// <returns><see langword="true"/> if the image was saved successfully, otherwise false</returns>
-	public static async Task<bool> ImageSaveToFileAsync(this string imageBase64, string savePath)
+	public static async Task<bool> ImageSaveToFileAsync(this string imageBase64, string savePath, SKEncodedImageFormat format = SKEncodedImageFormat.Jpeg, short quality = 100)
 	{
+		if (quality is < 0 or > 100)
+		{
+			throw new ArgumentOutOfRangeException(nameof(quality), "Quality must be between 0 and 100.");
+		}
+
 		try
 		{
 			ReadOnlySpan<byte> bytes = FromBase64String(imageBase64);
-
-			using Image image = Image.Load(bytes);
+			using SKBitmap image = SKBitmap.Decode(bytes);
+			// using Image image = Image.Load(bytes);
 			if (image?.Width > 0 && image.Height > 0)
 			{
-				await image.SaveAsync(savePath);
+				await using FileStream fileStream = File.OpenWrite(savePath);
+				image.Encode(format, quality).SaveTo(fileStream);
+				await fileStream.FlushAsync();
+				fileStream.Close();
+				await fileStream.DisposeAsync();
+				// await image.SaveAsync(savePath);
 			}
 
 			return true;
@@ -267,8 +289,9 @@ public static partial class Base64
 		try
 		{
 			ReadOnlySpan<byte> bytes = FromBase64String(imageBase64);
-			using Image image = Image.Load(bytes);
-			return image?.Width > 0 && image.Height > 0;
+			SKImageInfo bounds = SKBitmap.DecodeBounds(bytes);
+			// using Image image = Image.Load(bytes);
+			return bounds.Width > 0 && bounds.Height > 0;
 		}
 		catch (Exception ex)
 		{

@@ -83,9 +83,8 @@
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
 		<PackageReference Include="NPOI" />
-		<PackageReference Include="SkiaSharp" />
-		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
-		<PackageReference Include="SixLabors.ImageSharp" PrivateAssets="all" />
+		<PackageReference Include="SkiaSharp" PrivateAssets="all" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" PrivateAssets="all" />
 		<PackageReference Include="System.Security.Cryptography.Xml" />
 	</ItemGroup>
 

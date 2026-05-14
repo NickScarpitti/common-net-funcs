@@ -4,7 +4,7 @@ using System.Reflection;
 using ClosedXML.Excel;
 using ClosedXML.Excel.Drawings;
 using CommonNetFuncs.Excel.Common;
-using SixLabors.ImageSharp;
+using SkiaSharp;
 
 namespace CommonNetFuncs.Excel.ClosedXml;
 
@@ -814,9 +814,9 @@ public static class Common
 		{
 			cell.Style = cellStyle ?? wb.GetStandardCellStyle(EStyle.ImageBackground) ?? ws.Style;
 
-			using Image image = Image.Load(imageData);
-			int imgWidth = image.Width;
-			int imgHeight = image.Height;
+			SKImageInfo bounds = SKBitmap.DecodeBounds(imageData);
+			int imgWidth = bounds.Width;
+			int imgHeight = bounds.Height;
 
 			decimal imgAspect = ((decimal)imgWidth) / imgHeight;
 

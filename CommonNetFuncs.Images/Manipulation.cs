@@ -57,6 +57,28 @@ public static class Manipulation
 	private const int DefaultResizeQuality = 90;
 	private static readonly SKSamplingOptions DefaultSampling = new(SKCubicResampler.Mitchell);
 
+	// Decodes a bitmap, with a fallback for formats (e.g. TIFF) that SKBitmap.Decode cannot handle directly.
+	private static SKBitmap DecodeBitmap(byte[] data)
+	{
+		SKBitmap? bitmap = SKBitmap.Decode(data);
+		if (bitmap != null)
+		{
+			return bitmap;
+		}
+
+		using SKCodec codec = SKCodec.Create(SKData.CreateCopy(data))
+			?? throw new InvalidOperationException("Failed to create codec from image data.");
+		SKImageInfo info = codec.Info;
+		bitmap = new SKBitmap(info.Width, info.Height, info.ColorType, info.AlphaType);
+		SKCodecResult result = codec.GetPixels(info, bitmap.GetPixels());
+		if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput)
+		{
+			bitmap.Dispose();
+			throw new InvalidOperationException($"Failed to decode image pixels: {result}");
+		}
+		return bitmap;
+	}
+
 	// Returns a newly allocated resized (and optionally cropped) bitmap, or null if no resize is required.
 	private static SKBitmap? ResizeCore(SKBitmap source, ResizeOptions? resizeOptions, int? width, int? height,
 		SKSamplingOptions? sampling, bool useDimsAsMax, bool resizeRequired)

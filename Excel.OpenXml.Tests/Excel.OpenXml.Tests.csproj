@@ -19,6 +19,8 @@
 	<ItemGroup>
 		<PackageReference Include="AutoFixture" />
 		<PackageReference Include="FakeItEasy" />
+		<PackageReference Include="SkiaSharp" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
 		<PackageReference Include="coverlet.collector">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

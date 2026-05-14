@@ -57,26 +57,34 @@ public static class Manipulation
 	private const int DefaultResizeQuality = 90;
 	private static readonly SKSamplingOptions DefaultSampling = new(SKCubicResampler.Mitchell);
 
-	// Decodes a bitmap, with a fallback for formats (e.g. TIFF) that SKBitmap.Decode cannot handle directly.
+	// Decodes a bitmap using SkiaSharp. Throws InvalidOperationException for unsupported formats (e.g. TIFF).
 	private static SKBitmap DecodeBitmap(byte[] data)
 	{
-		SKBitmap? bitmap = SKBitmap.Decode(data);
+		SKBitmap? bitmap = null;
+		try { bitmap = SKBitmap.Decode(data); } catch { /* format not supported by SKBitmap.Decode */ }
+
 		if (bitmap != null)
 		{
 			return bitmap;
 		}
 
-		using SKCodec codec = SKCodec.Create(SKData.CreateCopy(data))
-			?? throw new InvalidOperationException("Failed to create codec from image data.");
-		SKImageInfo info = codec.Info;
-		bitmap = new SKBitmap(info.Width, info.Height, info.ColorType, info.AlphaType);
-		SKCodecResult result = codec.GetPixels(info, bitmap.GetPixels());
-		if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput)
+		// Try SKCodec fallback
+		using SKData skData = SKData.CreateCopy(data);
+		using SKCodec? codec = SKCodec.Create(skData);
+		if (codec != null)
 		{
-			bitmap.Dispose();
-			throw new InvalidOperationException($"Failed to decode image pixels: {result}");
+			SKImageInfo info = codec.Info;
+			bitmap = new SKBitmap(info.Width, info.Height, info.ColorType, info.AlphaType);
+			SKCodecResult result = codec.GetPixels(info, bitmap.GetPixels());
+			if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput)
+			{
+				bitmap.Dispose();
+				throw new InvalidOperationException($"Failed to decode image pixels: {result}");
+			}
+			return bitmap;
 		}
-		return bitmap;
+
+		throw new NotSupportedException("The image format is not supported. TIFF and other formats not handled by SkiaSharp cannot be decoded.");
 	}
 
 	// Returns a newly allocated resized (and optionally cropped) bitmap, or null if no resize is required.
@@ -195,7 +203,7 @@ public static class Manipulation
 		SKBitmap? mutated = null;
 		try
 		{
-			original = SKBitmap.Decode(inputFilePath) ?? throw new InvalidOperationException($"Failed to load image from {inputFilePath}");
+			original = DecodeBitmap(File.ReadAllBytes(inputFilePath)) ?? throw new InvalidOperationException($"Failed to load image from {inputFilePath}");
 			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, true);
 			SKBitmap current = resized ?? original;
 
@@ -232,7 +240,10 @@ public static class Manipulation
 		SKBitmap? mutated = null;
 		try
 		{
-			original = SKBitmap.Decode(inputStream) ?? throw new InvalidOperationException("Failed to load image from stream");
+			byte[] _streamBytes;
+			using (MemoryStream _ms = new()) { inputStream.CopyTo(_ms); _streamBytes = _ms.ToArray(); }
+			if (inputStream.CanSeek) inputStream.Position = 0;
+			original = DecodeBitmap(_streamBytes) ?? throw new InvalidOperationException("Failed to load image from stream");
 			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, true);
 			SKBitmap current = resized ?? original;
 
@@ -268,7 +279,7 @@ public static class Manipulation
 		SKBitmap? mutated = null;
 		try
 		{
-			original = SKBitmap.Decode(inputSpan.ToArray()) ?? throw new InvalidOperationException("Failed to load image from span");
+			original = DecodeBitmap(inputSpan.ToArray()) ?? throw new InvalidOperationException("Failed to load image from span");
 			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, true);
 			SKBitmap current = resized ?? original;
 
@@ -313,7 +324,7 @@ public static class Manipulation
 		SKBitmap? mutated = null;
 		try
 		{
-			original = SKBitmap.Decode(inputFilePath) ?? throw new InvalidOperationException($"Failed to load image from {inputFilePath}");
+			original = DecodeBitmap(File.ReadAllBytes(inputFilePath)) ?? throw new InvalidOperationException($"Failed to load image from {inputFilePath}");
 			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, false);
 			SKBitmap current = resized ?? original;
 
@@ -365,7 +376,10 @@ public static class Manipulation
 		SKBitmap? mutated = null;
 		try
 		{
-			original = SKBitmap.Decode(inputStream) ?? throw new InvalidOperationException("Failed to load image from stream");
+			byte[] _streamBytes;
+			using (MemoryStream _ms = new()) { inputStream.CopyTo(_ms); _streamBytes = _ms.ToArray(); }
+			if (inputStream.CanSeek) inputStream.Position = 0;
+			original = DecodeBitmap(_streamBytes) ?? throw new InvalidOperationException("Failed to load image from stream");
 			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, false);
 			SKBitmap current = resized ?? original;
 
@@ -406,7 +420,7 @@ public static class Manipulation
 		SKBitmap? mutated = null;
 		try
 		{
-			original = SKBitmap.Decode(inputSpan.ToArray()) ?? throw new InvalidOperationException("Failed to load image from span");
+			original = DecodeBitmap(inputSpan.ToArray()) ?? throw new InvalidOperationException("Failed to load image from span");
 			resized = ResizeCore(original, resizeOptions, width, height, samplingOptions, useDimsAsMax, false);
 			SKBitmap current = resized ?? original;
 
@@ -856,21 +870,21 @@ public static class Manipulation
 				return false;
 			}
 
-			// Read just the header bytes — enough to identify any image format magic bytes
-			byte[] header = new byte[64];
-			int bytesRead = imageStream.Read(header, 0, header.Length);
+			using MemoryStream ms = new();
+			imageStream.CopyTo(ms);
+			byte[] bytes = ms.ToArray();
 
 			if (imageStream.CanSeek)
 			{
 				imageStream.Position = startPosition!.Value;
 			}
 
-			if (bytesRead < 4)
+			if (bytes.Length < 4)
 			{
 				return false;
 			}
 
-			using SKData data = SKData.CreateCopy(header, (uint)bytesRead);
+			using SKData data = SKData.CreateCopy(bytes);
 			using SKCodec? codec = SKCodec.Create(data);
 			format = codec?.EncodedFormat;
 		}
@@ -899,7 +913,7 @@ public static class Manipulation
 			}
 
 			using SKData data = SKData.CreateCopy(imageData.ToArray());
-using SKCodec? codec = SKCodec.Create(data);
+			using SKCodec? codec = SKCodec.Create(data);
 			format = codec?.EncodedFormat;
 		}
 		catch (Exception ex)
@@ -927,15 +941,18 @@ using SKCodec? codec = SKCodec.Create(data);
 			{
 				return false;
 			}
-			bitmap = SKBitmap.Decode(imagePath);
 			codec = SKCodec.Create(imagePath);
-			if (bitmap != null)
+			if (codec == null) return false;
+			try { bitmap = DecodeBitmap(File.ReadAllBytes(imagePath)); } catch { /* fallback to codec info */ }
+			int w = bitmap?.Width ?? codec.Info.Width;
+			int h = bitmap?.Height ?? codec.Info.Height;
+			if (w > 0 && h > 0)
 			{
 				metadata = new ImageInfo
 				{
-					Width = bitmap.Width,
-					Height = bitmap.Height,
-					EncodedFormat = codec?.EncodedFormat,
+					Width = w,
+					Height = h,
+					EncodedFormat = codec.EncodedFormat,
 					HorizontalResolution = 96.0,
 					VerticalResolution = 96.0,
 				};
@@ -991,15 +1008,17 @@ using SKCodec? codec = SKCodec.Create(data);
 
 			data = SKData.CreateCopy(bytes);
 			codec = SKCodec.Create(data);
-			bitmap = SKBitmap.Decode(bytes);
-
-			if (bitmap != null)
+			if (codec == null) return false;
+			try { bitmap = DecodeBitmap(bytes); } catch { /* fallback to codec info */ }
+			int w = bitmap?.Width ?? codec.Info.Width;
+			int h = bitmap?.Height ?? codec.Info.Height;
+			if (w > 0 && h > 0)
 			{
 				metadata = new ImageInfo
 				{
-					Width = bitmap.Width,
-					Height = bitmap.Height,
-					EncodedFormat = codec?.EncodedFormat,
+					Width = w,
+					Height = h,
+					EncodedFormat = codec.EncodedFormat,
 					HorizontalResolution = 96.0,
 					VerticalResolution = 96.0,
 				};
@@ -1039,17 +1058,20 @@ using SKCodec? codec = SKCodec.Create(data);
 				return false;
 			}
 
-			data = SKData.CreateCopy(imageData.ToArray());
+			byte[] arr = imageData.ToArray();
+			data = SKData.CreateCopy(arr);
 			codec = SKCodec.Create(data);
-			bitmap = SKBitmap.Decode(imageData.ToArray());
-
-			if (bitmap != null)
+			if (codec == null) return false;
+			try { bitmap = DecodeBitmap(arr); } catch { /* fallback to codec info */ }
+			int w = bitmap?.Width ?? codec.Info.Width;
+			int h = bitmap?.Height ?? codec.Info.Height;
+			if (w > 0 && h > 0)
 			{
 				metadata = new ImageInfo
 				{
-					Width = bitmap.Width,
-					Height = bitmap.Height,
-					EncodedFormat = codec?.EncodedFormat,
+					Width = w,
+					Height = h,
+					EncodedFormat = codec.EncodedFormat,
 					HorizontalResolution = 96.0,
 					VerticalResolution = 96.0,
 				};
@@ -1094,7 +1116,7 @@ using SKCodec? codec = SKCodec.Create(data);
 		SKBitmap? mutated = null;
 		try
 		{
-			bitmap = SKBitmap.Decode(inputFilePath) ?? throw new InvalidOperationException($"Failed to load image from {inputFilePath}");
+			bitmap = DecodeBitmap(File.ReadAllBytes(inputFilePath)) ?? throw new InvalidOperationException($"Failed to load image from {inputFilePath}");
 			SKBitmap current = bitmap;
 			if (mutate != null)
 			{
@@ -1131,7 +1153,10 @@ using SKCodec? codec = SKCodec.Create(data);
 		SKBitmap? mutated = null;
 		try
 		{
-			bitmap = SKBitmap.Decode(inputStream) ?? throw new InvalidOperationException("Failed to load image from stream");
+			byte[] _bytes;
+			using (MemoryStream _ms = new()) { inputStream.CopyTo(_ms); _bytes = _ms.ToArray(); }
+			if (inputStream.CanSeek) inputStream.Position = 0;
+			bitmap = DecodeBitmap(_bytes) ?? throw new InvalidOperationException("Failed to load image from stream");
 			SKBitmap current = bitmap;
 			if (mutate != null)
 			{
@@ -1167,7 +1192,7 @@ using SKCodec? codec = SKCodec.Create(data);
 		SKBitmap? mutated = null;
 		try
 		{
-			bitmap = SKBitmap.Decode(inputData.ToArray()) ?? throw new InvalidOperationException("Failed to load image from span");
+			bitmap = DecodeBitmap(inputData.ToArray()) ?? throw new InvalidOperationException("Failed to load image from span");
 			SKBitmap current = bitmap;
 			if (mutate != null)
 			{

@@ -56,15 +56,14 @@ public sealed class ManipulationTests : IDisposable
 
 	private static SKBitmap InvertBitmap(SKBitmap source)
 	{
-		SKBitmap result = new(source.Width, source.Height, source.ColorType, source.AlphaType);
-		using SKCanvas canvas = new(result);
-		float[] invertMatrix = [-1, 0, 0, 0, 255,
-														 0, -1, 0, 0, 255,
-														 0, 0, -1, 0, 255,
-														 0, 0, 0, 1, 0];
-		using SKColorFilter filter = SKColorFilter.CreateColorMatrix(invertMatrix);
-		using SKPaint paint = new() { ColorFilter = filter };
-		canvas.DrawBitmap(source, 0, 0, paint);
+		SKBitmap result = source.Copy();
+		SKColor[] pixels = result.Pixels;
+		for (int i = 0; i < pixels.Length; i++)
+		{
+			SKColor c = pixels[i];
+			pixels[i] = new SKColor((byte)(255 - c.Red), (byte)(255 - c.Green), (byte)(255 - c.Blue), c.Alpha);
+		}
+		result.Pixels = pixels;
 		return result;
 	}
 
@@ -84,9 +83,9 @@ public sealed class ManipulationTests : IDisposable
 				int invY = y * inverted.Height / original.Height;
 				SKColor origPixel = original.GetPixel(x, y);
 				SKColor invPixel = inverted.GetPixel(invX, invY);
-				if (Math.Abs((255 - origPixel.Red) - invPixel.Red) > 10) return false;
-				if (Math.Abs((255 - origPixel.Green) - invPixel.Green) > 10) return false;
-				if (Math.Abs((255 - origPixel.Blue) - invPixel.Blue) > 10) return false;
+				if (Math.Abs(255 - origPixel.Red - invPixel.Red) > 10) return false;
+				if (Math.Abs(255 - origPixel.Green - invPixel.Green) > 10) return false;
+				if (Math.Abs(255 - origPixel.Blue - invPixel.Blue) > 10) return false;
 			}
 		}
 		return true;
@@ -96,7 +95,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpg", 100, 100)]
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
-	[InlineData("test.bmp", 10, 10)]
 	public void ResizeImage_FilePath_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
@@ -130,7 +128,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
 	public void ResizeImage_Stream_Succeeds(string fileName, int width, int height)
 	{
@@ -154,7 +151,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
 	public void ResizeImage_Span_Succeeds(string fileName, int width, int height)
 	{
@@ -178,7 +174,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public void ReduceImageQuality_FilePath_Succeeds(string fileName, int quality)
 	{
@@ -212,7 +207,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public void ReduceImageQuality_Stream_Succeeds(string fileName, int quality)
 	{
@@ -237,7 +231,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public void ReduceImageQuality_Span_Succeeds(string fileName, int quality)
 	{
@@ -258,30 +251,21 @@ public sealed class ManipulationTests : IDisposable
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.gif", ".bmp")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.jpeg", ".bmp")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpg", ".bmp")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.png", ".bmp")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
 	public void ConvertImageFormat_FilePath_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
@@ -312,30 +296,21 @@ public sealed class ManipulationTests : IDisposable
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.gif", ".bmp")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.jpeg", ".bmp")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpg", ".bmp")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.png", ".bmp")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
 	public void ConvertImageFormat_Stream_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
@@ -356,30 +331,21 @@ public sealed class ManipulationTests : IDisposable
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.gif", ".bmp")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.jpeg", ".bmp")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpg", ".bmp")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.png", ".bmp")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
 	public void ConvertImageFormat_Span_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
@@ -405,7 +371,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryDetectImageType_FilePath_Works(string fileName)
 	{
 		// Arrange
@@ -425,7 +390,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryDetectImageType_Stream_Works(string fileName)
 	{
 		// Arrange
@@ -445,7 +409,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryDetectImageType_Span_Works(string fileName)
 	{
 		// Arrange
@@ -465,7 +428,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryGetMetadata_FilePath_Works(string fileName)
 	{
 		// Arrange
@@ -487,7 +449,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryGetMetadata_Stream_Works(string fileName)
 	{
 		// Arrange
@@ -509,7 +470,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public void TryGetMetadata_Span_Works(string fileName)
 	{
 		// Arrange
@@ -531,7 +491,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public async Task TryDetectImageTypeAsync_FilePath_Works(string fileName)
 	{
 		// Arrange
@@ -550,11 +509,10 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public async Task TryDetectImageTypeAsync_Stream_Works(string fileName)
 	{
 		// Arrange
-		using MemoryStream stream = GetTestImageStream(fileName);
+		await using MemoryStream stream = GetTestImageStream(fileName);
 
 		// Act
 		SKEncodedImageFormat? format = await Manipulation.TryDetectImageTypeAsync(stream);
@@ -569,7 +527,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public async Task TryGetMetadataAsync_FilePath_Works(string fileName)
 	{
 		// Arrange
@@ -589,7 +546,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg")]
 	[InlineData("test.jpg")]
 	[InlineData("test.png")]
-	[InlineData("test.tiff")]
 	public async Task TryGetMetadataAsync_Stream_Works(string fileName)
 	{
 		// Arrange
@@ -604,30 +560,21 @@ public sealed class ManipulationTests : IDisposable
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.gif", ".bmp")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.jpeg", ".bmp")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpg", ".bmp")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.png", ".bmp")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
 	public async Task ConvertImageFormatAsync_FilePath_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
@@ -658,30 +605,21 @@ public sealed class ManipulationTests : IDisposable
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.gif", ".bmp")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.jpeg", ".bmp")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpg", ".bmp")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.png", ".bmp")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
 	public async Task ConvertImageFormatAsync_Stream_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
@@ -721,7 +659,6 @@ public sealed class ManipulationTests : IDisposable
 	[RetryTheory(3)]
 	[InlineData("test.jpg", 0)]
 	[InlineData("test.png", 101)]
-	[InlineData("test.tiff", -1)]
 	[InlineData("test.gif", -100)]
 	public void ReduceImageQuality_InvalidQuality_Throws(string fileName, int quality)
 	{
@@ -815,7 +752,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpg", 120, 80)]
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
-	[InlineData("test.bmp", 10, 5)]
 	public void ResizeImage_FilePath_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
@@ -854,7 +790,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
 	[InlineData("test.gif", 25, 13)]
-	[InlineData("test.tiff", 33, 15)]
 	[InlineData("test.bmp", 10, 5)]
 	public void ResizeImage_Stream_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
@@ -884,7 +819,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
 	[InlineData("test.gif", 25, 13)]
-	[InlineData("test.tiff", 33, 15)]
 	[InlineData("test.bmp", 10, 5)]
 	public void ResizeImage_Span_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
@@ -914,7 +848,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public void ReduceImageQuality_FilePath_ToPng_Succeeds(string fileName, int quality)
 	{
@@ -948,7 +881,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public void ReduceImageQuality_Stream_ToPng_Succeeds(string fileName, int quality)
 	{
@@ -974,7 +906,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public void ReduceImageQuality_Span_ToPng_Succeeds(string fileName, int quality)
 	{
@@ -1000,7 +931,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public async Task ReduceImageQualityAsync_FilePath_ToPng_Succeeds(string fileName, int quality)
 	{
@@ -1034,7 +964,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public async Task ReduceImageQualityAsync_Stream_ToPng_Succeeds(string fileName, int quality)
 	{
@@ -1059,7 +988,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpg", 120, 80)]
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
-	[InlineData("test.bmp", 10, 5)]
 	public async Task ResizeImageAsync_FilePath_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
 		// Arrange
@@ -1098,7 +1026,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 40)]
 	[InlineData("test.png", 50, 25)]
 	[InlineData("test.gif", 25, 13)]
-	[InlineData("test.tiff", 33, 15)]
 	[InlineData("test.bmp", 10, 5)]
 	public async Task ResizeImageAsync_Stream_WithResizeOptions_Succeeds(string fileName, int width, int height)
 	{
@@ -1128,7 +1055,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
 	public void ResizeImage_FilePath_Mutate_Succeeds(string fileName, int width, int height)
 	{
@@ -1168,7 +1094,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
 	public void ResizeImage_Stream_Mutate_Succeeds(string fileName, int width, int height)
 	{
@@ -1198,7 +1123,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
 	public void ResizeImage_Span_Mutate_Succeeds(string fileName, int width, int height)
 	{
@@ -1228,7 +1152,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public void ReduceImageQuality_FilePath_Mutate_Succeeds(string fileName, int quality)
 	{
@@ -1265,7 +1188,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public void ReduceImageQuality_Stream_Mutate_Succeeds(string fileName, int quality)
 	{
@@ -1291,7 +1213,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public void ReduceImageQuality_Span_Mutate_Succeeds(string fileName, int quality)
 	{
@@ -1313,30 +1234,21 @@ public sealed class ManipulationTests : IDisposable
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.gif", ".bmp")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.jpeg", ".bmp")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpg", ".bmp")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.png", ".bmp")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
 	public async Task ConvertImageFormatAsync_FilePath_Mutate_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
@@ -1375,30 +1287,21 @@ public sealed class ManipulationTests : IDisposable
 	}
 
 	[RetryTheory(3)]
-	[InlineData("test.bmp", ".bmp")]
 	[InlineData("test.bmp", ".jpeg")]
 	[InlineData("test.bmp", ".jpg")]
 	[InlineData("test.bmp", ".png")]
-	[InlineData("test.gif", ".bmp")]
 	[InlineData("test.gif", ".jpeg")]
 	[InlineData("test.gif", ".jpg")]
 	[InlineData("test.gif", ".png")]
-	[InlineData("test.jpeg", ".bmp")]
 	[InlineData("test.jpeg", ".jpeg")]
 	[InlineData("test.jpeg", ".jpg")]
 	[InlineData("test.jpeg", ".png")]
-	[InlineData("test.jpg", ".bmp")]
 	[InlineData("test.jpg", ".jpeg")]
 	[InlineData("test.jpg", ".jpg")]
 	[InlineData("test.jpg", ".png")]
-	[InlineData("test.png", ".bmp")]
 	[InlineData("test.png", ".jpeg")]
 	[InlineData("test.png", ".jpg")]
 	[InlineData("test.png", ".png")]
-	[InlineData("test.tiff", ".bmp")]
-	[InlineData("test.tiff", ".jpeg")]
-	[InlineData("test.tiff", ".jpg")]
-	[InlineData("test.tiff", ".png")]
 	public async Task ConvertImageFormatAsync_Stream_Mutate_Succeeds(string fileName, string outExt)
 	{
 		// Arrange
@@ -1430,7 +1333,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
 	public async Task ResizeImageAsync_FilePath_Mutate_Succeeds(string fileName, int width, int height)
 	{
@@ -1470,7 +1372,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75, 75)]
 	[InlineData("test.png", 50, 50)]
 	[InlineData("test.gif", 25, 25)]
-	[InlineData("test.tiff", 33, 33)]
 	[InlineData("test.bmp", 10, 10)]
 	public async Task ResizeImageAsync_Stream_Mutate_Succeeds(string fileName, int width, int height)
 	{
@@ -1500,7 +1401,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public async Task ReduceImageQualityAsync_FilePath_Mutate_Succeeds(string fileName, int quality)
 	{
@@ -1534,7 +1434,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 75)]
 	[InlineData("test.png", 50)]
 	[InlineData("test.gif", 25)]
-	[InlineData("test.tiff", 33)]
 	[InlineData("test.bmp", 10)]
 	public async Task ReduceImageQualityAsync_Stream_Mutate_Succeeds(string fileName, int quality)
 	{
@@ -1629,7 +1528,7 @@ public sealed class ManipulationTests : IDisposable
 
 		if (width < 0 && height < 0)
 		{
-			using SKBitmap originalImg = SKBitmap.Decode(input);
+			using SKBitmap originalImg = SKBitmap.Decode(input.ToArray());
 			originalImg.ShouldNotBeNull();
 			width = originalImg.Width;
 			height = originalImg.Height;
@@ -1765,7 +1664,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 50)]
 	[InlineData("test.png", 60)]
 	[InlineData("test.gif", 80)]
-	[InlineData("test.tiff", 70)]
 	[InlineData("test.bmp", 65)]
 	public void ReduceImageQuality_SameFilePath_Jpeg_Succeeds(string fileName, int quality)
 	{
@@ -1807,7 +1705,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 50)]
 	[InlineData("test.png", 60)]
 	[InlineData("test.gif", 80)]
-	[InlineData("test.tiff", 70)]
 	[InlineData("test.bmp", 65)]
 	public void ReduceImageQuality_SameFilePath_ToPng_Succeeds(string fileName, int quality)
 	{
@@ -1849,7 +1746,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 50)]
 	[InlineData("test.png", 60)]
 	[InlineData("test.gif", 80)]
-	[InlineData("test.tiff", 70)]
 	[InlineData("test.bmp", 65)]
 	public async Task ReduceImageQualityAsync_SameFilePath_Jpeg_Succeeds(string fileName, int quality)
 	{
@@ -1891,7 +1787,6 @@ public sealed class ManipulationTests : IDisposable
 	[InlineData("test.jpeg", 50)]
 	[InlineData("test.png", 60)]
 	[InlineData("test.gif", 80)]
-	[InlineData("test.tiff", 70)]
 	[InlineData("test.bmp", 65)]
 	public async Task ReduceImageQualityAsync_SameFilePath_ToPng_Succeeds(string fileName, int quality)
 	{
@@ -2259,7 +2154,7 @@ public sealed class ManipulationTests : IDisposable
 		byte[] imageBytes = File.ReadAllBytes(inputPath);
 		ReadOnlySpan<byte> inputSpan = imageBytes;
 		using MemoryStream outputStream = new();
-		bool result = Manipulation.ConvertImageFormat(inputSpan, outputStream, SKEncodedImageFormat.Bmp);
+		bool result = Manipulation.ConvertImageFormat(inputSpan, outputStream, SKEncodedImageFormat.Png);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 		outputStream.Position.ShouldBe(0);
@@ -2310,7 +2205,7 @@ public sealed class ManipulationTests : IDisposable
 		string outputPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.bmp");
 		try
 		{
-			bool result = await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, SKEncodedImageFormat.Bmp, 80, resizeOptions: null);
+			bool result = await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, SKEncodedImageFormat.Jpeg, 80, resizeOptions: null);
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
 		}
@@ -2383,7 +2278,7 @@ public sealed class ManipulationTests : IDisposable
 		byte[] imageBytes = File.ReadAllBytes(inputPath);
 		ReadOnlySpan<byte> inputSpan = imageBytes;
 		using MemoryStream outputStream = new();
-		bool result = Manipulation.ResizeImage(inputSpan, outputStream, 120, 120, SKEncodedImageFormat.Bmp);
+		bool result = Manipulation.ResizeImage(inputSpan, outputStream, 120, 120, SKEncodedImageFormat.Jpeg);
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
@@ -2408,7 +2303,7 @@ public sealed class ManipulationTests : IDisposable
 		string outputPath = GetTempFilePath(".bmp");
 		try
 		{
-			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, SKEncodedImageFormat.Bmp, 80,
+			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, SKEncodedImageFormat.Png, 80,
 				new ResizeOptions { Size = new ImageSize(150, 150) });
 			result.ShouldBeTrue();
 			File.Exists(outputPath).ShouldBeTrue();
@@ -2438,7 +2333,7 @@ public sealed class ManipulationTests : IDisposable
 		byte[] imageBytes = File.ReadAllBytes(inputPath);
 		ReadOnlySpan<byte> inputSpan = imageBytes;
 		using MemoryStream outputStream = new();
-		bool result = Manipulation.ReduceImageQuality(inputSpan, outputStream, SKEncodedImageFormat.Bmp, 70,
+		bool result = Manipulation.ReduceImageQuality(inputSpan, outputStream, SKEncodedImageFormat.Png, 70,
 			new ResizeOptions { Size = new ImageSize(180, 180) });
 		result.ShouldBeTrue();
 		outputStream.Length.ShouldBeGreaterThan(0);

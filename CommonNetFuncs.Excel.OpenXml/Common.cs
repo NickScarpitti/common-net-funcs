@@ -2774,7 +2774,7 @@ public static partial class Common
 	/// </summary>
 	/// <param name="cell">The cell to modify.</param>
 	/// <param name="value">The numeric value to set.</param>
-	private static void SetCellNumericValue(this Cell? cell, int value)
+	public static void SetCellNumericValue(this Cell? cell, int value)
 	{
 		if (cell == null) return;
 		cell.CellValue = new CellValue(value);
@@ -2824,7 +2824,7 @@ public static partial class Common
 	/// </summary>
 	/// <param name="cell">The cell to modify.</param>
 	/// <param name="value">The numeric value to set.</param>
-	private static void SetCellNumericValue(this Cell? cell, double value)
+	public static void SetCellNumericValue(this Cell? cell, double value)
 	{
 		if (cell == null) return;
 		cell.CellValue = new CellValue(value);
@@ -2874,7 +2874,7 @@ public static partial class Common
 	/// </summary>
 	/// <param name="cell">The cell to modify.</param>
 	/// <param name="value">The numeric value to set.</param>
-	private static void SetCellNumericValue(this Cell? cell, decimal value)
+	public static void SetCellNumericValue(this Cell? cell, decimal value)
 	{
 		if (cell == null) return;
 		cell.CellValue = new CellValue(value);

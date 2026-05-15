@@ -493,6 +493,10 @@ public static partial class Common
 		}
 	}
 
+	/// <summary>
+	/// Gets a copy of the workbook custom format caches.
+	/// </summary>
+	/// <returns>A dictionary containing the custom format caches.</returns>
 	public static Dictionary<string, WorkbookStyleCache> GetWorkbookCustomFormatCaches()
 	{
 		return new(WorkbookCustomFormatCaches);
@@ -973,6 +977,9 @@ public static partial class Common
 		return protection1.Locked == protection2.Locked;
 	}
 
+	/// <summary>
+	/// Caches style elements for a workbook including fonts, fills, borders, and cell formats.
+	/// </summary>
 	public sealed class WorkbookStyleCache
 	{
 		public Dictionary<int, uint> FontCache { get; } = [];
@@ -1562,6 +1569,14 @@ public static partial class Common
 		}
 	}
 
+	/// <summary>
+	/// Adds an image into the worksheet at the specified merged cell area, resizing the image to fit within the area while maintaining aspect ratio and centering it within the area
+	/// </summary>
+	/// <param name="worksheetPart">The WorksheetPart to add the image to.</param>
+	/// <param name="drawingsPart">The DrawingsPart to add the image to.</param>
+	/// <param name="mergedCellArea">The merged cell area to insert the image into.</param>
+	/// <param name="cellStyleIndex">The style index to apply to the cells.</param>
+	/// <param name="imageData">The image data as a byte array.</param>
 	public static void AddImagePart(this WorksheetPart worksheetPart, DrawingsPart drawingsPart, (CellReference FirstCell, CellReference LastCell) mergedCellArea, uint cellStyleIndex, byte[] imageData)
 	{
 		// Set cells to standard font to ensure cell sizes are gotten correctly
@@ -2058,6 +2073,12 @@ public static partial class Common
 		return dataTable;
 	}
 
+	/// <summary>
+	/// Gets the Sheet that contains a given Table
+	/// </summary>
+	/// <param name="document">The SpreadsheetDocument containing the table.</param>
+	/// <param name="table">The Table to find the containing sheet for.</param>
+	/// <returns>The Sheet that contains the specified Table, or null if not found.</returns>
 	public static Sheet? GetSheetForTable(this SpreadsheetDocument document, Table table)
 	{
 		WorkbookPart? workbookPart = document.WorkbookPart;

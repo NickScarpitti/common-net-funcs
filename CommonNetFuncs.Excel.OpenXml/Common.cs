@@ -2339,6 +2339,661 @@ public static partial class Common
 		return Math.Truncate(((width * maxCharWidth) + 5) / maxCharWidth * 256) / 256;
 	}
 
+	/// <summary>
+	/// Sets the string value and data type of a spreadsheet cell.
+	/// </summary>
+	/// <param name="cell">The cell to update. If null, the method returns without performing any action.</param>
+	/// <param name="value">The string value to assign to the cell. If null, an empty string is used.</param>
+	public static void SetCellStringValue(this Cell? cell, string? value)
+	{
+		if (cell == null) return;
+		cell.CellValue = new CellValue(value ?? string.Empty);
+		cell.DataType = CellValues.String;
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified row and column in the sheet data.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the target cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The decimal value to set as a string in the cell.</param>
+	public static void SetCellStringValue(this SheetData sheetData, uint row, uint col, string? value)
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellStringValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified cell reference.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="cellReference">The cell reference specifying the target cell location.</param>
+	/// <param name="value">The decimal value to set as a string.</param>
+	public static void SetCellStringValue(this SheetData sheetData, CellReference cellReference, string value)
+	{
+		SetCellStringValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified reference to a formatted decimal string.
+	/// </summary>
+	/// <param name="worksheet">The worksheet containing the cell.</param>
+	/// <param name="cellReference">The cell reference specifying the target location.</param>
+	/// <param name="value">The decimal value to set.</param>
+	public static void SetCellStringValue(this Worksheet worksheet, CellReference cellReference, string value)
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellStringValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the cell's string value to the specified boolean value.
+	/// </summary>
+	/// <param name="cell">The cell to set the value on.</param>
+	/// <param name="value">The boolean value to set.</param>
+	public static void SetCellStringValue(this Cell? cell, bool value) => SetCellStringValue(cell, value.ToString());
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified row and column in the sheet data.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the target cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The decimal value to set as a string in the cell.</param>
+	public static void SetCellStringValue(this SheetData sheetData, uint row, uint col, bool value)
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellStringValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified cell reference.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="cellReference">The cell reference specifying the target cell location.</param>
+	/// <param name="value">The decimal value to set as a string.</param>
+	public static void SetCellStringValue(this SheetData sheetData, CellReference cellReference, bool value)
+	{
+		SetCellStringValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified reference to a formatted decimal string.
+	/// </summary>
+	/// <param name="worksheet">The worksheet containing the cell.</param>
+	/// <param name="cellReference">The cell reference specifying the target location.</param>
+	/// <param name="value">The decimal value to set.</param>
+	public static void SetCellStringValue(this Worksheet worksheet, CellReference cellReference, bool value)
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellStringValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the cell's string value to the specified integer value.
+	/// </summary>
+	/// <param name="cell">The cell to set the value on.</param>
+	/// <param name="value">The integer value to set.</param>
+	public static void SetCellStringValue(this Cell? cell, int value) => SetCellStringValue(cell, value.ToString());
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified row and column in the sheet data.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the target cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The decimal value to set as a string in the cell.</param>
+	public static void SetCellStringValue(this SheetData sheetData, uint row, uint col, int value)
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellStringValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified cell reference.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="cellReference">The cell reference specifying the target cell location.</param>
+	/// <param name="value">The decimal value to set as a string.</param>
+	public static void SetCellStringValue(this SheetData sheetData, CellReference cellReference, int value)
+	{
+		SetCellStringValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified reference to a formatted decimal string.
+	/// </summary>
+	/// <param name="worksheet">The worksheet containing the cell.</param>
+	/// <param name="cellReference">The cell reference specifying the target location.</param>
+	/// <param name="value">The decimal value to set.</param>
+	public static void SetCellStringValue(this Worksheet worksheet, CellReference cellReference, int value)
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellStringValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the cell's string value to the specified double value.
+	/// </summary>
+	/// <param name="cell">The cell to set the value on.</param>
+	/// <param name="value">The double value to set.</param>
+	public static void SetCellStringValue(this Cell? cell, double value) => SetCellStringValue(cell, value.ToString());
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified row and column in the sheet data.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the target cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The decimal value to set as a string in the cell.</param>
+	public static void SetCellStringValue(this SheetData sheetData, uint row, uint col, double value)
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellStringValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified cell reference.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="cellReference">The cell reference specifying the target cell location.</param>
+	/// <param name="value">The decimal value to set as a string.</param>
+	public static void SetCellStringValue(this SheetData sheetData, CellReference cellReference, double value)
+	{
+		SetCellStringValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified reference to a formatted decimal string.
+	/// </summary>
+	/// <param name="worksheet">The worksheet containing the cell.</param>
+	/// <param name="cellReference">The cell reference specifying the target location.</param>
+	/// <param name="value">The decimal value to set.</param>
+	public static void SetCellStringValue(this Worksheet worksheet, CellReference cellReference, double value)
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellStringValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the cell's string value to the specified decimal value.
+	/// </summary>
+	/// <param name="cell">The cell to set the value on.</param>
+	/// <param name="value">The decimal value to set.</param>
+	public static void SetCellStringValue(this Cell? cell, decimal value) => SetCellStringValue(cell, value.ToString());
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified row and column in the sheet data.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the target cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The decimal value to set as a string in the cell.</param>
+	public static void SetCellStringValue(this SheetData sheetData, uint row, uint col, decimal value)
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellStringValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified cell reference.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="cellReference">The cell reference specifying the target cell location.</param>
+	/// <param name="value">The decimal value to set as a string.</param>
+	public static void SetCellStringValue(this SheetData sheetData, CellReference cellReference, decimal value)
+	{
+		SetCellStringValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified reference to a formatted decimal string.
+	/// </summary>
+	/// <param name="worksheet">The worksheet containing the cell.</param>
+	/// <param name="cellReference">The cell reference specifying the target location.</param>
+	/// <param name="value">The decimal value to set.</param>
+	public static void SetCellStringValue(this Worksheet worksheet, CellReference cellReference, decimal value)
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellStringValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell to a formatted date string based on the provided DateOnly value and optional date format.
+	/// </summary>
+	/// <param name="cell">The cell to modify.</param>
+	/// <param name="value">The date value to set.</param>
+	/// <param name="dateFormat">The format string for the date. Defaults to "MM/dd/yyyy".</param>
+	public static void SetCellStringValue(this Cell? cell, DateOnly value, string? dateFormat = "MM/dd/yyyy") => SetCellStringValue(cell, value.ToString(dateFormat ?? "MM/dd/yyyy"));
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified row and column position to a formatted date string.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The date value to set.</param>
+	/// <param name="dateFormat">The format string for the date. Defaults to "MM/dd/yyyy".</param>
+	public static void SetCellStringValue(this SheetData sheetData, uint row, uint col, DateOnly value, string? dateFormat = "MM/dd/yyyy")
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellStringValue(cell, value, dateFormat);
+	}
+
+	/// <summary>
+	/// Sets a cell's string value with the specified date at the given cell reference.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cells.</param>
+	/// <param name="cellReference">The cell reference specifying the target location.</param>
+	/// <param name="value">The date value to set.</param>
+	/// <param name="dateFormat">The format string for the date. Defaults to "MM/dd/yyyy".</param>
+	public static void SetCellStringValue(this SheetData sheetData, CellReference cellReference, DateOnly value, string? dateFormat = "MM/dd/yyyy")
+	{
+		SetCellStringValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value, dateFormat);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified reference to a formatted date string.
+	/// </summary>
+	/// <param name="worksheet">The worksheet instance.</param>
+	/// <param name="cellReference">The cell reference specifying the location of the cell.</param>
+	/// <param name="value">The date value to set.</param>
+	/// <param name="dateFormat">The date format string to use for formatting the date. Defaults to "MM/dd/yyyy" if not specified.</param>
+	public static void SetCellStringValue(this Worksheet worksheet, CellReference cellReference, DateOnly value, string? dateFormat = "MM/dd/yyyy")
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellStringValue(cell, value, dateFormat);
+	}
+
+
+	/// <summary>
+	/// Sets the string value of a cell to a formatted date string based on the provided DateOnly value and optional date format.
+	/// </summary>
+	/// <param name="cell">The cell to modify.</param>
+	/// <param name="value">The date value to set.</param>
+	/// <param name="dateFormat">The format string for the date. Defaults to "MM/dd/yyyy".</param>
+	public static void SetCellStringValue(this Cell? cell, DateTime value, string? dateFormat = "g") => SetCellStringValue(cell, value.ToString(dateFormat ?? "g"));
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified row and column position to a formatted date string.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The date value to set.</param>
+	/// <param name="dateFormat">The format string for the date. Defaults to "MM/dd/yyyy".</param>
+	public static void SetCellStringValue(this SheetData sheetData, uint row, uint col, DateTime value, string? dateFormat = "MM/dd/yyyy")
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellStringValue(cell, value, dateFormat);
+	}
+
+	/// <summary>
+	/// Sets a cell's string value with the specified date at the given cell reference.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cells.</param>
+	/// <param name="cellReference">The cell reference specifying the target location.</param>
+	/// <param name="value">The date value to set.</param>
+	/// <param name="dateFormat">The format string for the date. Defaults to "MM/dd/yyyy".</param>
+	public static void SetCellStringValue(this SheetData sheetData, CellReference cellReference, DateTime value, string? dateFormat = "MM/dd/yyyy")
+	{
+		SetCellStringValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value, dateFormat);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified reference to a formatted date string.
+	/// </summary>
+	/// <param name="worksheet">The worksheet instance.</param>
+	/// <param name="cellReference">The cell reference specifying the location of the cell.</param>
+	/// <param name="value">The date value to set.</param>
+	/// <param name="dateFormat">The date format string to use for formatting the date. Defaults to "MM/dd/yyyy" if not specified.</param>
+	public static void SetCellStringValue(this Worksheet worksheet, CellReference cellReference, DateTime value, string? dateFormat = "MM/dd/yyyy")
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellStringValue(cell, value, dateFormat);
+	}
+
+
+	/// <summary>
+	/// Sets the string value of a cell to a formatted date string based on the provided DateOnly value and optional date format.
+	/// </summary>
+	/// <param name="cell">The cell to modify.</param>
+	/// <param name="value">The date value to set.</param>
+	public static void SetCellDateValue(this Cell? cell, DateOnly value)
+	{
+		if (cell == null) return;
+		cell.CellValue = new CellValue(value.ToDateTime(new TimeOnly(0, 0)));
+		cell.DataType = CellValues.Date;
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified row and column position to a formatted date string.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The date value to set.</param>
+	public static void SetCellDateValue(this SheetData sheetData, uint row, uint col, DateOnly value)
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellDateValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets a cell's string value with the specified date at the given cell reference.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cells.</param>
+	/// <param name="cellReference">The cell reference specifying the target location.</param>
+	/// <param name="value">The date value to set.</param>
+	public static void SetCellDateValue(this SheetData sheetData, CellReference cellReference, DateOnly value)
+	{
+		SetCellDateValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified reference to a formatted date string.
+	/// </summary>
+	/// <param name="worksheet">The worksheet instance.</param>
+	/// <param name="cellReference">The cell reference specifying the location of the cell.</param>
+	/// <param name="value">The date value to set.</param>
+	public static void SetCellDateValue(this Worksheet worksheet, CellReference cellReference, DateOnly value)
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellDateValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell to a formatted date string based on the provided DateOnly value and optional date format.
+	/// </summary>
+	/// <param name="cell">The cell to modify.</param>
+	/// <param name="value">The date value to set.</param>
+	public static void SetCellDateValue(this Cell? cell, DateTime value)
+	{
+		if (cell == null) return;
+		cell.CellValue = new CellValue(value);
+		cell.DataType = CellValues.Date;
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified row and column position to a formatted date string.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The date value to set.</param>
+	public static void SetCellDateValue(this SheetData sheetData, uint row, uint col, DateTime value)
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellDateValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets a cell's string value with the specified date at the given cell reference.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cells.</param>
+	/// <param name="cellReference">The cell reference specifying the target location.</param>
+	/// <param name="value">The date value to set.</param>
+	public static void SetCellDateValue(this SheetData sheetData, CellReference cellReference, DateTime value)
+	{
+		SetCellDateValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value);
+	}
+
+	/// <summary>
+	/// Sets the string value of a cell at the specified reference to a formatted date string.
+	/// </summary>
+	/// <param name="worksheet">The worksheet instance.</param>
+	/// <param name="cellReference">The cell reference specifying the location of the cell.</param>
+	/// <param name="value">The date value to set.</param>
+	public static void SetCellDateValue(this Worksheet worksheet, CellReference cellReference, DateTime value)
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellDateValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the numeric value of a cell in the sheet.
+	/// </summary>
+	/// <param name="cell">The cell to modify.</param>
+	/// <param name="value">The numeric value to set.</param>
+	private static void SetCellNumericValue(this Cell? cell, int value)
+	{
+		if (cell == null) return;
+		cell.CellValue = new CellValue(value);
+		cell.DataType = CellValues.Number;
+	}
+
+	/// <summary>
+	/// Sets the numeric value of a cell at the specified row and column position.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The numeric value to set in the cell.</param>
+	public static void SetCellNumericValue(this SheetData sheetData, uint row, uint col, int value)
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellNumericValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the numeric value of a cell in the sheet.
+	/// </summary>
+	/// <param name="sheetData">The sheet data to modify.</param>
+	/// <param name="cellReference">The cell reference specifying the target cell.</param>
+	/// <param name="value">The numeric value to set.</param>
+	public static void SetCellNumericValue(this SheetData sheetData, CellReference cellReference, int value)
+	{
+		SetCellNumericValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value);
+	}
+
+	/// <summary>
+	/// Sets a numeric value to a cell at the specified cell reference.
+	/// </summary>
+	/// <param name="worksheet">The worksheet containing the cell.</param>
+	/// <param name="cellReference">The reference identifying the target cell.</param>
+	/// <param name="value">The numeric value to set.</param>
+	public static void SetCellNumericValue(this Worksheet worksheet, CellReference cellReference, int value)
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellNumericValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the numeric value of a cell in the sheet.
+	/// </summary>
+	/// <param name="cell">The cell to modify.</param>
+	/// <param name="value">The numeric value to set.</param>
+	private static void SetCellNumericValue(this Cell? cell, double value)
+	{
+		if (cell == null) return;
+		cell.CellValue = new CellValue(value);
+		cell.DataType = CellValues.Number;
+	}
+
+	/// <summary>
+	/// Sets the numeric value of a cell at the specified row and column position.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The numeric value to set in the cell.</param>
+	public static void SetCellNumericValue(this SheetData sheetData, uint row, uint col, double value)
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellNumericValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the numeric value of a cell in the sheet.
+	/// </summary>
+	/// <param name="sheetData">The sheet data to modify.</param>
+	/// <param name="cellReference">The cell reference specifying the target cell.</param>
+	/// <param name="value">The numeric value to set.</param>
+	public static void SetCellNumericValue(this SheetData sheetData, CellReference cellReference, double value)
+	{
+		SetCellNumericValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value);
+	}
+
+	/// <summary>
+	/// Sets a numeric value to a cell at the specified cell reference.
+	/// </summary>
+	/// <param name="worksheet">The worksheet containing the cell.</param>
+	/// <param name="cellReference">The reference identifying the target cell.</param>
+	/// <param name="value">The numeric value to set.</param>
+	public static void SetCellNumericValue(this Worksheet worksheet, CellReference cellReference, double value)
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellNumericValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the numeric value of a cell in the sheet.
+	/// </summary>
+	/// <param name="cell">The cell to modify.</param>
+	/// <param name="value">The numeric value to set.</param>
+	private static void SetCellNumericValue(this Cell? cell, decimal value)
+	{
+		if (cell == null) return;
+		cell.CellValue = new CellValue(value);
+		cell.DataType = CellValues.Number;
+	}
+
+	/// <summary>
+	/// Sets the numeric value of a cell at the specified row and column position.
+	/// </summary>
+	/// <param name="sheetData">The sheet data containing the cell.</param>
+	/// <param name="row">The row index of the cell.</param>
+	/// <param name="col">The column index of the cell.</param>
+	/// <param name="value">The numeric value to set in the cell.</param>
+	public static void SetCellNumericValue(this SheetData sheetData, uint row, uint col, decimal value)
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		SetCellNumericValue(cell, value);
+	}
+
+	/// <summary>
+	/// Sets the numeric value of a cell in the sheet.
+	/// </summary>
+	/// <param name="sheetData">The sheet data to modify.</param>
+	/// <param name="cellReference">The cell reference specifying the target cell.</param>
+	/// <param name="value">The numeric value to set.</param>
+	public static void SetCellNumericValue(this SheetData sheetData, CellReference cellReference, decimal value)
+	{
+		SetCellNumericValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value);
+	}
+
+	/// <summary>
+	/// Sets a numeric value to a cell at the specified cell reference.
+	/// </summary>
+	/// <param name="worksheet">The worksheet containing the cell.</param>
+	/// <param name="cellReference">The reference identifying the target cell.</param>
+	/// <param name="value">The numeric value to set.</param>
+	public static void SetCellNumericValue(this Worksheet worksheet, CellReference cellReference, decimal value)
+	{
+		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
+		SetCellNumericValue(cell, value);
+	}
+
+	/// <summary>
+	/// Forces all formulas in the spreadsheet document to be recalculated when the document is next opened.
+	/// </summary>
+	/// <param name="document">The spreadsheet document to force formula recalculation on.</param>
+	public static void ForceFormulaRecalculation(this SpreadsheetDocument document)
+	{
+		document.WorkbookPart?.Workbook?.ForceFormulaRecalculation();
+	}
+
+	/// <summary>
+	/// Forces recalculation of all formulas in the workbook.
+	/// </summary>
+	/// <param name="workbookPart">The workbook part containing the workbook to recalculate.</param>
+	public static void ForceFormulaRecalculation(this WorkbookPart workbookPart)
+	{
+		workbookPart?.Workbook?.ForceFormulaRecalculation();
+	}
+
+	/// <summary>
+	/// Configures the workbook to force full recalculation of all formulas when loaded.
+	/// </summary>
+	/// <param name="workbook">The workbook to configure.</param>
+	public static void ForceFormulaRecalculation(this Workbook workbook)
+	{
+		if (workbook?.CalculationProperties == null)
+		{
+			workbook?.AppendChild(new CalculationProperties { ForceFullCalculation = true, FullCalculationOnLoad = true });
+		}
+		else
+		{
+			workbook.CalculationProperties.ForceFullCalculation = true;
+			workbook.CalculationProperties.FullCalculationOnLoad = true;
+		}
+	}
+
+	/// <summary>
+	/// Saves the workbook, closes the document, and resets the stream position to the beginning.
+	/// </summary>
+	/// <param name="document">The document to save and close.</param>
+	/// <param name="memoryStream">The stream to reset to position 0.</param>
+	public static void WriteAndClose(this SpreadsheetDocument document, MemoryStream memoryStream)
+	{
+		document.WorkbookPart?.Workbook?.Save();
+		document.Dispose();
+		memoryStream.Position = 0;
+	}
+
+	/// <summary>
+	/// Adds dropdown list data validation to a specified cell or range in the worksheet.
+	/// </summary>
+	/// <param name="worksheet">The worksheet to add the validation to.</param>
+	/// <param name="cellReference">The cell or range reference where the validation will be applied (e.g., "A1" or "A1:A10").</param>
+	/// <param name="formula">The formula defining the list source for the dropdown validation.</param>
+	public static void AddDropDownValidation(Worksheet worksheet, string cellReference, string formula)
+	{
+		DataValidations? dataValidations = worksheet.GetFirstChild<DataValidations>();
+		if (dataValidations == null)
+		{
+			dataValidations = new DataValidations();
+			worksheet.AppendChild(dataValidations);
+		}
+
+		DataValidation dataValidation = new()
+		{
+			Type = DataValidationValues.List,
+			ShowErrorMessage = true,
+			AllowBlank = true,
+			SequenceOfReferences = new ListValue<StringValue> { InnerText = cellReference },
+			Formula1 = new Formula1(formula)
+		};
+
+		dataValidations.AppendChild(dataValidation);
+		dataValidations.Count = (uint)(dataValidations.Count ?? 0) + 1;
+	}
+
 	// Helper classes to deal with cell references more easily
 	public partial class CellReference
 	{

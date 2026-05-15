@@ -5765,5 +5765,155 @@ public sealed class CommonTests : IDisposable
 		DataValidation? dataValidation = dataValidations!.Elements<DataValidation>().FirstOrDefault();
 		dataValidation!.SequenceOfReferences!.InnerText.ShouldBe("C3");
 	}
+
+	// ---- GetTableStart ----
+
+	[RetryFact(3)]
+	public void GetTableStart_ReturnsStartCellReference()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Col1"), CellValues.String);
+		worksheet.InsertCellValue(1, 2, new CellValue("Col2"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 2, "MyTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act
+		CellReference result = table.GetTableStart();
+
+		// Assert
+		result.ColumnIndex.ShouldBe(1u);
+		result.RowIndex.ShouldBe(1u);
+		result.ToString().ShouldBe("A1");
+	}
+
+	[RetryTheory(3)]
+	[InlineData(3u, 2u, "C2")]
+	[InlineData(2u, 5u, "B5")]
+	public void GetTableStart_ReturnsCorrectStartForOffset(uint startCol, uint startRow, string expectedRef)
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(startRow, startCol, new CellValue("Header"), CellValues.String);
+		worksheet.CreateTable(startRow, startCol, startRow + 2, startCol, $"Table_{startCol}_{startRow}");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act
+		CellReference result = table.GetTableStart();
+
+		// Assert
+		result.ToString().ShouldBe(expectedRef);
+	}
+
+	// ---- GetColumnIndex ----
+
+	[RetryFact(3)]
+	public void GetColumnIndex_MatchingColumnName_ReturnsCorrectIndex()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Alpha"), CellValues.String);
+		worksheet.InsertCellValue(2, 1, new CellValue("Beta"), CellValues.String);
+		worksheet.InsertCellValue(3, 1, new CellValue("Gamma"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 3, "ColIndexTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act - "Beta" is the second column (0-based position 1), start column is 1, so result = 1 + 1 = 2
+		int result = table.GetColumnIndex("Beta");
+
+		// Assert
+		result.ShouldBe(2);
+	}
+
+	[RetryFact(3)]
+	public void GetColumnIndex_MatchingColumnName_CaseInsensitive_ReturnsCorrectIndex()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Alpha"), CellValues.String);
+		worksheet.InsertCellValue(2, 1, new CellValue("Beta"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 2, "CaseTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act
+		int result = table.GetColumnIndex("BETA");
+
+		// Assert
+		result.ShouldBe(2);
+	}
+
+	[RetryFact(3)]
+	public void GetColumnIndex_NoMatchingColumnName_ReturnsTableStartColumnIndex()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Alpha"), CellValues.String);
+		worksheet.InsertCellValue(1, 2, new CellValue("Beta"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 2, "NoMatchTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act
+		int result = table.GetColumnIndex("NonExistent");
+
+		// Assert
+		result.ShouldBe(1); // Falls back to table start column index
+	}
+
+	[RetryFact(3)]
+	public void GetColumnIndex_WithExplicitTableStart_UsesProvidedTableStart()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Alpha"), CellValues.String);
+		worksheet.InsertCellValue(2, 1, new CellValue("Beta"), CellValues.String);
+		worksheet.InsertCellValue(3, 1, new CellValue("Gamma"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 3, "ExplicitStartTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+		CellReference explicitStart = new(1u, 1u);
+
+		// Act - "Gamma" is the third column (0-based position 2), start column is 1, so result = 1 + 2 = 3
+		int result = table.GetColumnIndex("Gamma", explicitStart);
+
+		// Assert
+		result.ShouldBe(3);
+	}
+
+	[RetryFact(3)]
+	public void GetColumnIndex_FirstColumn_ReturnsTableStartColumnIndex()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Alpha"), CellValues.String);
+		worksheet.InsertCellValue(1, 2, new CellValue("Beta"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 2, "FirstColTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act - "Alpha" is at position 0, start col is 1, so result = 1 + 0 = 1
+		int result = table.GetColumnIndex("Alpha");
+
+		// Assert
+		result.ShouldBe(1);
+	}
 }
 

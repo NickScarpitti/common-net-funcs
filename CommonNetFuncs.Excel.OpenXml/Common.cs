@@ -2994,6 +2994,39 @@ public static partial class Common
 		dataValidations.Count = (uint)(dataValidations.Count ?? 0) + 1;
 	}
 
+	/// <summary>
+	/// Gets the column index for a specified column name in the table.
+	/// </summary>
+	/// <remarks>The column name comparison is case-insensitive.</remarks>
+	/// <param name="table">The table to search for the column.</param>
+	/// <param name="columnName">The name of the column to find.</param>
+	/// <param name="tableStart">The starting cell reference of the table. If <c>null</c>, it will be retrieved from the table.</param>
+	/// <returns>The column index of the matching column, or the table start column index if no match is found.</returns>
+	public static int GetColumnIndex(this Table table, string columnName, CellReference? tableStart = null)
+	{
+		tableStart ??= table.GetTableStart();
+		int position = 0;
+		foreach (TableColumn col in table.TableColumns?.Elements<TableColumn>() ?? [])
+		{
+			if (col.Name?.Value?.Equals(columnName, StringComparison.OrdinalIgnoreCase) == true)
+			{
+				return (int)tableStart.ColumnIndex + position;
+			}
+			position++;
+		}
+		return (int)tableStart.ColumnIndex;
+	}
+
+	/// <summary>
+	/// Returns the 1-based absolute worksheet row index for the named table column.
+	/// </summary>
+	/// <param name="table">The table to get the start cell reference for.</param>
+	/// <returns>The 1-based absolute worksheet row index for the named table column.</returns>
+	public static CellReference GetTableStart(this Table table)
+	{
+		return new CellReference(table.Reference!.Value!.Split(':')[0]);
+	}
+
 	// Helper classes to deal with cell references more easily
 	public partial class CellReference
 	{

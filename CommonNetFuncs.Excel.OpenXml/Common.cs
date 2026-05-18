@@ -1973,34 +1973,39 @@ public static partial class Common
 			return null;
 		}
 
+		// Formula cells store the cached result in CellValue; InnerText also includes the formula text itself
+		bool hasFormula = cell.CellFormula != null;
+		string? rawValue = hasFormula ? cell.CellValue?.Text : cell.InnerText;
+
 		if (cell.DataType != null)
 		{
-			string cellDataType = cell.DataType.Value.ToString();
-			if (string.Equals(cellDataType, CellValues.SharedString.ToString()))
+			CellValues cellDataType = cell.DataType.Value;
+
+			if (cellDataType == CellValues.SharedString)
 			{
 				Worksheet worksheet = cell.GetWorksheetFromCell();
 				Workbook? workbook = worksheet.GetWorkbookFromWorksheet();
 				SharedStringTablePart? stringTable = workbook?.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
-				if (stringTable != null)
+				if ((stringTable != null) && int.TryParse(rawValue, out int index))
 				{
-					return stringTable.SharedStringTable?.ElementAt(int.Parse(cell.InnerText)).InnerText;
+					return stringTable.SharedStringTable?.ElementAt(index).InnerText;
 				}
 			}
-			else if (string.Equals(cellDataType, CellValues.Boolean.ToString()))
+			else if (cellDataType == CellValues.Boolean)
 			{
-				return string.Equals(cell.InnerText, "1") ? "TRUE" : "FALSE";
+				return string.Equals(rawValue, "1") ? "TRUE" : "FALSE";
 			}
-			else if (string.Equals(cellDataType, CellValues.Error.ToString()))
+			else if (cellDataType == CellValues.Error)
 			{
-				return $"ERROR: {cell.InnerText}";
+				return $"ERROR: {rawValue}";
 			}
-			else // (cellDataType == CellValues.Number.ToString() || cellDataType == CellValues.String.ToString() || cellDataType == CellValues.InlineString.ToString())
+			else // Number, String, InlineString
 			{
-				return cell.InnerText;
+				return rawValue;
 			}
 		}
 
-		return cell.InnerText;
+		return rawValue;
 	}
 
 	/// <summary>

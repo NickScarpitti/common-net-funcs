@@ -10,7 +10,7 @@
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="CliWrap" Version="3.10.1" />
     <PackageVersion Include="ClosedXML" Version="0.105.0" />
-    <PackageVersion Include="coverlet.collector" Version="10.0.0" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
     <PackageVersion Include="DocumentFormat.OpenXml" Version="3.5.1" />
     <!-- FakeItEasy must be 8.3.0 until AutoFixture.AutoFakeItEasy is updated to use the new version (9.x.x) -->

@@ -898,7 +898,7 @@ public sealed class CommonTests : IDisposable
 		result.ShouldNotBeNull();
 		if (cellType == nameof(CellValues.Boolean))
 		{
-			result.ShouldBe((value == "TRUE") ? "1" : "0");
+			result.ShouldBe(value == "TRUE" ? "TRUE" : "FALSE");
 		}
 		else if (cellType == nameof(CellValues.Error))
 		{
@@ -3042,9 +3042,9 @@ public sealed class CommonTests : IDisposable
 		// Act
 		string? value = cell.GetStringValue();
 
-		// Assert - Actually checks cell.InnerText which is "1", not "TRUE"
+		// Assert
 		value.ShouldNotBeNull();
-		value.ShouldContain("1"); // InnerText behavior
+		value.ShouldBe("TRUE");
 	}
 
 	[RetryFact(3)]
@@ -3062,9 +3062,9 @@ public sealed class CommonTests : IDisposable
 		// Act
 		string? value = cell.GetStringValue();
 
-		// Assert - Actually checks cell.InnerText which is "0", not "FALSE"
+		// Assert
 		value.ShouldNotBeNull();
-		value.ShouldContain("0"); // InnerText behavior
+		value.ShouldBe("FALSE");
 	}
 
 	[RetryFact(3)]
@@ -5914,6 +5914,119 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		result.ShouldBe(1);
+	}
+
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithNullCell_ReturnsNull()
+	{
+		Cell? cell = null;
+		cell.GetStringValue().ShouldBeNull();
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithNullDataType_ReturnsInnerText()
+	{
+		Cell cell = new() { CellValue = new CellValue("42") };
+		// DataType is null, so should return InnerText
+		cell.GetStringValue().ShouldBe("42");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithBooleanTrue_ReturnsTRUE()
+	{
+		Cell cell = new() { DataType = CellValues.Boolean, CellValue = new CellValue("1") };
+		cell.GetStringValue().ShouldBe("TRUE");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithBooleanFalse_ReturnsFALSE()
+	{
+		Cell cell = new() { DataType = CellValues.Boolean, CellValue = new CellValue("0") };
+		cell.GetStringValue().ShouldBe("FALSE");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithError_ReturnsErrorPrefixed()
+	{
+		Cell cell = new() { DataType = CellValues.Error, CellValue = new CellValue("#DIV/0!") };
+		cell.GetStringValue().ShouldBe("ERROR: #DIV/0!");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithNumber_ReturnsInnerText()
+	{
+		Cell cell = new() { DataType = CellValues.Number, CellValue = new CellValue("123.45") };
+		cell.GetStringValue().ShouldBe("123.45");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithString_ReturnsInnerText()
+	{
+		Cell cell = new() { DataType = CellValues.String, CellValue = new CellValue("hello") };
+		cell.GetStringValue().ShouldBe("hello");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithInlineString_ReturnsInnerText()
+	{
+		Cell cell = new() { DataType = CellValues.InlineString, InlineString = new InlineString(new Text("inline value")) };
+		cell.GetStringValue().ShouldBe("inline value");
+	}
+
+	[RetryTheory(3)]
+	[InlineData("A1", "2")]
+	[InlineData("A2", "Test Test Again")]
+	[InlineData("A3", "0.5")]
+	[InlineData("A4", "3")]
+	[InlineData("A5", "Test2")]
+	[InlineData("A6", "ERROR: #DIV/0!")]
+	public void GetStringValue_FormulaCells_ShouldReturnCachedValue(string cellRef, string expectedValue)
+	{
+		// Arrange
+		using FileStream fileStream = File.OpenRead("TestData/FormulasTest.xlsx");
+		using SpreadsheetDocument document = SpreadsheetDocument.Open(fileStream, false);
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1", createIfMissing: false)!;
+		CellReference reference = new(cellRef);
+		Cell? cell = worksheet.GetCellFromCoordinates((int)reference.ColumnIndex, (int)reference.RowIndex);
+
+		// Act
+		string? value = cell.GetStringValue();
+
+		// Assert
+		value.ShouldBe(expectedValue);
+	}
+
+	[RetryFact]
+	public void OpenXml_GetStringValue_WithSharedString_ReturnsSharedStringValue()
+	{
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, DocumentFormat.OpenXml.SpreadsheetDocumentType.Workbook);
+		WorkbookPart workbookPart = doc.AddWorkbookPart();
+		workbookPart.Workbook = new Workbook();
+
+		// Add shared string table
+		SharedStringTablePart sharedStringTablePart = workbookPart.AddNewPart<SharedStringTablePart>();
+		sharedStringTablePart.SharedStringTable = new SharedStringTable();
+		sharedStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("SharedValue")));
+		sharedStringTablePart.SharedStringTable.Save();
+
+		// Add worksheet
+		WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+		SheetData sheetData = new();
+		Row row = new() { RowIndex = 1 };
+		Cell cell = new() { CellReference = "A1", DataType = CellValues.SharedString, CellValue = new CellValue("0") };
+		row.AppendChild(cell);
+		sheetData.AppendChild(row);
+		worksheetPart.Worksheet = new Worksheet(sheetData);
+		worksheetPart.Worksheet.Save();
+
+		Sheets sheets = workbookPart.Workbook.AppendChild(new Sheets());
+		sheets.AppendChild(new Sheet { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" });
+		workbookPart.Workbook.Save();
+
+		string? result = cell.GetStringValue();
+		result.ShouldBe("SharedValue");
 	}
 }
 

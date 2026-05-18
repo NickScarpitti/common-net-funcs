@@ -7,6 +7,7 @@ using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
+using NSubstitute;
 using xRetry.v3;
 using static CommonNetFuncs.Excel.Npoi.Common;
 
@@ -2716,4 +2717,127 @@ public sealed class CommonTests : IDisposable
 	}
 
 	#endregion
+
+	[Fact]
+	public void NpoiGetStringValue_WithNullCell_ReturnsNull()
+	{
+		ICell? cell = null;
+		cell.GetStringValue().ShouldBeNull();
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithNoneType_ReturnsEmpty()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType._None);
+		cell.GetStringValue().ShouldBe(string.Empty);
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithNumericType_ReturnsNumericString()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType.Numeric);
+		cell.NumericCellValue.Returns(3.14);
+		cell.GetStringValue().ShouldBe("3.14");
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithStringType_ReturnsStringValue()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType.String);
+		cell.StringCellValue.Returns("hello");
+		cell.GetStringValue().ShouldBe("hello");
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithBlankType_ReturnsEmpty()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType.Blank);
+		cell.GetStringValue().ShouldBe(string.Empty);
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithBooleanType_ReturnsBooleanString()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType.Boolean);
+		cell.BooleanCellValue.Returns(true);
+		cell.GetStringValue().ShouldBe("True");
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithErrorType_ReturnsEmpty()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType.Error);
+		cell.GetStringValue().ShouldBe(string.Empty);
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithFormulaAndNumericResult_ReturnsNumericString()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType.Formula);
+		cell.CachedFormulaResultType.Returns(CellType.Numeric);
+		cell.NumericCellValue.Returns(42.0);
+		cell.GetStringValue().ShouldBe("42");
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithFormulaAndStringResult_ReturnsString()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType.Formula);
+		cell.CachedFormulaResultType.Returns(CellType.String);
+		cell.StringCellValue.Returns("formulaResult");
+		cell.GetStringValue().ShouldBe("formulaResult");
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithFormulaAndBlankResult_ReturnsEmpty()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType.Formula);
+		cell.CachedFormulaResultType.Returns(CellType.Blank);
+		cell.GetStringValue().ShouldBe(string.Empty);
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithFormulaAndBooleanResult_ReturnsBooleanString()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType.Formula);
+		cell.CachedFormulaResultType.Returns(CellType.Boolean);
+		cell.BooleanCellValue.Returns(false);
+		cell.GetStringValue().ShouldBe("False");
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithFormulaAndErrorResult_ReturnsEmpty()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType.Formula);
+		cell.CachedFormulaResultType.Returns(CellType.Error);
+		cell.GetStringValue().ShouldBe(string.Empty);
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithFormulaAndNoneResult_ReturnsEmpty()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns(CellType.Formula);
+		cell.CachedFormulaResultType.Returns(CellType._None);
+		cell.GetStringValue().ShouldBe(string.Empty);
+	}
+
+	[Fact]
+	public void NpoiGetStringValue_WithUnknownCellType_ReturnsEmpty()
+	{
+		ICell cell = Substitute.For<ICell>();
+		cell.CellType.Returns((CellType)99);
+		cell.GetStringValue().ShouldBe(string.Empty);
+	}
 }

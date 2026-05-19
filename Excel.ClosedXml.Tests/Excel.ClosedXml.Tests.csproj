@@ -39,6 +39,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\CommonNetFuncs.Excel.ClosedXml\CommonNetFuncs.Excel.ClosedXml.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.Excel.Npoi\CommonNetFuncs.Excel.Npoi.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.Excel.OpenXml\CommonNetFuncs.Excel.OpenXml.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

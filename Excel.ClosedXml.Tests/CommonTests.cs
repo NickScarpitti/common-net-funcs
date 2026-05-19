@@ -3,6 +3,7 @@ using ClosedXML.Excel;
 using ClosedXML.Excel.Drawings;
 using CommonNetFuncs.Excel.ClosedXml;
 using CommonNetFuncs.Excel.Common;
+using NPOI.SS.UserModel;
 using NSubstitute;
 
 namespace Excel.ClosedXml.Tests;
@@ -1490,5 +1491,8 @@ public sealed class CommonTests : IDisposable
 	}
 
 	#endregion
+
 }
+
+
 

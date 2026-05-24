@@ -2,7 +2,6 @@
 using System.Net;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Requests.Rest.Options;
-using NLog;
 using static System.Net.HttpStatusCode;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Random;
@@ -13,7 +12,6 @@ namespace CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 
 internal static class WrapperHelpers
 {
-	private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 	private static readonly ImmutableDictionary<string, string> MemPackHeadersWithGzip = ImmutableDictionary.CreateRange([MemPackContentHeader, MemPackAcceptHeader, GzipEncodingHeader]);
 	private static readonly ImmutableDictionary<string, string> MemPackHeadersWithBrotli = ImmutableDictionary.CreateRange([MemPackContentHeader, MemPackAcceptHeader, BrotliEncodingHeader]);
 

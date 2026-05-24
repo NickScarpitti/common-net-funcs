@@ -266,6 +266,14 @@ public static class MathHelpers
 		}
 	}
 
+	/// <summary>
+	/// Compares two <see cref="double"/> values for equality within a specified tolerance.
+	/// </summary>
+	/// <remarks>This method is useful for comparing floating-point numbers, which can have precision issues.</remarks>
+	/// <param name="a">The first double value to compare.</param>
+	/// <param name="b">The second double value to compare.</param>
+	/// <param name="tolerance">The tolerance within which the two values are considered equal.</param>
+	/// <returns>True if the values are equal within the specified tolerance, otherwise, false.</returns>
 	public static bool Equals(this double? a, double? b, decimal tolerance = 0.0001m)
 	{
 		if (a == null && b == null)
@@ -279,11 +287,27 @@ public static class MathHelpers
 		return Math.Abs(a.Value - b.Value) <= (double)tolerance;
 	}
 
+	/// <summary>
+	/// Compares two <see cref="double"/> values for equality within a specified tolerance.
+	/// </summary>
+	/// <remarks>This method is useful for comparing floating-point numbers, which can have precision issues.</remarks>
+	/// <param name="a">The first double value to compare.</param>
+	/// <param name="b">The second double value to compare.</param>
+	/// <param name="tolerance">The tolerance within which the two values are considered not equal.</param>
+	/// <returns>True if the values are not equal within the specified tolerance, otherwise, false.</returns>
 	public static bool Equals(this double a, double b, decimal tolerance = 0.0001m)
 	{
 		return Math.Abs(a - b) <= (double)tolerance;
 	}
 
+	/// <summary>
+	/// Compares two <see cref="double"/> values for inequality within a specified tolerance.
+	/// </summary>
+	/// <remarks>This method is useful for comparing floating-point numbers, which can have precision issues.</remarks>
+	/// <param name="a">The first double value to compare.</param>
+	/// <param name="b">The second double value to compare.</param>
+	/// <param name="tolerance">The tolerance within which the two values are considered not equal.</param>
+	/// <returns>True if the values are not equal within the specified tolerance, otherwise, false.</returns>
 	public static bool NotEquals(this double? a, double? b, decimal tolerance = 0.0001m)
 	{
 		if (a == null && b == null)
@@ -297,6 +321,14 @@ public static class MathHelpers
 		return Math.Abs(a.Value - b.Value) > (double)tolerance;
 	}
 
+	/// <summary>
+	/// Compares two <see cref="double"/> values for inequality within a specified tolerance.
+	/// </summary>
+	/// <remarks>This method is useful for comparing floating-point numbers, which can have precision issues.</remarks>
+	/// <param name="a">The first double value to compare.</param>
+	/// <param name="b">The second double value to compare.</param>
+	/// <param name="tolerance">The tolerance within which the two values are considered not equal.</param>
+	/// <returns>True if the values are not equal within the specified tolerance, otherwise, false.</returns>
 	public static bool NotEquals(this double a, double b, decimal tolerance = 0.0001m)
 	{
 		return Math.Abs(a - b) > (double)tolerance;

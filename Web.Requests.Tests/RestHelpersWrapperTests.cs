@@ -1,5 +1,7 @@
 ﻿using System.Net;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
+using CommonNetFuncs.Web.Requests;
 using CommonNetFuncs.Web.Requests.Rest;
 using CommonNetFuncs.Web.Requests.Rest.Options;
 using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
@@ -1046,6 +1048,399 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		result.ShouldNotBeNull();
 		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
 			.MustHaveHappened(2, Times.Exactly);
+	}
+
+	#endregion
+
+	#region FillDefaultOptions Tests
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldNotModifyOptions_WhenNoDefaultConfigProvided()
+	{
+		// Arrange - wrapper has no default config
+		JsonSerializerOptions originalJsonOptions = new();
+		MsgPackOptions originalMsgPackOptions = new();
+		CompressionOptions originalCompressionOptions = new();
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+
+		A.CallTo(() => fakeRestClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi",
+				JsonSerializerOptions: originalJsonOptions,
+				MsgPackOptions: originalMsgPackOptions,
+				CompressionOptions: originalCompressionOptions);
+
+		// Act
+		await wrapper.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - no default config means FillDefaultOptions is a no-op
+		options.JsonSerializerOptions.ShouldBeSameAs(originalJsonOptions);
+		options.MsgPackOptions.ShouldBeSameAs(originalMsgPackOptions);
+		options.CompressionOptions.ShouldBeSameAs(originalCompressionOptions);
+		options.UseBearerToken.ShouldBeFalse();
+	}
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldInitializeResilienceOptions_WhenNullOnOptionsAndDefaultConfigProvided()
+	{
+		// Arrange
+		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
+		IRestClient localClient = A.Fake<IRestClient>();
+		A.CallTo(() => localFactory.CreateClient(A<string>._)).Returns(localClient);
+		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
+		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig());
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi"); // ResilienceOptions is null
+
+		// Act
+		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - FillDefaultOptions should initialize ResilienceOptions when a default config is present
+		options.ResilienceOptions.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldFillGetBearerTokenFunc_WhenNotSetOnOptions()
+	{
+		// Arrange
+		static ValueTask<string> defaultBearerTokenFunc(string _, bool __) => new("default-token");
+
+		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
+		IRestClient localClient = A.Fake<IRestClient>();
+		A.CallTo(() => localFactory.CreateClient(A<string>._)).Returns(localClient);
+		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
+		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
+		{
+			ResilienceOptions = new ResilienceOptions(GetBearerTokenFunc: defaultBearerTokenFunc)
+		});
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi"); // No GetBearerTokenFunc
+
+		// Act
+		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - GetBearerTokenFunc was filled from the default config
+		options.ResilienceOptions.ShouldNotBeNull();
+		options.ResilienceOptions.GetBearerTokenFunc.ShouldNotBeNull();
+		string token = await options.ResilienceOptions.GetBearerTokenFunc("TestApi", false);
+		token.ShouldBe("default-token");
+	}
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldNotOverrideGetBearerTokenFunc_WhenAlreadySetOnOptions()
+	{
+		// Arrange
+		static ValueTask<string> defaultFunc(string _, bool __) => new("default-token");
+		static ValueTask<string> optionsFunc(string _, bool __) => new("options-token");
+
+		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
+		IRestClient localClient = A.Fake<IRestClient>();
+		A.CallTo(() => localFactory.CreateClient(A<string>._)).Returns(localClient);
+		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
+		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
+		{
+			ResilienceOptions = new ResilienceOptions(GetBearerTokenFunc: defaultFunc)
+		});
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi",
+				ResilienceOptions: new ResilienceOptions(GetBearerTokenFunc: optionsFunc));
+
+		// Act
+		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - options' GetBearerTokenFunc must not be replaced by the default config's func
+		options.ResilienceOptions!.GetBearerTokenFunc.ShouldNotBeNull();
+		string token = await options.ResilienceOptions.GetBearerTokenFunc("TestApi", false);
+		token.ShouldBe("options-token");
+	}
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldOverrideUseBearerToken_WhenDefaultConfigHasValue()
+	{
+		// Arrange
+		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
+		IRestClient localClient = A.Fake<IRestClient>();
+		A.CallTo(() => localFactory.CreateClient(A<string>._)).Returns(localClient);
+		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
+		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
+		{
+			UseBearerToken = true,
+			ResilienceOptions = new ResilienceOptions(GetBearerTokenFunc: (_, __) => new("some-token"))
+		});
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi"); // UseBearerToken defaults to false
+
+		// Act
+		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - UseBearerToken was overridden to true by the default config
+		options.UseBearerToken.ShouldBeTrue();
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(
+				A<RequestOptions<TestModel>>.That.Matches(r => r.BearerToken == "some-token"), A<CancellationToken>._))
+				.MustHaveHappenedOnceExactly();
+	}
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldNotOverrideUseBearerToken_WhenDefaultConfigHasNullUseBearerToken()
+	{
+		// Arrange
+		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
+		IRestClient localClient = A.Fake<IRestClient>();
+		A.CallTo(() => localFactory.CreateClient(A<string>._)).Returns(localClient);
+		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
+		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
+		{
+			UseBearerToken = null // null means don't override
+		});
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi"); // UseBearerToken = false
+
+		// Act
+		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - UseBearerToken not overridden because default config value is null
+		options.UseBearerToken.ShouldBeFalse();
+	}
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldFillJsonSerializerOptions_WhenNotSetOnOptions()
+	{
+		// Arrange
+		JsonSerializerOptions defaultJsonOptions = new() { PropertyNameCaseInsensitive = true };
+
+		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
+		IRestClient localClient = A.Fake<IRestClient>();
+		A.CallTo(() => localFactory.CreateClient(A<string>._)).Returns(localClient);
+		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
+		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
+		{
+			JsonSerializerOptions = defaultJsonOptions
+		});
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi"); // JsonSerializerOptions is null
+
+		// Act
+		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - JsonSerializerOptions was filled from the default config
+		options.JsonSerializerOptions.ShouldBeSameAs(defaultJsonOptions);
+	}
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldNotOverrideJsonSerializerOptions_WhenAlreadySetOnOptions()
+	{
+		// Arrange
+		JsonSerializerOptions defaultJsonOptions = new() { PropertyNameCaseInsensitive = true };
+		JsonSerializerOptions optionsJsonOptions = new() { WriteIndented = true };
+
+		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
+		IRestClient localClient = A.Fake<IRestClient>();
+		A.CallTo(() => localFactory.CreateClient(A<string>._)).Returns(localClient);
+		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
+		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
+		{
+			JsonSerializerOptions = defaultJsonOptions
+		});
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi", JsonSerializerOptions: optionsJsonOptions);
+
+		// Act
+		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - options' JsonSerializerOptions was not overridden by the default config
+		options.JsonSerializerOptions.ShouldBeSameAs(optionsJsonOptions);
+	}
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldFillMsgPackOptions_WhenNotSetOnOptions()
+	{
+		// Arrange
+		MsgPackOptions defaultMsgPackOptions = new() { UseMsgPackCompression = true };
+
+		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
+		IRestClient localClient = A.Fake<IRestClient>();
+		A.CallTo(() => localFactory.CreateClient(A<string>._)).Returns(localClient);
+		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
+		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
+		{
+			MsgPackOptions = defaultMsgPackOptions
+		});
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi"); // MsgPackOptions is null
+
+		// Act
+		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - MsgPackOptions was filled from the default config
+		options.MsgPackOptions.ShouldBeSameAs(defaultMsgPackOptions);
+	}
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldNotOverrideMsgPackOptions_WhenAlreadySetOnOptions()
+	{
+		// Arrange
+		MsgPackOptions defaultMsgPackOptions = new() { UseMsgPackCompression = true };
+		MsgPackOptions optionsMsgPackOptions = new() { UseMsgPackUntrusted = true };
+
+		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
+		IRestClient localClient = A.Fake<IRestClient>();
+		A.CallTo(() => localFactory.CreateClient(A<string>._)).Returns(localClient);
+		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
+		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
+		{
+			MsgPackOptions = defaultMsgPackOptions
+		});
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi", MsgPackOptions: optionsMsgPackOptions);
+
+		// Act
+		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - options' MsgPackOptions was not overridden by the default config
+		options.MsgPackOptions.ShouldBeSameAs(optionsMsgPackOptions);
+	}
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldFillCompressionOptions_WhenNotSetOnOptions()
+	{
+		// Arrange
+		CompressionOptions defaultCompressionOptions = new(UseCompression: true);
+
+		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
+		IRestClient localClient = A.Fake<IRestClient>();
+		A.CallTo(() => localFactory.CreateClient(A<string>._)).Returns(localClient);
+		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
+		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
+		{
+			CompressionOptions = defaultCompressionOptions
+		});
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi"); // CompressionOptions is null
+
+		// Act
+		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - CompressionOptions was filled from the default config
+		options.CompressionOptions.ShouldBeSameAs(defaultCompressionOptions);
+	}
+
+	[Fact]
+	public async Task FillDefaultOptions_ShouldNotOverrideCompressionOptions_WhenAlreadySetOnOptions()
+	{
+		// Arrange
+		CompressionOptions defaultCompressionOptions = new(UseCompression: true);
+		CompressionOptions optionsCompressionOptions = new(UseCompression: false);
+
+		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
+		IRestClient localClient = A.Fake<IRestClient>();
+		A.CallTo(() => localFactory.CreateClient(A<string>._)).Returns(localClient);
+		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
+		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
+		{
+			CompressionOptions = defaultCompressionOptions
+		});
+
+		RestObject<TestModel> restObject = new()
+		{
+			Result = new TestModel { Id = 1 },
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(restObject));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi", CompressionOptions: optionsCompressionOptions);
+
+		// Act
+		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
+
+		// Assert - options' CompressionOptions was not overridden by the default config
+		options.CompressionOptions.ShouldBeSameAs(optionsCompressionOptions);
 	}
 
 	#endregion

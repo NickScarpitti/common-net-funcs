@@ -135,13 +135,13 @@ MyResponse? deleted = await wrapper.DeleteRequest<MyResponse>(
 
 `RestHelperOptionsDefaultConfig` lets you define fallback values applied to every call made through a `RestHelpersWrapper` instance. Per-call options always take precedence; defaults only fill in what is `null` on the per-call `RestHelperOptions` (except `UseBearerToken`, which always overrides when non-`null`).
 
-| Property | Behavior |
-|---|---|
-| `UseBearerToken` | When non-`null`, always overrides the per-call value |
+| Property                               | Behavior                                                     |
+| -------------------------------------- | ------------------------------------------------------------ |
+| `UseBearerToken`                       | When non-`null`, always overrides the per-call value         |
 | `ResilienceOptions.GetBearerTokenFunc` | Fills in if the per-call options has no `GetBearerTokenFunc` |
-| `JsonSerializerOptions` | Fills in if `null` on the per-call options |
-| `MsgPackOptions` | Fills in if `null` on the per-call options |
-| `CompressionOptions` | Fills in if `null` on the per-call options |
+| `JsonSerializerOptions`                | Fills in if `null` on the per-call options                   |
+| `MsgPackOptions`                       | Fills in if `null` on the per-call options                   |
+| `CompressionOptions`                   | Fills in if `null` on the per-call options                   |
 
 ```cs
 using CommonNetFuncs.Web.Requests;

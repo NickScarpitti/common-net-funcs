@@ -28,6 +28,9 @@ This project contains helper methods for several common functions required by AP
       - [UseMsgPackRequestBody](#usemsgpackrequestbody)
     - [MsgPackOutputFilter](#msgpackoutputfilter)
       - [WithMsgPackOutput](#withmsgpackoutput)
+    - [FlexibleDecimalResolver](#flexibledecimalresolver)
+      - [Registering with a CompositeResolver](#registering-with-a-compositeresolver)
+      - [Registering with AddMvc / AddControllers](#registering-with-addmvc--addcontrollers)
   - [Installation](#installation)
   - [License](#license)
 
@@ -181,6 +184,71 @@ app.MapGet("/entities/{id}", (int id, IBaseDbContextActions<MyEntity, MyDbContex
 RouteGroupBuilder group = app.MapGroup("/entities").WithMsgPackOutput();
 group.MapGet("/{id}", (int id) => Results.Ok(myEntity));
 ```
+
+</details>
+
+---
+
+### FlexibleDecimalResolver
+
+`FlexibleDecimalResolver` is a MessagePack `IFormatterResolver` that intercepts `decimal` and `decimal?` serialization and substitutes `FlexibleDecimalFormatter` / `FlexibleNullableDecimalFormatter` in place of the built-in `DecimalFormatter`.
+
+**Why you need it:** The standard `DecimalFormatter` only accepts the string msgpack encoding that C# produces. JavaScript clients using [msgpackr](https://github.com/kriszyp/msgpackr) always encode JS `number` values as msgpack integers or floats, never as strings. Without this resolver those payloads throw a deserialization exception.
+
+- `FlexibleDecimalFormatter` — handles `decimal`; deserializes from msgpack string, integer, or float.
+- `FlexibleNullableDecimalFormatter` — handles `decimal?`; additionally handles the msgpack nil token.
+- `FlexibleDecimalResolver` — resolver that routes `decimal` / `decimal?` to the two formatters above and returns `null` for everything else.
+
+Register `FlexibleDecimalResolver` **before** `StandardResolver` (or any other resolver that handles decimals) in a `CompositeResolver`.
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
+
+#### Registering with a CompositeResolver
+
+Use this approach for minimal API applications or any scenario where you supply `MessagePackSerializerOptions` directly (e.g. to `WithMsgPackOutput`).
+
+```cs
+using MessagePack;
+using MessagePack.Resolvers;
+using CommonNetFuncs.Web.Api.MsgPack;
+
+// Build options that accept both C# string-encoded decimals and JS numeric decimals.
+MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard
+    .WithResolver(CompositeResolver.Create(
+        FlexibleDecimalResolver.Instance,  // must come first
+        StandardResolver.Instance));
+
+// Pass to WithMsgPackOutput (optional – omit to use DefaultOptions)
+app.MapGet("/entities/{id}", (int id) => Results.Ok(myEntity))
+   .WithMsgPackOutput(options);
+
+// Or set as the global default
+MessagePackSerializer.DefaultOptions = options;
+```
+
+#### Registering with AddMvc / AddControllers
+
+When using MVC controllers with the [MessagePack-CSharp ASP.NET Core formatter](https://github.com/MessagePack-CSharp/MessagePack-CSharp#aspnet-core-mvc-formatters), supply the options when adding the formatters.
+
+```cs
+using MessagePack;
+using MessagePack.Resolvers;
+using CommonNetFuncs.Web.Api.MsgPack;
+
+MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard
+    .WithResolver(CompositeResolver.Create(
+        FlexibleDecimalResolver.Instance,
+        StandardResolver.Instance));
+
+builder.Services.AddControllers()
+    .AddMessagePackFormatters(o =>
+    {
+        o.SerializerOptions = options;
+    });
+```
+
+> **Note:** `FlexibleDecimalResolver.Instance` must appear **before** `StandardResolver.Instance` (or `ContractlessStandardResolver.Instance`) so that its `decimal` / `decimal?` registrations take precedence.
 
 </details>
 

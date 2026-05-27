@@ -9,26 +9,26 @@ This project contains helper methods for dealing with base64 image encoding and 
 ## Contents
 
 - [CommonNetFuncs.Images](#commonnetfuncsimages)
-	- [Contents](#contents)
-	- [Base64](#base64)
-		- [Base64 Usage Examples](#base64-usage-examples)
-			- [ConvertImageFileToBase64](#convertimagefiletobase64)
-			- [CleanImageValue \[Obsolete, please use ExtractBase64\]](#cleanimagevalue-obsolete-please-use-extractbase64)
-			- [ExtractBase64](#extractbase64)
-			- [ImageSaveToFile](#imagesavetofile)
-			- [IsValidBase64Image](#isvalidbase64image)
-	- [Manipulation](#manipulation)
-	- [Manipulation Usage Examples](#manipulation-usage-examples)
-			- [ResizeImage](#resizeimage)
-			- [ConvertImageFormat](#convertimageformat)
-			- [ReduceImageQuality](#reduceimagequality)
-			- [TryDetectImageType](#trydetectimagetype)
-			- [TryGetMetadata](#trygetmetadata)
-	- [Optimizer](#optimizer)
-		- [Optimizer Usage Examples](#optimizer-usage-examples)
-			- [OptimizeImage](#optimizeimage)
-	- [Installation](#installation)
-	- [License](#license)
+  - [Contents](#contents)
+  - [Base64](#base64)
+    - [Base64 Usage Examples](#base64-usage-examples)
+      - [ConvertImageFileToBase64](#convertimagefiletobase64)
+      - [CleanImageValue \[Obsolete, please use ExtractBase64\]](#cleanimagevalue-obsolete-please-use-extractbase64)
+      - [ExtractBase64](#extractbase64)
+      - [ImageSaveToFile](#imagesavetofile)
+      - [IsValidBase64Image](#isvalidbase64image)
+  - [Manipulation](#manipulation)
+  - [Manipulation Usage Examples](#manipulation-usage-examples) - [ResizeImage](#resizeimage) - [ResizeTo Helpers](#resizeto-helpers) - [ConvertImageFormat](#convertimageformat) - [ReduceImageQuality](#reduceimagequality) - [TryDetectImageType](#trydetectimagetype) - [TryGetMetadata](#trygetmetadata)
+  - [Fingerprinting](#fingerprinting)
+    - [Fingerprinting Usage Examples](#fingerprinting-usage-examples)
+      - [FingerprintImage](#fingerprintimage)
+      - [FingerprintDirectory](#fingerprintdirectory)
+      - [Compare and FindDuplicates](#compare-and-findduplicates)
+  - [Optimizer](#optimizer)
+    - [Optimizer Usage Examples](#optimizer-usage-examples)
+      - [OptimizeImage](#optimizeimage)
+  - [Installation](#installation)
+  - [License](#license)
 
 ---
 
@@ -107,26 +107,51 @@ Resizes an image to the specified width and height, maintaining the aspect ratio
 await ResizeImage(@"C:\path\to\input_image.jpg", @"C:\path\to\output_image.jpg", 800, 600); // "C:\path\to\output_image.jpg" contains the 800px x 600px resized image.
 ```
 
+#### ResizeTo Helpers
+
+Use lightweight helper overloads when you just need a resized `SKBitmap` (and optionally encoded output).
+
+```cs
+using FileStream input = File.OpenRead(@"C:\path\to\input_image.jpg");
+using MemoryStream output = new();
+
+// Stream -> SKBitmap
+using SKBitmap resizedA = input.ResizeTo(320, 240);
+
+// Stream -> SKBitmap + encoded output stream
+using SKBitmap resizedB = input.ResizeTo(output, 320, 240, SKEncodedImageFormat.Jpeg, 90);
+
+// SKBitmap -> resized SKBitmap
+using SKBitmap sourceBitmap = SKBitmap.Decode(@"C:\path\to\input_image.jpg");
+using SKBitmap resizedC = sourceBitmap.ResizeTo(320, 240);
+
+// SKImage -> resized SKBitmap
+using SKImage sourceImage = SKImage.FromBitmap(sourceBitmap);
+using SKBitmap resizedD = sourceImage.ResizeTo(320, 240);
+```
+
 #### ConvertImageFormat
 
 Converts an image from one format to another (e.g., JPEG to PNG).
 
 ```cs
-await ConvertImageFormat(@"C:\path\to\input_image.jpg", @"C:\path\to\output_image.png", PngFormat.Instance); // "C:\path\to\output_image.png" contains the converted image in png format.
+await ConvertImageFormat(@"C:\path\to\input_image.jpg", @"C:\path\to\output_image.png", SKEncodedImageFormat.Png); // "C:\path\to\output_image.png" contains the converted image in png format.
 ```
 
 #### ReduceImageQuality
 
 Reduces the quality of an image by applying a specified JPEG quality level, which can help in reducing file size. Neither input nor output are required to be JPEG format.
+
 ```cs
 await ReduceImageQuality(@"C:\path\to\input_image.jpg", @"C:\path\to\output_image.jpg", 50); // "C:\path\to\output_image.jpg" contains the image with reduced 50% quality
 ```
 
 #### TryDetectImageType
+
 Detects the image format of a file based on its content, returning the format as a string.
 
 ```cs
-TryDetectImageType(@"C:\path\to\input_image.jpg", out IImageFormat? format); // Returns true and format is the "JPEG" IImageFormat.
+TryDetectImageType(@"C:\path\to\input_image.jpg", out SKEncodedImageFormat? format); // Returns true and format is Jpeg.
 ```
 
 #### TryGetMetadata
@@ -134,7 +159,57 @@ TryDetectImageType(@"C:\path\to\input_image.jpg", out IImageFormat? format); // 
 Attempts to retrieve ImageMetadata from an image file.
 
 ```cs
-TryGetMetadata(@"C:\path\to\input_image.jpg", out ImageMetadata metadata); // Returns ImageMetadata with properties like Width, Height, Format, etc.
+TryGetMetadata(@"C:\path\to\input_image.jpg", out ImageInfo metadata); // Returns ImageInfo with properties like Width, Height, and EncodedFormat.
+```
+
+</details>
+
+---
+
+## Fingerprinting
+
+Helper methods for perceptual image fingerprinting and duplicate detection using AverageHash, DifferenceHash, and PerceptualHash.
+
+### Fingerprinting Usage Examples
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
+
+#### FingerprintImage
+
+Fingerprint a single file path.
+
+```cs
+ImageFingerprint fp = await @"C:\path\to\image.jpg".FingerprintImage(ImageHashAlgorithm.DifferenceHash);
+// fp.Hash contains the 64-bit perceptual hash value
+```
+
+#### FingerprintDirectory
+
+Fingerprint all supported images in a directory.
+
+```cs
+IReadOnlyList<ImageFingerprint> fingerprints = await ImageFingerprinting.FingerprintDirectory(
+	@"C:\path\to\images",
+	recursive: true,
+	algorithm: ImageHashAlgorithm.PerceptualHash
+);
+```
+
+#### Compare and FindDuplicates
+
+Compare two fingerprints or scan a set for duplicates.
+
+```cs
+SimilarityResult pair = ImageFingerprinting.Compare(fingerprints[0], fingerprints[1], duplicateThreshold: 90.0m);
+
+IReadOnlyList<SimilarityResult> duplicates = ImageFingerprinting.FindDuplicates(fingerprints, duplicateThreshold: 90.0m);
+
+IReadOnlyList<SimilarityResult> duplicatesFromDirectory = await ImageFingerprinting.FindDuplicatesInDirectory(
+	@"C:\path\to\images",
+	recursive: true,
+	algorithm: ImageHashAlgorithm.DifferenceHash
+);
 ```
 
 </details>

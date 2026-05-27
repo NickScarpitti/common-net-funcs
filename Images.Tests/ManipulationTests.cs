@@ -1271,7 +1271,7 @@ public sealed class ManipulationTests : IDisposable
 			using SKBitmap img = SKBitmap.Decode(invertedOutputPath);
 			img.ShouldNotBeNull();
 
-			using SKCodec? codec = SKCodec.Create(invertedOutputPath);
+using SKCodec? codec = SKCodec.Create(invertedOutputPath);
 			codec.ShouldNotBeNull();
 			codec!.EncodedFormat.ShouldBe(format);
 
@@ -1316,7 +1316,7 @@ public sealed class ManipulationTests : IDisposable
 		result.ShouldBeTrue();
 		byte[] outputBytes = output.ToArray();
 		using SKData skData = SKData.CreateCopy(outputBytes);
-		using SKCodec? codec = SKCodec.Create(skData);
+using SKCodec? codec = SKCodec.Create(skData);
 		codec.ShouldNotBeNull();
 		codec!.EncodedFormat.ShouldBe(format);
 
@@ -1809,7 +1809,7 @@ public sealed class ManipulationTests : IDisposable
 			// Assert
 			result.ShouldBeTrue();
 			File.Exists(testFilePath).ShouldBeTrue();
-			using SKCodec? codec = SKCodec.Create(testFilePath);
+using SKCodec? codec = SKCodec.Create(testFilePath);
 			codec.ShouldNotBeNull();
 			codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
 			using SKBitmap img = SKBitmap.Decode(testFilePath);
@@ -2339,6 +2339,217 @@ public sealed class ManipulationTests : IDisposable
 		outputStream.Length.ShouldBeGreaterThan(0);
 	}
 
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 82, 64, 48)]
+	[InlineData("test.png", 76, 72, 54)]
+	public void ReduceImageQuality_String_WithWidthHeightOverload_Success(string fileName, int quality, int width, int height)
+	{
+		string inputPath = GetTestImagePath(fileName);
+		string outputPath = GetTempFilePath(".jpg");
+		try
+		{
+			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, quality, width, height);
+			result.ShouldBeTrue();
+			using SKBitmap output = SKBitmap.Decode(outputPath);
+			output.ShouldNotBeNull();
+			output.Width.ShouldBe(width);
+			output.Height.ShouldBe(height);
+		}
+		finally
+		{
+			if (File.Exists(outputPath)) File.Delete(outputPath);
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 82, 64, 48)]
+	[InlineData("test.png", 76, 72, 54)]
+	public void ReduceImageQuality_String_WithFormatWidthHeightOverload_Success(string fileName, int quality, int width, int height)
+	{
+		string inputPath = GetTestImagePath(fileName);
+		string outputPath = GetTempFilePath(".png");
+		try
+		{
+			bool result = Manipulation.ReduceImageQuality(inputPath, outputPath, SKEncodedImageFormat.Png, quality, width, height);
+			result.ShouldBeTrue();
+			using SKCodec? codec = SKCodec.Create(outputPath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
+			using SKBitmap output = SKBitmap.Decode(outputPath);
+			output.ShouldNotBeNull();
+			output.Width.ShouldBe(width);
+			output.Height.ShouldBe(height);
+		}
+		finally
+		{
+			if (File.Exists(outputPath)) File.Delete(outputPath);
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 84, 60, 46)]
+	[InlineData("test.png", 79, 68, 50)]
+	public void ReduceImageQuality_Stream_WithWidthHeightOverload_Success(string fileName, int quality, int width, int height)
+	{
+		using MemoryStream inputStream = GetTestImageStream(fileName);
+		using MemoryStream outputStream = new();
+
+		bool result = Manipulation.ReduceImageQuality(inputStream, outputStream, quality, width, height);
+		result.ShouldBeTrue();
+		outputStream.Position.ShouldBe(0);
+		using SKBitmap output = SKBitmap.Decode(outputStream);
+		output.ShouldNotBeNull();
+		output.Width.ShouldBe(width);
+		output.Height.ShouldBe(height);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 84, 60, 46)]
+	[InlineData("test.png", 79, 68, 50)]
+	public void ReduceImageQuality_Stream_WithFormatWidthHeightOverload_Success(string fileName, int quality, int width, int height)
+	{
+		using MemoryStream inputStream = GetTestImageStream(fileName);
+		using MemoryStream outputStream = new();
+
+		bool result = Manipulation.ReduceImageQuality(inputStream, outputStream, SKEncodedImageFormat.Png, quality, width, height);
+		result.ShouldBeTrue();
+		outputStream.Position.ShouldBe(0);
+		using SKData data = SKData.CreateCopy(outputStream.ToArray());
+		using SKCodec? codec = SKCodec.Create(data);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
+		outputStream.Position = 0;
+		using SKBitmap output = SKBitmap.Decode(outputStream);
+		output.ShouldNotBeNull();
+		output.Width.ShouldBe(width);
+		output.Height.ShouldBe(height);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 81, 62, 44)]
+	[InlineData("test.png", 77, 66, 52)]
+	public void ReduceImageQuality_Span_WithWidthHeightOverload_Success(string fileName, int quality, int width, int height)
+	{
+		byte[] imageBytes = GetTestImageBytes(fileName);
+		using MemoryStream outputStream = new();
+
+		bool result = Manipulation.ReduceImageQuality(imageBytes, outputStream, quality, width, height);
+		result.ShouldBeTrue();
+		outputStream.Position.ShouldBe(0);
+		using SKBitmap output = SKBitmap.Decode(outputStream);
+		output.ShouldNotBeNull();
+		output.Width.ShouldBe(width);
+		output.Height.ShouldBe(height);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 81, 62, 44)]
+	[InlineData("test.png", 77, 66, 52)]
+	public void ReduceImageQuality_Span_WithFormatWidthHeightOverload_Success(string fileName, int quality, int width, int height)
+	{
+		byte[] imageBytes = GetTestImageBytes(fileName);
+		using MemoryStream outputStream = new();
+
+		bool result = Manipulation.ReduceImageQuality(imageBytes, outputStream, SKEncodedImageFormat.Png, quality, width, height);
+		result.ShouldBeTrue();
+		outputStream.Position.ShouldBe(0);
+		using SKData data = SKData.CreateCopy(outputStream.ToArray());
+		using SKCodec? codec = SKCodec.Create(data);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
+		outputStream.Position = 0;
+		using SKBitmap output = SKBitmap.Decode(outputStream);
+		output.ShouldNotBeNull();
+		output.Width.ShouldBe(width);
+		output.Height.ShouldBe(height);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 83, 58, 42)]
+	[InlineData("test.png", 78, 70, 48)]
+	public async Task ReduceImageQualityAsync_String_WithWidthHeightOverload_Success(string fileName, int quality, int width, int height)
+	{
+		string inputPath = GetTestImagePath(fileName);
+		string outputPath = GetTempFilePath(".jpg");
+		try
+		{
+			bool result = await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, quality, width, height);
+			result.ShouldBeTrue();
+			using SKBitmap output = SKBitmap.Decode(outputPath);
+			output.ShouldNotBeNull();
+			output.Width.ShouldBe(width);
+			output.Height.ShouldBe(height);
+		}
+		finally
+		{
+			if (File.Exists(outputPath)) File.Delete(outputPath);
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 83, 58, 42)]
+	[InlineData("test.png", 78, 70, 48)]
+	public async Task ReduceImageQualityAsync_String_WithFormatWidthHeightOverload_Success(string fileName, int quality, int width, int height)
+	{
+		string inputPath = GetTestImagePath(fileName);
+		string outputPath = GetTempFilePath(".png");
+		try
+		{
+			bool result = await Manipulation.ReduceImageQualityAsync(inputPath, outputPath, SKEncodedImageFormat.Png, quality, width, height);
+			result.ShouldBeTrue();
+using SKCodec? codec = SKCodec.Create(outputPath);
+			codec.ShouldNotBeNull();
+			codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
+			using SKBitmap output = SKBitmap.Decode(outputPath);
+			output.ShouldNotBeNull();
+			output.Width.ShouldBe(width);
+			output.Height.ShouldBe(height);
+		}
+		finally
+		{
+			if (File.Exists(outputPath)) File.Delete(outputPath);
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 86, 56, 40)]
+	[InlineData("test.png", 74, 64, 46)]
+	public async Task ReduceImageQualityAsync_Stream_WithWidthHeightOverload_Success(string fileName, int quality, int width, int height)
+	{
+		using MemoryStream inputStream = GetTestImageStream(fileName);
+		using MemoryStream outputStream = new();
+
+		bool result = await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, quality, width, height);
+		result.ShouldBeTrue();
+		outputStream.Position.ShouldBe(0);
+		using SKBitmap output = SKBitmap.Decode(outputStream);
+		output.ShouldNotBeNull();
+		output.Width.ShouldBe(width);
+		output.Height.ShouldBe(height);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 86, 56, 40)]
+	[InlineData("test.png", 74, 64, 46)]
+	public async Task ReduceImageQualityAsync_Stream_WithFormatWidthHeightOverload_Success(string fileName, int quality, int width, int height)
+	{
+		using MemoryStream inputStream = GetTestImageStream(fileName);
+		using MemoryStream outputStream = new();
+
+		bool result = await Manipulation.ReduceImageQualityAsync(inputStream, outputStream, SKEncodedImageFormat.Png, quality, width, height);
+		result.ShouldBeTrue();
+		outputStream.Position.ShouldBe(0);
+		using SKData data = SKData.CreateCopy(outputStream.ToArray());
+using SKCodec? codec = SKCodec.Create(data);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Png);
+		outputStream.Position = 0;
+		using SKBitmap output = SKBitmap.Decode(outputStream);
+		output.ShouldNotBeNull();
+		output.Width.ShouldBe(width);
+		output.Height.ShouldBe(height);
+	}
+
 	[RetryFact(3)]
 	public async Task ReduceImageQualityAsync_Stream_WithFormat_Success()
 	{
@@ -2764,6 +2975,208 @@ public sealed class ManipulationTests : IDisposable
 		using MemoryStream stream = new(shortData);
 		ImageInfo? metadata = await Manipulation.TryGetMetadataAsync(stream);
 		metadata.ShouldBeNull();
+	}
+
+	#endregion
+
+	#region ResizeTo
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 50, 50)]
+	[InlineData("test.png", 100, 75)]
+	[InlineData("test.bmp", 32, 32)]
+	[InlineData("test.gif", 16, 16)]
+	public void ResizeTo_Stream_ReturnsBitmapWithCorrectDimensions(string fileName, int width, int height)
+	{
+		// Arrange
+		using MemoryStream stream = GetTestImageStream(fileName);
+
+		// Act
+		using SKBitmap result = stream.ResizeTo(width, height);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Width.ShouldBe(width);
+		result.Height.ShouldBe(height);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 50, 50)]
+	[InlineData("test.png", 100, 75)]
+	[InlineData("test.bmp", 32, 32)]
+	public void ResizeTo_Stream_WithCustomResampler_ReturnsCorrectDimensions(string fileName, int width, int height)
+	{
+		// Arrange
+		using MemoryStream stream = GetTestImageStream(fileName);
+
+		// Act
+		using SKBitmap result = stream.ResizeTo(width, height, SKCubicResampler.CatmullRom);
+
+		// Assert
+		result.Width.ShouldBe(width);
+		result.Height.ShouldBe(height);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 50, 50)]
+	[InlineData("test.png", 100, 75)]
+	[InlineData("test.bmp", 32, 32)]
+	[InlineData("test.gif", 16, 16)]
+	public void ResizeTo_StreamToOutputStream_ReturnsBitmapAndWritesToStream(string fileName, int width, int height)
+	{
+		// Arrange
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
+
+		// Act
+		using SKBitmap result = input.ResizeTo(output, width, height, SKEncodedImageFormat.Jpeg, 90);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Width.ShouldBe(width);
+		result.Height.ShouldBe(height);
+
+		// Output stream should contain valid JPEG data
+		output.Position.ShouldBe(0);
+		output.Length.ShouldBeGreaterThan(0);
+using SKCodec? codec = SKCodec.Create(output);
+		codec.ShouldNotBeNull();
+		codec!.EncodedFormat.ShouldBe(SKEncodedImageFormat.Jpeg);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 50, 50)]
+	[InlineData("test.png", 100, 75)]
+	[InlineData("test.bmp", 32, 32)]
+	public void ResizeTo_StreamToOutputStream_WithCustomResampler_Succeeds(string fileName, int width, int height)
+	{
+		// Arrange
+		using MemoryStream input = GetTestImageStream(fileName);
+		using MemoryStream output = new();
+
+		// Act
+		using SKBitmap result = input.ResizeTo(output, width, height, SKEncodedImageFormat.Png, 85, SKCubicResampler.CatmullRom);
+
+		// Assert
+		result.Width.ShouldBe(width);
+		result.Height.ShouldBe(height);
+		output.Position.ShouldBe(0);
+		output.Length.ShouldBeGreaterThan(0);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 50, 50)]
+	[InlineData("test.png", 100, 75)]
+	[InlineData("test.bmp", 32, 32)]
+	[InlineData("test.gif", 16, 16)]
+	public void ResizeTo_SKBitmap_ReturnsBitmapWithCorrectDimensions(string fileName, int width, int height)
+	{
+		// Arrange
+		using SKBitmap source = SKBitmap.Decode(GetTestImagePath(fileName));
+
+		// Act
+		using SKBitmap result = source.ResizeTo(width, height);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Width.ShouldBe(width);
+		result.Height.ShouldBe(height);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 50, 50)]
+	[InlineData("test.png", 100, 75)]
+	public void ResizeTo_SKBitmap_WithCustomResampler_ReturnsCorrectDimensions(string fileName, int width, int height)
+	{
+		// Arrange
+		using SKBitmap source = SKBitmap.Decode(GetTestImagePath(fileName));
+
+		// Act
+		using SKBitmap result = source.ResizeTo(width, height, SKCubicResampler.CatmullRom);
+
+		// Assert
+		result.Width.ShouldBe(width);
+		result.Height.ShouldBe(height);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 50, 50)]
+	[InlineData("test.png", 100, 75)]
+	[InlineData("test.bmp", 32, 32)]
+	[InlineData("test.gif", 16, 16)]
+	public void ResizeTo_SKImage_ReturnsBitmapWithCorrectDimensions(string fileName, int width, int height)
+	{
+		// Arrange
+		using SKBitmap bmp = SKBitmap.Decode(GetTestImagePath(fileName));
+		using SKImage source = SKImage.FromBitmap(bmp);
+
+		// Act
+		using SKBitmap result = source.ResizeTo(width, height);
+
+		// Assert
+		result.ShouldNotBeNull();
+		result.Width.ShouldBe(width);
+		result.Height.ShouldBe(height);
+	}
+
+	[RetryTheory(3)]
+	[InlineData("test.jpg", 50, 50)]
+	[InlineData("test.png", 100, 75)]
+	public void ResizeTo_SKImage_WithCustomResampler_ReturnsCorrectDimensions(string fileName, int width, int height)
+	{
+		// Arrange
+		using SKBitmap bmp = SKBitmap.Decode(GetTestImagePath(fileName));
+		using SKImage source = SKImage.FromBitmap(bmp);
+
+		// Act
+		using SKBitmap result = source.ResizeTo(width, height, SKCubicResampler.CatmullRom);
+
+		// Assert
+		result.Width.ShouldBe(width);
+		result.Height.ShouldBe(height);
+	}
+
+	[RetryFact(3)]
+	public void ResizeTo_Stream_DefaultResampler_IsMitchell()
+	{
+		// Verify that not providing a resampler (null) uses the default Mitchell resampler and still works
+		using MemoryStream stream = GetTestImageStream("test.jpg");
+		using SKBitmap result = stream.ResizeTo(40, 40, null);
+		result.Width.ShouldBe(40);
+		result.Height.ShouldBe(40);
+	}
+
+	[RetryFact(3)]
+	public void ResizeTo_SKBitmap_DefaultResampler_IsMitchell()
+	{
+		using SKBitmap source = SKBitmap.Decode(GetTestImagePath("test.png"));
+		using SKBitmap result = source.ResizeTo(40, 40, null);
+		result.Width.ShouldBe(40);
+		result.Height.ShouldBe(40);
+	}
+
+	[RetryFact(3)]
+	public void ResizeTo_SKImage_DefaultResampler_IsMitchell()
+	{
+		using SKBitmap bmp = SKBitmap.Decode(GetTestImagePath("test.png"));
+		using SKImage source = SKImage.FromBitmap(bmp);
+		using SKBitmap result = source.ResizeTo(40, 40, null);
+		result.Width.ShouldBe(40);
+		result.Height.ShouldBe(40);
+	}
+
+	[RetryFact(3)]
+	public void ResizeTo_StreamToOutputStream_SeekableOutput_ResetToZero()
+	{
+		// Arrange
+		using MemoryStream input = GetTestImageStream("test.jpg");
+		using MemoryStream output = new();
+
+		// Act
+		using SKBitmap result = input.ResizeTo(output, 30, 30, SKEncodedImageFormat.Jpeg, 80);
+
+		// Assert — seekable output stream should be reset to position 0
+		output.Position.ShouldBe(0);
 	}
 
 	#endregion

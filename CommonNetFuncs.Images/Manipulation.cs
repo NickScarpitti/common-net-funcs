@@ -586,6 +586,83 @@ public static class Manipulation
 		return ResizeImageBase(inputSpan, outputStream, resizeOptions, null, null, null, outputFormat, useDimsAsMax, mutate);
 	}
 
+	/// <summary>
+	/// Simple resize of an image stream to the target dimensions.
+	/// <param name="sourceStream">The original image stream to resize.</param>
+	/// <param name="width">The target width in pixels.</param>
+	/// <param name="height">The target height in pixels.</param>
+	/// <param name="resampler">Optional custom resampling filter. Defaults to Mitchell if not provided.</param>
+	/// </summary>
+	public static SKBitmap ResizeTo(this Stream sourceStream, int width, int height, SKCubicResampler? resampler = null)
+	{
+		SKBitmap sourceBitmap = SKBitmap.Decode(sourceStream);
+		return sourceBitmap.ResizeTo(width, height, resampler);
+	}
+
+	/// <summary>
+	/// Simple resize of an image stream to the target dimensions and encodes it to the specified format.
+	/// <param name="sourceStream">The original image stream to resize.</param>
+	/// <param name="outputStream">The output stream to write the resized image to.</param>
+	/// <param name="width">The target width in pixels.</param>
+	/// <param name="height">The target height in pixels.</param>
+	/// <param name="format">The image format for encoding.</param>
+	/// <param name="quality">The quality of the encoded image (0-100).</param>
+	/// <param name="resampler">Optional custom resampling filter. Defaults to Mitchell if not provided.</param>
+	/// </summary>
+	public static SKBitmap ResizeTo(this Stream sourceStream, Stream outputStream, int width, int height, SKEncodedImageFormat format, int quality, SKCubicResampler? resampler = null)
+	{
+		SKBitmap sourceBitmap = SKBitmap.Decode(sourceStream);
+
+		SKBitmap resized = sourceBitmap.ResizeTo(width, height, resampler);
+
+		if (!resized.Encode(outputStream, format, quality))
+		{
+			throw new InvalidOperationException($"Failed to encode image as {format}. The format may not be supported for encoding.");
+		}
+
+		if (outputStream.CanSeek)
+		{
+			outputStream.Position = 0;
+		}
+
+		return resized;
+	}
+
+	/// <summary>
+	/// Simple resize of an SKBitmap to the target dimensions.
+	/// <param name="sourceBitmap">The original bitmap to resize.</param>
+	/// <param name="width">The target width in pixels.</param>
+	/// <param name="height">The target height in pixels.</param>
+	/// <param name="resampler">Optional custom resampling filter. Defaults to Mitchell if not provided.</param>
+	/// </summary>
+	public static SKBitmap ResizeTo(this SKBitmap sourceBitmap, int width, int height, SKCubicResampler? resampler = null)
+	{
+		SKImage image = SKImage.FromBitmap(sourceBitmap);
+		return image.ResizeTo(width, height, resampler);
+	}
+
+	/// <summary>
+	/// Simple resize of an SKImage to the target dimensions.
+	/// <param name="sourceImage">The original image to resize.</param>
+	/// <param name="width">The target width in pixels.</param>
+	/// <param name="height">The target height in pixels.</param>
+	/// <param name="resampler">Optional custom resampling filter. Defaults to Mitchell if not provided.</param>
+	/// </summary>
+	public static SKBitmap ResizeTo(this SKImage sourceImage, int width, int height, SKCubicResampler? resampler = null)
+	{
+		SKImageInfo info = new(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+		SKBitmap resized = new(info);
+
+		using SKCanvas canvas = new(resized);
+		using SKPaint paint = new()
+		{
+			IsAntialias = true
+		};
+
+		canvas.DrawImage(sourceImage, new SKRect(0, 0, width, height), new SKSamplingOptions(resampler ?? SKCubicResampler.Mitchell), paint);
+
+		return resized;
+	}
 
 	/// <summary>
 	/// Reduces the quality of an image to the specified quality level.

@@ -251,7 +251,7 @@ public sealed class FlexibleNullableDecimalFormatterTests
 public sealed class FlexibleDecimalResolverTests
 {
 		// -----------------------------------------------------------------------
-		// GetFormatter<T>
+		// GetFormatter<TNumber>
 		// -----------------------------------------------------------------------
 
 		[Fact]

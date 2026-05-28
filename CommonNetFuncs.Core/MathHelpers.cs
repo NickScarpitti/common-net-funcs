@@ -176,7 +176,7 @@ public static class MathHelpers
 	/// <param name="start">Number to start range with (inclusive)</param>
 	/// <param name="end">Number to end range with (inclusive)</param>
 	/// <returns>An IEnumerable containing a continuous range of numbers between start and end parameters (inclusive)</returns>
-	public static IEnumerable<TNumber> GenerateRange<TNumber>(TNumber start, TNumber end) where TNumber : System.Numerics.INumber<TNumber>
+	public static IEnumerable<TNumber> GenerateRange<TNumber>(TNumber start, TNumber end) where TNumber : struct, System.Numerics.INumber<TNumber>
 	{
 		if (start > end)
 		{
@@ -289,14 +289,14 @@ public static class MathHelpers
 		return Math.Abs(a - b) > (double)tolerance;
 	}
 
-	public static TNumber GetMedian<TNumber>(this IEnumerable<TNumber>[] numbers) where TNumber : System.Numerics.INumber<TNumber>
+	public static TNumber GetMedian<TNumber>(this IEnumerable<TNumber> numbers) where TNumber : struct, System.Numerics.INumber<TNumber>
 	{
-		if (numbers == null || numbers.Length == 0)
+		if (numbers?.Any() != true)
 		{
 			throw new ArgumentException("Array cannot be null or empty.");
 		}
 
-		TNumber[] sorted = numbers.SelectMany(n => n).Order().ToArray();
+		TNumber[] sorted = numbers.Order().ToArray();
 
 		int mid = sorted.Length / 2;
 		return sorted.Length % 2 != 0

@@ -62,6 +62,13 @@ public static class ImageFingerprinting
 		return bitmap.FingerprintImage(label, algorithm);
 	}
 
+	/// <summary>Fingerprint an image from a span of bytes.</summary>
+	public static ImageFingerprint FingerprintImage(this ReadOnlySpan<byte> stream, string label = "<stream>", ImageHashAlgorithm algorithm = ImageHashAlgorithm.DifferenceHash)
+	{
+		using SKBitmap bitmap = SKBitmap.Decode(stream) ?? throw new InvalidDataException($"Could not decode image: {label}");
+		return bitmap.FingerprintImage(label, algorithm);
+	}
+
 	/// <summary>Fingerprint an image from a bitmap.</summary>
 	public static ImageFingerprint FingerprintImage(this SKBitmap bitmap, string label = "<bitmap>", ImageHashAlgorithm algorithm = ImageHashAlgorithm.DifferenceHash)
 	{

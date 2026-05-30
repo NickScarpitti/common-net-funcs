@@ -131,6 +131,20 @@ public sealed class FingerprintTests
 	}
 
 	[RetryFact(3)]
+	public void FingerprintSpan_DefaultLabel_IsStream()
+	{
+		// Arrange
+		using MemoryStream stream = GetTestImageStream("test.jpg");
+		ReadOnlySpan<byte> span = new(stream.ToArray());
+
+		// Act
+		ImageFingerprint result = span.FingerprintImage();
+
+		// Assert
+		result.FilePath.ShouldBe("<stream>");
+	}
+
+	[RetryFact(3)]
 	public void FingerprintStream_InvalidData_Throws()
 	{
 		// Arrange

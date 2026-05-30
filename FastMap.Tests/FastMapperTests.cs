@@ -1056,7 +1056,7 @@ public sealed class FastMapperTests
 	}
 
 	// Note: Lines 298-299, 343, 346-347 are covered by existing tests during expression tree construction,
-	// but produce invalid expressions for Queue<T>/Stack<T> destinations (which lack IEnumerable<T> constructors).
+	// but produce invalid expressions for Queue<TNumber>/Stack<TNumber> destinations (which lack IEnumerable<TNumber> constructors).
 	// These lines execute correctly and return ToList expressions, but lambda compilation fails at line 154.
 	// This is expected behavior - FastMapper intentionally does not support Queue/Stack as destination types.
 

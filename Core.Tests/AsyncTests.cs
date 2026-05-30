@@ -80,7 +80,7 @@ public sealed class AsyncTests
 	[Fact]
 	public async Task ObjectFill_WithFuncComplexType_ShouldCopyProperties()
 	{
-		// Arrange - Test Func<Task<T>> overload WITHOUT semaphore with complex type (covers line 53)
+		// Arrange - Test Func<Task<TNumber>> overload WITHOUT semaphore with complex type (covers line 53)
 		AsyncIntString obj = new() { AsyncInt = 0, AsyncString = "Original" };
 		static Task<AsyncIntString> func()
 		{
@@ -4578,7 +4578,7 @@ public sealed class AsyncTests
 	[Fact]
 	public async Task ObjectFill_WithSimpleTypeFuncTask_ShouldNotCopyProperties()
 	{
-		// Arrange - Test Func<Task<T>> overload with simple type
+		// Arrange - Test Func<Task<TNumber>> overload with simple type
 		const string obj = "original";
 		static Task<string> func()
 		{
@@ -4595,7 +4595,7 @@ public sealed class AsyncTests
 	[Fact]
 	public async Task ObjectFill_WithSimpleTypeFuncTaskAndSemaphore_ShouldNotCopyProperties()
 	{
-		// Arrange - Test Func<Task<T>> with semaphore overload with simple type
+		// Arrange - Test Func<Task<TNumber>> with semaphore overload with simple type
 		const string obj = "original";
 		static Task<string> func()
 		{
@@ -4625,7 +4625,7 @@ public sealed class AsyncTests
 	[Fact]
 	public async Task ObjectFill_WithSimpleTypeFuncTaskNullSemaphore_ShouldWork()
 	{
-		// Arrange - Test Func<Task<T>> with null semaphore and simple type
+		// Arrange - Test Func<Task<TNumber>> with null semaphore and simple type
 		const string obj = "test";
 		static Task<string> func()
 		{
@@ -5379,7 +5379,7 @@ public sealed class AsyncTests
 	[Fact]
 	public async Task ObjectFill_FuncTaskWithSemaphoreAndComplexType_ShouldCopyProperties()
 	{
-		// Arrange - Test the Func<Task<T>> with semaphore overload with complex type to cover line 86-88
+		// Arrange - Test the Func<Task<TNumber>> with semaphore overload with complex type to cover line 86-88
 		AsyncIntString obj = new() { AsyncInt = 1, AsyncString = "orig" };
 		static Task<AsyncIntString> func()
 		{

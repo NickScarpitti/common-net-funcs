@@ -66,7 +66,7 @@ public sealed class ValidationEndpointFilter(IServiceProviderIsService serviceCh
 		// Catch any HttpContext / ClaimsPrincipal subclasses not listed above
 		if (type.IsAssignableTo(typeof(HttpContext)) || type.IsAssignableTo(typeof(ClaimsPrincipal))) return false;
 
-		// Skip any type registered in the DI container (covers all app services, ILogger<T>, etc.)
+		// Skip any type registered in the DI container (covers all app services, ILogger<TNumber>, etc.)
 		if (serviceChecker.IsService(type)) return false;
 
 		return true;

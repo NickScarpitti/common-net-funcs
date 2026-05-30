@@ -55,6 +55,26 @@ public sealed class FingerprintTests
 	}
 
 	[RetryFact(3)]
+	public async Task FingerprintImage_EmptyBitmap_Throws()
+	{
+		// Arrange
+		using SKBitmap emptyBitmap = new(0, 0);
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => emptyBitmap.FingerprintImage("empty"));
+	}
+
+	[RetryFact(3)]
+	public async Task FingerprintImage_NullBitmap_Throws()
+	{
+		// Arrange
+		SKBitmap? nullBitmap = null;
+
+		// Act & Assert
+		Should.Throw<ArgumentNullException>(() => nullBitmap!.FingerprintImage("empty"));
+	}
+
+	[RetryFact(3)]
 	public async Task FingerprintImage_DefaultAlgorithm_IsDifferenceHash()
 	{
 		// Arrange
@@ -89,7 +109,7 @@ public sealed class FingerprintTests
 		string label = fileName;
 
 		// Act
-		ImageFingerprint result = stream.FingerprintStream(label, algorithm);
+		ImageFingerprint result = stream.FingerprintImage(label, algorithm);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -104,7 +124,7 @@ public sealed class FingerprintTests
 		using MemoryStream stream = GetTestImageStream("test.jpg");
 
 		// Act
-		ImageFingerprint result = stream.FingerprintStream();
+		ImageFingerprint result = stream.FingerprintImage();
 
 		// Assert
 		result.FilePath.ShouldBe("<stream>");
@@ -117,7 +137,7 @@ public sealed class FingerprintTests
 		using MemoryStream stream = new(new byte[] { 0x00, 0x01, 0x02, 0x03 });
 
 		// Act & Assert
-		Should.Throw<InvalidDataException>(() => stream.FingerprintStream("bad-data"));
+		Should.Throw<InvalidDataException>(() => stream.FingerprintImage("bad-data"));
 	}
 
 	// ── FingerprintDirectory ──────────────────────────────────────────────────
@@ -169,7 +189,7 @@ public sealed class FingerprintTests
 
 		try
 		{
-			File.WriteAllText(Path.Combine(tempDir, "readme.txt"), "not an image");
+			await File.WriteAllTextAsync(Path.Combine(tempDir, "readme.txt"), "not an image");
 
 			// Act
 			IReadOnlyList<ImageFingerprint> results = await ImageFingerprinting.FingerprintDirectory(tempDir);
@@ -193,7 +213,7 @@ public sealed class FingerprintTests
 		try
 		{
 			// Write a file with a .jpg extension but garbage content so SKBitmap.Decode fails
-			File.WriteAllBytes(Path.Combine(tempDir, "corrupt.jpg"), new byte[] { 0x00, 0x01, 0x02, 0x03 });
+			await File.WriteAllBytesAsync(Path.Combine(tempDir, "corrupt.jpg"), new byte[] { 0x00, 0x01, 0x02, 0x03 });
 
 			// Act — should not throw, just skip the bad file
 			IReadOnlyList<ImageFingerprint> results = await ImageFingerprinting.FingerprintDirectory(tempDir);
@@ -463,12 +483,8 @@ public sealed class FingerprintTests
 	public void HammingSimilarity_HalfBitsDifferent_Returns50()
 	{
 		// Arrange — flip exactly 32 bits (lower 32 bits set in hashB)
-		ulong hashA = 0xFFFF_FFFF_0000_0000UL; // upper 32 bits set
-		ulong hashB = 0x0000_0000_FFFF_FFFFUL; // lower 32 bits set
-																					 // XOR = 0xFFFF_FFFF_FFFF_FFFF → all 64 bits differ
-																					 // Actually let's be more precise: 32 bits differ
-		hashA = 0xFFFF_FFFF_FFFF_FFFFUL; // all bits set
-		hashB = 0xFFFF_FFFF_0000_0000UL; // upper 32 bits set → lower 32 differ
+		ulong hashA = 0xFFFF_FFFF_FFFF_FFFFUL; // all bits set
+		ulong hashB = 0xFFFF_FFFF_0000_0000UL; // upper 32 bits set → lower 32 differ
 
 		// Act
 		double similarity = ImageFingerprinting.HammingSimilarity(hashA, hashB);

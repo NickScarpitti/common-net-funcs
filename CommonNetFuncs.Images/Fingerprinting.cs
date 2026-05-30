@@ -52,13 +52,23 @@ public static class ImageFingerprinting
 		}
 
 		await using FileStream stream = File.OpenRead(imagePath);
-		return FingerprintStream(stream, imagePath, algorithm);
+		return FingerprintImage(stream, imagePath, algorithm);
 	}
 
 	/// <summary>Fingerprint an image from a stream.</summary>
-	public static ImageFingerprint FingerprintStream(this Stream stream, string label = "<stream>", ImageHashAlgorithm algorithm = ImageHashAlgorithm.DifferenceHash)
+	public static ImageFingerprint FingerprintImage(this Stream stream, string label = "<stream>", ImageHashAlgorithm algorithm = ImageHashAlgorithm.DifferenceHash)
 	{
 		using SKBitmap bitmap = SKBitmap.Decode(stream) ?? throw new InvalidDataException($"Could not decode image: {label}");
+		return bitmap.FingerprintImage(label, algorithm);
+	}
+
+	/// <summary>Fingerprint an image from a bitmap.</summary>
+	public static ImageFingerprint FingerprintImage(this SKBitmap bitmap, string label = "<bitmap>", ImageHashAlgorithm algorithm = ImageHashAlgorithm.DifferenceHash)
+	{
+		if (bitmap == null || bitmap.IsEmpty)
+		{
+			throw new ArgumentNullException(nameof(bitmap), "Bitmap cannot be null or empty.");
+		}
 
 		ulong hash = algorithm switch
 		{

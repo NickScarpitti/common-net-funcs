@@ -595,7 +595,7 @@ public static class Manipulation
 	/// </summary>
 	public static SKBitmap ResizeTo(this Stream sourceStream, int width, int height, SKCubicResampler? resampler = null)
 	{
-		SKBitmap sourceBitmap = SKBitmap.Decode(sourceStream);
+		using SKBitmap sourceBitmap = SKBitmap.Decode(sourceStream);
 		return sourceBitmap.ResizeTo(width, height, resampler);
 	}
 
@@ -611,7 +611,7 @@ public static class Manipulation
 	/// </summary>
 	public static SKBitmap ResizeTo(this Stream sourceStream, Stream outputStream, int width, int height, SKEncodedImageFormat format, int quality, SKCubicResampler? resampler = null)
 	{
-		SKBitmap sourceBitmap = SKBitmap.Decode(sourceStream);
+		using SKBitmap sourceBitmap = SKBitmap.Decode(sourceStream);
 
 		SKBitmap resized = sourceBitmap.ResizeTo(width, height, resampler);
 
@@ -637,7 +637,7 @@ public static class Manipulation
 	/// </summary>
 	public static SKBitmap ResizeTo(this SKBitmap sourceBitmap, int width, int height, SKCubicResampler? resampler = null)
 	{
-		SKImage image = SKImage.FromBitmap(sourceBitmap);
+		using SKImage image = SKImage.FromBitmap(sourceBitmap);
 		return image.ResizeTo(width, height, resampler);
 	}
 

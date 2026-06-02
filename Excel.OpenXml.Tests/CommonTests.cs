@@ -5407,7 +5407,7 @@ public sealed class CommonTests : IDisposable
 		sheetData.InsertCell(1, 1);
 
 		// Act & Assert
-		Should.NotThrow(() => sheetData.SetCellStringValue(1u, 1u, (string?)null));
+		Should.NotThrow(() => sheetData.SetCellStringValue(1u, 1u, null));
 	}
 
 	[RetryFact(3)]

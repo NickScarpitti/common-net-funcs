@@ -22,7 +22,7 @@ public class PrioritizedSequentialTaskProcessorTests
 			PrioritizedQueuedTask queuedTask = new(async ct =>
 			{
 				T? result = await taskFunction(ct).ConfigureAwait(false);
-				return (object?)result;
+				return result;
 			})
 			{
 				Priority = priority,

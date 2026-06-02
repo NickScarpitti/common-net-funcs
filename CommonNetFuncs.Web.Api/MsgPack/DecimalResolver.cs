@@ -6,13 +6,13 @@ using MessagePack.Resolvers;
 namespace CommonNetFuncs.Web.Api.MsgPack;
 
 /// <summary>
-/// MessagePack formatter for <see cref="decimal"/> that accepts both the standard string encoding used by C# (<see cref="DecimalFormatter"/>) and the numeric (integer / float) encodings sent by JavaScript clients — msgpackr always encodes
+/// MessagePack formatter for <see cref="decimal"/> that accepts both the standard string encoding used by C# (<see cref="MessagePack.Formatters.DecimalFormatter"/>) and the numeric (integer / float) encodings sent by JavaScript clients — msgpackr always encodes
 /// JS <c>number</c> values as ints or floats, never as strings.
 /// </summary>
-public sealed class FlexibleDecimalFormatter : IMessagePackFormatter<decimal>
+public sealed class DecimalFormatter : IMessagePackFormatter<decimal>
 {
-	public static readonly FlexibleDecimalFormatter Instance = new();
-	private FlexibleDecimalFormatter() { }
+	public static readonly DecimalFormatter Instance = new();
+	private DecimalFormatter() { }
 
 	public void Serialize(ref MessagePackWriter writer, decimal value, MessagePackSerializerOptions options)
 		=> writer.Write(value.ToString(CultureInfo.InvariantCulture));
@@ -37,10 +37,10 @@ public sealed class FlexibleDecimalFormatter : IMessagePackFormatter<decimal>
 /// MessagePack formatter for <see cref="Nullable{T}">decimal?</see> that accepts both the
 /// standard string encoding used by C# and numeric encodings sent by JavaScript clients.
 /// </summary>
-public sealed class FlexibleNullableDecimalFormatter : IMessagePackFormatter<decimal?>
+public sealed class NullableDecimalFormatter : IMessagePackFormatter<decimal?>
 {
-	public static readonly FlexibleNullableDecimalFormatter Instance = new();
-	private FlexibleNullableDecimalFormatter() { }
+	public static readonly NullableDecimalFormatter Instance = new();
+	private NullableDecimalFormatter() { }
 
 	public void Serialize(ref MessagePackWriter writer, decimal? value, MessagePackSerializerOptions options)
 	{
@@ -72,8 +72,8 @@ public sealed class FlexibleNullableDecimalFormatter : IMessagePackFormatter<dec
 
 /// <summary>
 /// Resolver that intercepts <c>decimal</c> and <c>decimal?</c> requests and returns
-/// <see cref="FlexibleDecimalFormatter"/> / <see cref="FlexibleNullableDecimalFormatter"/>
-/// instead of the standard <see cref="DecimalFormatter"/> (which rejects numeric msgpack codes).
+/// <see cref="DecimalFormatter"/> / <see cref="NullableDecimalFormatter"/>
+/// instead of the standard <see cref="MessagePack.Formatters.DecimalFormatter"/> (which rejects numeric msgpack codes).
 /// Register before <see cref="StandardResolver"/> in a <see cref="CompositeResolver"/>.
 /// </summary>
 public sealed class FlexibleDecimalResolver : IFormatterResolver
@@ -85,11 +85,11 @@ public sealed class FlexibleDecimalResolver : IFormatterResolver
 	{
 		if (typeof(T) == typeof(decimal))
 		{
-			return (IMessagePackFormatter<T>)(object)FlexibleDecimalFormatter.Instance;
+			return (IMessagePackFormatter<T>)(object)DecimalFormatter.Instance;
 		}
 		if (typeof(T) == typeof(decimal?))
 		{
-			return (IMessagePackFormatter<T>)(object)FlexibleNullableDecimalFormatter.Instance;
+			return (IMessagePackFormatter<T>)(object)NullableDecimalFormatter.Instance;
 		}
 		return null;
 	}

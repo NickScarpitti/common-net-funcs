@@ -11,8 +11,8 @@ public static class Extensions
 	/// Call this before <c>app.MapControllers()</c> / <c>app.MapGroup()</c> so the
 	/// middleware runs before parameter binding consumes the request body.
 	/// </summary>
-	public static IApplicationBuilder UseMsgPackRequestBody(this IApplicationBuilder app)
-		=> app.UseMiddleware<MsgPackRequestMiddleware>();
+	public static IApplicationBuilder UseMsgPackRequestBody(this IApplicationBuilder app, MessagePackSerializerOptions? options = null)
+		=> app.UseMiddleware<MsgPackRequestMiddleware>(options ?? MessagePackSerializerOptions.Standard);
 
 	/// <summary>
 	/// Attaches <see cref="MsgPackOutputFilter"/> to an endpoint or route group so
@@ -21,9 +21,9 @@ public static class Extensions
 	/// </summary>
 	/// <param name="builder">The endpoint or group builder to extend.</param>
 	/// <param name="options">
-	/// MsgPack serializer options.  Defaults to <see cref="MessagePackSerializer.DefaultOptions"/>
+	/// MsgPack serializer options.  Defaults to <see cref="MessagePackSerializerOptions.Standard"/>
 	/// when <see langword="null"/>.
 	/// </param>
 	public static TBuilder WithMsgPackOutput<TBuilder>(this TBuilder builder, MessagePackSerializerOptions? options = null) where TBuilder : IEndpointConventionBuilder
-		=> builder.AddEndpointFilter(new MsgPackOutputFilter(options ?? MessagePackSerializer.DefaultOptions));
+		=> builder.AddEndpointFilter(new MsgPackOutputFilter(options ?? MessagePackSerializerOptions.Standard));
 }

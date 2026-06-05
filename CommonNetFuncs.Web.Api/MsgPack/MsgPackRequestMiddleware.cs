@@ -10,9 +10,10 @@ namespace CommonNetFuncs.Web.Api.MsgPack;
 /// <c>[FromBody]</c> parameter binding can deserialise it.  Must be inserted into the
 /// pipeline <em>before routing</em>.
 /// </summary>
-public sealed class MsgPackRequestMiddleware(RequestDelegate next)
+public sealed class MsgPackRequestMiddleware(RequestDelegate next, MessagePackSerializerOptions? options = null)
 {
 	private const string MsgPackMime = "application/x-msgpack";
+	private readonly MessagePackSerializerOptions options = options ?? MessagePackSerializerOptions.Standard;
 
 	public Task InvokeAsync(HttpContext context)
 	{
@@ -24,11 +25,11 @@ public sealed class MsgPackRequestMiddleware(RequestDelegate next)
 
 	private async Task TransformThenContinueAsync(HttpContext context)
 	{
-		await TransformRequestBodyAsync(context);
+		await TransformRequestBodyAsync(context, options);
 		await next(context);
 	}
 
-	private static async Task TransformRequestBodyAsync(HttpContext context)
+	private static async Task TransformRequestBodyAsync(HttpContext context, MessagePackSerializerOptions options)
 	{
 		// Pre-size with the declared Content-Length to avoid internal resizing.
 		// Plain `using` is correct: MemoryStream does not override DisposeAsync(), so
@@ -44,7 +45,7 @@ public sealed class MsgPackRequestMiddleware(RequestDelegate next)
 
 		// GetBuffer() exposes the underlying array without copying — one fewer
 		// allocation compared to ToArray().
-		string json = MessagePackSerializer.ConvertToJson(ms.GetBuffer().AsMemory(0, written));
+		string json = MessagePackSerializer.ConvertToJson(ms.GetBuffer().AsMemory(0, written), options);
 		byte[] jsonBytes = Encoding.UTF8.GetBytes(json);
 
 		context.Request.Body = new MemoryStream(jsonBytes, writable: false);

@@ -3,6 +3,7 @@ using CommonNetFuncs.Web.Requests;
 using CommonNetFuncs.Web.Requests.Rest;
 using CommonNetFuncs.Web.Requests.Rest.Options;
 using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
+using MessagePack;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Web.Common.ContentTypes;
 using static CommonNetFuncs.Web.Requests.Rest.RestHelperConstants;
@@ -807,7 +808,7 @@ public sealed class WrapperHelpersTests
 			LogBody = true,
 			JsonSerializerOptions = new System.Text.Json.JsonSerializerOptions(),
 			UseNewtonsoftDeserializer = true,
-			MsgPackOptions = new MsgPackOptions()
+			MessagePackSerializerOptions = MessagePackSerializerOptions.Standard
 		};
 
 		Dictionary<string, string> headers = new() { ["X-Test"] = "value" };
@@ -827,7 +828,7 @@ public sealed class WrapperHelpersTests
 		result.ExpectTaskCancellation.ShouldBeTrue();
 		result.LogQuery.ShouldBeTrue();
 		result.LogBody.ShouldBeTrue();
-		result.MsgPackOptions.ShouldNotBeNull();
+		result.MessagePackSerializerOptions.ShouldNotBeNull();
 	}
 
 	[Fact]

@@ -6,6 +6,7 @@ using CommonNetFuncs.Web.Requests.Rest;
 using CommonNetFuncs.Web.Requests.Rest.Options;
 using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 using FakeItEasy;
+using MessagePack;
 
 namespace Web.Requests.Tests;
 
@@ -1059,7 +1060,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 	{
 		// Arrange - wrapper has no default config
 		JsonSerializerOptions originalJsonOptions = new();
-		MsgPackOptions originalMsgPackOptions = new();
+		MessagePackSerializerOptions originalMessagePackOptions = MessagePackSerializerOptions.Standard;
 		CompressionOptions originalCompressionOptions = new();
 
 		RestObject<TestModel> restObject = new()
@@ -1073,7 +1074,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 
 		RestHelperOptions options = new("test-endpoint", "TestApi",
 				JsonSerializerOptions: originalJsonOptions,
-				MsgPackOptions: originalMsgPackOptions,
+				MessagePackSerializerOptions: originalMessagePackOptions,
 				CompressionOptions: originalCompressionOptions);
 
 		// Act
@@ -1081,7 +1082,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 
 		// Assert - no default config means FillDefaultOptions is a no-op
 		options.JsonSerializerOptions.ShouldBeSameAs(originalJsonOptions);
-		options.MsgPackOptions.ShouldBeSameAs(originalMsgPackOptions);
+		options.MessagePackSerializerOptions.ShouldBeSameAs(originalMessagePackOptions);
 		options.CompressionOptions.ShouldBeSameAs(originalCompressionOptions);
 		options.UseBearerToken.ShouldBeFalse();
 	}
@@ -1314,10 +1315,10 @@ public sealed class RestHelpersWrapperTests : IDisposable
 	}
 
 	[Fact]
-	public async Task FillDefaultOptions_ShouldFillMsgPackOptions_WhenNotSetOnOptions()
+	public async Task FillDefaultOptions_ShouldFillMessagePackSerializerOptions_WhenNotSetOnOptions()
 	{
 		// Arrange
-		MsgPackOptions defaultMsgPackOptions = new() { UseMsgPackCompression = true };
+		MessagePackSerializerOptions defaultMessagePackSerializerOptions = MessagePackSerializerOptions.Standard;
 
 		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
 		IRestClient localClient = A.Fake<IRestClient>();
@@ -1325,7 +1326,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
 		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
 		{
-			MsgPackOptions = defaultMsgPackOptions
+			MessagePackSerializerOptions = defaultMessagePackSerializerOptions
 		});
 
 		RestObject<TestModel> restObject = new()
@@ -1336,21 +1337,21 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
 				.Returns(Task.FromResult(restObject));
 
-		RestHelperOptions options = new("test-endpoint", "TestApi"); // MsgPackOptions is null
+		RestHelperOptions options = new("test-endpoint", "TestApi"); // MessagePackSerializerOptions is null
 
 		// Act
 		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
-		// Assert - MsgPackOptions was filled from the default config
-		options.MsgPackOptions.ShouldBeSameAs(defaultMsgPackOptions);
+		// Assert - MessagePackSerializerOptions was filled from the default config
+		options.MessagePackSerializerOptions.ShouldBeSameAs(defaultMessagePackSerializerOptions);
 	}
 
 	[Fact]
-	public async Task FillDefaultOptions_ShouldNotOverrideMsgPackOptions_WhenAlreadySetOnOptions()
+	public async Task FillDefaultOptions_ShouldNotOverrideMessagePackSerializerOptions_WhenAlreadySetOnOptions()
 	{
 		// Arrange
-		MsgPackOptions defaultMsgPackOptions = new() { UseMsgPackCompression = true };
-		MsgPackOptions optionsMsgPackOptions = new() { UseMsgPackUntrusted = true };
+		MessagePackSerializerOptions defaultMessagePackSerializerOptions = MessagePackSerializerOptions.Standard;
+		MessagePackSerializerOptions optionsMessagePackSerializerOptions = MessagePackSerializerOptions.Standard;
 
 		IRestClientFactory localFactory = A.Fake<IRestClientFactory>();
 		IRestClient localClient = A.Fake<IRestClient>();
@@ -1358,7 +1359,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		A.CallTo(() => localClient.BaseAddress).Returns(new Uri("http://test.com/"));
 		RestHelpersWrapper wrapperWithDefaults = new(localFactory, new RestHelperOptionsDefaultConfig
 		{
-			MsgPackOptions = defaultMsgPackOptions
+			MessagePackSerializerOptions = defaultMessagePackSerializerOptions
 		});
 
 		RestObject<TestModel> restObject = new()
@@ -1369,13 +1370,13 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		A.CallTo(() => localClient.RestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
 				.Returns(Task.FromResult(restObject));
 
-		RestHelperOptions options = new("test-endpoint", "TestApi", MsgPackOptions: optionsMsgPackOptions);
+		RestHelperOptions options = new("test-endpoint", "TestApi", MessagePackSerializerOptions: optionsMessagePackSerializerOptions);
 
 		// Act
 		await wrapperWithDefaults.Get<TestModel>(options, TestContext.Current.CancellationToken);
 
-		// Assert - options' MsgPackOptions was not overridden by the default config
-		options.MsgPackOptions.ShouldBeSameAs(optionsMsgPackOptions);
+		// Assert - options' MessagePackSerializerOptions was not overridden by the default config
+		options.MessagePackSerializerOptions.ShouldBeSameAs(optionsMessagePackSerializerOptions);
 	}
 
 	[Fact]

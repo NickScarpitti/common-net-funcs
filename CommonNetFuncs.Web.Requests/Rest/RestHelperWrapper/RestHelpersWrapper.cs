@@ -43,7 +43,7 @@ public sealed class RestHelpersWrapper
 		options.UseBearerToken = defaultOptions.UseBearerToken ?? options.UseBearerToken;
 
 		options.JsonSerializerOptions ??= defaultOptions.JsonSerializerOptions;
-		options.MsgPackOptions ??= defaultOptions.MsgPackOptions;
+		options.MessagePackSerializerOptions ??= defaultOptions.MessagePackSerializerOptions;
 		options.CompressionOptions ??= defaultOptions.CompressionOptions;
 	}
 

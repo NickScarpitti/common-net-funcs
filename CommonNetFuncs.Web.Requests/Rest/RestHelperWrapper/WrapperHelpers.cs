@@ -241,7 +241,8 @@ internal static class WrapperHelpers
 		};
 	}
 
-	internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, Uri? baseAddress, IDictionary<string, string> headers, HttpMethod httpMethod, string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)
+	internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, Uri? baseAddress, IDictionary<string, string> headers, HttpMethod httpMethod,
+		string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)
 	{
 		RequestOptions<T> baseRequestOptions = new()
 		{
@@ -257,7 +258,7 @@ internal static class WrapperHelpers
 			ExpectTaskCancellation = options.ResilienceOptions?.RunOnce ?? false,
 			LogQuery = options.LogQuery,
 			LogBody = options.LogBody,
-			MsgPackOptions = options.MsgPackOptions
+			MessagePackSerializerOptions = options.MessagePackSerializerOptions
 		};
 
 		if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)

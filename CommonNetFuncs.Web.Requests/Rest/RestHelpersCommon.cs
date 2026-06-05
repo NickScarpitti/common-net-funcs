@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using CommonNetFuncs.Web.Common;
+using MessagePack;
 
 namespace CommonNetFuncs.Web.Requests.Rest;
 
@@ -48,7 +49,7 @@ public sealed class RequestOptions<TBody>
 
 	public bool LogResponse { get; set; }
 
-	public MsgPackOptions? MsgPackOptions { get; set; }
+	public MessagePackSerializerOptions? MessagePackSerializerOptions { get; set; }
 
 	public HttpContent? PatchDocument { get; set; }
 

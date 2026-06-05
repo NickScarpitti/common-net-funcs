@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
-using CommonNetFuncs.Web.Requests;
 using CommonNetFuncs.Web.Requests.Rest.Options;
+using MessagePack;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Web.Requests.Rest.RestHelperConstants;
 
@@ -301,7 +301,7 @@ public sealed class OptionsClassesTests
 		options.LogQuery.ShouldBeTrue();
 		options.LogBody.ShouldBeTrue();
 		options.CompressionOptions.ShouldBeNull();
-		options.MsgPackOptions.ShouldBeNull();
+		options.MessagePackSerializerOptions.ShouldBeNull();
 		options.JsonSerializerOptions.ShouldBeNull();
 		options.ResilienceOptions.ShouldBeNull();
 	}
@@ -417,7 +417,7 @@ public sealed class OptionsClassesTests
 
 		Dictionary<string, string> headers = new() { { "X-Custom", "Value" } };
 		CompressionOptions compressionOptions = new(UseCompression: true);
-		MsgPackOptions msgPackOptions = new() { UseMsgPackCompression = true };
+		MessagePackSerializerOptions messagePackSerializerOptions = MessagePackSerializerOptions.Standard;
 		JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
 		ResilienceOptions resilienceOptions = new(MaxRetry: 3);
 
@@ -433,7 +433,7 @@ public sealed class OptionsClassesTests
 			LogQuery: false,
 			LogBody: false,
 			CompressionOptions: compressionOptions,
-			MsgPackOptions: msgPackOptions,
+			MessagePackSerializerOptions: messagePackSerializerOptions,
 			JsonSerializerOptions: jsonOptions,
 			ResilienceOptions: resilienceOptions
 		);
@@ -449,7 +449,7 @@ public sealed class OptionsClassesTests
 		options.LogQuery.ShouldBeFalse();
 		options.LogBody.ShouldBeFalse();
 		options.CompressionOptions.ShouldBe(compressionOptions);
-		options.MsgPackOptions.ShouldBe(msgPackOptions);
+		options.MessagePackSerializerOptions.ShouldBe(messagePackSerializerOptions);
 		options.JsonSerializerOptions.ShouldBe(jsonOptions);
 		options.ResilienceOptions.ShouldBe(resilienceOptions);
 	}
@@ -472,7 +472,7 @@ public sealed class OptionsClassesTests
 			LogQuery = false,
 			LogBody = false,
 			CompressionOptions = new CompressionOptions(UseCompression: true),
-			MsgPackOptions = new MsgPackOptions { UseMsgPackCompression = true },
+			MessagePackSerializerOptions = MessagePackSerializerOptions.Standard,
 			JsonSerializerOptions = new JsonSerializerOptions(),
 			ResilienceOptions = new ResilienceOptions()
 		};
@@ -488,7 +488,7 @@ public sealed class OptionsClassesTests
 		options.LogQuery.ShouldBeFalse();
 		options.LogBody.ShouldBeFalse();
 		options.CompressionOptions.ShouldNotBeNull();
-		options.MsgPackOptions.ShouldNotBeNull();
+		options.MessagePackSerializerOptions.ShouldNotBeNull();
 		options.JsonSerializerOptions.ShouldNotBeNull();
 		options.ResilienceOptions.ShouldNotBeNull();
 	}

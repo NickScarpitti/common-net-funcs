@@ -1,11 +1,12 @@
 ﻿using System.Text.Json;
+using MessagePack;
 
 namespace CommonNetFuncs.Web.Requests.Rest.Options;
 
 public sealed class RestHelperOptions
 {
 	public RestHelperOptions(string Url, string ApiName, IDictionary<string, string>? HttpHeaders = null, bool UseBearerToken = false, string? BearerToken = null,
-			bool UseNewtonsoftDeserializer = false, bool LogQuery = true, bool LogBody = true, CompressionOptions? CompressionOptions = null, MsgPackOptions? MsgPackOptions = null,
+			bool UseNewtonsoftDeserializer = false, bool LogQuery = true, bool LogBody = true, CompressionOptions? CompressionOptions = null, MessagePackSerializerOptions? MessagePackSerializerOptions = null,
 			JsonSerializerOptions? JsonSerializerOptions = null, ResilienceOptions? ResilienceOptions = null)
 	{
 		if (string.IsNullOrWhiteSpace(ApiName))
@@ -33,7 +34,7 @@ public sealed class RestHelperOptions
 		this.CompressionOptions = CompressionOptions;
 		this.ResilienceOptions = ResilienceOptions;
 		this.BearerToken = BearerToken;
-		this.MsgPackOptions = MsgPackOptions;
+		this.MessagePackSerializerOptions = MessagePackSerializerOptions;
 		this.JsonSerializerOptions = JsonSerializerOptions;
 	}
 
@@ -55,7 +56,7 @@ public sealed class RestHelperOptions
 
 	public CompressionOptions? CompressionOptions { get; set; }
 
-	public MsgPackOptions? MsgPackOptions { get; set; }
+	public MessagePackSerializerOptions? MessagePackSerializerOptions { get; set; }
 
 	public JsonSerializerOptions? JsonSerializerOptions { get; set; }
 
@@ -79,10 +80,10 @@ public sealed class RestHelperOptionsDefaultConfig
 	public CompressionOptions? CompressionOptions { get; set; }
 
 	/// <summary>
-	/// If set, will be used if  <see cref="MsgPackOptions"/> is <see langword="null"/> in the options passed to the <see cref="RestHelper"/> methods.
+	/// If set, will be used if  <see cref="MessagePackSerializerOptions"/> is <see langword="null"/> in the options passed to the <see cref="RestHelper"/> methods.
 	/// This allows you to set a default MsgPack option that will be used if not specified in the individual method calls.
 	/// </summary>
-	public MsgPackOptions? MsgPackOptions { get; set; }
+	public MessagePackSerializerOptions? MessagePackSerializerOptions { get; set; }
 
 	/// <summary>
 	/// If set, will be used if <see cref="JsonSerializerOptions"/> is <see langword="null"/> in the options passed to the <see cref="RestHelper"/> methods.

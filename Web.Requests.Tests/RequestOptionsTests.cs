@@ -1,5 +1,6 @@
 ﻿using CommonNetFuncs.Web.Requests;
 using CommonNetFuncs.Web.Requests.Rest;
+using MessagePack;
 
 namespace Web.Requests.Tests;
 
@@ -88,7 +89,7 @@ public sealed class RequestOptionsTests
 		options.LogQuery.ShouldBeFalse();
 		options.LogBody.ShouldBeFalse();
 		options.LogResponse.ShouldBeFalse();
-		options.MsgPackOptions.ShouldBeNull();
+		options.MessagePackSerializerOptions.ShouldBeNull();
 		options.PatchDocument.ShouldBeNull();
 		options.BodyObject.ShouldBeNull();
 	}
@@ -98,7 +99,7 @@ public sealed class RequestOptionsTests
 	{
 		Dictionary<string, string> headers = new() { ["X-Custom"] = "value" };
 		System.Text.Json.JsonSerializerOptions jsonOptions = new();
-		MsgPackOptions msgPackOptions = new();
+		MessagePackSerializerOptions messagePackSerializerOptions = MessagePackSerializerOptions.Standard;
 		HttpContent patchContent = new StringContent("{}");
 
 		RequestOptions<string> options = new()
@@ -115,7 +116,7 @@ public sealed class RequestOptionsTests
 			LogQuery = true,
 			LogBody = true,
 			LogResponse = true,
-			MsgPackOptions = msgPackOptions,
+			MessagePackSerializerOptions = messagePackSerializerOptions,
 			PatchDocument = patchContent,
 			BodyObject = "test-body"
 		};
@@ -132,7 +133,7 @@ public sealed class RequestOptionsTests
 		options.LogQuery.ShouldBeTrue();
 		options.LogBody.ShouldBeTrue();
 		options.LogResponse.ShouldBeTrue();
-		options.MsgPackOptions.ShouldBe(msgPackOptions);
+		options.MessagePackSerializerOptions.ShouldBe(messagePackSerializerOptions);
 		options.PatchDocument.ShouldBe(patchContent);
 		options.BodyObject.ShouldBe("test-body");
 	}

@@ -133,32 +133,6 @@ public sealed class ModelClassesTests
 	}
 
 	[Fact]
-	public void MsgPackOptions_DefaultValues()
-	{
-		// Arrange & Act
-		MsgPackOptions options = new();
-
-		// Assert
-		options.UseMsgPackCompression.ShouldBeFalse();
-		options.UseMsgPackUntrusted.ShouldBeFalse();
-	}
-
-	[Fact]
-	public void MsgPackOptions_CanSetProperties()
-	{
-		// Arrange & Act
-		MsgPackOptions options = new()
-		{
-			UseMsgPackCompression = true,
-			UseMsgPackUntrusted = true
-		};
-
-		// Assert
-		options.UseMsgPackCompression.ShouldBeTrue();
-		options.UseMsgPackUntrusted.ShouldBeTrue();
-	}
-
-	[Fact]
 	public void RestObject_CanBeCreated()
 	{
 		// Arrange

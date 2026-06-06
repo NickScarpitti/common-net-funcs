@@ -615,7 +615,8 @@ public static class RestHelpersStatic
 	/// <param name="httpHeaders">Headers used in the HTTP request.</param>
 	/// <param name="postObject">Object to add as the content (POST and PUT only).</param>
 	/// <param name="patchDoc">Patch document for PATCH requests.</param>
-	internal static void AddContent<TBody>(this HttpRequestMessage httpRequestMessage, HttpMethod httpMethod, IDictionary<string, string>? httpHeaders = null, TBody? postObject = default, HttpContent? patchDoc = null, MessagePackSerializerOptions? messagePackSerializerOptions = null)
+	internal static void AddContent<TBody>(this HttpRequestMessage httpRequestMessage, HttpMethod httpMethod, IDictionary<string, string>? httpHeaders = null,
+			TBody? postObject = default, HttpContent? patchDoc = null, MessagePackSerializerOptions? messagePackSerializerOptions = null)
 	{
 		if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
 		{

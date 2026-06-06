@@ -11,8 +11,13 @@ public static class Extensions
 	/// Call this before <c>app.MapControllers()</c> / <c>app.MapGroup()</c> so the
 	/// middleware runs before parameter binding consumes the request body.
 	/// </summary>
-	public static IApplicationBuilder UseMsgPackRequestBody(this IApplicationBuilder app)
-		=> app.UseMiddleware<MsgPackRequestMiddleware>();
+	/// <param name="app">The application builder.</param>
+	/// <param name="options">
+	/// MsgPack serializer options used when converting the request body from MsgPack to JSON.
+	/// Defaults to <see cref="MessagePackSerializer.DefaultOptions"/> when <see langword="null"/>.
+	/// </param>
+	public static IApplicationBuilder UseMsgPackRequestBody(this IApplicationBuilder app, MessagePackSerializerOptions? options = null)
+		=> app.UseMiddleware<MsgPackRequestMiddleware>(options ?? MessagePackSerializer.DefaultOptions);
 
 	/// <summary>
 	/// Attaches <see cref="MsgPackOutputFilter"/> to an endpoint or route group so

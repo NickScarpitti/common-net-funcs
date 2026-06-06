@@ -54,7 +54,7 @@ public static class RestHelpersStatic
 			using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
 
 			httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
-			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument, requestOptions.MessagePackSerializerOptions);
 
 			//client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
 			using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
@@ -114,7 +114,7 @@ public static class RestHelpersStatic
 				}
 
 				httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
-				httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+				httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument, requestOptions.MessagePackSerializerOptions);
 
 				//client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
 				response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
@@ -178,7 +178,7 @@ public static class RestHelpersStatic
 
 			using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
 			httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
-			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument, requestOptions.MessagePackSerializerOptions);
 
 			//client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
 			restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
@@ -235,7 +235,7 @@ public static class RestHelpersStatic
 			}
 
 			httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
-			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument, requestOptions.MessagePackSerializerOptions);
 
 			//client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
 			restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
@@ -615,7 +615,7 @@ public static class RestHelpersStatic
 	/// <param name="httpHeaders">Headers used in the HTTP request.</param>
 	/// <param name="postObject">Object to add as the content (POST and PUT only).</param>
 	/// <param name="patchDoc">Patch document for PATCH requests.</param>
-	internal static void AddContent<TBody>(this HttpRequestMessage httpRequestMessage, HttpMethod httpMethod, IDictionary<string, string>? httpHeaders = null, TBody? postObject = default, HttpContent? patchDoc = null)
+	internal static void AddContent<TBody>(this HttpRequestMessage httpRequestMessage, HttpMethod httpMethod, IDictionary<string, string>? httpHeaders = null, TBody? postObject = default, HttpContent? patchDoc = null, MessagePackSerializerOptions? messagePackSerializerOptions = null)
 	{
 		if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
 		{
@@ -629,7 +629,7 @@ public static class RestHelpersStatic
 			}
 			else if (hasContentType && contentTypeValue!.StrEq(MsgPack))
 			{
-				httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
+				httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject, messagePackSerializerOptions));
 				httpRequestMessage.Content.Headers.ContentType = new(MsgPack);
 			}
 			else

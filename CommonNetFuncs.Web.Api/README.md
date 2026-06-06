@@ -150,11 +150,18 @@ Converts a MessagePack-encoded request body to JSON before the endpoint handler 
 
 #### UseMsgPackRequestBody
 
-Registers `MsgPackRequestMiddleware` globally so every endpoint accepts MessagePack request bodies.
+Registers `MsgPackRequestMiddleware` globally so every endpoint accepts MessagePack request bodies. Optionally accepts custom `MessagePackSerializerOptions`; defaults to `MessagePackSerializer.DefaultOptions` when `null`.
 
 ```cs
 // Program.cs
+// Default options
 app.UseMsgPackRequestBody();
+
+// Custom options (e.g. with FlexibleDecimalResolver)
+app.UseMsgPackRequestBody(MessagePackSerializerOptions.Standard
+    .WithResolver(CompositeResolver.Create(
+        FlexibleDecimalResolver.Instance,
+        StandardResolver.Instance)));
 
 app.MapPost("/entities", (MyEntity entity) => Results.Ok(entity));
 ```

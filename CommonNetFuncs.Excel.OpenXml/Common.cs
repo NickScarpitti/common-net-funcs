@@ -2961,14 +2961,57 @@ public static partial class Common
 
 	/// <summary>
 	/// Saves the workbook, closes the document, and resets the stream position to the beginning.
+	/// <remarks>Use this when the document is backed by a *stream* that needs to be reused or read from the beginning after closing the document.</remarks>
 	/// </summary>
 	/// <param name="document">The document to save and close.</param>
-	/// <param name="memoryStream">The stream to reset to position 0.</param>
-	public static void WriteAndClose(this SpreadsheetDocument document, MemoryStream memoryStream)
+	/// <param name="stream">The stream containing the file contents to reset to position 0.</param>
+	public static void WriteAndClose(this SpreadsheetDocument document, Stream stream)
+	{
+		document.WorkbookPart?.Workbook?.Save();
+		document.Dispose();
+		if(stream.CanSeek)
+		{
+			stream.Position = 0;
+		}
+	}
+
+	/// <summary>
+	/// Saves the workbook, closes the document, and resets the stream position to the beginning.
+	/// <remarks>Use this when the document is backed by a *file* and you want to read the file into a MemorySteam</remarks>
+	/// </summary>
+	/// <param name="document">The document to save and close.</param>
+	/// <param name="memoryStream">The stream to receive the file contents.</param>
+	/// <param name="filePath">The file path of the saved document.</param>
+	public static void WriteAndClose(this SpreadsheetDocument document, MemoryStream memoryStream, string filePath)
 	{
 		document.WorkbookPart?.Workbook?.Save();
 		document.Dispose();
 		memoryStream.Position = 0;
+		using FileStream fileStream = File.OpenRead(filePath);
+		fileStream.CopyTo(memoryStream);
+		if(memoryStream.CanSeek)
+		{
+			memoryStream.Position = 0;
+		}
+	}
+
+	/// <summary>
+	/// Saves the workbook, closes the document, and resets the stream position to the beginning.
+	/// <remarks>Use this when the document is backed by a *file* and you want to read the file into a MemorySteam</remarks>
+	/// </summary>
+	/// <param name="document">The document to save and close.</param>
+	/// <param name="memoryStream">The stream to receive the file contents.</param>
+	/// <param name="filePath">The file path of the saved document.</param>
+	public static async Task WriteAndCloseAsync(this SpreadsheetDocument document, MemoryStream memoryStream, string filePath)
+	{
+		document.WorkbookPart?.Workbook?.Save();
+		document.Dispose();
+		await using FileStream fileStream = File.OpenRead(filePath);
+		await fileStream.CopyToAsync(memoryStream);
+		if (memoryStream.CanSeek)
+		{
+			memoryStream.Position = 0;
+		}
 	}
 
 	/// <summary>

@@ -5703,6 +5703,108 @@ public sealed class CommonTests : IDisposable
 	}
 
 	[RetryFact(3)]
+	public void WriteAndClose_WithFilePath_ReadsFileIntoMemoryStreamAndResetsPosition()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			document.WriteAndClose(memoryStream, tempFilePath);
+
+			// Assert
+			memoryStream.Position.ShouldBe(0);
+			memoryStream.Length.ShouldBeGreaterThan(0);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
+	public void WriteAndClose_WithFilePath_StreamContainsValidWorkbook()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			document.WriteAndClose(memoryStream, tempFilePath);
+
+			// Assert
+			using SpreadsheetDocument reopened = SpreadsheetDocument.Open(memoryStream, false);
+			reopened.WorkbookPart.ShouldNotBeNull();
+			reopened.WorkbookPart!.Workbook.ShouldNotBeNull();
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
+	public async Task WriteAndCloseAsync_WithFilePath_ReadsFileIntoMemoryStreamAndResetsPosition()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			await document.WriteAndCloseAsync(memoryStream, tempFilePath);
+
+			// Assert
+			memoryStream.Position.ShouldBe(0);
+			memoryStream.Length.ShouldBeGreaterThan(0);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
+	public async Task WriteAndCloseAsync_WithFilePath_StreamContainsValidWorkbook()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			await document.WriteAndCloseAsync(memoryStream, tempFilePath);
+
+			// Assert
+			using SpreadsheetDocument reopened = SpreadsheetDocument.Open(memoryStream, false);
+			reopened.WorkbookPart.ShouldNotBeNull();
+			reopened.WorkbookPart!.Workbook.ShouldNotBeNull();
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
 	public void AddDropDownValidation_WhenNoExistingDataValidations_CreatesAndAppendsDataValidation()
 	{
 		// Arrange

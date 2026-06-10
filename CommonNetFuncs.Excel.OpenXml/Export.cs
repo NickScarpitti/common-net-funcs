@@ -47,6 +47,7 @@ public static class Export
 			document.Save();
 			document.Dispose();
 
+			memoryStream.Position = 0;
 			return memoryStream;
 		}
 		catch (Exception ex)
@@ -83,6 +84,7 @@ public static class Export
 			document.Save();
 			document.Dispose();
 
+			memoryStream.Position = 0;
 			return memoryStream;
 		}
 		catch (Exception ex)

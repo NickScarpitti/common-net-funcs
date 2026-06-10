@@ -23,7 +23,7 @@ This project contains helper methods for reading and writing Excel files using t
 
 ## Common
 
-Low-level helpers for building and manipulating `SpreadsheetDocument` objects with the OpenXML SDK. Covers creating workbooks and sheets, reading and writing cell values, managing number formats, inserting images, and applying cell styles.
+Low-level helpers for building and manipulating `SpreadsheetDocument` objects with the OpenXML SDK. Covers creating workbooks and sheets, reading and writing cell values, managing number formats, inserting images, applying cell styles, and finalizing documents.
 
 ### Common Usage Examples
 
@@ -43,6 +43,47 @@ uint sheetId = document.InitializeExcelFile("Sheet1"); // creates the workbook a
 uint sheet2Id = document.CreateNewSheet("Sheet2");     // appends a second sheet
 
 Worksheet? ws = document.GetWorksheetById(sheetId);
+```
+
+#### WriteAndClose / WriteAndCloseAsync
+
+`WriteAndClose` saves the workbook, disposes the document, and resets the stream position to 0 so the stream is ready to be read or returned immediately.
+
+Use the single-`Stream` overload when the document was created in-memory:
+
+```cs
+using DocumentFormat.OpenXml.Packaging;
+using CommonNetFuncs.Excel.OpenXml;
+
+using MemoryStream ms = new();
+SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+document.InitializeExcelFile("Sheet1");
+// ... write data ...
+
+document.WriteAndClose(ms); // saves, disposes, resets ms.Position to 0
+// ms is now ready to read / return as a file download
+```
+
+Use the `filePath` overload (or its async counterpart) when the document was created against a file path and you want to return the result as a `MemoryStream`:
+
+```cs
+using DocumentFormat.OpenXml.Packaging;
+using CommonNetFuncs.Excel.OpenXml;
+
+string path = Path.GetTempFileName();
+MemoryStream ms = new();
+SpreadsheetDocument document = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
+document.InitializeExcelFile("Sheet1");
+// ... write data ...
+
+// sync
+document.WriteAndClose(ms, path);
+
+// async
+await document.WriteAndCloseAsync(ms, path);
+
+// ms.Position == 0 and contains the full .xlsx content
+return File(ms, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "output.xlsx");
 ```
 
 </details>

@@ -253,17 +253,28 @@ public static partial class Common
 	{
 		try
 		{
-			Row? row = ws.GetRow(cellReference.RowIndex + ((uint)rowOffset));
+			uint targetRowIndex = (uint)(cellReference.RowIndex + rowOffset);
+			uint targetColIndex = (uint)(cellReference.ColumnIndex + colOffset);
+			Row? row = ws.GetRow(targetRowIndex);
 			if (row == null)
 			{
-				row = new Row() { RowIndex = (uint)(cellReference.RowIndex + rowOffset) };
-				ws.Append(row);
+				row = new Row() { RowIndex = targetRowIndex };
+				SheetData? sheetData = ws.GetFirstChild<SheetData>();
+				Row? nextRow = sheetData?.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value > targetRowIndex);
+				if (nextRow != null)
+					sheetData!.InsertBefore(row, nextRow);
+				else
+					sheetData?.Append(row);
 			}
-			Cell? cell = row.GetCell(cellReference.ColumnIndex + ((uint)colOffset));
+			Cell? cell = row.GetCell(targetColIndex);
 			if (cell == null)
 			{
-				cell = new Cell() { CellReference = new CellReference(cellReference.ColumnIndex + ((uint)colOffset), cellReference.RowIndex + ((uint)rowOffset)).ToString() };
-				row.Append(cell);
+				cell = new Cell() { CellReference = new CellReference(targetColIndex, targetRowIndex).ToString() };
+				Cell? nextCell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference != null && new CellReference(c.CellReference!).ColumnIndex > targetColIndex);
+				if (nextCell != null)
+					row.InsertBefore(cell, nextCell);
+				else
+					row.Append(cell);
 			}
 			return cell;
 		}
@@ -327,17 +338,38 @@ public static partial class Common
 	{
 		try
 		{
-			Row? row = ws.GetRow((uint)(y + rowOffset));
+			uint targetRowIndex = (uint)(y + rowOffset);
+			uint targetColIndex = (uint)(x + colOffset);
+			Row? row = ws.GetRow(targetRowIndex);
 			if (row == null)
 			{
-				row = new Row() { RowIndex = (uint)(y + rowOffset) };
-				ws.Append(row);
+				row = new Row() { RowIndex = targetRowIndex };
+				SheetData? sheetData = ws.GetFirstChild<SheetData>();
+				Row? nextRow = sheetData?.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value > targetRowIndex);
+				if (nextRow != null)
+				{
+					// Ensure ordering of rows within the sheet is maintained when adding a new row
+					sheetData!.InsertBefore(row, nextRow);
+				}
+				else
+				{
+					sheetData?.Append(row);
+				}
 			}
-			Cell? cell = row.GetCell((uint)(x + colOffset));
+			Cell? cell = row.GetCell(targetColIndex);
 			if (cell == null)
 			{
-				cell = new Cell() { CellReference = new CellReference((uint)(x + colOffset), (uint)(y + rowOffset)).ToString() };
-				row.Append(cell);
+				cell = new() { CellReference = new CellReference(targetColIndex, targetRowIndex).ToString() };
+				Cell? nextCell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference != null && new CellReference(c.CellReference!).ColumnIndex > targetColIndex);
+				if (nextCell != null)
+				{
+					// Ensure ordering of cells within the row is maintained when adding a new cell
+					row.InsertBefore(cell, nextCell);
+				}
+				else
+				{
+					row.Append(cell);
+				}
 			}
 			return cell;
 		}
@@ -485,6 +517,8 @@ public static partial class Common
 	/// Clears custom format cache for specific workbook
 	/// </summary>
 	/// <param name="document">SpreadsheetDocument to clear in memory style references for</param>
+	/// <remarks>Use this when using a template / base file as any residual created styles will corrupt subsequent documents made from the template / base file.</remarks>
+	/// <remarks>The <see cref="WriteAndClose"/> and <see cref="WriteAndCloseAsync"/> methods have a parameter "clearCachedStyles" to automatically clear the custom format cache for the workbook when set to true.</remarks>
 	public static void ClearCustomFormatCacheForWorkbook(SpreadsheetDocument document)
 	{
 		if (document?.WorkbookPart != null)
@@ -2965,14 +2999,22 @@ public static partial class Common
 	/// </summary>
 	/// <param name="document">The document to save and close.</param>
 	/// <param name="stream">The stream containing the file contents to reset to position 0.</param>
-	public static void WriteAndClose(this SpreadsheetDocument document, Stream stream)
+	/// <param name="clearCachedStyles">Whether to clear the cached styles for the workbook after writing and closing. Defaults to <c>false</c>. Set to true if you are using a template / base file as any residual created styles may corrupt subsequent documents.</param>
+	public static void WriteAndClose(this SpreadsheetDocument document, Stream stream, bool clearCachedStyles = false)
 	{
+		if (clearCachedStyles)
+		{
+			ClearCustomFormatCacheForWorkbook(document);
+		}
+
 		document.WorkbookPart?.Workbook?.Save();
 		document.Dispose();
-		if(stream.CanSeek)
+
+		if (stream.CanSeek)
 		{
 			stream.Position = 0;
 		}
+
 	}
 
 	/// <summary>
@@ -2982,14 +3024,21 @@ public static partial class Common
 	/// <param name="document">The document to save and close.</param>
 	/// <param name="memoryStream">The stream to receive the file contents.</param>
 	/// <param name="filePath">The file path of the saved document.</param>
-	public static void WriteAndClose(this SpreadsheetDocument document, MemoryStream memoryStream, string filePath)
+	/// <param name="clearCachedStyles">Whether to clear the cached styles for the workbook after writing and closing. Defaults to <c>false</c>. Set to true if you are using a template / base file as any residual created styles may corrupt subsequent documents.</param>
+	public static void WriteAndClose(this SpreadsheetDocument document, MemoryStream memoryStream, string filePath, bool clearCachedStyles = false)
 	{
+		if (clearCachedStyles)
+		{
+			ClearCustomFormatCacheForWorkbook(document);
+		}
+
 		document.WorkbookPart?.Workbook?.Save();
 		document.Dispose();
 		memoryStream.Position = 0;
+
 		using FileStream fileStream = File.OpenRead(filePath);
 		fileStream.CopyTo(memoryStream);
-		if(memoryStream.CanSeek)
+		if (memoryStream.CanSeek)
 		{
 			memoryStream.Position = 0;
 		}
@@ -3002,8 +3051,14 @@ public static partial class Common
 	/// <param name="document">The document to save and close.</param>
 	/// <param name="memoryStream">The stream to receive the file contents.</param>
 	/// <param name="filePath">The file path of the saved document.</param>
-	public static async Task WriteAndCloseAsync(this SpreadsheetDocument document, MemoryStream memoryStream, string filePath)
+	/// <param name="clearCachedStyles">Whether to clear the cached styles for the workbook after writing and closing. Defaults to <c>false</c>. Set to true if you are using a template / base file as any residual created styles may corrupt subsequent documents.</param>
+	public static async Task WriteAndCloseAsync(this SpreadsheetDocument document, MemoryStream memoryStream, string filePath, bool clearCachedStyles = false)
 	{
+		if (clearCachedStyles)
+		{
+			ClearCustomFormatCacheForWorkbook(document);
+		}
+
 		document.WorkbookPart?.Workbook?.Save();
 		document.Dispose();
 		await using FileStream fileStream = File.OpenRead(filePath);

@@ -5804,6 +5804,85 @@ public sealed class CommonTests : IDisposable
 		}
 	}
 
+	[RetryTheory(3)]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void WriteAndClose_WithStream_ClearCachedStyles_ShouldClearCacheOnlyWhenTrue(bool clearCachedStyles)
+	{
+		// Arrange
+		MemoryStream memoryStream = new();
+		SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
+		string workbookId = GetWorkbookId(document);
+		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeTrue();
+
+		// Act
+		document.WriteAndClose(memoryStream, clearCachedStyles);
+
+		// Assert
+		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBe(!clearCachedStyles);
+		memoryStream.Dispose();
+	}
+
+	[RetryTheory(3)]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void WriteAndClose_WithFilePath_ClearCachedStyles_ShouldClearCacheOnlyWhenTrue(bool clearCachedStyles)
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.CreateNewSheet("Test Sheet");
+			document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
+			string workbookId = GetWorkbookId(document);
+			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeTrue();
+
+			// Act
+			document.WriteAndClose(memoryStream, tempFilePath, clearCachedStyles);
+
+			// Assert
+			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBe(!clearCachedStyles);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData(true)]
+	[InlineData(false)]
+	public async Task WriteAndCloseAsync_WithFilePath_ClearCachedStyles_ShouldClearCacheOnlyWhenTrue(bool clearCachedStyles)
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.CreateNewSheet("Test Sheet");
+			document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
+			string workbookId = GetWorkbookId(document);
+			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeTrue();
+
+			// Act
+			await document.WriteAndCloseAsync(memoryStream, tempFilePath, clearCachedStyles);
+
+			// Assert
+			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBe(!clearCachedStyles);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
 	[RetryFact(3)]
 	public void AddDropDownValidation_WhenNoExistingDataValidations_CreatesAndAppendsDataValidation()
 	{

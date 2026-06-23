@@ -1693,18 +1693,23 @@ public static partial class Common
 	/// </summary>
 	/// <param name="worksheetPart">WorksheetPart containing the range being measured</param>
 	/// <param name="range">The range being measured</param>
-	/// <returns>The width of the specified range in EMU</returns>
+	/// <returns>The width of the specified range in pixels</returns>
 	public static int GetRangeWidthInPx(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
 	{
 		Worksheet? worksheet = worksheetPart.Worksheet;
 		Columns? columns = worksheet?.Elements<Columns>().FirstOrDefault();
 
+		// Read the sheet-level default column width from sheetFormatPr; fall back to the OOXML default of 8.43
+		double defaultColWidthChars = worksheet?.GetFirstChild<SheetFormatProperties>()?.DefaultColumnWidth ?? 8.43;
+
 		double totalWidthChars = 0;
 		for (uint colIndex = range.start.ColumnIndex; colIndex <= range.end.ColumnIndex; colIndex++)
 		{
-			Column? column = worksheet?.GetOrCreateColumn(colIndex, columns: columns);
-			double columnWidthChars = column?.Width ?? 8.43; // Default column width (# in characters)
-			totalWidthChars += columnWidthChars; //(int)Math.Truncate((columnWidthChars *  7 + 5) / 7 * 256)/ 256;
+			// Look up an existing <col> entry without creating one — creating cols here would add
+			// width-less <col> elements that Excel treats as zero-width (hidden columns).
+			Column? column = columns?.Elements<Column>().FirstOrDefault(c => colIndex >= (c.Min?.Value ?? 0) && colIndex <= (c.Max?.Value ?? 0));
+			double columnWidthChars = (column?.Width?.HasValue == true) ? column.Width!.Value : defaultColWidthChars;
+			totalWidthChars += columnWidthChars;
 		}
 
 		return (int)Math.Round(totalWidthChars * 7, 0, MidpointRounding.ToZero);
@@ -1715,22 +1720,21 @@ public static partial class Common
 	/// </summary>
 	/// <param name="worksheetPart">WorksheetPart containing the range being measured</param>
 	/// <param name="range">The range being measured</param>
-	/// <returns>The height of the specified range in EMU</returns>
+	/// <returns>The height of the specified range in pixels</returns>
 	public static int GetRangeHeightInPx(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
 	{
 		Worksheet? worksheet = worksheetPart.Worksheet;
+
+		// Read the sheet-level default row height from sheetFormatPr; fall back to the OOXML default of 14.2pt
+		double defaultRowHeightPt = worksheet?.GetFirstChild<SheetFormatProperties>()?.DefaultRowHeight ?? 14.2;
 
 		int totalHeight = 0;
 		for (uint rowIndex = range.start.RowIndex; rowIndex <= range.end.RowIndex; rowIndex++)
 		{
 			Row? row = worksheet?.GetRow(rowIndex);
-			if (row == null)
-			{
-				SheetData? sheetData = worksheet?.GetFirstChild<SheetData>();
-				row = new Row { RowIndex = rowIndex };
-				sheetData!.Append(row);
-			}
-			double rowHeight = row?.Height ?? 14.2; // Default row height for Calibri 11pt
+			// Do not create missing rows here — appending rows mutates the sheet and can produce out-of-order row
+			// elements, which corrupts the sheet XML. Fall back to the sheet default row height instead.
+			double rowHeight = row?.Height?.HasValue == true ? row.Height!.Value : defaultRowHeightPt;
 			totalHeight += (int)(rowHeight * 12700 / 9525); // Convert to EMUs (1 point = 12700 EMUs), then to pixels (1 pixel = 9525 EMUs)
 		}
 
@@ -2254,7 +2258,14 @@ public static partial class Common
 		if (columns == null)
 		{
 			columns = new Columns();
-			worksheet.InsertAt(columns, 0);
+			// <cols> must appear after <sheetFormatPr> and before <sheetData> per the CT_Worksheet schema.
+			// Inserting at index 0 would place it before <dimension>, corrupting the file when no <cols>
+			// element already exists in the template. Insert before <sheetData> instead.
+			SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
+			if (sheetData != null)
+				worksheet.InsertBefore(columns, sheetData);
+			else
+				worksheet.Append(columns);
 		}
 		return columns;
 	}

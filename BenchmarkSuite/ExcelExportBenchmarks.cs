@@ -18,8 +18,8 @@ using static CommonNetFuncs.Excel.OpenXml.Common;
 namespace BenchmarkSuite;
 
 /// <summary>
-/// Benchmarks comparing the original (pre-optimisation) ExportFromTable implementation against
-/// the new optimised one for both the generic IEnumerable&lt;T&gt; and DataTable overloads.
+/// Benchmarks comparing the original (pre-optimization) ExportFromTable implementation against
+/// the new optimized one for both the generic IEnumerable&lt;T&gt; and DataTable overloads.
 ///
 /// Root causes of the original being slow at 2000 rows × 36 columns (~72 000 cells):
 ///   1. InsertSharedStringItem   – O(n) linear scan of the shared-string table per cell +
@@ -29,14 +29,12 @@ namespace BenchmarkSuite;
 ///   4. AutoFitColumns()         – second full pass that repeats tree traversal + ElementAt()
 ///                                 shared-string lookup per cell.
 /// </summary>
-[MemoryDiagnoser]
 [RankColumn]
-#pragma warning disable RCS1102, S1118
+[MemoryDiagnoser]
 public class ExcelExportBenchmarks
-#pragma warning restore RCS1102, S1118
 {
-	private List<ExportTestRow> _genericData = [];
-	private DataTable _dataTable = new();
+	private List<ExportTestRow> GenericData = [];
+	private DataTable Dt = new();
 
 	[Params(500, 2000)]
 	public int RowCount { get; set; }
@@ -48,7 +46,7 @@ public class ExcelExportBenchmarks
 		string[] statuses = ["Active", "Inactive", "Pending", "Closed"];
 		string[] categories = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"];
 
-		_genericData = Enumerable.Range(1, RowCount).Select(i => new ExportTestRow
+		GenericData = Enumerable.Range(1, RowCount).Select(i => new ExportTestRow
 		{
 			Id = i,
 			FirstName = $"First{i}",
@@ -89,16 +87,20 @@ public class ExcelExportBenchmarks
 		}).ToList();
 
 		// Mirror the generic data in a DataTable for the DataTable overload benchmarks
-		_dataTable = new DataTable();
+		Dt = new DataTable();
 		PropertyInfo[] props = GetOrAddPropertiesFromReflectionCache(typeof(ExportTestRow));
 		foreach (PropertyInfo p in props)
-			_dataTable.Columns.Add(p.Name, typeof(string));
-		foreach (ExportTestRow row in _genericData)
 		{
-			DataRow dr = _dataTable.NewRow();
+			Dt.Columns.Add(p.Name, typeof(string));
+		}
+		foreach (ExportTestRow row in GenericData)
+		{
+			DataRow dr = Dt.NewRow();
 			foreach (PropertyInfo p in props)
+			{
 				dr[p.Name] = p.GetValue(row)?.ToString() ?? string.Empty;
-			_dataTable.Rows.Add(dr);
+			}
+			Dt.Rows.Add(dr);
 		}
 	}
 
@@ -115,12 +117,14 @@ public class ExcelExportBenchmarks
 		uint newSheetId = document.InitializeExcelFile("Data");
 		Worksheet? worksheet = document.GetWorksheetById(newSheetId);
 		if (worksheet != null)
-			OriginalExportFromTable(document, worksheet, _genericData);
+		{
+			OriginalExportFromTable(document, worksheet, GenericData);
+		}
 		document.Save();
 	}
 
-	[Benchmark(Description = "Optimised IEnumerable<T>")]
-	public void Optimised_Generic()
+	[Benchmark(Description = "Optimized IEnumerable<T>")]
+	public void Optimized_Generic()
 	{
 		using MemoryStream ms = new();
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook, true);
@@ -128,7 +132,9 @@ public class ExcelExportBenchmarks
 		uint newSheetId = document.InitializeExcelFile("Data");
 		Worksheet? worksheet = document.GetWorksheetById(newSheetId);
 		if (worksheet != null)
-			Export.ExportFromTable(document, worksheet, _genericData);
+		{
+			Export.ExportFromTable(document, worksheet, GenericData);
+		}
 		document.Save();
 	}
 
@@ -145,12 +151,14 @@ public class ExcelExportBenchmarks
 		uint newSheetId = document.InitializeExcelFile("Data");
 		Worksheet? worksheet = document.GetWorksheetById(newSheetId);
 		if (worksheet != null)
-			OriginalExportFromTable(document, worksheet, _dataTable);
+		{
+			OriginalExportFromTable(document, worksheet, Dt);
+		}
 		document.Save();
 	}
 
-	[Benchmark(Description = "Optimised DataTable")]
-	public void Optimised_DataTable()
+	[Benchmark(Description = "Optimized DataTable")]
+	public void Optimized_DataTable()
 	{
 		using MemoryStream ms = new();
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook, true);
@@ -158,12 +166,14 @@ public class ExcelExportBenchmarks
 		uint newSheetId = document.InitializeExcelFile("Data");
 		Worksheet? worksheet = document.GetWorksheetById(newSheetId);
 		if (worksheet != null)
-			Export.ExportFromTable(document, worksheet, _dataTable);
+		{
+			Export.ExportFromTable(document, worksheet, Dt);
+		}
 		document.Save();
 	}
 
 	// -----------------------------------------------------------------------
-	// Verbatim copy of the ORIGINAL ExportFromTable<T> logic (pre-optimisation)
+	// Verbatim copy of the ORIGINAL ExportFromTable<T> logic (pre-optimization)
 	// so that the baseline is not affected by any changes made to Export.cs.
 	// -----------------------------------------------------------------------
 
@@ -173,7 +183,10 @@ public class ExcelExportBenchmarks
 		if (data?.Any() == true)
 		{
 			SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
-			if (sheetData == null) return false;
+			if (sheetData == null)
+			{
+				return false;
+			}
 
 			uint headerStyleId = document.GetStandardCellStyle(EStyle.Header, wrapText: wrapText);
 			uint bodyStyleId = document.GetStandardCellStyle(EStyle.Body, wrapText: wrapText);
@@ -182,8 +195,7 @@ public class ExcelExportBenchmarks
 			uint y = 1;
 
 			PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T))
-					.Where(p => (skipColumnNames == null) || (skipColumnNames.Count == 0) ||
-											!skipColumnNames.Contains(p.Name, StringComparer.InvariantCultureIgnoreCase))
+					.Where(p => (skipColumnNames == null) || (skipColumnNames.Count == 0) || !skipColumnNames.Contains(p.Name, StringComparer.InvariantCultureIgnoreCase))
 					.ToArray();
 
 			foreach (PropertyInfo prop in properties)
@@ -206,9 +218,13 @@ public class ExcelExportBenchmarks
 			}
 
 			if (createTable)
+			{
 				worksheet.CreateTable(1, 1, y - 1, (uint)properties.Length, tableName);
+			}
 			else
+			{
 				worksheet.SetAutoFilter(1, 1, y - 1, (uint)properties.Length);
+			}
 
 			worksheet.AutoFitColumns();
 		}
@@ -222,7 +238,10 @@ public class ExcelExportBenchmarks
 		if (data?.Rows.Count > 0)
 		{
 			SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
-			if (sheetData == null) return false;
+			if (sheetData == null)
+			{
+				return false;
+			}
 
 			uint headerStyleId = document.GetStandardCellStyle(EStyle.Header, wrapText: wrapText);
 			uint bodyStyleId = document.GetStandardCellStyle(EStyle.Body, wrapText: wrapText);
@@ -234,9 +253,13 @@ public class ExcelExportBenchmarks
 			foreach (DataColumn column in data.Columns)
 			{
 				if (skipColumnNames?.Contains(column.ColumnName, StringComparer.InvariantCultureIgnoreCase) != true)
+				{
 					sheetData.InsertCellValue(x, y, new CellValue(column.ColumnName), CellValues.SharedString, headerStyleId);
+				}
 				else
+				{
 					skipColumns.Add(x);
+				}
 				x++;
 			}
 
@@ -248,7 +271,9 @@ public class ExcelExportBenchmarks
 				foreach (object? value in row.ItemArray)
 				{
 					if ((value != null) && !skipColumns.Contains(x))
+					{
 						sheetData.InsertCellValue(x, y, new CellValue(value.ToString() ?? string.Empty), CellValues.SharedString, bodyStyleId);
+					}
 					x++;
 				}
 				x = 1;
@@ -256,9 +281,13 @@ public class ExcelExportBenchmarks
 			}
 
 			if (createTable)
+			{
 				worksheet.CreateTable(1, 1, y - 1, (uint)data.Columns.Count, tableName);
+			}
 			else
+			{
 				worksheet.SetAutoFilter(1, 1, y - 1, (uint)data.Columns.Count);
+			}
 
 			worksheet.AutoFitColumns();
 		}

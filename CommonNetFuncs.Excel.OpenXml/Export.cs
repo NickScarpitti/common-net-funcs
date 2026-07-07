@@ -204,7 +204,9 @@ public static class Export
 				// Pre-compute column letter strings (e.g. "A", "B", ..., "AJ") once
 				string[] colLetters = new string[colCount];
 				for (int i = 0; i < colCount; i++)
+				{
 					colLetters[i] = CellReference.NumberToColumnName((uint)(i + 1));
+				}
 
 				// Set up shared-string table with O(1) dictionary lookup.
 				// The original approach called InsertSharedStringItem per cell, which did an O(n) linear scan and called SharedStringTable.Save() after every single insertion
@@ -215,8 +217,9 @@ public static class Export
 
 				Dictionary<string, int> sharedStringCache = new(StringComparer.Ordinal);
 				int ssCount = 0;
-				foreach (SharedStringItem item in sharedStringTable.Elements<SharedStringItem>())
+				foreach (SharedStringItem item in sharedStringTable.Elements<SharedStringItem>()){
 					sharedStringCache[item.InnerText] = ssCount++;
+				}
 
 				// Track maximum column widths inline during the write pass so that the second full-cell pass of AutoFitColumns() (which also repeated the tree traversals and shared-string lookups) is avoided entirely.
 				double[] colWidths = new double[colCount];
@@ -237,8 +240,12 @@ public static class Export
 						DataType = CellValues.SharedString,
 						CellValue = new CellValue(ssIdx.ToString())
 					});
+
 					double w = CalculateWidth(text, headerStyleId);
-					if (w > colWidths[i]) colWidths[i] = w;
+					if (w > colWidths[i])
+					{
+						colWidths[i] = w;
+					}
 				}
 				sheetData.Append(headerRow);
 				y++;
@@ -260,7 +267,10 @@ public static class Export
 							CellValue = new CellValue(ssIdx.ToString())
 						});
 						double w = CalculateWidth(text, bodyStyleId);
-						if (w > colWidths[i]) colWidths[i] = w;
+						if (w > colWidths[i])
+						{
+							colWidths[i] = w;
+						}
 					}
 					sheetData.Append(dataRow);
 					y++;
@@ -274,13 +284,19 @@ public static class Export
 				for (int i = 0; i < colCount; i++)
 				{
 					if (colWidths[i] > 0)
+					{
 						columns.Append(new Column { Min = (uint)(i + 1), Max = (uint)(i + 1), Width = Math.Min(colWidths[i], 100), CustomWidth = true });
+					}
 				}
 
 				if (createTable)
+				{
 					worksheet.CreateTable(1, 1, y - 1, (uint)colCount, tableName);
+				}
 				else
+				{
 					worksheet.SetAutoFilter(1, 1, y - 1, (uint)colCount);
+				}
 			}
 			ClearStandardFormatCacheForWorkbook(document);
 			return true;
@@ -322,19 +338,22 @@ public static class Export
 				// Pre-compute column letter strings once
 				string[] colLetters = new string[totalCols];
 				for (int i = 0; i < totalCols; i++)
+				{
 					colLetters[i] = CellReference.NumberToColumnName((uint)(i + 1));
+				}
 
 				// Set up shared-string table with O(1) dictionary lookup
 				WorkbookPart workbookPart = document.WorkbookPart ?? throw new InvalidOperationException("WorkbookPart is missing.");
-				SharedStringTablePart sharedStringPart = workbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault()
-					?? workbookPart.AddNewPart<SharedStringTablePart>();
+				SharedStringTablePart sharedStringPart = workbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault() ?? workbookPart.AddNewPart<SharedStringTablePart>();
 				sharedStringPart.SharedStringTable ??= new SharedStringTable();
 				SharedStringTable sharedStringTable = sharedStringPart.SharedStringTable;
 
 				Dictionary<string, int> sharedStringCache = new(StringComparer.Ordinal);
 				int ssCount = 0;
 				foreach (SharedStringItem item in sharedStringTable.Elements<SharedStringItem>())
+				{
 					sharedStringCache[item.InnerText] = ssCount++;
+				}
 
 				// Build skip set using 0-based column indices (HashSet for O(1) lookup vs the
 				// original List<uint> which was O(n) per Contains call)
@@ -342,7 +361,9 @@ public static class Export
 				for (int i = 0; i < totalCols; i++)
 				{
 					if (skipColumnNames?.Contains(data.Columns[i].ColumnName, StringComparer.InvariantCultureIgnoreCase) == true)
+					{
 						skipColumnIndices.Add(i);
+					}
 				}
 
 				// Track maximum column widths inline
@@ -355,7 +376,10 @@ public static class Export
 				for (int i = 0; i < totalCols; i++)
 				{
 					if (skipColumnIndices.Contains(i))
+					{
 						continue;
+					}
+
 					string text = data.Columns[i].ColumnName;
 					int ssIdx = GetOrAddSharedString(text, sharedStringCache, sharedStringTable, ref ssCount);
 					headerRow.Append(new Cell
@@ -366,7 +390,10 @@ public static class Export
 						CellValue = new CellValue(ssIdx.ToString())
 					});
 					double w = CalculateWidth(text, headerStyleId);
-					if (w > colWidths[i]) colWidths[i] = w;
+					if (w > colWidths[i])
+					{
+						colWidths[i] = w;
+					}
 				}
 				sheetData.Append(headerRow);
 				y++;
@@ -380,7 +407,9 @@ public static class Export
 					for (int i = 0; i < items.Length; i++)
 					{
 						if (items[i] == null || skipColumnIndices.Contains(i))
+						{
 							continue;
+						}
 						string text = items[i]!.ToString() ?? string.Empty;
 						int ssIdx = GetOrAddSharedString(text, sharedStringCache, sharedStringTable, ref ssCount);
 						dataRow.Append(new Cell
@@ -391,7 +420,10 @@ public static class Export
 							CellValue = new CellValue(ssIdx.ToString())
 						});
 						double w = CalculateWidth(text, bodyStyleId);
-						if (w > colWidths[i]) colWidths[i] = w;
+						if (w > colWidths[i])
+						{
+							colWidths[i] = w;
+						}
 					}
 					sheetData.Append(dataRow);
 					y++;
@@ -405,13 +437,19 @@ public static class Export
 				for (int i = 0; i < totalCols; i++)
 				{
 					if (colWidths[i] > 0)
+					{
 						columns.Append(new Column { Min = (uint)(i + 1), Max = (uint)(i + 1), Width = Math.Min(colWidths[i], 100), CustomWidth = true });
+					}
 				}
 
 				if (createTable)
+				{
 					worksheet.CreateTable(1, 1, y - 1, (uint)totalCols, tableName);
+				}
 				else
+				{
 					worksheet.SetAutoFilter(1, 1, y - 1, (uint)totalCols);
+				}
 			}
 			return true;
 		}
@@ -426,10 +464,17 @@ public static class Export
 	/// Returns the shared-string index for <paramref name="text"/>, adding it to both the
 	/// in-memory dictionary cache and the XML table if it is not already present.
 	/// </summary>
+	/// <param name="text">The string to look up or add.</param>
+	/// <param name="cache">The in-memory dictionary cache of shared strings.</param>
+	/// <param name="table">The XML shared-string table.</param>
+	/// <param name="count">The current count of shared strings, used to assign the next index for a new string.</param>
+	/// <returns>The index of the shared string in the table.</returns>
 	private static int GetOrAddSharedString(string text, Dictionary<string, int> cache, SharedStringTable table, ref int count)
 	{
 		if (cache.TryGetValue(text, out int index))
+		{
 			return index;
+		}
 		table.AppendChild(new SharedStringItem(new Text(text)));
 		cache[text] = count;
 		return count++;

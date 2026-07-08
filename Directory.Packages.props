@@ -20,9 +20,7 @@
     <PackageVersion Include="Hangfire.Core" Version="1.8.23" />
     <PackageVersion Include="MailKit" Version="4.17.0" />
     <PackageVersion Include="Mapster" Version="10.0.10" />
-    <!-- <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" /> -->
     <PackageVersion Include="Microsoft.AspNetCore.JsonPatch" Version="10.0.9" />
-    <!-- <PackageVersion Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.10" /> -->
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.9" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
     <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.9" />
@@ -38,7 +36,8 @@
     <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.9" />
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
-    <PackageVersion Include="Microsoft.OpenApi" Version="3.8.0" />
+		<!-- FakeItEasy must be 2.x.x until Microsoft.AspNetCore.OpenApi is updated to use the new version (3.x.x) -->
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.10.0" />
     <PackageVersion Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.7.37220.1" />
     <PackageVersion Include="MemoryPack" Version="1.21.4" />
     <PackageVersion Include="MessagePack" Version="3.1.7" />

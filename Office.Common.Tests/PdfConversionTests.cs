@@ -1345,6 +1345,128 @@ public sealed class PdfConversionTests //: IDisposable
 		}
 	}
 
+	/// <summary>
+	/// Returns a real executable that accepts any arguments and exits immediately with a non-zero exit code,
+	/// used to exercise the retry/throw paths in the conversion methods without requiring LibreOffice to fail.
+	/// </summary>
+	private static string FakeFailingExecutable =>
+		RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+			? "where.exe"   // Windows: where.exe exits non-zero when the LibreOffice args are unrecognised patterns
+			: "/bin/false"; // Unix: always exits with code 1, ignores all arguments
+
+	[Fact]
+	public async Task ConvertToPdf_WhenProcessExitsWithNonZero_WithNoRetries_ShouldThrowWithExitCodeInnerException()
+	{
+		// Arrange - use a real executable that exits with non-zero to exercise the
+		// "process exited but ExitCode != 0" branch (lines 75 and 82-83 in the sync method)
+		string sourceFile = Combine(testDataPath, $"TestNonZeroExit-{Guid.NewGuid()}.xlsx");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+
+		try
+		{
+			// Act - maxRetries=0 so the loop runs exactly once, hits ExitCode != 0, and throws at max retries
+#pragma warning disable S6966 // Awaitable method should be used
+			LibreOfficeFailedException ex = Should.Throw<LibreOfficeFailedException>(() =>
+				ConvertToPdf(FakeFailingExecutable, sourceFile, maxRetries: 0));
+#pragma warning restore S6966 // Awaitable method should be used
+
+			// Assert - the outer catch wraps the "LibreOffice has failed with {exitCode}" inner exception
+			ex.Message.ShouldContain("Failed to run LibreOffice!");
+			ex.InnerException.ShouldNotBeNull();
+			ex.InnerException!.Message.ShouldContain("LibreOffice has failed with");
+		}
+		finally
+		{
+			if (File.Exists(sourceFile))
+			{
+				File.Delete(sourceFile);
+			}
+		}
+	}
+
+	[Fact]
+	public async Task ConvertToPdf_WhenProcessExitsWithNonZero_WithOneRetry_ShouldLogRetryMessageAndThrow()
+	{
+		// Arrange - use a real executable that exits with non-zero to exercise the
+		// Console.WriteLine retry path (line 79) and the final throw (line 83)
+		string sourceFile = Combine(testDataPath, $"TestNonZeroRetry-{Guid.NewGuid()}.xlsx");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+
+		try
+		{
+			// Act - maxRetries=1 so i=0 triggers Console.WriteLine (i < maxRetries) and
+			// i=1 triggers the throw (i == maxRetries)
+#pragma warning disable S6966 // Awaitable method should be used
+			LibreOfficeFailedException ex = Should.Throw<LibreOfficeFailedException>(() =>
+				ConvertToPdf(FakeFailingExecutable, sourceFile, maxRetries: 1));
+#pragma warning restore S6966 // Awaitable method should be used
+
+			// Assert
+			ex.Message.ShouldContain("Failed to run LibreOffice!");
+		}
+		finally
+		{
+			if (File.Exists(sourceFile))
+			{
+				File.Delete(sourceFile);
+			}
+		}
+	}
+
+	[Fact]
+	public async Task ConvertToPdfAsync_WhenProcessExitsWithNonZero_WithNoRetries_ShouldThrowWithExitCodeInnerException()
+	{
+		// Arrange - use a real executable that exits with non-zero to exercise the
+		// "process exited but ExitCode != 0" branch (lines 140 and 147-148 in the async method)
+		string sourceFile = Combine(testDataPath, $"TestAsyncNonZeroExit-{Guid.NewGuid()}.xlsx");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+
+		try
+		{
+			// Act - maxRetries=0: exits non-zero, throws at max retries (inner exception = "LibreOffice has failed with")
+			LibreOfficeFailedException ex = await Should.ThrowAsync<LibreOfficeFailedException>(() =>
+				ConvertToPdfAsync(FakeFailingExecutable, sourceFile, maxRetries: 0));
+
+			// Assert
+			ex.Message.ShouldContain("Failed to run LibreOffice!");
+			ex.InnerException.ShouldNotBeNull();
+			ex.InnerException!.Message.ShouldContain("LibreOffice has failed with");
+		}
+		finally
+		{
+			if (File.Exists(sourceFile))
+			{
+				File.Delete(sourceFile);
+			}
+		}
+	}
+
+	[Fact]
+	public async Task ConvertToPdfAsync_WhenProcessExitsWithNonZero_WithOneRetry_ShouldLogRetryMessageAndThrow()
+	{
+		// Arrange - use a real executable that exits with non-zero to exercise the
+		// async Console.WriteLine retry path (line 144) and the final throw (line 148)
+		string sourceFile = Combine(testDataPath, $"TestAsyncNonZeroRetry-{Guid.NewGuid()}.xlsx");
+		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+
+		try
+		{
+			// Act - maxRetries=1: i=0 triggers Console.WriteLine, i=1 triggers the throw
+			LibreOfficeFailedException ex = await Should.ThrowAsync<LibreOfficeFailedException>(() =>
+				ConvertToPdfAsync(FakeFailingExecutable, sourceFile, maxRetries: 1));
+
+			// Assert
+			ex.Message.ShouldContain("Failed to run LibreOffice!");
+		}
+		finally
+		{
+			if (File.Exists(sourceFile))
+			{
+				File.Delete(sourceFile);
+			}
+		}
+	}
+
 	[Fact]
 	public async Task ConvertToPdfAsync_WithOverwriteTrueMultipleTimes_ShouldAllowRepeatedOverwrites()
 	{

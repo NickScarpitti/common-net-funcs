@@ -8,13 +8,13 @@ public static class PdfConversion
 {
 	private enum EOfficeFileTypes
 	{
-		Xlsx,
-		Xls,
-		Docx,
-		Doc,
-		Pptx,
-		Ppt,
-		Csv
+		xlsx,
+		xls,
+		docx,
+		doc,
+		pptx,
+		ppt,
+		csv
 	}
 
 	private static readonly Lock conversionLock = new();
@@ -72,7 +72,7 @@ public static class PdfConversion
 					}
 				}
 
-				if (process.HasExited && process.ExitCode != 0)
+				if (process.ExitCode != 0)
 				{
 					if (i < maxRetries)
 					{
@@ -137,7 +137,7 @@ public static class PdfConversion
 				process.Start();
 				await process.WaitForExitAsync(cancellationToken ?? default).ConfigureAwait(false);
 
-				if (process.HasExited && process.ExitCode != 0)
+				if (process.ExitCode != 0)
 				{
 					if (i < maxRetries)
 					{
@@ -182,19 +182,13 @@ public static class PdfConversion
 
 	private static string? GetPdfCommand(this string fileName)
 	{
-		string? pdfCommand = null;
-		string extension = GetExtension(fileName).Replace(".", string.Empty);
-		if (Enum.TryParse(typeof(EOfficeFileTypes), extension, true, out object? officeType))
+		return GetExtension(fileName).Replace(".", string.Empty).ToLowerInvariant() switch
 		{
-			pdfCommand = officeType switch
-			{
-				EOfficeFileTypes.Xlsx or EOfficeFileTypes.Xls or EOfficeFileTypes.Csv => "calc_pdf_Export",
-				EOfficeFileTypes.Docx or EOfficeFileTypes.Doc => "writer_pdf_Export",
-				EOfficeFileTypes.Pptx or EOfficeFileTypes.Ppt => "impress_pdf_Export",
-				_ => null
-			};
-		}
-		return pdfCommand;
+			nameof(EOfficeFileTypes.xlsx) or nameof(EOfficeFileTypes.xls) or nameof(EOfficeFileTypes.csv) => "calc_pdf_Export",
+			nameof(EOfficeFileTypes.docx) or nameof(EOfficeFileTypes.doc) => "writer_pdf_Export",
+			nameof(EOfficeFileTypes.pptx) or nameof(EOfficeFileTypes.ppt) => "impress_pdf_Export",
+			_ => null
+		};
 	}
 
 	private static (Process Process, string PdfFileName, string TempFileName) CreatePdfConversionProcess(string fileName, string libreOfficeExecutable, string pdfCommand, ref string? outputPath)

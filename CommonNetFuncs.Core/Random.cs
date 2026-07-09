@@ -275,7 +275,7 @@ public static class Random
 
 		decimalPlaces = decimalPlaces <= 15 ? decimalPlaces : 15;
 		double result = GetRandomDouble();
-		return Round(result, decimalPlaces, MidpointRounding.AwayFromZero);
+		return Round(result, decimalPlaces, MidpointRounding.ToZero);
 	}
 
 	/// <summary>
@@ -324,7 +324,7 @@ public static class Random
 	public static double GetRepeatableRandomDouble(int decimalPlaces, System.Random rnd)
 	{
 		double result = GetRepeatableRandomDouble(rnd);
-		return Round(result, decimalPlaces, MidpointRounding.AwayFromZero);
+		return Round(result, decimalPlaces, MidpointRounding.ToZero);
 	}
 
 	/// <summary>
@@ -428,7 +428,7 @@ public static class Random
 		}
 		decimalPlaces = decimalPlaces <= 28 ? decimalPlaces : 28;
 		decimal result = GetRandomDecimal();
-		return Round(result, decimalPlaces, MidpointRounding.AwayFromZero);
+		return Round(result, decimalPlaces, MidpointRounding.ToZero);
 	}
 
 	/// <summary>
@@ -489,7 +489,7 @@ public static class Random
 		decimalPlaces = decimalPlaces <= 28 ? decimalPlaces : 28;
 
 		decimal result = GetRepeatableRandomDecimal(rnd);
-		return Round(result, decimalPlaces, MidpointRounding.AwayFromZero);
+		return Round(result, decimalPlaces, MidpointRounding.ToZero);
 	}
 
 	/// <summary>

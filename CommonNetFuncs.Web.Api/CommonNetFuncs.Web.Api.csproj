@@ -28,7 +28,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.1.10</Version>
+		<Version>4.1.11</Version>
 		<MinVerTagPrefix>web.api-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>

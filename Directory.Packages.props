@@ -6,7 +6,7 @@
     <PackageVersion Include="AutoFixture" Version="4.18.1" />
     <PackageVersion Include="AutoFixture.AutoFakeItEasy" Version="4.18.1" />
     <PackageVersion Include="AutoFixture.Xunit3" Version="4.19.0" />
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.100.2" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.100.3" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="CliWrap" Version="3.10.2" />
     <PackageVersion Include="ClosedXML" Version="0.105.0" />
@@ -36,7 +36,7 @@
     <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.9" />
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
-		<!-- FakeItEasy must be 2.x.x until Microsoft.AspNetCore.OpenApi is updated to use the new version (3.x.x) -->
+    <!-- FakeItEasy must be 2.x.x until Microsoft.AspNetCore.OpenApi is updated to use the new version (3.x.x) -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.10.0" />
     <PackageVersion Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.7.37220.1" />
     <PackageVersion Include="MemoryPack" Version="1.21.4" />

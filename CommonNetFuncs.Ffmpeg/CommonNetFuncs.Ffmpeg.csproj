@@ -28,13 +28,13 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.0.43</Version>
-		<MinVerTagPrefix>media.ffmpeg-</MinVerTagPrefix>
+		<Version>4.1.13</Version>
+		<MinVerTagPrefix>ffmpeg-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
 		<MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
 		<!-- Optional: Detect breaking changes from a previous stable version -->
-		<PackageValidationBaselineVersion>4.0.17</PackageValidationBaselineVersion>
+		<!-- <PackageValidationBaselineVersion>4.0.17</PackageValidationBaselineVersion> -->
 		<EnablePackageValidation>true</EnablePackageValidation>
 	</PropertyGroup>
 

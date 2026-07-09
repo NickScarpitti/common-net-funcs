@@ -54,7 +54,7 @@ public static class RestHelpersStatic
 			using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
 
 			httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
-			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument, requestOptions.MessagePackSerializerOptions);
 
 			//client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
 			using HttpResponseMessage response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
@@ -114,7 +114,7 @@ public static class RestHelpersStatic
 				}
 
 				httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
-				httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+				httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument, requestOptions.MessagePackSerializerOptions);
 
 				//client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
 				response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
@@ -178,7 +178,7 @@ public static class RestHelpersStatic
 
 			using HttpRequestMessage httpRequestMessage = new(requestOptions.HttpMethod, requestOptions.Url);
 			httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
-			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument, requestOptions.MessagePackSerializerOptions);
 
 			//client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
 			restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
@@ -235,7 +235,7 @@ public static class RestHelpersStatic
 			}
 
 			httpRequestMessage.AttachHeaders(requestOptions.BearerToken, requestOptions.HttpHeaders);
-			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument);
+			httpRequestMessage.AddContent(requestOptions.HttpMethod, requestOptions.HttpHeaders, requestOptions.BodyObject, requestOptions.PatchDocument, requestOptions.MessagePackSerializerOptions);
 
 			//client.Timeout = requestOptions.Timeout == null ? client.Timeout : TimeSpan.FromSeconds((long)requestOptions.Timeout);
 			restObject.Response = await client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseContentRead, combinedTokenSource.Token).ConfigureAwait(false) ?? new();
@@ -281,7 +281,7 @@ public static class RestHelpersStatic
 			if (response.IsSuccessStatusCode)
 			{
 				result = await ReadResponseStream<TResponse>(responseStream, contentType, contentEncoding, requestOptions.UseNewtonsoftDeserializer, requestOptions.JsonSerializerOptions,
-					requestOptions.MsgPackOptions, cancellationToken).ConfigureAwait(false);
+					requestOptions.MessagePackSerializerOptions, cancellationToken).ConfigureAwait(false);
 			}
 			else
 			{
@@ -289,13 +289,13 @@ public static class RestHelpersStatic
 				if (contentType.ContainsInvariant(JsonProblem))
 				{
 					ProblemDetailsWithErrors? problemDetails = await ReadResponseStream<ProblemDetailsWithErrors>(responseStream, contentType, contentEncoding, requestOptions.UseNewtonsoftDeserializer,
-						requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions, cancellationToken).ConfigureAwait(false) ?? new();
+						requestOptions.JsonSerializerOptions, requestOptions.MessagePackSerializerOptions, cancellationToken).ConfigureAwait(false) ?? new();
 					errorMessage = $"({problemDetails.Status}) {problemDetails.Title}\n\t\t{string.Join("\n\t\t", problemDetails.Errors.Select(x => $"{x.Key}:\n\t\t\t{string.Join("\n\t\t\t", x.Value)}"))}";
 				}
 				else
 				{
 					errorMessage = await ReadResponseStream<string>(responseStream, Text, contentEncoding, requestOptions.UseNewtonsoftDeserializer,
-						requestOptions.JsonSerializerOptions, requestOptions.MsgPackOptions, cancellationToken).ConfigureAwait(false);
+						requestOptions.JsonSerializerOptions, requestOptions.MessagePackSerializerOptions, cancellationToken).ConfigureAwait(false);
 				}
 				logger.Warn("{HttpMethod} request with URL {URL} failed with the following response:\n\t{StatusCode}: {ReasonPhrase}\n\tContent: {ErrorMessage}\n\t{Headers}",
 					requestOptions.HttpMethod, requestOptions.LogQuery ? requestOptions.Url : requestOptions.RedactedUrl, response.StatusCode, response.ReasonPhrase, errorMessage,
@@ -422,11 +422,11 @@ public static class RestHelpersStatic
 	/// <param name="contentEncoding">Content encoding of the response.</param>
 	/// <param name="useNewtonsoftDeserializer">Whether to use Newtonsoft.Json for deserialization.</param>
 	/// <param name="jsonSerializerOptions">JSON serializer options.</param>
-	/// <param name="msgPackOptions">MessagePack serializer options.</param>
+	/// <param name="MessagePackSerializerOptions">MessagePack serializer options.</param>
 	/// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
 	/// <returns>Deserialized response content.</returns>
 	public static async Task<TResponse?> ReadResponseStream<TResponse>(this Stream responseStream, string? contentType, string? contentEncoding, bool useNewtonsoftDeserializer,
-				JsonSerializerOptions? jsonSerializerOptions = null, MsgPackOptions? msgPackOptions = null, CancellationToken cancellationToken = default)
+				JsonSerializerOptions? jsonSerializerOptions = null, MessagePackSerializerOptions? messagePackSerializerOptions = null, CancellationToken cancellationToken = default)
 	{
 		TResponse? result = default;
 		try
@@ -443,24 +443,7 @@ public static class RestHelpersStatic
 
 			if (contentType.StrEq(MsgPack)) //Message Pack uses native compression
 			{
-				if (msgPackOptions?.UseMsgPackCompression == true || msgPackOptions?.UseMsgPackUntrusted == true)
-				{
-					MessagePackSerializerOptions messagePackOptions = MessagePackSerializerOptions.Standard;
-					if (msgPackOptions.UseMsgPackCompression)
-					{
-						messagePackOptions = messagePackOptions.WithCompression(MessagePackCompression.Lz4BlockArray);
-					}
-
-					if (msgPackOptions.UseMsgPackUntrusted)
-					{
-						messagePackOptions = messagePackOptions.WithSecurity(MessagePackSecurity.UntrustedData);
-					}
-					result = await MessagePackSerializer.DeserializeAsync<TResponse>(responseStream, messagePackOptions, cancellationToken).ConfigureAwait(false);
-				}
-				else
-				{
-					result = await MessagePackSerializer.DeserializeAsync<TResponse>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false);
-				}
+				result = await MessagePackSerializer.DeserializeAsync<TResponse>(responseStream, messagePackSerializerOptions ?? MessagePackSerializerOptions.Standard, cancellationToken: cancellationToken).ConfigureAwait(false);
 			}
 			else if (contentType.StrEq(MemPack)) // ***Will fail if trying to deserialize null value, ensure NoContent is sent back for nulls***
 			{
@@ -632,7 +615,8 @@ public static class RestHelpersStatic
 	/// <param name="httpHeaders">Headers used in the HTTP request.</param>
 	/// <param name="postObject">Object to add as the content (POST and PUT only).</param>
 	/// <param name="patchDoc">Patch document for PATCH requests.</param>
-	internal static void AddContent<TBody>(this HttpRequestMessage httpRequestMessage, HttpMethod httpMethod, IDictionary<string, string>? httpHeaders = null, TBody? postObject = default, HttpContent? patchDoc = null)
+	internal static void AddContent<TBody>(this HttpRequestMessage httpRequestMessage, HttpMethod httpMethod, IDictionary<string, string>? httpHeaders = null,
+			TBody? postObject = default, HttpContent? patchDoc = null, MessagePackSerializerOptions? messagePackSerializerOptions = null)
 	{
 		if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)
 		{
@@ -646,7 +630,7 @@ public static class RestHelpersStatic
 			}
 			else if (hasContentType && contentTypeValue!.StrEq(MsgPack))
 			{
-				httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject));
+				httpRequestMessage.Content = new ByteArrayContent(MessagePackSerializer.Serialize(postObject, messagePackSerializerOptions));
 				httpRequestMessage.Content.Headers.ContentType = new(MsgPack);
 			}
 			else

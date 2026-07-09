@@ -13,7 +13,7 @@ using static CommonNetFuncs.DeepClone.ExpressionTrees;
 
 namespace CommonNetFuncs.Web.Api;
 
-public sealed class GenericMinimalEndpoints
+public static class GenericMinimalEndpoints
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 

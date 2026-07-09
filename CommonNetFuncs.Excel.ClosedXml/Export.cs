@@ -1,8 +1,8 @@
-﻿using System.Data;
-using System.Reflection;
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
+using System.Data;
+using System.Reflection;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Excel.ClosedXml;

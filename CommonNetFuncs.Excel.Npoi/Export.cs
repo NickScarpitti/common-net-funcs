@@ -1,11 +1,11 @@
-﻿using CommonNetFuncs.Core;
+﻿using System.Data;
+using System.Reflection;
+using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
 using NPOI.SS.UserModel;
 using NPOI.Util;
 using NPOI.XSSF.Streaming;
 using NPOI.XSSF.UserModel;
-using System.Data;
-using System.Reflection;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Excel.Npoi;
@@ -31,7 +31,7 @@ public static class Export
 	/// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
 	/// <param name="createTable">If <see langword="true"/>, will format the exported data into an Excel table.</param>
 	/// <param name="skipColumnNames">List of columns to not include in export</param>
-	/// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
+	/// <returns>MemoryStream containing en excel file with a tabular representation of dataList set to position 0</returns>
 	public static async Task<MemoryStream?> GenericExcelExport<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null, bool createTable = false,
 			string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
 	{
@@ -91,7 +91,7 @@ public static class Export
 	/// <param name="memoryStream">Output memory stream (will be created if one is not provided)</param>
 	/// <param name="createTable">If <see langword="true"/>, will format the exported data into an Excel table.</param>
 	/// <param name="skipColumnNames">List of columns to not include in export</param>
-	/// <returns>MemoryStream containing en excel file with a tabular representation of dataList</returns>
+	/// <returns>MemoryStream containing en excel file with a tabular representation of dataList set to position 0</returns>
 	public static async Task<MemoryStream?> GenericExcelExport(this DataTable datatable, MemoryStream? memoryStream = null, bool createTable = false,
 			string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
 	{

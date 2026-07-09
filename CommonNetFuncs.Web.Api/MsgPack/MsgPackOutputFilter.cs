@@ -9,7 +9,6 @@ namespace CommonNetFuncs.Web.Api.MsgPack;
 /// When the client's <c>Accept</c> header includes <c>application/x-msgpack</c>, the
 /// value is wrapped in a <see cref="DirectMsgPackResult"/> that writes MsgPack directly
 /// to the response stream — no JSON intermediate, no response-body buffer.
-///
 /// <para>
 /// Results that do not carry a body (204, 404 without body, redirects, …) and
 /// problem-detail results (<c>application/problem+json</c>) are passed through

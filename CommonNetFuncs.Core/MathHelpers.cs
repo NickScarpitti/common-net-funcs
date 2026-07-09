@@ -176,39 +176,21 @@ public static class MathHelpers
 	/// <param name="start">Number to start range with (inclusive)</param>
 	/// <param name="end">Number to end range with (inclusive)</param>
 	/// <returns>An IEnumerable containing a continuous range of numbers between start and end parameters (inclusive)</returns>
-	public static IEnumerable<int> GenerateRange(int start, int end)
+	public static IEnumerable<TNumber> GenerateRange<TNumber>(TNumber start, TNumber end) where TNumber : struct, System.Numerics.INumber<TNumber>
 	{
 		if (start > end)
 		{
 			throw new ArgumentException($"Parameter '{nameof(start)}' ({start}) cannot be greater than parameter '{nameof(end)}' ({end})");
 		}
-		return Enumerable.Range(start, end - start + 1);
-	}
 
-	/// <summary>
-	/// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
-	/// </summary>
-	/// <remarks>Both the numerator and denominator are reduced in place to their lowest terms by dividing them by the GCD.</remarks>
-	/// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
-	/// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
-	/// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
-	public static void GreatestCommonDenominator(ref long numerator, ref long denominator, out long greatestCommonDenominator)
-	{
-		// Fast Euclidean algorithm for GCD calculation
-		long a = Math.Abs(numerator);
-		long b = Math.Abs(denominator);
-		while (b != 0)
-		{
-			long temp = b;
-			b = a % b;
-			a = temp;
-		}
+		return GenerateRangeInternal();
 
-		greatestCommonDenominator = a;
-		if (greatestCommonDenominator != 0)
+		IEnumerable<TNumber> GenerateRangeInternal()
 		{
-			numerator /= greatestCommonDenominator;
-			denominator /= greatestCommonDenominator;
+			for (TNumber i = start; i <= end; i++)
+			{
+				yield return i;
+			}
 		}
 	}
 
@@ -219,20 +201,20 @@ public static class MathHelpers
 	/// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
 	/// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
 	/// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
-	public static void GreatestCommonDenominator(ref int numerator, ref int denominator, out int greatestCommonDenominator)
+	public static void GreatestCommonDenominator<T>(ref T numerator, ref T denominator, out T greatestCommonDenominator) where T : System.Numerics.INumber<T>
 	{
 		// Fast Euclidean algorithm for GCD calculation
-		int a = Math.Abs(numerator);
-		int b = Math.Abs(denominator);
-		while (b != 0)
+		T a = T.Abs(numerator);
+		T b = T.Abs(denominator);
+		while (b != T.Zero)
 		{
-			int temp = b;
+			T temp = b;
 			b = a % b;
 			a = temp;
 		}
 
 		greatestCommonDenominator = a;
-		if (greatestCommonDenominator != 0)
+		if (greatestCommonDenominator != T.Zero)
 		{
 			numerator /= greatestCommonDenominator;
 			denominator /= greatestCommonDenominator;
@@ -240,32 +222,13 @@ public static class MathHelpers
 	}
 
 	/// <summary>
-	/// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
+	/// Compares two <see cref="double"/> values for equality within a specified tolerance.
 	/// </summary>
-	/// <remarks>Both the numerator and denominator are reduced in place to their lowest terms by dividing them by the GCD.</remarks>
-	/// <param name="numerator">The numerator of the fraction. This value will be updated to the reduced numerator after the GCD is calculated.</param>
-	/// <param name="denominator">The denominator of the fraction. This value will be updated to the reduced denominator after the GCD is calculated.</param>
-	/// <param name="greatestCommonDenominator">Contains the greatest common denominator of the original numerator and denominator.</param>
-	public static void GreatestCommonDenominator(ref decimal numerator, ref decimal denominator, out decimal greatestCommonDenominator)
-	{
-		// Fast Euclidean algorithm for GCD calculation
-		decimal a = Math.Abs(numerator);
-		decimal b = Math.Abs(denominator);
-		while (b != 0)
-		{
-			decimal temp = b;
-			b = a % b;
-			a = temp;
-		}
-
-		greatestCommonDenominator = a;
-		if (greatestCommonDenominator != 0)
-		{
-			numerator /= greatestCommonDenominator;
-			denominator /= greatestCommonDenominator;
-		}
-	}
-
+	/// <remarks>This method is useful for comparing floating-point numbers, which can have precision issues.</remarks>
+	/// <param name="a">The first double value to compare.</param>
+	/// <param name="b">The second double value to compare.</param>
+	/// <param name="tolerance">The tolerance within which the two values are considered equal.</param>
+	/// <returns>True if the values are equal within the specified tolerance, otherwise, false.</returns>
 	public static bool Equals(this double? a, double? b, decimal tolerance = 0.0001m)
 	{
 		if (a == null && b == null)
@@ -279,11 +242,27 @@ public static class MathHelpers
 		return Math.Abs(a.Value - b.Value) <= (double)tolerance;
 	}
 
+	/// <summary>
+	/// Compares two <see cref="double"/> values for equality within a specified tolerance.
+	/// </summary>
+	/// <remarks>This method is useful for comparing floating-point numbers, which can have precision issues.</remarks>
+	/// <param name="a">The first double value to compare.</param>
+	/// <param name="b">The second double value to compare.</param>
+	/// <param name="tolerance">The tolerance within which the two values are considered not equal.</param>
+	/// <returns>True if the values are not equal within the specified tolerance, otherwise, false.</returns>
 	public static bool Equals(this double a, double b, decimal tolerance = 0.0001m)
 	{
 		return Math.Abs(a - b) <= (double)tolerance;
 	}
 
+	/// <summary>
+	/// Compares two <see cref="double"/> values for inequality within a specified tolerance.
+	/// </summary>
+	/// <remarks>This method is useful for comparing floating-point numbers, which can have precision issues.</remarks>
+	/// <param name="a">The first double value to compare.</param>
+	/// <param name="b">The second double value to compare.</param>
+	/// <param name="tolerance">The tolerance within which the two values are considered not equal.</param>
+	/// <returns>True if the values are not equal within the specified tolerance, otherwise, false.</returns>
 	public static bool NotEquals(this double? a, double? b, decimal tolerance = 0.0001m)
 	{
 		if (a == null && b == null)
@@ -297,8 +276,31 @@ public static class MathHelpers
 		return Math.Abs(a.Value - b.Value) > (double)tolerance;
 	}
 
+	/// <summary>
+	/// Compares two <see cref="double"/> values for inequality within a specified tolerance.
+	/// </summary>
+	/// <remarks>This method is useful for comparing floating-point numbers, which can have precision issues.</remarks>
+	/// <param name="a">The first double value to compare.</param>
+	/// <param name="b">The second double value to compare.</param>
+	/// <param name="tolerance">The tolerance within which the two values are considered not equal.</param>
+	/// <returns>True if the values are not equal within the specified tolerance, otherwise, false.</returns>
 	public static bool NotEquals(this double a, double b, decimal tolerance = 0.0001m)
 	{
 		return Math.Abs(a - b) > (double)tolerance;
+	}
+
+	public static TNumber GetMedian<TNumber>(this IEnumerable<TNumber> numbers) where TNumber : struct, System.Numerics.INumber<TNumber>
+	{
+		if (numbers?.Any() != true)
+		{
+			throw new ArgumentException("Array cannot be null or empty.");
+		}
+
+		TNumber[] sorted = numbers.Order().ToArray();
+
+		int mid = sorted.Length / 2;
+		return sorted.Length % 2 != 0
+				? sorted[mid]
+				: (sorted[mid - 1] + sorted[mid]) / TNumber.CreateChecked(2);
 	}
 }

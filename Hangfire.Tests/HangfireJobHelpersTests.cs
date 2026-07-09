@@ -11,7 +11,7 @@ using Hangfire.Storage.Monitoring;
 namespace Hangfire.Tests;
 
 [CollectionDefinition("HangfireStaticStorage", DisableParallelization = true)]
-public sealed class HangfireStaticStorageCollection { }
+public sealed class HangfireStaticStorageCollection;
 
 // Helper interface used to create Hangfire Job objects for testing
 public interface ITestJobService
@@ -470,7 +470,7 @@ public sealed class HangfireJobHelpersTests
 	public void FindAndCancelJobs_Generic_WhenEnqueuedJobMatchesExpression_CallsMonitoringApi()
 	{
 		// Arrange
-		var (_, monitoringApi, _) = SetupFakeStorage();
+		(JobStorage _, IMonitoringApi? monitoringApi, IStorageConnection _) = SetupFakeStorage();
 		int id = fixture.Create<int>();
 		string name = fixture.Create<string>();
 
@@ -503,7 +503,7 @@ public sealed class HangfireJobHelpersTests
 	public void FindAndCancelJobs_CallsEnqueuedJobsWithCorrectQueueName()
 	{
 		// Arrange
-		var (_, monitoringApi, _) = SetupFakeStorage();
+		(JobStorage _, IMonitoringApi? monitoringApi, IStorageConnection _) = SetupFakeStorage();
 		string queueName = fixture.Create<string>();
 
 		// Act
@@ -518,7 +518,7 @@ public sealed class HangfireJobHelpersTests
 	public void FindAndCancelJobs_CallsProcessingAndScheduledJobsWithFullRange()
 	{
 		// Arrange
-		var (_, monitoringApi, _) = SetupFakeStorage();
+		(JobStorage _, IMonitoringApi? monitoringApi, IStorageConnection _) = SetupFakeStorage();
 
 		// Act
 		"my-queue".FindAndCancelJobs("RunJob", new Dictionary<string, string>());
@@ -532,7 +532,7 @@ public sealed class HangfireJobHelpersTests
 	public void FindAndCancelJobs_CallsAllThreeMonitoringApiEndpoints()
 	{
 		// Arrange
-		var (_, monitoringApi, _) = SetupFakeStorage();
+		(JobStorage _, IMonitoringApi? monitoringApi, IStorageConnection _) = SetupFakeStorage();
 
 		// Act
 		"my-queue".FindAndCancelJobs("RunJob", new Dictionary<string, string>());
@@ -727,7 +727,7 @@ public sealed class HangfireJobHelpersTests
 			new KeyValuePair<string, EnqueuedJobDto>("job-1",
 				new EnqueuedJobDto { Job = job, State = "Enqueued" })
 		]);
-		var (_, monitoringApi, _) = SetupFakeStorage(enqueuedJobs: enqueuedJobs);
+		(JobStorage _, IMonitoringApi? monitoringApi, IStorageConnection _) = SetupFakeStorage(enqueuedJobs: enqueuedJobs);
 
 		// Act
 		List<string> result = "my-queue".FindAndCancelJobs(nameof(ITestJobService.RunJob), new Dictionary<string, string>());
@@ -758,7 +758,7 @@ public sealed class HangfireJobHelpersTests
 			new KeyValuePair<string, ScheduledJobDto>("job-s",
 				new ScheduledJobDto { Job = scheduledJob, EnqueueAt = DateTime.UtcNow.AddMinutes(1) })
 		]);
-		var (storage, _, _) = SetupFakeStorage(processingJobs: processingJobs, scheduledJobs: scheduledJobs, connectionJobQueue: "my-queue");
+		(JobStorage? storage, IMonitoringApi _, IStorageConnection _) = SetupFakeStorage(processingJobs: processingJobs, scheduledJobs: scheduledJobs, connectionJobQueue: "my-queue");
 
 		// Act
 		"my-queue".FindAndCancelJobs("RunJob", new Dictionary<string, string>());

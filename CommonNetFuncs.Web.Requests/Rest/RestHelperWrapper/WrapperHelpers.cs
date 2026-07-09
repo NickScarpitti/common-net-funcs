@@ -2,7 +2,6 @@
 using System.Net;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Requests.Rest.Options;
-using NLog;
 using static System.Net.HttpStatusCode;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Random;
@@ -13,7 +12,6 @@ namespace CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 
 internal static class WrapperHelpers
 {
-	private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 	private static readonly ImmutableDictionary<string, string> MemPackHeadersWithGzip = ImmutableDictionary.CreateRange([MemPackContentHeader, MemPackAcceptHeader, GzipEncodingHeader]);
 	private static readonly ImmutableDictionary<string, string> MemPackHeadersWithBrotli = ImmutableDictionary.CreateRange([MemPackContentHeader, MemPackAcceptHeader, BrotliEncodingHeader]);
 
@@ -243,7 +241,8 @@ internal static class WrapperHelpers
 		};
 	}
 
-	internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, Uri? baseAddress, IDictionary<string, string> headers, HttpMethod httpMethod, string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)
+	internal static RequestOptions<T> GetRequestOptions<T>(RestHelperOptions options, Uri? baseAddress, IDictionary<string, string> headers, HttpMethod httpMethod,
+		string? bearerToken, T? postObject = default, HttpContent? patchDocument = null)
 	{
 		RequestOptions<T> baseRequestOptions = new()
 		{
@@ -259,7 +258,7 @@ internal static class WrapperHelpers
 			ExpectTaskCancellation = options.ResilienceOptions?.RunOnce ?? false,
 			LogQuery = options.LogQuery,
 			LogBody = options.LogBody,
-			MsgPackOptions = options.MsgPackOptions
+			MessagePackSerializerOptions = options.MessagePackSerializerOptions
 		};
 
 		if (httpMethod == HttpMethod.Post || httpMethod == HttpMethod.Put)

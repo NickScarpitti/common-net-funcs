@@ -52,7 +52,7 @@ public static class RunBatches
 			bool logProgress = true, CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(listProcessor);
-		// Adapt the List processor to work with IEnumerable - batch from GetRange is always List<T>
+		// Adapt the List processor to work with IEnumerable - batch from GetRange is always List<TNumber>
 		return RunBatchedProcessAsync(itemsToProcess, async batch => await listProcessor((List<T>)batch).ConfigureAwait(false), batchSize, breakOnFail, logProgress, cancellationToken);
 	}
 
@@ -99,7 +99,7 @@ public static class RunBatches
 			CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(listProcessor);
-		// Adapt the List processor to work with IEnumerable - batch from GetRange is always List<T>
+		// Adapt the List processor to work with IEnumerable - batch from GetRange is always List<TNumber>
 		return RunBatchedProcess(itemsToProcess, batch => listProcessor((List<T>)batch), batchSize, breakOnFail, logProgress, cancellationToken);
 	}
 }

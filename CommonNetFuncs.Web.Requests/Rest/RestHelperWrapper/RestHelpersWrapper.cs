@@ -1,21 +1,51 @@
-﻿using CommonNetFuncs.Web.Requests.Rest.Options;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
+using CommonNetFuncs.Web.Requests.Rest.Options;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.ObjectPool;
 using NLog;
-using System.Runtime.CompilerServices;
-using System.Text;
 using static CommonNetFuncs.Web.Common.ContentTypes;
 using static CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper.WrapperHelpers;
 using static Newtonsoft.Json.JsonConvert;
 
 namespace CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 
-public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
+public sealed class RestHelpersWrapper
 {
-	//private readonly ILogger<RestHelpersWrapper> logger = logger;
+
+	public RestHelpersWrapper(IRestClientFactory restClientFactory)
+	{
+		this.restClientFactory = restClientFactory;
+	}
+
+	public RestHelpersWrapper(IRestClientFactory restClientFactory, RestHelperOptionsDefaultConfig defaultOptions)
+	{
+		this.restClientFactory = restClientFactory;
+		this.defaultOptions = defaultOptions;
+	}
+
+	private readonly IRestClientFactory restClientFactory;
+	private readonly RestHelperOptionsDefaultConfig? defaultOptions;
+
 	private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
 	private static readonly ObjectPool<Dictionary<string, string>> headerPool = new DefaultObjectPool<Dictionary<string, string>>(new DefaultPooledObjectPolicy<Dictionary<string, string>>());
+
+	private void FillDefaultOptions(RestHelperOptions options)
+	{
+		if (defaultOptions == null)
+		{
+			return;
+		}
+
+		options.ResilienceOptions ??= new();
+		options.ResilienceOptions.GetBearerTokenFunc ??= defaultOptions.ResilienceOptions?.GetBearerTokenFunc;
+		options.UseBearerToken = defaultOptions.UseBearerToken ?? options.UseBearerToken;
+
+		options.JsonSerializerOptions ??= defaultOptions.JsonSerializerOptions;
+		options.MessagePackSerializerOptions ??= defaultOptions.MessagePackSerializerOptions;
+		options.CompressionOptions ??= defaultOptions.CompressionOptions;
+	}
 
 	#region GET Methods
 
@@ -32,6 +62,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 
+		FillDefaultOptions(options);
 		HttpResponseMessage? lastResponse = null;
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
@@ -95,6 +126,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <returns>The deserialized response object, or <see cref="null"/> if the request failed.</returns>
 	public async IAsyncEnumerable<TResponse?> GetStreaming<TResponse>(RestHelperOptions options, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
+		FillDefaultOptions(options);
 		UpdateStreamingHeaders(options); // Ensure application/json is used for streaming
 
 		StreamingRestObject<TResponse>? result = null;
@@ -183,6 +215,8 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
+
+		FillDefaultOptions(options);
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
@@ -246,6 +280,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <returns>An asynchronous stream of the response objects.</returns>
 	public async IAsyncEnumerable<TBody?> PostRequestStreaming<TBody>(RestHelperOptions options, TBody postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
+		FillDefaultOptions(options);
 		UpdateStreamingHeaders(options); // Ensure application/json is used for streaming
 
 		StreamingRestObject<TBody>? result = null;
@@ -330,6 +365,8 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
+
+		FillDefaultOptions(options);
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
@@ -394,6 +431,7 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 	/// <returns>An asynchronous stream of the response objects.</returns>
 	public async IAsyncEnumerable<TResponse?> GenericPostRequestStreaming<TResponse, TBody>(RestHelperOptions options, TBody postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
+		FillDefaultOptions(options);
 		UpdateStreamingHeaders(options); // Ensure application/json is used for streaming
 
 		StreamingRestObject<TResponse>? result = null;
@@ -477,6 +515,8 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
+
+		FillDefaultOptions(options);
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
@@ -557,6 +597,8 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
+
+		FillDefaultOptions(options);
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
@@ -625,6 +667,8 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
+
+		FillDefaultOptions(options);
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
@@ -690,6 +734,8 @@ public sealed class RestHelpersWrapper(IRestClientFactory restClientFactory)
 		int attempts = 0;
 		string? bearerToken = null;
 		HttpResponseMessage? lastResponse = null;
+
+		FillDefaultOptions(options);
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 

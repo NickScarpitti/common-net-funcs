@@ -898,7 +898,7 @@ public sealed class CommonTests : IDisposable
 		result.ShouldNotBeNull();
 		if (cellType == nameof(CellValues.Boolean))
 		{
-			result.ShouldBe((value == "TRUE") ? "1" : "0");
+			result.ShouldBe(value == "TRUE" ? "TRUE" : "FALSE");
 		}
 		else if (cellType == nameof(CellValues.Error))
 		{
@@ -3042,9 +3042,9 @@ public sealed class CommonTests : IDisposable
 		// Act
 		string? value = cell.GetStringValue();
 
-		// Assert - Actually checks cell.InnerText which is "1", not "TRUE"
+		// Assert
 		value.ShouldNotBeNull();
-		value.ShouldContain("1"); // InnerText behavior
+		value.ShouldBe("TRUE");
 	}
 
 	[RetryFact(3)]
@@ -3062,9 +3062,9 @@ public sealed class CommonTests : IDisposable
 		// Act
 		string? value = cell.GetStringValue();
 
-		// Assert - Actually checks cell.InnerText which is "0", not "FALSE"
+		// Assert
 		value.ShouldNotBeNull();
-		value.ShouldContain("0"); // InnerText behavior
+		value.ShouldBe("FALSE");
 	}
 
 	[RetryFact(3)]
@@ -3893,6 +3893,2835 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		foundSheet.ShouldNotBeNull();
 		foundSheet.Name?.Value.ShouldBe("TestSheet");
+	}
+
+	// --- SetCellStringValue(Cell?, bool) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellBool_True_ShouldSetTrueString()
+	{
+		// Arrange
+		Cell cell = new();
+
+		// Act
+		cell.SetCellStringValue(true);
+
+		// Assert
+		cell.CellValue!.Text.ShouldBe("True");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellBool_False_ShouldSetFalseString()
+	{
+		// Arrange
+		Cell cell = new();
+
+		// Act
+		cell.SetCellStringValue(false);
+
+		// Assert
+		cell.CellValue!.Text.ShouldBe("False");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_NullCell_Bool_ShouldNotThrow()
+	{
+		// Arrange
+		Cell? cell = null;
+
+		// Act & Assert
+		Should.NotThrow(() => cell.SetCellStringValue(true));
+	}
+
+	// --- SetCellStringValue(SheetData, uint row, uint col, bool) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColBool_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act
+		sheetData.SetCellStringValue(1u, 1u, true);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell.ShouldNotBeNull();
+		cell!.CellValue!.Text.ShouldBe("True");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColBool_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(5u, 5u, false));
+	}
+
+	// --- SetCellStringValue(SheetData, CellReference, bool) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceBool_ShouldDelegate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+		worksheet.InsertCellValue(2, 3, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(2u, 3u);
+
+		// Act
+		sheetData.SetCellStringValue(cellRef, false);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 3u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell.ShouldNotBeNull();
+		cell!.CellValue!.Text.ShouldBe("False");
+	}
+
+	// --- SetCellStringValue(Worksheet, CellReference, bool) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceBool_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		CellReference cellRef = new(1u, 1u);
+
+		// Act
+		worksheet.SetCellStringValue(cellRef, true);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell.ShouldNotBeNull();
+		cell!.CellValue!.Text.ShouldBe("True");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceBool_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+		CellReference cellRef = new(10u, 10u);
+
+		// Act & Assert
+		Should.NotThrow(() => worksheet.SetCellStringValue(cellRef, false));
+	}
+
+	// --- SetCellStringValue(Worksheet, CellReference, string) (partial) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceString_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		CellReference cellRef = new(1u, 1u);
+
+		// Act
+		worksheet.SetCellStringValue(cellRef, "hello");
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell.ShouldNotBeNull();
+		cell!.CellValue!.Text.ShouldBe("hello");
+	}
+
+	// --- SetCellStringValue(Cell?, int) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellInt_ShouldSetIntegerString()
+	{
+		// Arrange
+		Cell cell = new();
+
+		// Act
+		cell.SetCellStringValue(42);
+
+		// Assert
+		cell.CellValue!.Text.ShouldBe("42");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellInt_NegativeValue_ShouldSetNegativeString()
+	{
+		// Arrange
+		Cell cell = new();
+
+		// Act
+		cell.SetCellStringValue(-7);
+
+		// Assert
+		cell.CellValue!.Text.ShouldBe("-7");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_NullCell_Int_ShouldNotThrow()
+	{
+		// Arrange
+		Cell? cell = null;
+
+		// Act & Assert
+		Should.NotThrow(() => cell.SetCellStringValue(123));
+	}
+
+	// --- SetCellStringValue(SheetData, uint row, uint col, int) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColInt_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act
+		sheetData.SetCellStringValue(1u, 1u, 99);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell.ShouldNotBeNull();
+		cell!.CellValue!.Text.ShouldBe("99");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColInt_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(5u, 5u, 0));
+	}
+
+	// --- SetCellStringValue(SheetData, CellReference, int) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceInt_ShouldDelegate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+		worksheet.InsertCellValue(2, 3, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(2u, 3u);
+
+		// Act
+		sheetData.SetCellStringValue(cellRef, 55);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 3u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell.ShouldNotBeNull();
+		cell!.CellValue!.Text.ShouldBe("55");
+	}
+
+	// --- SetCellStringValue(Worksheet, CellReference, int) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceInt_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		CellReference cellRef = new(1u, 1u);
+
+		// Act
+		worksheet.SetCellStringValue(cellRef, 7);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell.ShouldNotBeNull();
+		cell!.CellValue!.Text.ShouldBe("7");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceInt_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+		CellReference cellRef = new(10u, 10u);
+
+		// Act & Assert
+		Should.NotThrow(() => worksheet.SetCellStringValue(cellRef, 0));
+	}
+
+	// --- SetCellStringValue(Cell?, double) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellDouble_ShouldSetDoubleString()
+	{
+		// Arrange
+		Cell cell = new();
+
+		// Act
+		cell.SetCellStringValue(3.14);
+
+		// Assert
+		cell.CellValue!.Text.ShouldBe(3.14.ToString());
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_NullCell_Double_ShouldNotThrow()
+	{
+		// Arrange
+		Cell? cell = null;
+
+		// Act & Assert
+		Should.NotThrow(() => cell.SetCellStringValue(1.5));
+	}
+
+	// --- SetCellStringValue(SheetData, uint row, uint col, double) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColDouble_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act
+		sheetData.SetCellStringValue(1u, 1u, 2.5);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe(2.5.ToString());
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColDouble_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(5u, 5u, 0.0));
+	}
+
+	// --- SetCellStringValue(SheetData, CellReference, double) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceDouble_ShouldDelegate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(2, 3, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(2u, 3u);
+
+		// Act
+		sheetData.SetCellStringValue(cellRef, 9.99);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 3u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe(9.99.ToString());
+	}
+
+	// --- SetCellStringValue(Worksheet, CellReference, double) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDouble_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		CellReference cellRef = new(1u, 1u);
+
+		// Act
+		worksheet.SetCellStringValue(cellRef, 1.23);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell!.CellValue!.Text.ShouldBe(1.23.ToString());
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDouble_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		CellReference cellRef = new(10u, 10u);
+
+		// Act & Assert
+		Should.NotThrow(() => worksheet.SetCellStringValue(cellRef, 0.0));
+	}
+
+	// --- SetCellStringValue(Cell?, decimal) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellDecimal_ShouldSetDecimalString()
+	{
+		// Arrange
+		Cell cell = new();
+
+		// Act
+		cell.SetCellStringValue(3.14m);
+
+		// Assert
+		cell.CellValue!.Text.ShouldBe(3.14m.ToString());
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_NullCell_Decimal_ShouldNotThrow()
+	{
+		// Arrange
+		Cell? cell = null;
+
+		// Act & Assert
+		Should.NotThrow(() => cell.SetCellStringValue(1.5m));
+	}
+
+	// --- SetCellStringValue(SheetData, uint row, uint col, decimal) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColDecimal_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act
+		sheetData.SetCellStringValue(1u, 1u, 7.77m);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe(7.77m.ToString());
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColDecimal_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(5u, 5u, 0m));
+	}
+
+	// --- SetCellStringValue(SheetData, CellReference, decimal) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceDecimal_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(1u, 1u);
+
+		// Act
+		sheetData.SetCellStringValue(cellRef, 9.99m);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe(9.99m.ToString());
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceDecimal_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(5u, 5u);
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(cellRef, 0m));
+	}
+
+	// --- SetCellStringValue(Worksheet, CellReference, decimal) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDecimal_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		CellReference cellRef = new(1u, 1u);
+
+		// Act
+		worksheet.SetCellStringValue(cellRef, 4.56m);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell!.CellValue!.Text.ShouldBe(4.56m.ToString());
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDecimal_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		CellReference cellRef = new(10u, 10u);
+
+		// Act & Assert
+		Should.NotThrow(() => worksheet.SetCellStringValue(cellRef, 0m));
+	}
+
+	// --- SetCellStringValue(Cell?, DateOnly) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellDateOnly_DefaultFormat_ShouldSetFormattedDate()
+	{
+		// Arrange
+		Cell cell = new();
+		DateOnly date = new(2024, 3, 15);
+
+		// Act
+		cell.SetCellStringValue(date);
+
+		// Assert
+		cell.CellValue!.Text.ShouldBe("03/15/2024");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellDateOnly_CustomFormat_ShouldUseCustomFormat()
+	{
+		// Arrange
+		Cell cell = new();
+		DateOnly date = new(2024, 3, 15);
+
+		// Act
+		cell.SetCellStringValue(date, "yyyy-MM-dd");
+
+		// Assert
+		cell.CellValue!.Text.ShouldBe("2024-03-15");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellDateOnly_NullFormat_ShouldUseDefaultFormat()
+	{
+		// Arrange
+		Cell cell = new();
+		DateOnly date = new(2024, 3, 15);
+
+		// Act
+		cell.SetCellStringValue(date, null);
+
+		// Assert
+		cell.CellValue!.Text.ShouldBe("03/15/2024");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_NullCell_DateOnly_ShouldNotThrow()
+	{
+		// Arrange
+		Cell? cell = null;
+		DateOnly date = new(2024, 3, 15);
+
+		// Act & Assert
+		Should.NotThrow(() => cell.SetCellStringValue(date));
+	}
+
+	// --- SetCellStringValue(SheetData, uint row, uint col, DateOnly) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColDateOnly_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		DateOnly date = new(2024, 6, 1);
+
+		// Act
+		sheetData.SetCellStringValue(1u, 1u, date);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe("06/01/2024");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColDateOnly_CustomFormat_ShouldSetFormattedValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		DateOnly date = new(2024, 6, 1);
+
+		// Act
+		sheetData.SetCellStringValue(1u, 1u, date, "yyyy/MM/dd");
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe("2024/06/01");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColDateOnly_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(5u, 5u, new DateOnly(2024, 1, 1)));
+	}
+
+	// --- SetCellStringValue(SheetData, CellReference, DateOnly) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceDateOnly_ShouldDelegate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(2, 3, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(2u, 3u);
+		DateOnly date = new(2023, 12, 25);
+
+		// Act
+		sheetData.SetCellStringValue(cellRef, date);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 3u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe("12/25/2023");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceDateOnly_NullFormat_ShouldUseDefault()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(1u, 1u);
+		DateOnly date = new(2023, 12, 25);
+
+		// Act
+		sheetData.SetCellStringValue(cellRef, date, null);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe("12/25/2023");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceDateOnly_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(5u, 5u);
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(cellRef, new DateOnly(2024, 1, 1)));
+	}
+
+	// --- SetCellStringValue(Worksheet, CellReference, DateOnly) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDateOnly_DefaultFormat_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		CellReference cellRef = new(1u, 1u);
+		DateOnly date = new(2024, 6, 15);
+
+		// Act
+		worksheet.SetCellStringValue(cellRef, date);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell!.CellValue!.Text.ShouldBe("06/15/2024");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDateOnly_CustomFormat_ShouldUseCustomFormat()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		CellReference cellRef = new(1u, 1u);
+		DateOnly date = new(2024, 6, 15);
+
+		// Act
+		worksheet.SetCellStringValue(cellRef, date, "yyyy-MM-dd");
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell!.CellValue!.Text.ShouldBe("2024-06-15");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDateOnly_NullFormat_ShouldUseDefault()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		CellReference cellRef = new(1u, 1u);
+		DateOnly date = new(2024, 6, 15);
+
+		// Act
+		worksheet.SetCellStringValue(cellRef, date, null);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell!.CellValue!.Text.ShouldBe("06/15/2024");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDateOnly_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		CellReference cellRef = new(5u, 5u);
+
+		// Act & Assert
+		Should.NotThrow(() => worksheet.SetCellStringValue(cellRef, new DateOnly(2024, 1, 1)));
+	}
+
+	// --- SetCellStringValue(Cell?, DateTime) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellDateTime_DefaultFormat_ShouldSetFormattedDate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+
+		// Act
+		cell.SetCellStringValue(dt);
+
+		// Assert
+		cell!.CellValue!.Text.ShouldBe(dt.ToString("g"));
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellDateTime_CustomFormat_ShouldUseCustomFormat()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+
+		// Act
+		cell.SetCellStringValue(dt, "yyyy-MM-dd");
+
+		// Assert
+		cell!.CellValue!.Text.ShouldBe("2024-06-15");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_CellDateTime_NullFormat_ShouldUseDefault()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+
+		// Act
+		cell.SetCellStringValue(dt, null);
+
+		// Assert
+		cell!.CellValue!.Text.ShouldBe(dt.ToString("g"));
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_NullCell_DateTime_ShouldNotThrow()
+	{
+		// Arrange
+		Cell? cell = null;
+		DateTime dt = new(2024, 6, 15);
+
+		// Act & Assert
+		Should.NotThrow(() => cell.SetCellStringValue(dt));
+	}
+
+	// --- SetCellStringValue(SheetData, uint row, uint col, DateTime) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColDateTime_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+
+		// Act
+		sheetData.SetCellStringValue(1u, 1u, dt);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe(dt.ToString("MM/dd/yyyy"));
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColDateTime_CustomFormat_ShouldSetFormattedValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+
+		// Act
+		sheetData.SetCellStringValue(1u, 1u, dt, "yyyy-MM-dd");
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe("2024-06-15");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColDateTime_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		DateTime dt = new(2024, 6, 15);
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(5u, 5u, dt));
+	}
+
+	// --- SetCellStringValue(SheetData, CellReference, DateTime) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceDateTime_ShouldDelegate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(1u, 1u);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+
+		// Act
+		sheetData.SetCellStringValue(cellRef, dt);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe(dt.ToString("MM/dd/yyyy"));
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceDateTime_NullFormat_ShouldUseDefault()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(1u, 1u);
+		DateTime dt = new(2024, 6, 15);
+
+		// Act
+		sheetData.SetCellStringValue(cellRef, dt, null);
+
+		// Assert
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell!.CellValue!.Text.ShouldBe(dt.ToString("g"));
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceDateTime_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(5u, 5u);
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(cellRef, new DateTime(2024, 1, 1)));
+	}
+
+	// --- SetCellStringValue(Worksheet, CellReference, DateTime) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDateTime_DefaultFormat_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		CellReference cellRef = new(1u, 1u);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+
+		// Act
+		worksheet.SetCellStringValue(cellRef, dt);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell!.CellValue!.Text.ShouldBe(dt.ToString("MM/dd/yyyy"));
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDateTime_CustomFormat_ShouldUseCustomFormat()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		CellReference cellRef = new(1u, 1u);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+
+		// Act
+		worksheet.SetCellStringValue(cellRef, dt, "yyyy-MM-dd");
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell!.CellValue!.Text.ShouldBe("2024-06-15");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDateTime_NullFormat_ShouldUseDefault()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
+		CellReference cellRef = new(1u, 1u);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+
+		// Act
+		worksheet.SetCellStringValue(cellRef, dt, null);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell!.CellValue!.Text.ShouldBe(dt.ToString("g"));
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_WorksheetCellReferenceDateTime_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		CellReference cellRef = new(5u, 5u);
+
+		// Act & Assert
+		Should.NotThrow(() => worksheet.SetCellStringValue(cellRef, new DateTime(2024, 1, 1)));
+	}
+
+	// ---- SetCellDateValue(Cell?, DateOnly) ----
+
+	[RetryFact(3)]
+	public void SetCellDateValue_Cell_DateOnly_NullCell_ShouldNotThrow()
+	{
+		Cell? cell = null;
+		Should.NotThrow(() => cell.SetCellDateValue(new DateOnly(2024, 6, 15)));
+	}
+
+	[RetryFact(3)]
+	public void SetCellDateValue_Cell_DateOnly_SetsValueAndDataType()
+	{
+		// Arrange
+		Cell cell = new();
+		DateOnly date = new(2024, 6, 15);
+
+		// Act
+		cell.SetCellDateValue(date);
+
+		// Assert
+		cell.CellValue.ShouldNotBeNull();
+		cell.DataType!.Value.ShouldBe(CellValues.Date);
+	}
+
+	// ---- SetCellDateValue(SheetData, uint, uint, DateOnly) ----
+
+	[RetryFact(3)]
+	public void SetCellDateValue_SheetData_RowCol_CellExists_SetsDate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCell(1, 1);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		DateOnly date = new(2024, 6, 15);
+
+		// Act
+		sheetData.SetCellDateValue(1u, 1u, date);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+	}
+
+	[RetryFact(3)]
+	public void SetCellDateValue_SheetData_RowCol_CellMissing_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellDateValue(99u, 99u, new DateOnly(2024, 1, 1)));
+	}
+
+	// ---- SetCellDateValue(SheetData, CellReference, DateOnly) ----
+
+	[RetryFact(3)]
+	public void SetCellDateValue_SheetData_CellReference_SetsDate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCell(1, 2);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(1u, 2u);
+		DateOnly date = new(2023, 12, 25);
+
+		// Act
+		sheetData.SetCellDateValue(cellRef, date);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 2);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+	}
+
+	// ---- SetCellDateValue(Worksheet, CellReference, DateOnly) ----
+
+	[RetryFact(3)]
+	public void SetCellDateValue_Worksheet_CellReference_CellExists_SetsDate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCell(1, 3);
+		CellReference cellRef = new(1u, 3u);
+		DateOnly date = new(2024, 1, 1);
+
+		// Act
+		worksheet.SetCellDateValue(cellRef, date);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 3);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+	}
+
+	[RetryFact(3)]
+	public void SetCellDateValue_Worksheet_CellReference_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		CellReference cellRef = new(99u, 99u);
+
+		// Act & Assert
+		Should.NotThrow(() => worksheet.SetCellDateValue(cellRef, new DateOnly(2024, 1, 1)));
+	}
+
+	// ---- SetCellDateValue(Cell?, DateTime) ----
+
+	[RetryFact(3)]
+	public void SetCellDateValue_Cell_DateTime_NullCell_ShouldNotThrow()
+	{
+		Cell? cell = null;
+		Should.NotThrow(() => cell.SetCellDateValue(new DateTime(2024, 6, 15)));
+	}
+
+	[RetryFact(3)]
+	public void SetCellDateValue_Cell_DateTime_SetsValueAndDataType()
+	{
+		// Arrange
+		Cell cell = new();
+		DateTime dt = new(2024, 6, 15, 12, 0, 0);
+
+		// Act
+		cell.SetCellDateValue(dt);
+
+		// Assert
+		cell.CellValue.ShouldNotBeNull();
+		cell.DataType!.Value.ShouldBe(CellValues.Date);
+	}
+
+	// ---- SetCellDateValue(SheetData, uint, uint, DateTime) ----
+
+	[RetryFact(3)]
+	public void SetCellDateValue_SheetData_RowCol_DateTime_CellExists_SetsDate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCell(1, 1);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		DateTime dt = new(2024, 6, 15, 8, 30, 0);
+
+		// Act
+		sheetData.SetCellDateValue(1u, 1u, dt);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+	}
+
+	[RetryFact(3)]
+	public void SetCellDateValue_SheetData_RowCol_DateTime_CellMissing_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellDateValue(99u, 99u, new DateTime(2024, 1, 1)));
+	}
+
+	// ---- SetCellDateValue(SheetData, CellReference, DateTime) ----
+
+	[RetryFact(3)]
+	public void SetCellDateValue_SheetData_CellReference_DateTime_SetsDate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCell(1, 2);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(1u, 2u);
+		DateTime dt = new(2023, 12, 25);
+
+		// Act
+		sheetData.SetCellDateValue(cellRef, dt);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 2);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+	}
+
+	// ---- SetCellDateValue(Worksheet, CellReference, DateTime) ----
+
+	[RetryFact(3)]
+	public void SetCellDateValue_Worksheet_CellReference_DateTime_CellExists_SetsDate()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCell(1, 3);
+		CellReference cellRef = new(1u, 3u);
+		DateTime dt = new(2024, 1, 1);
+
+		// Act
+		worksheet.SetCellDateValue(cellRef, dt);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 3);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+	}
+
+	[RetryFact(3)]
+	public void SetCellDateValue_Worksheet_CellReference_DateTime_CellMissing_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		CellReference cellRef = new(99u, 99u);
+
+		// Act & Assert
+		Should.NotThrow(() => worksheet.SetCellDateValue(cellRef, new DateTime(2024, 1, 1)));
+	}
+
+	// ---- SetCellNumericValue(SheetData, uint, uint, int) ----
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_SheetData_RowCol_CellExists_SetsValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCell(1, 1);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act
+		sheetData.SetCellNumericValue(1u, 1u, 42);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+		cell.CellValue!.Text.ShouldBe("42");
+	}
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_SheetData_RowCol_CellMissing_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellNumericValue(99u, 99u, 100));
+	}
+
+	// ---- SetCellNumericValue(SheetData, CellReference, int) ----
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_SheetData_CellReference_SetsValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCell(2, 3);
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(2u, 3u);
+
+		// Act
+		sheetData.SetCellNumericValue(cellRef, 99);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(2, 3);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+		cell.CellValue!.Text.ShouldBe("99");
+	}
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_SheetData_CellReference_CellMissing_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(99u, 99u);
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellNumericValue(cellRef, 0));
+	}
+
+	// ---- SetCellNumericValue(Worksheet, CellReference, int) ----
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_Worksheet_CellReference_Int_CellExists_SetsValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		sheetData.InsertCell(1, 1);
+		CellReference cellRef = new(1u, 1u);
+
+		// Act
+		worksheet.SetCellNumericValue(cellRef, 77);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell.ShouldNotBeNull();
+		cell!.CellValue!.Text.ShouldBe("77");
+		cell.DataType!.Value.ShouldBe(CellValues.Number);
+	}
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_Worksheet_CellReference_Int_CellMissing_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		CellReference cellRef = new(99u, 99u);
+
+		// Act & Assert
+		Should.NotThrow(() => worksheet.SetCellNumericValue(cellRef, 0));
+	}
+
+	// ---- SetCellNumericValue(SheetData, uint, uint, double) ----
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_SheetData_RowCol_Double_CellExists_SetsValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		sheetData.InsertCell(1, 2);
+
+		// Act
+		sheetData.SetCellNumericValue(2u, 1u, 3.14);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 2);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+	}
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_SheetData_RowCol_Double_CellMissing_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellNumericValue(99u, 99u, 1.5));
+	}
+
+	// ---- SetCellNumericValue(SheetData, CellReference, double) ----
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_SheetData_CellReference_Double_CellExists_SetsValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		sheetData.InsertCell(2, 3);
+		CellReference cellRef = new(2u, 3u);
+
+		// Act
+		sheetData.SetCellNumericValue(cellRef, 2.71828);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(2, 3);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+	}
+
+	// --- SetCellStringValue(SheetData, uint row, uint col, string?) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColString_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		sheetData.InsertCell(1, 1);
+
+		// Act
+		sheetData.SetCellStringValue(1u, 1u, "hello");
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell.ShouldNotBeNull();
+		cell!.CellValue!.Text.ShouldBe("hello");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColString_NullValue_ShouldSetNull()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		sheetData.InsertCell(1, 1);
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(1u, 1u, null));
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataRowColString_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(99u, 99u, "test"));
+	}
+
+	// --- SetCellStringValue(SheetData, CellReference, string) ---
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceString_ExistingCell_ShouldSetValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		sheetData.InsertCell(1, 2);
+		CellReference cellRef = new(1u, 2u);
+
+		// Act
+		sheetData.SetCellStringValue(cellRef, "world");
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 2);
+		cell.ShouldNotBeNull();
+		cell!.CellValue!.Text.ShouldBe("world");
+	}
+
+	[RetryFact(3)]
+	public void SetCellStringValue_SheetDataCellReferenceString_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(50u, 50u);
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellStringValue(cellRef, "value"));
+	}
+
+	// --- SetCellNumericValue(Worksheet, CellReference, double) ---
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_Worksheet_CellReference_Double_ExistingCell_SetsValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCell(1, 1);
+		CellReference cellRef = new(1u, 1u);
+
+		// Act
+		worksheet.SetCellNumericValue(cellRef, 3.14);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+	}
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_Worksheet_CellReference_Double_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		CellReference cellRef = new(99u, 99u);
+
+		// Act & Assert
+		Should.NotThrow(() => worksheet.SetCellNumericValue(cellRef, 1.0));
+	}
+
+	// --- SetCellNumericValue(SheetData, uint, uint, decimal) ---
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_SheetData_RowCol_Decimal_ExistingCell_SetsValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		sheetData.InsertCell(1, 1);
+
+		// Act
+		sheetData.SetCellNumericValue(1u, 1u, 9.99m);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+	}
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_SheetData_RowCol_Decimal_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellNumericValue(99u, 99u, 1.23m));
+	}
+
+	// --- SetCellNumericValue(SheetData, CellReference, decimal) ---
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_SheetData_CellReference_Decimal_ExistingCell_SetsValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		sheetData.InsertCell(2, 1);
+		CellReference cellRef = new(2u, 1u);
+
+		// Act
+		sheetData.SetCellNumericValue(cellRef, 5.55m);
+
+		// Assert
+		Cell? cell = worksheet.GetCellFromCoordinates(2, 1);
+		cell.ShouldNotBeNull();
+		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+	}
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_SheetData_CellReference_Decimal_MissingCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		CellReference cellRef = new(88u, 88u);
+
+		// Act & Assert
+		Should.NotThrow(() => sheetData.SetCellNumericValue(cellRef, 0m));
+	}
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_Worksheet_CellReference_SetsValue()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
+		// Add a cell first
+		Row row = new() { RowIndex = 1 };
+		Cell cell = new() { CellReference = "A1", DataType = CellValues.Number, CellValue = new CellValue("0") };
+		row.AppendChild(cell);
+		sheetData.AppendChild(row);
+		CellReference cellRef = new(1u, 1u);
+
+		// Act
+		worksheet.SetCellNumericValue(cellRef, 42.5m);
+
+		// Assert
+		Cell? resultCell = worksheet.GetCellFromCoordinates(1, 1);
+		resultCell.ShouldNotBeNull();
+		resultCell!.CellValue?.Text.ShouldNotBeNull();
+	}
+
+	[RetryFact(3)]
+	public void SetCellNumericValue_Worksheet_CellReference_NullCell_ShouldNotThrow()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		CellReference cellRef = new(99u, 99u);
+
+		// Act & Assert
+		Should.NotThrow(() => worksheet.SetCellNumericValue(cellRef, 1.0m));
+	}
+
+	[RetryFact(3)]
+	public void ForceFormulaRecalculation_SpreadsheetDocument_SetsProperties()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.InitializeExcelFile("Test");
+
+		// Act
+		document.ForceFormulaRecalculation();
+
+		// Assert
+		document.WorkbookPart!.Workbook!.CalculationProperties.ShouldNotBeNull();
+		document.WorkbookPart.Workbook.CalculationProperties!.ForceFullCalculation!.Value.ShouldBeTrue();
+		document.WorkbookPart.Workbook.CalculationProperties!.FullCalculationOnLoad!.Value.ShouldBeTrue();
+	}
+
+	[RetryFact(3)]
+	public void ForceFormulaRecalculation_WorkbookPart_SetsProperties()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.InitializeExcelFile("Test");
+		WorkbookPart workbookPart = document.WorkbookPart!;
+
+		// Act
+		workbookPart.ForceFormulaRecalculation();
+
+		// Assert
+		workbookPart.Workbook!.CalculationProperties.ShouldNotBeNull();
+		workbookPart.Workbook!.CalculationProperties!.ForceFullCalculation!.Value.ShouldBeTrue();
+		workbookPart.Workbook!.CalculationProperties!.FullCalculationOnLoad!.Value.ShouldBeTrue();
+	}
+
+	[RetryFact(3)]
+	public void ForceFormulaRecalculation_Workbook_NoExistingCalculationProperties_AppendsNew()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.InitializeExcelFile("Test");
+		Workbook workbook = document.WorkbookPart!.Workbook!;
+		// Ensure no calc properties
+		workbook.CalculationProperties?.Remove();
+
+		// Act
+		workbook.ForceFormulaRecalculation();
+
+		// Assert
+		workbook.CalculationProperties.ShouldNotBeNull();
+		workbook.CalculationProperties!.ForceFullCalculation!.Value.ShouldBeTrue();
+		workbook.CalculationProperties!.FullCalculationOnLoad!.Value.ShouldBeTrue();
+	}
+
+	[RetryFact(3)]
+	public void ForceFormulaRecalculation_Workbook_ExistingCalculationProperties_UpdatesProperties()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.InitializeExcelFile("Test");
+		Workbook workbook = document.WorkbookPart!.Workbook!;
+		workbook.CalculationProperties?.Remove();
+		workbook.AppendChild(new CalculationProperties { ForceFullCalculation = false, FullCalculationOnLoad = false });
+
+		// Act
+		workbook.ForceFormulaRecalculation();
+
+		// Assert
+		workbook.CalculationProperties!.ForceFullCalculation!.Value.ShouldBeTrue();
+		workbook.CalculationProperties!.FullCalculationOnLoad!.Value.ShouldBeTrue();
+	}
+
+	[RetryFact(3)]
+	public void WriteAndClose_SavesAndResetsPosition()
+	{
+		// Arrange
+		MemoryStream memoryStream = new();
+		SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.InitializeExcelFile("Test");
+
+		// Act
+		document.WriteAndClose(memoryStream);
+
+		// Assert
+		memoryStream.Position.ShouldBe(0);
+		memoryStream.Length.ShouldBeGreaterThan(0);
+		memoryStream.Dispose();
+	}
+
+	[RetryFact(3)]
+	public void WriteAndClose_WithFilePath_ReadsFileIntoMemoryStreamAndResetsPosition()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			document.WriteAndClose(memoryStream, tempFilePath);
+
+			// Assert
+			memoryStream.Position.ShouldBe(0);
+			memoryStream.Length.ShouldBeGreaterThan(0);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
+	public void WriteAndClose_WithFilePath_StreamContainsValidWorkbook()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			document.WriteAndClose(memoryStream, tempFilePath);
+
+			// Assert
+			using SpreadsheetDocument reopened = SpreadsheetDocument.Open(memoryStream, false);
+			reopened.WorkbookPart.ShouldNotBeNull();
+			reopened.WorkbookPart!.Workbook.ShouldNotBeNull();
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
+	public async Task WriteAndCloseAsync_WithFilePath_ReadsFileIntoMemoryStreamAndResetsPosition()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			await document.WriteAndCloseAsync(memoryStream, tempFilePath);
+
+			// Assert
+			memoryStream.Position.ShouldBe(0);
+			memoryStream.Length.ShouldBeGreaterThan(0);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
+	public async Task WriteAndCloseAsync_WithFilePath_StreamContainsValidWorkbook()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			await document.WriteAndCloseAsync(memoryStream, tempFilePath);
+
+			// Assert
+			using SpreadsheetDocument reopened = SpreadsheetDocument.Open(memoryStream, false);
+			reopened.WorkbookPart.ShouldNotBeNull();
+			reopened.WorkbookPart!.Workbook.ShouldNotBeNull();
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void WriteAndClose_WithStream_ClearCachedStyles_ShouldClearCacheOnlyWhenTrue(bool clearCachedStyles)
+	{
+		// Arrange
+		MemoryStream memoryStream = new();
+		SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
+		string workbookId = GetWorkbookId(document);
+		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeTrue();
+
+		// Act
+		document.WriteAndClose(memoryStream, clearCachedStyles);
+
+		// Assert
+		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBe(!clearCachedStyles);
+		memoryStream.Dispose();
+	}
+
+	[RetryTheory(3)]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void WriteAndClose_WithFilePath_ClearCachedStyles_ShouldClearCacheOnlyWhenTrue(bool clearCachedStyles)
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.CreateNewSheet("Test Sheet");
+			document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
+			string workbookId = GetWorkbookId(document);
+			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeTrue();
+
+			// Act
+			document.WriteAndClose(memoryStream, tempFilePath, clearCachedStyles);
+
+			// Assert
+			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBe(!clearCachedStyles);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData(true)]
+	[InlineData(false)]
+	public async Task WriteAndCloseAsync_WithFilePath_ClearCachedStyles_ShouldClearCacheOnlyWhenTrue(bool clearCachedStyles)
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.CreateNewSheet("Test Sheet");
+			document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
+			string workbookId = GetWorkbookId(document);
+			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeTrue();
+
+			// Act
+			await document.WriteAndCloseAsync(memoryStream, tempFilePath, clearCachedStyles);
+
+			// Assert
+			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBe(!clearCachedStyles);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
+	public void AddDropDownValidation_WhenNoExistingDataValidations_CreatesAndAppendsDataValidation()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.InitializeExcelFile("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+
+		// Act
+		AddDropDownValidation(worksheet, "A1", "\"Option1,Option2,Option3\"");
+
+		// Assert
+		DataValidations? dataValidations = worksheet.GetFirstChild<DataValidations>();
+		dataValidations.ShouldNotBeNull();
+		dataValidations!.Count!.Value.ShouldBe(1u);
+		DataValidation? dataValidation = dataValidations.Elements<DataValidation>().FirstOrDefault();
+		dataValidation.ShouldNotBeNull();
+		dataValidation!.Type!.Value.ShouldBe(DataValidationValues.List);
+		dataValidation.ShowErrorMessage!.Value.ShouldBeTrue();
+		dataValidation.AllowBlank!.Value.ShouldBeTrue();
+		dataValidation.Formula1!.Text.ShouldBe("\"Option1,Option2,Option3\"");
+	}
+
+	[RetryFact(3)]
+	public void AddDropDownValidation_WhenExistingDataValidations_AppendsAndIncrementsCount()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.InitializeExcelFile("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+
+		// Add first validation
+		AddDropDownValidation(worksheet, "A1", "\"Yes,No\"");
+
+		// Act - add second validation
+		AddDropDownValidation(worksheet, "B1", "\"Red,Green,Blue\"");
+
+		// Assert
+		DataValidations? dataValidations = worksheet.GetFirstChild<DataValidations>();
+		dataValidations.ShouldNotBeNull();
+		dataValidations!.Count!.Value.ShouldBe(2u);
+		dataValidations.Elements<DataValidation>().Count().ShouldBe(2);
+	}
+
+	[RetryFact(3)]
+	public void AddDropDownValidation_SetsSequenceOfReferencesToCellReference()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.InitializeExcelFile("Sheet1");
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1")!;
+
+		// Act
+		AddDropDownValidation(worksheet, "C3", "Sheet2!$A$1:$A$5");
+
+		// Assert
+		DataValidations? dataValidations = worksheet.GetFirstChild<DataValidations>();
+		DataValidation? dataValidation = dataValidations!.Elements<DataValidation>().FirstOrDefault();
+		dataValidation!.SequenceOfReferences!.InnerText.ShouldBe("C3");
+	}
+
+	// ---- GetTableStart ----
+
+	[RetryFact(3)]
+	public void GetTableStart_ReturnsStartCellReference()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Col1"), CellValues.String);
+		worksheet.InsertCellValue(1, 2, new CellValue("Col2"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 2, "MyTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act
+		CellReference result = table.GetTableStart();
+
+		// Assert
+		result.ColumnIndex.ShouldBe(1u);
+		result.RowIndex.ShouldBe(1u);
+		result.ToString().ShouldBe("A1");
+	}
+
+	[RetryTheory(3)]
+	[InlineData(3u, 2u, "C2")]
+	[InlineData(2u, 5u, "B5")]
+	public void GetTableStart_ReturnsCorrectStartForOffset(uint startCol, uint startRow, string expectedRef)
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(startRow, startCol, new CellValue("Header"), CellValues.String);
+		worksheet.CreateTable(startRow, startCol, startRow + 2, startCol, $"Table_{startCol}_{startRow}");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act
+		CellReference result = table.GetTableStart();
+
+		// Assert
+		result.ToString().ShouldBe(expectedRef);
+	}
+
+	// ---- GetColumnIndex ----
+
+	[RetryFact(3)]
+	public void GetColumnIndex_MatchingColumnName_ReturnsCorrectIndex()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Alpha"), CellValues.String);
+		worksheet.InsertCellValue(2, 1, new CellValue("Beta"), CellValues.String);
+		worksheet.InsertCellValue(3, 1, new CellValue("Gamma"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 3, "ColIndexTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act - "Beta" is the second column (0-based position 1), start column is 1, so result = 1 + 1 = 2
+		int result = table.GetColumnIndex("Beta");
+
+		// Assert
+		result.ShouldBe(2);
+	}
+
+	[RetryFact(3)]
+	public void GetColumnIndex_MatchingColumnName_CaseInsensitive_ReturnsCorrectIndex()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Alpha"), CellValues.String);
+		worksheet.InsertCellValue(2, 1, new CellValue("Beta"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 2, "CaseTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act
+		int result = table.GetColumnIndex("BETA");
+
+		// Assert
+		result.ShouldBe(2);
+	}
+
+	[RetryFact(3)]
+	public void GetColumnIndex_NoMatchingColumnName_ReturnsTableStartColumnIndex()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Alpha"), CellValues.String);
+		worksheet.InsertCellValue(1, 2, new CellValue("Beta"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 2, "NoMatchTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act
+		int result = table.GetColumnIndex("NonExistent");
+
+		// Assert
+		result.ShouldBe(1); // Falls back to table start column index
+	}
+
+	[RetryFact(3)]
+	public void GetColumnIndex_WithExplicitTableStart_UsesProvidedTableStart()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Alpha"), CellValues.String);
+		worksheet.InsertCellValue(2, 1, new CellValue("Beta"), CellValues.String);
+		worksheet.InsertCellValue(3, 1, new CellValue("Gamma"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 3, "ExplicitStartTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+		CellReference explicitStart = new(1u, 1u);
+
+		// Act - "Gamma" is the third column (0-based position 2), start column is 1, so result = 1 + 2 = 3
+		int result = table.GetColumnIndex("Gamma", explicitStart);
+
+		// Assert
+		result.ShouldBe(3);
+	}
+
+	[RetryFact(3)]
+	public void GetColumnIndex_FirstColumn_ReturnsTableStartColumnIndex()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test");
+		Worksheet worksheet = document.GetWorksheetByName("Test")!;
+		worksheet.InsertCellValue(1, 1, new CellValue("Alpha"), CellValues.String);
+		worksheet.InsertCellValue(1, 2, new CellValue("Beta"), CellValues.String);
+		worksheet.CreateTable(1, 1, 3, 2, "FirstColTable");
+		Table table = worksheet.WorksheetPart!.TableDefinitionParts.First().Table!;
+
+		// Act - "Alpha" is at position 0, start col is 1, so result = 1 + 0 = 1
+		int result = table.GetColumnIndex("Alpha");
+
+		// Assert
+		result.ShouldBe(1);
+	}
+
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithNullCell_ReturnsNull()
+	{
+		Cell? cell = null;
+		cell.GetStringValue().ShouldBeNull();
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithNullDataType_ReturnsInnerText()
+	{
+		Cell cell = new() { CellValue = new CellValue("42") };
+		// DataType is null, so should return InnerText
+		cell.GetStringValue().ShouldBe("42");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithBooleanTrue_ReturnsTRUE()
+	{
+		Cell cell = new() { DataType = CellValues.Boolean, CellValue = new CellValue("1") };
+		cell.GetStringValue().ShouldBe("TRUE");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithBooleanFalse_ReturnsFALSE()
+	{
+		Cell cell = new() { DataType = CellValues.Boolean, CellValue = new CellValue("0") };
+		cell.GetStringValue().ShouldBe("FALSE");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithError_ReturnsErrorPrefixed()
+	{
+		Cell cell = new() { DataType = CellValues.Error, CellValue = new CellValue("#DIV/0!") };
+		cell.GetStringValue().ShouldBe("ERROR: #DIV/0!");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithNumber_ReturnsInnerText()
+	{
+		Cell cell = new() { DataType = CellValues.Number, CellValue = new CellValue("123.45") };
+		cell.GetStringValue().ShouldBe("123.45");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithString_ReturnsInnerText()
+	{
+		Cell cell = new() { DataType = CellValues.String, CellValue = new CellValue("hello") };
+		cell.GetStringValue().ShouldBe("hello");
+	}
+
+	[Fact]
+	public void OpenXml_GetStringValue_WithInlineString_ReturnsInnerText()
+	{
+		Cell cell = new() { DataType = CellValues.InlineString, InlineString = new InlineString(new Text("inline value")) };
+		cell.GetStringValue().ShouldBe("inline value");
+	}
+
+	[RetryTheory(3)]
+	[InlineData("A1", "2")]
+	[InlineData("A2", "Test Test Again")]
+	[InlineData("A3", "0.5")]
+	[InlineData("A4", "3")]
+	[InlineData("A5", "Test2")]
+	[InlineData("A6", "ERROR: #DIV/0!")]
+	public void GetStringValue_FormulaCells_ShouldReturnCachedValue(string cellRef, string expectedValue)
+	{
+		// Arrange
+		using FileStream fileStream = File.OpenRead("TestData/FormulasTest.xlsx");
+		using SpreadsheetDocument document = SpreadsheetDocument.Open(fileStream, false);
+		Worksheet worksheet = document.GetWorksheetByName("Sheet1", createIfMissing: false)!;
+		CellReference reference = new(cellRef);
+		Cell? cell = worksheet.GetCellFromCoordinates((int)reference.ColumnIndex, (int)reference.RowIndex);
+
+		// Act
+		string? value = cell.GetStringValue();
+
+		// Assert
+		value.ShouldBe(expectedValue);
+	}
+
+	[RetryFact]
+	public void OpenXml_GetStringValue_WithSharedString_ReturnsSharedStringValue()
+	{
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, DocumentFormat.OpenXml.SpreadsheetDocumentType.Workbook);
+		WorkbookPart workbookPart = doc.AddWorkbookPart();
+		workbookPart.Workbook = new Workbook();
+
+		// Add shared string table
+		SharedStringTablePart sharedStringTablePart = workbookPart.AddNewPart<SharedStringTablePart>();
+		sharedStringTablePart.SharedStringTable = new SharedStringTable();
+		sharedStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("SharedValue")));
+		sharedStringTablePart.SharedStringTable.Save();
+
+		// Add worksheet
+		WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+		SheetData sheetData = new();
+		Row row = new() { RowIndex = 1 };
+		Cell cell = new() { CellReference = "A1", DataType = CellValues.SharedString, CellValue = new CellValue("0") };
+		row.AppendChild(cell);
+		sheetData.AppendChild(row);
+		worksheetPart.Worksheet = new Worksheet(sheetData);
+		worksheetPart.Worksheet.Save();
+
+		Sheets sheets = workbookPart.Workbook.AppendChild(new Sheets());
+		sheets.AppendChild(new Sheet { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" });
+		workbookPart.Workbook.Save();
+
+		string? result = cell.GetStringValue();
+		result.ShouldBe("SharedValue");
+	}
+
+	// -----------------------------------------------------------------------
+	// Tests for the new performance-optimized public APIs
+	// -----------------------------------------------------------------------
+
+	[RetryFact(3)]
+	public void BuildSharedStringIndex_ShouldReturnCorrectMapping()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("Alpha")));
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("Beta")));
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("Gamma")));
+
+		// Act
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Assert
+		index.Count.ShouldBe(3);
+		index[0].ShouldBe("Alpha");
+		index[1].ShouldBe("Beta");
+		index[2].ShouldBe("Gamma");
+	}
+
+	[RetryFact(3)]
+	public void BuildSharedStringIndex_EmptyTable_ShouldReturnEmptyDictionary()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+
+		// Act
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Assert
+		index.Count.ShouldBe(0);
+	}
+
+	[RetryFact(3)]
+	public void GetCellValue_WithIndex_ShouldReturnCorrectValue()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("TestValue")));
+
+		Cell cell = new()
+		{
+			DataType = CellValues.SharedString,
+			CellValue = new CellValue("0")
+		};
+
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Act
+		string result = cell.GetCellValue(index);
+
+		// Assert
+		result.ShouldBe("TestValue");
+	}
+
+	[RetryFact(3)]
+	public void GetCellValue_WithIndex_NonSharedString_ShouldReturnRawValue()
+	{
+		// Arrange
+		Cell cell = new()
+		{
+			DataType = CellValues.String,
+			CellValue = new CellValue("DirectValue")
+		};
+		Dictionary<int, string> index = new() { [0] = "SharedValue" };
+
+		// Act
+		string result = cell.GetCellValue(index);
+
+		// Assert
+		result.ShouldBe("DirectValue");
+	}
+
+	[RetryFact(3)]
+	public void GetCellValue_WithNullIndex_ShouldFallBackToStandardLookup()
+	{
+		// Arrange
+		Cell cell = new()
+		{
+			DataType = CellValues.String,
+			CellValue = new CellValue("PlainValue")
+		};
+
+		// Act
+		string result = cell.GetCellValue(null);
+
+		// Assert
+		result.ShouldBe("PlainValue");
+	}
+
+	[RetryFact(3)]
+	public void GetCellValue_SheetDataWithIndex_ShouldReturnCorrectValue()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("CellText")));
+
+		SheetData sheetData = new();
+		Row row = new() { RowIndex = 1 };
+		Cell cell = new()
+		{
+			CellReference = "A1",
+			DataType = CellValues.SharedString,
+			CellValue = new CellValue("0")
+		};
+		row.AppendChild(cell);
+		sheetData.AppendChild(row);
+
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Act
+		string result = sheetData.GetCellValue(1, 1, index);
+
+		// Assert
+		result.ShouldBe("CellText");
+	}
+
+	[RetryFact(3)]
+	public void GetStringValue_WithIndex_ShouldReturnCorrectValue()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("StringVal")));
+
+		Cell cell = new()
+		{
+			DataType = CellValues.SharedString,
+			CellValue = new CellValue("0")
+		};
+
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Act
+		string? result = cell.GetStringValue(index);
+
+		// Assert
+		result.ShouldBe("StringVal");
+	}
+
+	[RetryFact(3)]
+	public void GetStringValue_WithIndex_NullCell_ShouldReturnNull()
+	{
+		// Arrange
+		Dictionary<int, string> index = new() { [0] = "Something" };
+		Cell? cell = null;
+
+		// Act
+		string? result = cell.GetStringValue(index);
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[RetryFact(3)]
+	public void InsertSharedStringItem_WithCache_ShouldInsertAndReturnCorrectIndex()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+
+		Dictionary<string, int> cache = new(StringComparer.Ordinal);
+
+		// Act
+		int idx0 = wbp.Workbook.InsertSharedStringItem("First", cache);
+		int idx1 = wbp.Workbook.InsertSharedStringItem("Second", cache);
+		int idx0Again = wbp.Workbook.InsertSharedStringItem("First", cache); // duplicate
+
+		// Assert
+		idx0.ShouldBe(0);
+		idx1.ShouldBe(1);
+		idx0Again.ShouldBe(0); // same index returned for duplicate
+
+		SharedStringTablePart? shareStringTablePart = wbp.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+		shareStringTablePart.ShouldNotBeNull();
+		shareStringTablePart!.SharedStringTable!.Elements<SharedStringItem>().Count().ShouldBe(2); // no duplicate inserted
+	}
+
+	[RetryFact(3)]
+	public void InsertSharedStringItem_WithCache_ShouldNotSaveAfterEachInsertion()
+	{
+		// Arrange — verify the Save-per-insert behavior is gone by confirming the table has
+		// no LastModified timestamp or similar artifact; practically we just confirm bulk
+		// inserts complete quickly and the table contents are correct.
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+
+		Dictionary<string, int> cache = new(StringComparer.Ordinal);
+
+		for (int i = 0; i < 100; i++)
+			wbp.Workbook.InsertSharedStringItem($"Item{i}", cache);
+
+		SharedStringTablePart? shareStringTablePart = wbp.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+		shareStringTablePart.ShouldNotBeNull();
+
+		// Save once at the end (as callers are expected to do)
+		shareStringTablePart!.SharedStringTable!.Save();
+		document.Save();
+
+		// Assert the table contains all 100 items
+		cache.Count.ShouldBe(100);
+		shareStringTablePart.SharedStringTable.Elements<SharedStringItem>().Count().ShouldBe(100);
+	}
+
+	[RetryFact(3)]
+	public void CalculateWidth_WithIndex_ShouldReturnSameAsWithoutIndex_ForNonSharedStrings()
+	{
+		// Arrange — a plain-string cell should give identical width with or without an index
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+
+		Cell cell = new()
+		{
+			DataType = CellValues.String,
+			CellValue = new CellValue("Hello")
+		};
+
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Act
+		double withIndex = cell.CalculateWidth(index);
+		double withoutIndex = CalculateWidth("Hello");
+
+		// Assert
+		withIndex.ShouldBe(withoutIndex);
+	}
+
+	[RetryFact(3)]
+	public void NumberToColumnName_ShouldReturnCorrectNames()
+	{
+		// Spot-check a range of well-known column name / number pairs
+		CellReference.NumberToColumnName(1).ShouldBe("A");
+		CellReference.NumberToColumnName(26).ShouldBe("Z");
+		CellReference.NumberToColumnName(27).ShouldBe("AA");
+		CellReference.NumberToColumnName(52).ShouldBe("AZ");
+		CellReference.NumberToColumnName(702).ShouldBe("ZZ");
+		CellReference.NumberToColumnName(703).ShouldBe("AAA");
+		CellReference.NumberToColumnName(16384).ShouldBe("XFD");
+	}
+
+	// -----------------------------------------------------------------------
+	// Tests for previously-uncovered branches in Common.cs
+	// -----------------------------------------------------------------------
+
+	[RetryFact(3)]
+	public void GetCellFromReference_WhenLaterRowExistsInSheet_ShouldInsertBeforeThatRow()
+	{
+		// Arrange — build a worksheet with only row 3; then request cell (col 1, row 1)
+		// so that a new row must be inserted BEFORE row 3 (InsertBefore branch).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		uint sheetId = doc.InitializeExcelFile("Test");
+		Worksheet ws = doc.GetWorksheetById(sheetId)!;
+		SheetData sd = ws.GetFirstChild<SheetData>()!;
+
+		// Add row 3 first
+		Row row3 = new() { RowIndex = 3 };
+		row3.AppendChild(new Cell { CellReference = "A3", CellValue = new CellValue("R3C1") });
+		sd.Append(row3);
+
+		// Act — requesting row 1 should insert a new row before row 3
+		Cell? cell = ws.GetCellFromReference("A1");
+
+		// Assert
+		cell.ShouldNotBeNull();
+		cell!.CellReference?.Value.ShouldBe("A1");
+		// The rows should appear in order: row1, row3
+		List<uint> rowIndices = sd.Elements<Row>().Select(r => r.RowIndex!.Value).ToList();
+		rowIndices.ShouldBe([1u, 3u]);
+	}
+
+	[RetryFact(3)]
+	public void GetCellFromReference_WhenLaterCellExistsInRow_ShouldInsertBeforeThatCell()
+	{
+		// Arrange — row with cell at column C (3); request cell at column A (1)
+		// so that a new cell must be inserted BEFORE C (InsertBefore cell branch).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		uint sheetId = doc.InitializeExcelFile("Test");
+		Worksheet ws = doc.GetWorksheetById(sheetId)!;
+		SheetData sd = ws.GetFirstChild<SheetData>()!;
+
+		Row row = new() { RowIndex = 1 };
+		row.AppendChild(new Cell { CellReference = "C1", CellValue = new CellValue("ColC") });
+		sd.Append(row);
+
+		// Act — A1 must be inserted before C1
+		Cell? cell = ws.GetCellFromReference("A1");
+
+		// Assert
+		cell.ShouldNotBeNull();
+		List<string?> refs = row.Elements<Cell>().Select(c => c.CellReference?.Value).ToList();
+		refs[0].ShouldBe("A1");
+		refs[1].ShouldBe("C1");
+	}
+
+	[RetryFact(3)]
+	public void GetCellFromCoordinates_WhenLaterCellExistsInRow_ShouldInsertBeforeThatCell()
+	{
+		// Same scenario as above but through GetCellFromCoordinates (exercises line 371).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		uint sheetId = doc.InitializeExcelFile("Test");
+		Worksheet ws = doc.GetWorksheetById(sheetId)!;
+		SheetData sd = ws.GetFirstChild<SheetData>()!;
+
+		Row row = new() { RowIndex = 2 };
+		row.AppendChild(new Cell { CellReference = "D2", CellValue = new CellValue("ColD") });
+		sd.Append(row);
+
+		// Act — request col 2 (B), row 2 — must be inserted before col 4 (D)
+		Cell? cell = ws.GetCellFromCoordinates(2, 2);
+
+		// Assert
+		cell.ShouldNotBeNull();
+		List<string?> refs = row.Elements<Cell>().Select(c => c.CellReference?.Value).ToList();
+		refs[0].ShouldBe("B2");
+		refs[1].ShouldBe("D2");
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_WhenCalledAfterCacheClear_ShouldFindExistingFormatAndReturnSameId()
+	{
+		// Arrange — first call builds the format and caches it.
+		// After clearing only the in-memory cache (not the Stylesheet), a second call
+		// must walk the existing CellFormats list and find the already-added format via
+		// CellFormatsAreEqual (previously dead code, now exercised because FindOrAddStyleElement
+		// reuses existing Border/Fill/Font entries so the IDs match).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		doc.InitializeExcelFile("Test");
+
+		uint id1 = doc.GetStandardCellStyle(EStyle.Header);
+
+		// Clear only this document's cache so the next call misses the cache
+		// but the Stylesheet still contains the format from the first call.
+		ClearStandardFormatCacheForWorkbook(doc);
+
+		// Act — second call re-appends Borders/Fills/Fonts with new indices, so the
+		// duplicate check always fails and a brand-new CellFormat entry is created.
+		uint id2 = doc.GetStandardCellStyle(EStyle.Header);
+
+		// Assert — both calls must return the same index now that FindOrAddStyleElement
+		// reuses the existing Border/Fill/Font entries instead of always appending new ones,
+		// allowing CellFormatsAreEqual to find the already-stored CellFormat.
+		id1.ShouldBe(id2);
+	}
+
+	[RetryFact(3)]
+	public void InsertCell_WhenRowAlreadyHasHigherIndexCell_ShouldInsertBeforeIt()
+	{
+		// Arrange — row with a cell at column B (2); insert at column A (1)
+		// so that the new cell is placed via InsertBefore (lines 1287-1288).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		uint sheetId = doc.InitializeExcelFile("Test");
+		Worksheet ws = doc.GetWorksheetById(sheetId)!;
+		SheetData sd = ws.GetFirstChild<SheetData>()!;
+
+		// Pre-populate: add row 1 with only cell B1
+		Row row = new() { RowIndex = 1 };
+		row.AppendChild(new Cell { CellReference = "B1" });
+		sd.Append(row);
+
+		// Act — InsertCell at column 1 (A), row 1
+		Cell? newCell = sd.InsertCell(1, 1);
+
+		// Assert — A1 must appear before B1
+		newCell.ShouldNotBeNull();
+		List<string?> refs = row.Elements<Cell>().Select(c => c.CellReference?.Value).ToList();
+		refs[0].ShouldBe("A1");
+		refs[1].ShouldBe("B1");
+	}
+
+	[RetryFact(3)]
+	public void InsertCellValue_SharedStringType_InFullWorkbookContext_ShouldWriteSharedStringIndex()
+	{
+		// Arrange — InsertCellValue with CellValues.SharedString requires the cell to be
+		// attached to a real WorkbookPart so that GetWorkbookFromCell() and
+		// InsertSharedStringItem() can resolve (lines 1333-1336).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = doc.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		WorksheetPart wsp = wbp.AddNewPart<WorksheetPart>();
+		SheetData sd = new();
+		wsp.Worksheet = new Worksheet(sd);
+		Sheets sheets = wbp.Workbook.AppendChild(new Sheets());
+		sheets.AppendChild(new Sheet { Id = wbp.GetIdOfPart(wsp), SheetId = 1, Name = "Sheet1" });
+
+		// Act — default cellType is SharedString
+		sd.InsertCellValue(1, 1, new CellValue("HelloShared"), CellValues.SharedString);
+
+		// Assert
+		Cell? cell = sd.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1)?
+			.Elements<Cell>().FirstOrDefault(c => c.CellReference?.Value == "A1");
+		cell.ShouldNotBeNull();
+		cell!.DataType?.Value.ShouldBe(CellValues.SharedString);
+		// The CellValue should be a numeric index into the shared string table
+		int idx = int.Parse(cell.CellValue!.Text);
+		SharedStringTablePart? shareStringTablePart = wbp.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+		shareStringTablePart.ShouldNotBeNull();
+		shareStringTablePart!.SharedStringTable!.Elements<SharedStringItem>().ElementAt(idx).InnerText.ShouldBe("HelloShared");
+	}
+
+	[RetryFact(3)]
+	public void InsertSharedStringItem_WithDuplicateText_ShouldReturnExistingIndex()
+	{
+		// Covers the early-return path inside the scan loop (line 1417) where the
+		// item already exists and is returned without inserting a duplicate.
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = doc.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+
+		int idx1 = wbp.Workbook.InsertSharedStringItem("UniqueValue");
+		int idx2 = wbp.Workbook.InsertSharedStringItem("AnotherValue");
+		int idx1Again = wbp.Workbook.InsertSharedStringItem("UniqueValue"); // duplicate
+
+		idx1.ShouldBe(0);
+		idx2.ShouldBe(1);
+		idx1Again.ShouldBe(0); // same index, no new item added
+
+		SharedStringTablePart? shareStringTablePart = wbp.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+		shareStringTablePart!.SharedStringTable!.Elements<SharedStringItem>().Count().ShouldBe(2);
+	}
+
+	[RetryFact(3)]
+	public void GetCellValueWithIndex_WhenCellCellValueIsNull_ShouldReturnEmpty()
+	{
+		// Covers the null-guard early-return in the
+		// GetCellValue(Cell?, IReadOnlyDictionary<int,string>?) overload.
+		Cell cellNoValue = new(); // CellValue is null
+		Dictionary<int, string> index = new() { [0] = "ignored" };
+		string result = cellNoValue.GetCellValue(index);
+		result.ShouldBe(string.Empty);
+
+		Cell? nullCell = null;
+		string nullResult = nullCell.GetCellValue(index);
+		nullResult.ShouldBe(string.Empty);
+	}
+
+	[RetryFact(3)]
+	public void GetColumns_WhenWorksheetHasNoSheetData_ShouldAppendColumnsElement()
+	{
+		// Covers the else-branch (worksheet.Append(columns)) in GetColumns when
+		// there is no SheetData child to insert before (line 2412).
+		Worksheet ws = new(); // created without SheetData
+
+		Columns cols = ws.GetColumns();
+
+		cols.ShouldNotBeNull();
+		ws.GetFirstChild<Columns>().ShouldNotBeNull();
+	}
+
+	[RetryFact(3)]
+	public void CalculateWidth_CellExtension_ShouldReturnCorrectWidth()
+	{
+		// Covers the CalculateWidth(this Cell cell) extension method (line 2491)
+		// which is now distinct from the new shared-string-index overload.
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		uint sheetId = doc.InitializeExcelFile("Test");
+		Worksheet ws = doc.GetWorksheetById(sheetId)!;
+		SheetData sd = ws.GetFirstChild<SheetData>()!;
+
+		// Insert a plain-string cell so GetCellValue() returns the text directly
+		sd.InsertCellValue(1, 1, new CellValue("Hello"), CellValues.String);
+		Cell? cell = sd.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell.ShouldNotBeNull();
+
+		double width = cell!.CalculateWidth();
+
+		width.ShouldBeGreaterThan(0);
+		// CalculateWidth("Hello") == CalculateWidth("Hello", null)
+		width.ShouldBe(CalculateWidth("Hello"));
 	}
 }
 

@@ -1,4 +1,5 @@
-﻿using static System.Convert;
+﻿using System.Numerics;
+using static System.Convert;
 using static System.Math;
 
 namespace CommonNetFuncs.Core;
@@ -18,9 +19,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="massLbs">Mass in lbs to convert to kg</param>
 	/// <returns>Decimal representation of the mass in lbs converted to kg</returns>
-	public static decimal LbsToKg(this decimal massLbs)
+	public static decimal LbsToKg<TNumber>(this TNumber massLbs) where TNumber : struct, INumber<TNumber>
 	{
-		return massLbs / KgToLbsConst;
+		return decimal.CreateChecked(massLbs) / KgToLbsConst;
 	}
 
 	/// <summary>
@@ -28,9 +29,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="massLbs">Mass in lbs to convert to kg</param>
 	/// <returns>Decimal representation of the mass in lbs converted to kg</returns>
-	public static decimal LbsToKg(this decimal? massLbs)
+	public static decimal LbsToKg<TNumber>(this TNumber? massLbs) where TNumber : struct, INumber<TNumber>
 	{
-		return (massLbs ?? 0) / KgToLbsConst;
+		return decimal.CreateChecked(massLbs ?? TNumber.Zero) / KgToLbsConst;
 	}
 
 	/// <summary>
@@ -38,9 +39,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="massKg">Mass in kg to convert to lbs</param>
 	/// <returns>Decimal representation of the mass in kg converted to lbs</returns>
-	public static decimal KgToLbs(this decimal massKg)
+	public static decimal KgToLbs<TNumber>(this TNumber massKg) where TNumber : struct, INumber<TNumber>
 	{
-		return massKg * KgToLbsConst;
+		return decimal.CreateChecked(massKg) * KgToLbsConst;
 	}
 
 	/// <summary>
@@ -48,9 +49,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="massKg">Mass in kg to convert to lbs</param>
 	/// <returns>Decimal representation of the mass in kg converted to lbs</returns>
-	public static decimal KgToLbs(this decimal? massKg)
+	public static decimal KgToLbs<TNumber>(this TNumber? massKg) where TNumber : struct, INumber<TNumber>
 	{
-		return (massKg ?? 0) * KgToLbsConst;
+		return decimal.CreateChecked(massKg ?? TNumber.Zero) * KgToLbsConst;
 	}
 
 	/// <summary>
@@ -58,9 +59,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="lenIns">Length in inches to convert to feet</param>
 	/// <returns>Decimal representation of the length in inches converted to feet</returns>
-	public static decimal InsToFt(this decimal lenIns)
+	public static decimal InsToFt<TNumber>(this TNumber lenIns) where TNumber : struct, INumber<TNumber>
 	{
-		return lenIns / FtToInConst;
+		return decimal.CreateChecked(lenIns) / FtToInConst;
 	}
 
 	/// <summary>
@@ -68,9 +69,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="lenIns">Length in inches to convert to feet</param>
 	/// <returns>Decimal representation of the length in inches converted to feet</returns>
-	public static decimal InsToFt(this decimal? lenIns)
+	public static decimal InsToFt<TNumber>(this TNumber? lenIns) where TNumber : struct, INumber<TNumber>
 	{
-		return (lenIns ?? 0) / FtToInConst;
+		return decimal.CreateChecked(lenIns ?? TNumber.Zero) / FtToInConst;
 	}
 
 	/// <summary>
@@ -96,21 +97,21 @@ public static class UnitConversion
 	/// <summary>
 	/// Convert length in mm to inches
 	/// </summary>
-	/// <param name="lenMm<">Length in mm to convert to inches</param>
+	/// <param name="lenMm">Length in mm to convert to inches</param>
 	/// <returns>Decimal representation of the length in mm converted to inches</returns>
-	public static decimal MmToIns(this decimal lenMm, int decimalPlaces = 1)
+	public static decimal MmToIns<TNumber>(this TNumber lenMm, int decimalPlaces = 1) where TNumber : struct, INumber<TNumber>
 	{
-		return Round(ToDecimal(lenMm) / InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
+		return Round(decimal.CreateChecked(lenMm) / InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
 	}
 
 	/// <summary>
 	/// Convert length in mm to inches
 	/// </summary>
-	/// <param name="lenMm<">Length in mm to convert to inches</param>
+	/// <param name="lenMm">Length in mm to convert to inches</param>
 	/// <returns>Decimal representation of the length in mm converted to inches</returns>
-	public static decimal MmToIns(this decimal? lenMm, int decimalPlaces = 1)
+	public static decimal MmToIns<TNumber>(this TNumber? lenMm, int decimalPlaces = 1) where TNumber : struct, INumber<TNumber>
 	{
-		return Round((lenMm ?? 0) / InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
+		return Round(decimal.CreateChecked(lenMm ?? TNumber.Zero) / InToMmConst, decimalPlaces, MidpointRounding.AwayFromZero);
 	}
 
 	/// <summary>
@@ -118,9 +119,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="lenFt">Length in feet to convert to inches</param>
 	/// <returns>Decimal representation of the length in feet converted to inches</returns>
-	public static decimal FtToIns(this decimal lenFt)
+	public static decimal FtToIns<TNumber>(this TNumber lenFt) where TNumber : struct, INumber<TNumber>
 	{
-		return lenFt * FtToInConst;
+		return decimal.CreateChecked(lenFt) * FtToInConst;
 	}
 
 	/// <summary>
@@ -128,9 +129,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="lenFt">Length in feet to convert to inches</param>
 	/// <returns>Decimal representation of the length in feet converted to inches</returns>
-	public static decimal FtToIns(this decimal? lenFt)
+	public static decimal FtToIns<TNumber>(this TNumber? lenFt) where TNumber : struct, INumber<TNumber>
 	{
-		return (lenFt ?? 0) * FtToInConst;
+		return decimal.CreateChecked(lenFt ?? TNumber.Zero) * FtToInConst;
 	}
 
 	/// <summary>
@@ -138,19 +139,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="bytes">Number of bytes to convert to Kb</param>
 	/// <returns>Decimal representation of the number of bytes in Kb</returns>
-	public static decimal BytesToKb(this int bytes, int decimalPlaces = 1)
+	public static decimal BytesToKb<TNumber>(this TNumber bytes, int decimalPlaces = 1) where TNumber : IBinaryInteger<TNumber>
 	{
-		return Round(bytes / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
-	}
-
-	/// <summary>
-	/// Convert bytes to Kb
-	/// </summary>
-	/// <param name="bytes">Number of bytes to convert to Kb</param>
-	/// <returns>Decimal representation of the number of bytes in Kb</returns>
-	public static decimal BytesToKb(this long bytes, int decimalPlaces = 1)
-	{
-		return Round(bytes / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
+		return Round(decimal.CreateChecked(bytes) / 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
 	}
 
 	/// <summary>
@@ -168,19 +159,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="bytes">Number of bytes to convert to Mb</param>
 	/// <returns>Decimal representation of the number of bytes in Mb</returns>
-	public static decimal BytesToMb(this int bytes, int decimalPlaces = 1)
+	public static decimal BytesToMb<TNumber>(this TNumber bytes, int decimalPlaces = 1) where TNumber : IBinaryInteger<TNumber>
 	{
-		return Round(bytes / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
-	}
-
-	/// <summary>
-	/// Convert bytes to Mb
-	/// </summary>
-	/// <param name="bytes">Number of bytes to convert to Mb</param>
-	/// <returns>Decimal representation of the number of bytes in Mb</returns>
-	public static decimal BytesToMb(this long bytes, int decimalPlaces = 1)
-	{
-		return Round(bytes / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
+		return Round(decimal.CreateChecked(bytes) / 1048576m, decimalPlaces, MidpointRounding.AwayFromZero);
 	}
 
 	/// <summary>
@@ -198,19 +179,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="bytes">Number of bytes to convert to Gb</param>
 	/// <returns>Decimal representation of the number of bytes in Gb</returns>
-	public static decimal BytesToGb(this int bytes, int decimalPlaces = 1)
+	public static decimal BytesToGb<TNumber>(this TNumber bytes, int decimalPlaces = 1) where TNumber : IBinaryInteger<TNumber>
 	{
-		return Round(bytes / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero);
-	}
-
-	/// <summary>
-	/// Convert bytes to Gb
-	/// </summary>
-	/// <param name="bytes">Number of bytes to convert to Gb</param>
-	/// <returns>Decimal representation of the number of bytes in Gb</returns>
-	public static decimal BytesToGb(this long bytes, int decimalPlaces = 1)
-	{
-		return Round(bytes / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero);
+		return Round(decimal.CreateChecked(bytes) / 1073741824m, decimalPlaces, MidpointRounding.AwayFromZero);
 	}
 
 	/// <summary>
@@ -228,19 +199,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="bytes">Number of bytes to convert to Tb</param>
 	/// <returns>Decimal representation of the number of bytes in Tb</returns>
-	public static decimal BytesToTb(this int bytes, int decimalPlaces = 1)
+	public static decimal BytesToTb<TNumber>(this TNumber bytes, int decimalPlaces = 1) where TNumber : IBinaryInteger<TNumber>
 	{
-		return Round(bytes / 1099511627776m, decimalPlaces, MidpointRounding.AwayFromZero);
-	}
-
-	/// <summary>
-	/// Convert bytes to Tb
-	/// </summary>
-	/// <param name="bytes">Number of bytes to convert to Tb</param>
-	/// <returns>Decimal representation of the number of bytes in Tb</returns>
-	public static decimal BytesToTb(this long bytes, int decimalPlaces = 1)
-	{
-		return Round(bytes / 1099511627776m, decimalPlaces, MidpointRounding.AwayFromZero);
+		return Round(decimal.CreateChecked(bytes) / 1099511627776m, decimalPlaces, MidpointRounding.AwayFromZero);
 	}
 
 	/// <summary>
@@ -378,16 +339,13 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="inputBytes">Number of bytes to be converted</param>
 	/// <returns>Human readable string representation of the number of bytes</returns>
-	public static string GetFileSizeFromBytesWithUnits(this long inputBytes, int decimalPlaces = 1)
+	public static string GetFileSizeFromBytesWithUnits<TNumber>(this TNumber inputBytes, int decimalPlaces = 1) where TNumber : IBinaryInteger<TNumber>
 	{
-		long bytes = Abs(inputBytes);
-		long multiplier = 1;
-		if (bytes > inputBytes)
-		{
-			multiplier = -1;
-		}
+		long bytes = Abs(long.CreateChecked(inputBytes));
+		long longInput = long.CreateChecked(inputBytes);
+		long multiplier = bytes > longInput ? -1L : 1L;
 		return bytes >= 1024 ?
-			bytes.BytesToKb(decimalPlaces) >= 1024 ? +bytes.BytesToMb(decimalPlaces) >= 1024 ?
+			bytes.BytesToKb(decimalPlaces) >= 1024 ? bytes.BytesToMb(decimalPlaces) >= 1024 ?
 				bytes.BytesToGb(decimalPlaces) >= 1024 ?
 								$"{bytes.BytesToTb(decimalPlaces) * multiplier} TB" :
 							$"{bytes.BytesToGb(decimalPlaces) * multiplier} GB" :
@@ -401,48 +359,13 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="nullBytes">Number of bytes to be converted</param>
 	/// <returns>Human readable string representation of the number of bytes</returns>
-	public static string GetFileSizeFromBytesWithUnits(this long? nullBytes, int decimalPlaces = 1)
+	public static string GetFileSizeFromBytesWithUnits<TNumber>(this TNumber? nullBytes, int decimalPlaces = 1) where TNumber : struct, IBinaryInteger<TNumber>
 	{
 		if (nullBytes == null)
 		{
 			return "-0";
 		}
-		long bytes = Abs((long)nullBytes);
-
-		long multiplier = 1;
-		if (bytes > nullBytes)
-		{
-			multiplier = -1;
-		}
-		return bytes >= 1024 ?
-				bytes.BytesToKb(decimalPlaces) >= 1024 ?
-					bytes.BytesToMb(decimalPlaces) >= 1024 ?
-						bytes.BytesToGb(decimalPlaces) >= 1024 ?
-							$"{bytes.BytesToTb(decimalPlaces) * multiplier} TB" :
-						$"{bytes.BytesToGb(decimalPlaces) * multiplier} GB" :
-					$"{bytes.BytesToMb(decimalPlaces) * multiplier} MB" :
-				$"{bytes.BytesToKb(decimalPlaces) * multiplier} KB" :
-			$"{bytes * multiplier} B";
-	}
-
-	/// <summary>
-	/// Returns a human readable string representation of the number of bytes
-	/// </summary>
-	/// <param name="inputBytes">Number of bytes to be converted</param>
-	/// <returns>Human readable string representation of the number of bytes</returns>
-	public static string GetFileSizeFromBytesWithUnits(this int inputBytes)
-	{
-		return ((long)inputBytes).GetFileSizeFromBytesWithUnits();
-	}
-
-	/// <summary>
-	/// Returns a human readable string representation of the number of bytes
-	/// </summary>
-	/// <param name="nullBytes">Number of bytes to be converted</param>
-	/// <returns>Human readable string representation of the number of bytes</returns>
-	public static string GetFileSizeFromBytesWithUnits(this int? nullBytes)
-	{
-		return ((long?)nullBytes).GetFileSizeFromBytesWithUnits();
+		return nullBytes.Value.GetFileSizeFromBytesWithUnits(decimalPlaces);
 	}
 
 	/// <summary>
@@ -450,9 +373,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="meters">Number of meters to be converted into miles</param>
 	/// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
-	public static decimal MetersToMiles(this decimal meters)
+	public static decimal MetersToMiles<TNumber>(this TNumber meters) where TNumber : struct, INumber<TNumber>
 	{
-		return meters * MetersToMilesConst;
+		return decimal.CreateChecked(meters) * MetersToMilesConst;
 	}
 
 	/// <summary>
@@ -460,49 +383,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="meters">Number of meters to be converted into miles</param>
 	/// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
-	public static decimal MetersToMiles(this decimal? meters)
+	public static decimal MetersToMiles<TNumber>(this TNumber? meters) where TNumber : struct, INumber<TNumber>
 	{
-		return (meters ?? 0) * MetersToMilesConst;
-	}
-
-	/// <summary>
-	/// Convert meters to miles
-	/// </summary>
-	/// <param name="meters">Number of meters to be converted into miles</param>
-	/// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
-	public static decimal MetersToMiles(this double meters)
-	{
-		return ToDecimal(meters) * MetersToMilesConst;
-	}
-
-	/// <summary>
-	/// Convert meters to miles
-	/// </summary>
-	/// <param name="meters">Number of meters to be converted into miles</param>
-	/// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
-	public static decimal MetersToMiles(this double? meters)
-	{
-		return ToDecimal(meters ?? 0) * MetersToMilesConst;
-	}
-
-	/// <summary>
-	/// Convert meters to miles
-	/// </summary>
-	/// <param name="meters">Number of meters to be converted into miles</param>
-	/// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
-	public static decimal MetersToMiles(this int meters)
-	{
-		return meters * MetersToMilesConst;
-	}
-
-	/// <summary>
-	/// Convert meters to miles
-	/// </summary>
-	/// <param name="meters">Number of meters to be converted into miles</param>
-	/// <returns>Decimal representation of number of miles that corresponds to the input meters</returns>
-	public static decimal MetersToMiles(this int? meters)
-	{
-		return (meters ?? 0) * MetersToMilesConst;
+		return decimal.CreateChecked(meters ?? TNumber.Zero) * MetersToMilesConst;
 	}
 
 	/// <summary>
@@ -510,9 +393,9 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="miles">Number of miles to be converted into meters</param>
 	/// <returns>Decimal representation of number of meters that corresponds to the input miles</returns>
-	public static decimal MilesToMeters(this decimal miles)
+	public static decimal MilesToMeters<TNumber>(this TNumber miles) where TNumber : struct, INumber<TNumber>
 	{
-		return miles / MetersToMilesConst;
+		return decimal.CreateChecked(miles) / MetersToMilesConst;
 	}
 
 	/// <summary>
@@ -520,28 +403,8 @@ public static class UnitConversion
 	/// </summary>
 	/// <param name="miles">Number of miles to be converted into meters</param>
 	/// <returns>Decimal representation of number of meters that corresponds to the input miles</returns>
-	public static decimal MilesToMeters(this decimal? miles)
+	public static decimal MilesToMeters<TNumber>(this TNumber? miles) where TNumber : struct, INumber<TNumber>
 	{
-		return (miles ?? 0) / MetersToMilesConst;
-	}
-
-	/// <summary>
-	/// Convert miles to meters
-	/// </summary>
-	/// <param name="miles">Number of miles to be converted into meters</param>
-	/// <returns>Decimal representation of number of meters that corresponds to the input miles</returns>
-	public static decimal MilesToMeters(this int miles)
-	{
-		return miles / MetersToMilesConst;
-	}
-
-	/// <summary>
-	/// Convert miles to meters
-	/// </summary>
-	/// <param name="miles">Number of miles to be converted into meters</param>
-	/// <returns>Decimal representation of number of meters that corresponds to the input miles</returns>
-	public static decimal MilesToMeters(this int? miles)
-	{
-		return (miles ?? 0) / MetersToMilesConst;
+		return decimal.CreateChecked(miles ?? TNumber.Zero) / MetersToMilesConst;
 	}
 }

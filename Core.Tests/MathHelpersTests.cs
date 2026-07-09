@@ -321,4 +321,119 @@ public sealed class MathHelpersTests
 		int precision = nullableValue.GetPrecision();
 		precision.ShouldBe(expected);
 	}
+
+	[Fact]
+	public void GetMedian_NullCollection_ThrowsArgumentException()
+	{
+		IEnumerable<int>? numbers = null;
+		Should.Throw<ArgumentException>(() => numbers!.GetMedian());
+	}
+
+	[Fact]
+	public void GetMedian_EmptyCollection_ThrowsArgumentException()
+	{
+		IEnumerable<int> numbers = [];
+		Should.Throw<ArgumentException>(() => numbers.GetMedian());
+	}
+
+	[Fact]
+	public void GetMedian_SingleElement_ReturnsThatElement()
+	{
+		int[] numbers = [42];
+		numbers.GetMedian().ShouldBe(42);
+	}
+
+	[Theory]
+	[InlineData(new[] { 1, 2, 3 }, 2)]              // sorted odd count
+	[InlineData(new[] { 3, 1, 2 }, 2)]              // unsorted odd count
+	[InlineData(new[] { 1, 3, 5, 7, 9 }, 5)]        // five elements
+	[InlineData(new[] { -5, -3, -1 }, -3)]           // negative values odd count
+	[InlineData(new[] { 0, 0, 0 }, 0)]              // all zeros
+	public void GetMedian_OddCount_Int_ReturnsMiddleElement(int[] numbers, int expected)
+	{
+		numbers.GetMedian().ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(new[] { 1, 2, 3, 4 }, 2)]           // sorted even count — (2+3)/2 = 2 (integer division)
+	[InlineData(new[] { 4, 3, 1, 2 }, 2)]           // unsorted even count
+	[InlineData(new[] { 1, 3, 5, 7 }, 4)]           // four elements — (3+5)/2 = 4
+	[InlineData(new[] { -4, -2, 0, 2 }, -1)]        // negative values even count — (-2+0)/2 = -1
+	[InlineData(new[] { 0, 0, 0, 0 }, 0)]           // all zeros even count
+	public void GetMedian_EvenCount_Int_ReturnsAverageOfMiddleTwo(int[] numbers, int expected)
+	{
+		numbers.GetMedian().ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(new[] { 1.0, 2.0, 3.0 }, 2.0)]             // sorted odd count
+	[InlineData(new[] { 3.0, 1.0, 2.0 }, 2.0)]             // unsorted odd count
+	[InlineData(new[] { 1.5, 2.5, 3.5 }, 2.5)]             // fractional values odd count
+	[InlineData(new[] { -3.0, -1.0, 1.0 }, -1.0)]          // negative odd count
+	public void GetMedian_OddCount_Double_ReturnsMiddleElement(double[] numbers, double expected)
+	{
+		numbers.GetMedian().ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(new[] { 1.0, 2.0, 3.0, 4.0 }, 2.5)]        // sorted even count — (2+3)/2 = 2.5
+	[InlineData(new[] { 4.0, 1.0, 3.0, 2.0 }, 2.5)]        // unsorted even count
+	[InlineData(new[] { 1.5, 2.5, 3.5, 4.5 }, 3.0)]        // fractional even count — (2.5+3.5)/2 = 3.0
+	[InlineData(new[] { -4.0, -2.0, 0.0, 2.0 }, -1.0)]     // negative even count
+	public void GetMedian_EvenCount_Double_ReturnsAverageOfMiddleTwo(double[] numbers, double expected)
+	{
+		numbers.GetMedian().ShouldBe(expected);
+	}
+
+	[Fact]
+	public void GetMedian_OddCount_Decimal_ReturnsMiddleElement()
+	{
+		decimal[] numbers = [1.1m, 3.3m, 2.2m];
+		numbers.GetMedian().ShouldBe(2.2m);
+	}
+
+	[Fact]
+	public void GetMedian_EvenCount_Decimal_ReturnsAverageOfMiddleTwo()
+	{
+		decimal[] numbers = [1.0m, 2.0m, 3.0m, 4.0m];
+		numbers.GetMedian().ShouldBe(2.5m);
+	}
+
+	[Fact]
+	public void GetMedian_UnsortedInput_SortsBeforeCalculating()
+	{
+		int[] numbers = [5, 1, 3, 9, 7];
+		// sorted: [1, 3, 5, 7, 9] — median is 5
+		numbers.GetMedian().ShouldBe(5);
+	}
+
+	[Fact]
+	public void GetMedian_AllSameValues_ReturnsThatValue()
+	{
+		int[] numbers = [7, 7, 7, 7];
+		numbers.GetMedian().ShouldBe(7);
+	}
+
+	[Fact]
+	public void GetMedian_LargeCollection_ReturnsCorrectMedian()
+	{
+		// 1..99 — odd count, median is 50
+		IEnumerable<int> numbers = Enumerable.Range(1, 99);
+		numbers.GetMedian().ShouldBe(50);
+	}
+
+	[Fact]
+	public void GetMedian_LargeEvenCollection_ReturnsCorrectMedian()
+	{
+		// 1..100 — even count, median is (50+51)/2 = 50 (integer division)
+		IEnumerable<int> numbers = Enumerable.Range(1, 100);
+		numbers.GetMedian().ShouldBe(50);
+	}
+
+	[Fact]
+	public void GetMedian_AcceptsIEnumerable_NotJustArrays()
+	{
+		IEnumerable<int> numbers = [3, 1, 2];
+		numbers.GetMedian().ShouldBe(2);
+	}
 }

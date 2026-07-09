@@ -662,9 +662,9 @@ public sealed class RestHelpersStaticTests
 		byte[] msgPackBytes = MessagePackSerializer.Serialize(model, cancellationToken: TestContext.Current.CancellationToken);
 		MemoryStream stream = new(msgPackBytes);
 
-		MsgPackOptions options = new() { UseMsgPackCompression = true };
+		MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard;
 
-		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-msgpack", null, false, msgPackOptions: options, cancellationToken: TestContext.Current.CancellationToken);
+		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-msgpack", null, false, messagePackSerializerOptions: options, cancellationToken: TestContext.Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 	}
@@ -676,9 +676,9 @@ public sealed class RestHelpersStaticTests
 		byte[] msgPackBytes = MessagePackSerializer.Serialize(model, cancellationToken: TestContext.Current.CancellationToken);
 		MemoryStream stream = new(msgPackBytes);
 
-		MsgPackOptions options = new() { UseMsgPackUntrusted = true };
+		MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard;
 
-		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-msgpack", null, false, msgPackOptions: options, cancellationToken: TestContext.Current.CancellationToken);
+		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-msgpack", null, false, messagePackSerializerOptions: options, cancellationToken: TestContext.Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 	}

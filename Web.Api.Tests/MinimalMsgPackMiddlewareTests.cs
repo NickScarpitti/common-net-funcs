@@ -155,6 +155,41 @@ public sealed class MsgPackRequestMiddlewareTests
 		capturedContentType.ShouldContain(JsonMimeType);
 		capturedBody.ShouldContain("registered");
 	}
+
+	[Fact]
+	public async Task UseMsgPackRequestBody_CustomOptions_UsedForDeserialization()
+	{
+		// Custom options passed to UseMsgPackRequestBody are forwarded to the serializer
+		string capturedContentType = string.Empty;
+		string capturedBody = string.Empty;
+
+		WebApplicationBuilder builder = WebApplication.CreateBuilder();
+		builder.Logging.ClearProviders();
+		builder.WebHost.UseTestServer();
+		WebApplication app = builder.Build();
+		app.UseMsgPackRequestBody(MessagePackSerializer.DefaultOptions);
+		app.Run(async ctx =>
+		{
+			capturedContentType = ctx.Request.ContentType ?? string.Empty;
+			using StreamReader reader = new(ctx.Request.Body, Encoding.UTF8);
+			capturedBody = await reader.ReadToEndAsync();
+			ctx.Response.StatusCode = 200;
+			await ctx.Response.CompleteAsync();
+		});
+		await app.StartAsync(TestContext.Current.CancellationToken);
+		await using WebApplication _ = app;
+
+		using HttpClient client = app.GetTestClient();
+		byte[] msgPackBytes = MessagePackSerializer.ConvertFromJson("""{"name":"custom-options"}""", cancellationToken: TestContext.Current.CancellationToken);
+		using HttpRequestMessage request = new(HttpMethod.Post, "/");
+		ByteArrayContent content = new(msgPackBytes);
+		content.Headers.ContentType = new MediaTypeHeaderValue(MsgPackMimeType);
+		request.Content = content;
+		await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+		capturedContentType.ShouldContain(JsonMimeType);
+		capturedBody.ShouldContain("custom-options");
+	}
 }
 
 // ---------------------------------------------------------------------------

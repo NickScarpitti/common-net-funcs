@@ -1,11 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using CommonNetFuncs.Core;
+using static CommonNetFuncs.Core.Strings;
 
-[assembly: InternalsVisibleTo("Media.Ffmpeg.Tests")]
+[assembly: InternalsVisibleTo("Ffmpeg.Tests")]
 
-namespace CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
+namespace CommonNetFuncs.Ffmpeg.FfmpegRawCalls;
 
 internal static partial class Helpers
 {

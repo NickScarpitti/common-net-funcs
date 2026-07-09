@@ -1,8 +1,8 @@
 ﻿using CommonNetFuncs.Core;
-using CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
+using CommonNetFuncs.Ffmpeg.FfmpegRawCalls;
 using xRetry.v3;
 
-namespace Media.Ffmpeg.Tests;
+namespace Ffmpeg.Tests;
 
 public sealed class FfmpegRawCallsHelpersTests
 {

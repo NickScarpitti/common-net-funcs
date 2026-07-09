@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using Xabe.FFmpeg;
 
-namespace CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
+namespace CommonNetFuncs.Ffmpeg.FfmpegRawCalls;
 
 public static partial class RawConversionTask
 {
@@ -26,7 +26,7 @@ public static partial class RawConversionTask
 	/// <param name="strict">Optional: Use strict flag for conversion</param>
 	/// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
 	/// <param name="hardwareAccelerationValues">Optional: Parameters for hardware acceleration</param>
-	/// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
+	/// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
 	/// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
 	/// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
 	/// <returns><see langword="true"/> if conversion successfully completed</returns>
@@ -99,7 +99,7 @@ public static partial class RawConversionTask
 	/// <param name="fpsDict">Optional: Dictionary used to display total conversion FPS. Can be used to sum total FPS between multiple simultaneous conversion tasks. If null, will only show FPS for current conversion</param>
 	/// <param name="cancelIfLarger">Optional: Cancel the conversion task if the output becomes larger than the original file</param>
 	/// <param name="taskDescription">Optional: Description to use in logging</param>
-	/// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
+	/// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
 	/// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
 	/// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
 	/// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>

@@ -63,7 +63,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\CommonNetFuncs.Media.Ffmpeg\CommonNetFuncs.Media.Ffmpeg.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.Ffmpeg\CommonNetFuncs.Ffmpeg.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

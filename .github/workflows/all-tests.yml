@@ -37,7 +37,7 @@ jobs:
           - FastMap.Tests
           - Hangfire.Tests
           - Images.Tests
-          - Media.Ffmpeg.Tests
+          - Ffmpeg.Tests
           - Office.Common.Tests
           - Sql.Common.Tests
           - SubsetModelBinder.Attribute.Tests

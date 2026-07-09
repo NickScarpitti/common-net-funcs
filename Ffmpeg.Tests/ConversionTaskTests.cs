@@ -3,13 +3,13 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
-using CommonNetFuncs.Media.Ffmpeg;
-using CommonNetFuncs.Media.Ffmpeg.FfmpegRawCalls;
+using CommonNetFuncs.Ffmpeg;
+using CommonNetFuncs.Ffmpeg.FfmpegRawCalls;
 using Xabe.FFmpeg;
 using xRetry.v3;
-using static CommonNetFuncs.Media.Ffmpeg.Helpers;
+using static CommonNetFuncs.Ffmpeg.Helpers;
 
-namespace Media.Ffmpeg.Tests;
+namespace Ffmpeg.Tests;
 
 public sealed class ConversionTaskTests : IDisposable
 {

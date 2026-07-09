@@ -5,9 +5,9 @@ using Xabe.FFmpeg;
 using Xabe.FFmpeg.Exceptions;
 using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.Strings;
-using static CommonNetFuncs.Media.Ffmpeg.Helpers;
+using static CommonNetFuncs.Ffmpeg.Helpers;
 
-namespace CommonNetFuncs.Media.Ffmpeg;
+namespace CommonNetFuncs.Ffmpeg;
 
 public sealed class HardwareAccelerationValues
 {
@@ -43,7 +43,7 @@ public static class ConversionTask
 	/// <param name="overwriteOutput">Optional: Allows for overwriting a file with the same name as the conversion output</param>
 	/// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
 	/// <param name="hardwareAccelerationValues">Optional: Parameters for hardware acceleration</param>
-	/// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
+	/// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
 	/// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
 	/// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
 	/// <returns><see langword="true"/> if conversion successfully completed</returns>
@@ -74,7 +74,7 @@ public static class ConversionTask
 	/// <param name="overwriteOutput">Optional: Allows for overwriting a file with the same name as the conversion output</param>
 	/// <param name="processPriority">Optional: Priority level to run the conversion process at</param>
 	/// <param name="hardwareAccelerationValues">Optional: Parameters for hardware acceleration</param>
-	/// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Media.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
+	/// <param name="conversionOutputs">Optional: Recorded results from CommonNetFuncs.Ffmpeg.Helpers.RecordResults method. Used to display the total difference between original and converted files</param>
 	/// <param name="additionalLogText">Optional: Additional text to include in the conversion output logs</param>
 	/// <param name="cancellationTokenSource">Optional: Cancellation source for the conversion task</param>
 	/// <returns><see langword="true"/> if conversion successfully completed</returns>

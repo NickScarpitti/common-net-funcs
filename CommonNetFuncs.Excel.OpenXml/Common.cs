@@ -1,6 +1,6 @@
-﻿using System.Collections.Concurrent;
-using System.Data;
+﻿using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
@@ -484,44 +484,69 @@ public static partial class Common
 		}
 	}
 
-	private static ConcurrentDictionary<string, Dictionary<string, uint>> WorkbookStandardFormatCache = [];
+	// Holds the two caches that GetStandardCellStyle uses for a single SpreadsheetDocument:
+	//   FormatCache   — maps a style key ("Header_false") to the resolved CellFormat index.
+	//   ElementCache  — maps a style element key ("Header_false_border") to the Border/Fill/Font index already added to the stylesheet, so subsequent calls reuse the same elements instead of appending duplicates.
+	// Storing both inside a ConditionalWeakTable value means both caches are automatically freed when the document is garbage collected — no explicit per-document cleanup is required.
+	// FormatCache is cleared by ClearStandardFormatCacheForWorkbook (e.g. between sheets).
+	// ElementCache is intentionally preserved across that call so multi-sheet exports can deduplicate CellFormats without bloating the stylesheet with duplicate elements.
+	private sealed class WorkbookStandardCacheEntry
+	{
+		public readonly Dictionary<string, uint> FormatCache = [];
+		public readonly Dictionary<string, uint> ElementCache = [];
+	}
 
-	// Per-document cache for the indices of Border / Fill / Font elements created by
-	// GetStandardCellStyle.  Unlike WorkbookStandardFormatCache, this cache intentionally
-	// survives ClearStandardFormatCacheForWorkbook so that a subsequent cache-miss call can
-	// look up existing style-element indices directly, enabling CellFormatsAreEqual to find
-	// the already-stored CellFormat instead of duplicating it.
-	private static ConcurrentDictionary<string, Dictionary<string, uint>> WorkbookStyleElementCache = [];
+	// Non-readonly so ClearStandardFormatCache() can swap it out to drop all live entries.
+	private static ConditionalWeakTable<SpreadsheetDocument, WorkbookStandardCacheEntry> StandardCacheTable = new();
 
 	/// <summary>
 	/// Clears all cached standard formats for all workbooks
 	/// </summary>
 	public static void ClearStandardFormatCache()
 	{
-		WorkbookStandardFormatCache = [];
-		WorkbookStyleElementCache = [];
+		// Swap in a fresh table — any document that looks up its entry will find nothing and
+		// will rebuild both caches from scratch on the next GetStandardCellStyle call.
+		// The old table (and all WorkbookStandardCacheEntry instances it holds) becomes
+		// unreachable and will be collected by the GC.
+		StandardCacheTable = new();
 	}
 
 	/// <summary>
 	/// Clears standard format cache for specific workbook
 	/// </summary>
 	/// <param name="document">SpreadsheetDocument to clear in memory style references for</param>
-	public static void ClearStandardFormatCacheForWorkbook(SpreadsheetDocument document)
+	public static void ClearStandardFormatCache(this SpreadsheetDocument document)
 	{
-		if (document?.WorkbookPart != null)
+		if (document?.WorkbookPart != null && StandardCacheTable.TryGetValue(document, out WorkbookStandardCacheEntry? entry))
 		{
-			WorkbookStandardFormatCache.TryRemove(GetWorkbookId(document), out _);
+			lock (formatCacheLock)
+			{
+				entry.FormatCache.Clear();
+			}
 		}
 	}
 
-	private static ConcurrentDictionary<string, WorkbookStyleCache> WorkbookCustomFormatCaches = new();
+	public static void ClearStyleElementCache(this SpreadsheetDocument document)
+	{
+		if (document?.WorkbookPart != null && StandardCacheTable.TryGetValue(document, out WorkbookStandardCacheEntry? entry))
+		{
+			lock (formatCacheLock)
+			{
+				entry.ElementCache.Clear();
+			}
+		}
+	}
+
+	// Custom-style cache for a single SpreadsheetDocument. Storing it directly in a ConditionalWeakTable means the WorkbookStyleCache is automatically freed when the document is garbage collected — no explicit per-document cleanup is needed.
+	// ClearCustomFormatCacheForWorkbook() removes the entry explicitly (e.g. when finishing a template-based document). ClearCustomFormatCache() swaps in a fresh table globally.
+	private static ConditionalWeakTable<SpreadsheetDocument, WorkbookStyleCache> CustomCacheTable = new();
 
 	/// <summary>
 	/// Clears all cached custom formats for all workbooks
 	/// </summary>
 	public static void ClearCustomFormatCache()
 	{
-		WorkbookCustomFormatCaches = [];
+		CustomCacheTable = new();
 	}
 
 	/// <summary>
@@ -530,21 +555,22 @@ public static partial class Common
 	/// <param name="document">SpreadsheetDocument to clear in memory style references for</param>
 	/// <remarks>Use this when using a template / base file as any residual created styles will corrupt subsequent documents made from the template / base file.</remarks>
 	/// <remarks>The <see cref="WriteAndClose"/> and <see cref="WriteAndCloseAsync"/> methods have a parameter "clearCachedStyles" to automatically clear the custom format cache for the workbook when set to true.</remarks>
-	public static void ClearCustomFormatCacheForWorkbook(SpreadsheetDocument document)
+	public static void ClearCustomFormatCache(this SpreadsheetDocument document)
 	{
 		if (document?.WorkbookPart != null)
 		{
-			WorkbookCustomFormatCaches.TryRemove(GetWorkbookId(document), out _);
+			CustomCacheTable.Remove(document);
 		}
 	}
 
 	/// <summary>
-	/// Gets a copy of the workbook custom format caches.
+	/// Gets the custom format cache for the specified workbook, or <see langword="null"/> if no custom styles have been created for it yet (or after <see cref="ClearCustomFormatCache"/> was called).
 	/// </summary>
-	/// <returns>A dictionary containing the custom format caches.</returns>
-	public static Dictionary<string, WorkbookStyleCache> GetWorkbookCustomFormatCaches()
+	/// <param name="document">The SpreadsheetDocument to look up.</param>
+	/// <returns>The <see cref="WorkbookStyleCache"/> associated with the document, or <see langword="null"/> if none exists.</returns>
+	public static WorkbookStyleCache? GetCustomFormatCache(this SpreadsheetDocument document)
 	{
-		return new(WorkbookCustomFormatCaches);
+		return CustomCacheTable.TryGetValue(document, out WorkbookStyleCache? cache) ? cache : null;
 	}
 
 	/// <summary>
@@ -706,7 +732,8 @@ public static partial class Common
 	{
 		Stylesheet stylesheet = document.GetStylesheet()!;
 
-		Dictionary<string, uint> formatCache = WorkbookStandardFormatCache.GetOrAdd(GetWorkbookId(document), _ => []);
+		WorkbookStandardCacheEntry cacheEntry = StandardCacheTable.GetOrCreateValue(document);
+		Dictionary<string, uint> formatCache = cacheEntry.FormatCache;
 		string formatKey = $"{style}_{cellLocked}";
 
 		if (formatCache.TryGetValue(formatKey, out uint existingFormatId))
@@ -719,10 +746,9 @@ public static partial class Common
 		Fonts fonts = stylesheet.GetFonts()!;
 		CellFormat cellFormat = new();
 
-		// Per-document element-index cache:
-		// Persists across ClearStandardFormatCacheForWorkbook so that element indices (Border/Fill/Font) are reused on repeated calls,
-		// guaranteeing that the CellFormatsAreEqual deduplication loop finds a matching existing CellFormat.
-		Dictionary<string, uint> elementCache = WorkbookStyleElementCache.GetOrAdd(GetWorkbookId(document), _ => []);
+		// Per-document element-index cache: caches Border/Fill/Font indices so that repeated GetStandardCellStyle calls within the same document reuse existing elements rather than appending duplicates.
+		// Preserved across ClearStandardFormatCacheForWorkbook so that multi-sheet exports can correctly deduplicate CellFormats across sheets.
+		Dictionary<string, uint> elementCache = cacheEntry.ElementCache;
 		string ep = $"{style}_{cellLocked}"; // element-cache key prefix
 
 		Border border;
@@ -1090,14 +1116,13 @@ public static partial class Common
 	/// <param name="fill">Sets Fill value of CellFormat, creates if no identical fill exists yet</param>
 	/// <param name="border">Sets Border value of CellFormat, creates if no identical border exists yet</param>
 	/// <returns>ID of the new CellFormat</returns>
-	public static uint? GetCustomStyle(this SpreadsheetDocument document, bool cellLocked = false, Font? font = null,
-			HorizontalAlignmentValues? alignment = null, Fill? fill = null, Border? border = null, bool wrapText = false)
+	public static uint? GetCustomStyle(this SpreadsheetDocument document, bool cellLocked = false, Font? font = null, HorizontalAlignmentValues? alignment = null,
+		Fill? fill = null, Border? border = null, bool wrapText = false)
 	{
 		// GetStylesheet with default createIfMissing=true always returns non-null
 		Stylesheet stylesheet = document.GetStylesheet()!;
 
-		string workbookId = GetWorkbookId(document);
-		WorkbookStyleCache cache = WorkbookCustomFormatCaches.GetOrAdd(workbookId, _ => new WorkbookStyleCache());
+		WorkbookStyleCache cache = CustomCacheTable.GetOrCreateValue(document);
 
 		uint fontId = GetOrAddFont(stylesheet, cache, font);
 		uint fillId = GetOrAddFill(stylesheet, cache, fill);
@@ -1265,19 +1290,6 @@ public static partial class Common
 	public static int GetHashCode(this OpenXmlElement element)
 	{
 		return element.OuterXml.GetHashCode();
-	}
-
-	/// <summary>
-	/// Gets a unique identifier for the current SpreadsheetDocument
-	/// </summary>
-	/// <param name="document">The SpreadsheetDocument to get a unique identifier for</param>
-	/// <returns>The unique identifier for SpreadsheetDocument</returns>
-	public static string GetWorkbookId(SpreadsheetDocument document)
-	{
-		// Use a combination of the file path (if available) and creation time
-		string filePath = document.PackageProperties.Identifier ?? string.Empty;
-		string creationTime = document.PackageProperties.Created?.ToString() ?? string.Empty;
-		return $"{filePath}_{creationTime}";
 	}
 
 	/// <summary>
@@ -3216,7 +3228,7 @@ public static partial class Common
 	{
 		if (clearCachedStyles)
 		{
-			ClearCustomFormatCacheForWorkbook(document);
+			ClearCustomFormatCache(document);
 		}
 
 		document.WorkbookPart?.Workbook?.Save();
@@ -3241,7 +3253,7 @@ public static partial class Common
 	{
 		if (clearCachedStyles)
 		{
-			ClearCustomFormatCacheForWorkbook(document);
+			ClearCustomFormatCache(document);
 		}
 
 		document.WorkbookPart?.Workbook?.Save();
@@ -3268,7 +3280,7 @@ public static partial class Common
 	{
 		if (clearCachedStyles)
 		{
-			ClearCustomFormatCacheForWorkbook(document);
+			ClearCustomFormatCache(document);
 		}
 
 		document.WorkbookPart?.Workbook?.Save();

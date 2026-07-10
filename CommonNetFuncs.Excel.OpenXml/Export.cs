@@ -217,7 +217,8 @@ public static class Export
 
 				Dictionary<string, int> sharedStringCache = new(StringComparer.Ordinal);
 				int ssCount = 0;
-				foreach (SharedStringItem item in sharedStringTable.Elements<SharedStringItem>()){
+				foreach (SharedStringItem item in sharedStringTable.Elements<SharedStringItem>())
+				{
 					sharedStringCache[item.InnerText] = ssCount++;
 				}
 
@@ -298,7 +299,6 @@ public static class Export
 					worksheet.SetAutoFilter(1, 1, y - 1, (uint)colCount);
 				}
 			}
-			ClearStandardFormatCacheForWorkbook(document);
 			return true;
 		}
 		catch (OperationCanceledException)

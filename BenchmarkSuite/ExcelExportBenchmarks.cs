@@ -228,7 +228,7 @@ public class ExcelExportBenchmarks
 
 			worksheet.AutoFitColumns();
 		}
-		ClearStandardFormatCacheForWorkbook(document);
+		ClearStandardFormatCache(document);
 		return true;
 	}
 

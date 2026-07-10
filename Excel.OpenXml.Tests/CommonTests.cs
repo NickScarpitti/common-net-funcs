@@ -766,14 +766,37 @@ public sealed class CommonTests : IDisposable
 		// Arrange
 		using MemoryStream memoryStream = new();
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
-		document.GetStandardCellStyle(EStyle.Header, false);
-		string workbookId = GetWorkbookId(document);
+		uint id1 = document.GetStandardCellStyle(EStyle.Header, false);
 
 		// Act
-		ClearStandardFormatCacheForWorkbook(document);
+		document.ClearStandardFormatCache();
+
+		// Assert — element cache is preserved so re-requesting the same style returns the same ID
+		uint id2 = document.GetStandardCellStyle(EStyle.Header, false);
+		id2.ShouldBe(id1);
+	}
+
+	[RetryFact(3)]
+	public void ClearStyleElementCache_ShouldForceNewElementsOnNextCall()
+	{
+		// Arrange — create a style so both caches are populated
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.InitializeExcelFile("Test");
+		uint id1 = document.GetStandardCellStyle(EStyle.Header);
+
+		// Act — clear BOTH caches: format-ID cache and element-index cache
+		document.ClearStandardFormatCache(); // wipes FormatCache
+		document.ClearStyleElementCache();   // wipes ElementCache
+
+		// After clearing both caches the next call must append new Border/Fill/Font elements
+		// (no ElementCache hit), which gives them different indices than the first call.
+		// CellFormatsAreEqual then cannot match the existing CellFormat, so a new one is
+		// appended at a higher index.
+		uint id2 = document.GetStandardCellStyle(EStyle.Header);
 
 		// Assert
-		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeFalse();
+		id2.ShouldBeGreaterThan(id1);
 	}
 
 	[RetryFact(3)]
@@ -783,13 +806,13 @@ public sealed class CommonTests : IDisposable
 		using MemoryStream memoryStream = new();
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
-		string workbookId = GetWorkbookId(document);
+		document.GetCustomFormatCache().ShouldNotBeNull();
 
 		// Act
-		ClearCustomFormatCacheForWorkbook(document);
+		document.ClearCustomFormatCache();
 
 		// Assert
-		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeFalse();
+		document.GetCustomFormatCache().ShouldBeNull();
 	}
 
 	[RetryFact(3)]
@@ -2325,7 +2348,7 @@ public sealed class CommonTests : IDisposable
 	}
 
 	[RetryFact(3)]
-	public void GetWorkbookId_ShouldReturnConsistentId()
+	public void GetWorkbookCustomFormatCache_ShouldReturnSameCacheInstanceAcrossMultipleCalls()
 	{
 		// Arrange
 		using MemoryStream memoryStream = new();
@@ -2333,12 +2356,13 @@ public sealed class CommonTests : IDisposable
 		document.CreateNewSheet("Test Sheet");
 
 		// Act
-		string id1 = GetWorkbookId(document);
-		string id2 = GetWorkbookId(document);
+		document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
+		WorkbookStyleCache? cache1 = document.GetCustomFormatCache();
+		WorkbookStyleCache? cache2 = document.GetCustomFormatCache();
 
-		// Assert
-		id1.ShouldNotBeNullOrEmpty();
-		id1.ShouldBe(id2);
+		// Assert — same instance returned for the same document on repeated calls
+		cache1.ShouldNotBeNull();
+		cache1.ShouldBe(cache2);
 	}
 
 	[RetryFact(3)]
@@ -5814,14 +5838,13 @@ public sealed class CommonTests : IDisposable
 		SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
-		string workbookId = GetWorkbookId(document);
-		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeTrue();
+		document.GetCustomFormatCache().ShouldNotBeNull();
 
 		// Act
 		document.WriteAndClose(memoryStream, clearCachedStyles);
 
 		// Assert
-		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBe(!clearCachedStyles);
+		(document.GetCustomFormatCache() == null).ShouldBe(clearCachedStyles);
 		memoryStream.Dispose();
 	}
 
@@ -5838,14 +5861,13 @@ public sealed class CommonTests : IDisposable
 			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
 			document.CreateNewSheet("Test Sheet");
 			document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
-			string workbookId = GetWorkbookId(document);
-			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeTrue();
+			document.GetCustomFormatCache().ShouldNotBeNull();
 
 			// Act
 			document.WriteAndClose(memoryStream, tempFilePath, clearCachedStyles);
 
 			// Assert
-			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBe(!clearCachedStyles);
+			(document.GetCustomFormatCache() == null).ShouldBe(clearCachedStyles);
 			memoryStream.Dispose();
 		}
 		finally
@@ -5867,14 +5889,13 @@ public sealed class CommonTests : IDisposable
 			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
 			document.CreateNewSheet("Test Sheet");
 			document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
-			string workbookId = GetWorkbookId(document);
-			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeTrue();
+			document.GetCustomFormatCache().ShouldNotBeNull();
 
 			// Act
 			await document.WriteAndCloseAsync(memoryStream, tempFilePath, clearCachedStyles);
 
 			// Assert
-			GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBe(!clearCachedStyles);
+			(document.GetCustomFormatCache() == null).ShouldBe(clearCachedStyles);
 			memoryStream.Dispose();
 		}
 		finally
@@ -6569,10 +6590,8 @@ public sealed class CommonTests : IDisposable
 	public void GetStandardCellStyle_WhenCalledAfterCacheClear_ShouldFindExistingFormatAndReturnSameId()
 	{
 		// Arrange — first call builds the format and caches it.
-		// After clearing only the in-memory cache (not the Stylesheet), a second call
-		// must walk the existing CellFormats list and find the already-added format via
-		// CellFormatsAreEqual (previously dead code, now exercised because FindOrAddStyleElement
-		// reuses existing Border/Fill/Font entries so the IDs match).
+		// After clearing only the in-memory cache (not the Stylesheet), a second call must walk the existing CellFormats list and find the already-added format via
+		// CellFormatsAreEqual (previously dead code, now exercised because FindOrAddStyleElement reuses existing Border/Fill/Font entries so the IDs match).
 		using MemoryStream ms = new();
 		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
 		doc.InitializeExcelFile("Test");
@@ -6581,7 +6600,7 @@ public sealed class CommonTests : IDisposable
 
 		// Clear only this document's cache so the next call misses the cache
 		// but the Stylesheet still contains the format from the first call.
-		ClearStandardFormatCacheForWorkbook(doc);
+		doc.ClearStandardFormatCache();
 
 		// Act — second call re-appends Borders/Fills/Fonts with new indices, so the
 		// duplicate check always fails and a brand-new CellFormat entry is created.
@@ -6724,4 +6743,3 @@ public sealed class CommonTests : IDisposable
 		width.ShouldBe(CalculateWidth("Hello"));
 	}
 }
-

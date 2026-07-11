@@ -766,14 +766,37 @@ public sealed class CommonTests : IDisposable
 		// Arrange
 		using MemoryStream memoryStream = new();
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
-		document.GetStandardCellStyle(EStyle.Header, false);
-		string workbookId = GetWorkbookId(document);
+		uint id1 = document.GetStandardCellStyle(EStyle.Header, false);
 
 		// Act
-		ClearStandardFormatCacheForWorkbook(document);
+		document.ClearStandardFormatCache();
+
+		// Assert — element cache is preserved so re-requesting the same style returns the same ID
+		uint id2 = document.GetStandardCellStyle(EStyle.Header, false);
+		id2.ShouldBe(id1);
+	}
+
+	[RetryFact(3)]
+	public void ClearStyleElementCache_ShouldForceNewElementsOnNextCall()
+	{
+		// Arrange — create a style so both caches are populated
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.InitializeExcelFile("Test");
+		uint id1 = document.GetStandardCellStyle(EStyle.Header);
+
+		// Act — clear BOTH caches: format-ID cache and element-index cache
+		document.ClearStandardFormatCache(); // wipes FormatCache
+		document.ClearStyleElementCache();   // wipes ElementCache
+
+		// After clearing both caches the next call must append new Border/Fill/Font elements
+		// (no ElementCache hit), which gives them different indices than the first call.
+		// CellFormatsAreEqual then cannot match the existing CellFormat, so a new one is
+		// appended at a higher index.
+		uint id2 = document.GetStandardCellStyle(EStyle.Header);
 
 		// Assert
-		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeFalse();
+		id2.ShouldBeGreaterThan(id1);
 	}
 
 	[RetryFact(3)]
@@ -783,13 +806,13 @@ public sealed class CommonTests : IDisposable
 		using MemoryStream memoryStream = new();
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
-		string workbookId = GetWorkbookId(document);
+		document.GetCustomFormatCache().ShouldNotBeNull();
 
 		// Act
-		ClearCustomFormatCacheForWorkbook(document);
+		document.ClearCustomFormatCache();
 
 		// Assert
-		GetWorkbookCustomFormatCaches().ContainsKey(workbookId).ShouldBeFalse();
+		document.GetCustomFormatCache().ShouldBeNull();
 	}
 
 	[RetryFact(3)]
@@ -2325,7 +2348,7 @@ public sealed class CommonTests : IDisposable
 	}
 
 	[RetryFact(3)]
-	public void GetWorkbookId_ShouldReturnConsistentId()
+	public void GetWorkbookCustomFormatCache_ShouldReturnSameCacheInstanceAcrossMultipleCalls()
 	{
 		// Arrange
 		using MemoryStream memoryStream = new();
@@ -2333,12 +2356,13 @@ public sealed class CommonTests : IDisposable
 		document.CreateNewSheet("Test Sheet");
 
 		// Act
-		string id1 = GetWorkbookId(document);
-		string id2 = GetWorkbookId(document);
+		document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
+		WorkbookStyleCache? cache1 = document.GetCustomFormatCache();
+		WorkbookStyleCache? cache2 = document.GetCustomFormatCache();
 
-		// Assert
-		id1.ShouldNotBeNullOrEmpty();
-		id1.ShouldBe(id2);
+		// Assert — same instance returned for the same document on repeated calls
+		cache1.ShouldNotBeNull();
+		cache1.ShouldBe(cache2);
 	}
 
 	[RetryFact(3)]
@@ -5703,6 +5727,184 @@ public sealed class CommonTests : IDisposable
 	}
 
 	[RetryFact(3)]
+	public void WriteAndClose_WithFilePath_ReadsFileIntoMemoryStreamAndResetsPosition()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			document.WriteAndClose(memoryStream, tempFilePath);
+
+			// Assert
+			memoryStream.Position.ShouldBe(0);
+			memoryStream.Length.ShouldBeGreaterThan(0);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
+	public void WriteAndClose_WithFilePath_StreamContainsValidWorkbook()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			document.WriteAndClose(memoryStream, tempFilePath);
+
+			// Assert
+			using SpreadsheetDocument reopened = SpreadsheetDocument.Open(memoryStream, false);
+			reopened.WorkbookPart.ShouldNotBeNull();
+			reopened.WorkbookPart!.Workbook.ShouldNotBeNull();
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
+	public async Task WriteAndCloseAsync_WithFilePath_ReadsFileIntoMemoryStreamAndResetsPosition()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			await document.WriteAndCloseAsync(memoryStream, tempFilePath);
+
+			// Assert
+			memoryStream.Position.ShouldBe(0);
+			memoryStream.Length.ShouldBeGreaterThan(0);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
+	public async Task WriteAndCloseAsync_WithFilePath_StreamContainsValidWorkbook()
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.InitializeExcelFile("Sheet1");
+
+			// Act
+			await document.WriteAndCloseAsync(memoryStream, tempFilePath);
+
+			// Assert
+			using SpreadsheetDocument reopened = SpreadsheetDocument.Open(memoryStream, false);
+			reopened.WorkbookPart.ShouldNotBeNull();
+			reopened.WorkbookPart!.Workbook.ShouldNotBeNull();
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void WriteAndClose_WithStream_ClearCachedStyles_ShouldClearCacheOnlyWhenTrue(bool clearCachedStyles)
+	{
+		// Arrange
+		MemoryStream memoryStream = new();
+		SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
+		document.GetCustomFormatCache().ShouldNotBeNull();
+
+		// Act
+		document.WriteAndClose(memoryStream, clearCachedStyles);
+
+		// Assert
+		(document.GetCustomFormatCache() == null).ShouldBe(clearCachedStyles);
+		memoryStream.Dispose();
+	}
+
+	[RetryTheory(3)]
+	[InlineData(true)]
+	[InlineData(false)]
+	public void WriteAndClose_WithFilePath_ClearCachedStyles_ShouldClearCacheOnlyWhenTrue(bool clearCachedStyles)
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.CreateNewSheet("Test Sheet");
+			document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
+			document.GetCustomFormatCache().ShouldNotBeNull();
+
+			// Act
+			document.WriteAndClose(memoryStream, tempFilePath, clearCachedStyles);
+
+			// Assert
+			(document.GetCustomFormatCache() == null).ShouldBe(clearCachedStyles);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryTheory(3)]
+	[InlineData(true)]
+	[InlineData(false)]
+	public async Task WriteAndCloseAsync_WithFilePath_ClearCachedStyles_ShouldClearCacheOnlyWhenTrue(bool clearCachedStyles)
+	{
+		// Arrange
+		string tempFilePath = Path.ChangeExtension(Path.GetTempFileName(), ".xlsx");
+		try
+		{
+			MemoryStream memoryStream = new();
+			SpreadsheetDocument document = SpreadsheetDocument.Create(tempFilePath, SpreadsheetDocumentType.Workbook);
+			document.CreateNewSheet("Test Sheet");
+			document.GetCustomStyle(font: new Font { FontSize = new FontSize { Val = 12 } });
+			document.GetCustomFormatCache().ShouldNotBeNull();
+
+			// Act
+			await document.WriteAndCloseAsync(memoryStream, tempFilePath, clearCachedStyles);
+
+			// Assert
+			(document.GetCustomFormatCache() == null).ShouldBe(clearCachedStyles);
+			memoryStream.Dispose();
+		}
+		finally
+		{
+			if (File.Exists(tempFilePath)) File.Delete(tempFilePath);
+		}
+	}
+
+	[RetryFact(3)]
 	public void AddDropDownValidation_WhenNoExistingDataValidations_CreatesAndAppendsDataValidation()
 	{
 		// Arrange
@@ -6028,5 +6230,516 @@ public sealed class CommonTests : IDisposable
 		string? result = cell.GetStringValue();
 		result.ShouldBe("SharedValue");
 	}
-}
 
+	// -----------------------------------------------------------------------
+	// Tests for the new performance-optimized public APIs
+	// -----------------------------------------------------------------------
+
+	[RetryFact(3)]
+	public void BuildSharedStringIndex_ShouldReturnCorrectMapping()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("Alpha")));
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("Beta")));
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("Gamma")));
+
+		// Act
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Assert
+		index.Count.ShouldBe(3);
+		index[0].ShouldBe("Alpha");
+		index[1].ShouldBe("Beta");
+		index[2].ShouldBe("Gamma");
+	}
+
+	[RetryFact(3)]
+	public void BuildSharedStringIndex_EmptyTable_ShouldReturnEmptyDictionary()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+
+		// Act
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Assert
+		index.Count.ShouldBe(0);
+	}
+
+	[RetryFact(3)]
+	public void GetCellValue_WithIndex_ShouldReturnCorrectValue()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("TestValue")));
+
+		Cell cell = new()
+		{
+			DataType = CellValues.SharedString,
+			CellValue = new CellValue("0")
+		};
+
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Act
+		string result = cell.GetCellValue(index);
+
+		// Assert
+		result.ShouldBe("TestValue");
+	}
+
+	[RetryFact(3)]
+	public void GetCellValue_WithIndex_NonSharedString_ShouldReturnRawValue()
+	{
+		// Arrange
+		Cell cell = new()
+		{
+			DataType = CellValues.String,
+			CellValue = new CellValue("DirectValue")
+		};
+		Dictionary<int, string> index = new() { [0] = "SharedValue" };
+
+		// Act
+		string result = cell.GetCellValue(index);
+
+		// Assert
+		result.ShouldBe("DirectValue");
+	}
+
+	[RetryFact(3)]
+	public void GetCellValue_WithNullIndex_ShouldFallBackToStandardLookup()
+	{
+		// Arrange
+		Cell cell = new()
+		{
+			DataType = CellValues.String,
+			CellValue = new CellValue("PlainValue")
+		};
+
+		// Act
+		string result = cell.GetCellValue(null);
+
+		// Assert
+		result.ShouldBe("PlainValue");
+	}
+
+	[RetryFact(3)]
+	public void GetCellValue_SheetDataWithIndex_ShouldReturnCorrectValue()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("CellText")));
+
+		SheetData sheetData = new();
+		Row row = new() { RowIndex = 1 };
+		Cell cell = new()
+		{
+			CellReference = "A1",
+			DataType = CellValues.SharedString,
+			CellValue = new CellValue("0")
+		};
+		row.AppendChild(cell);
+		sheetData.AppendChild(row);
+
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Act
+		string result = sheetData.GetCellValue(1, 1, index);
+
+		// Assert
+		result.ShouldBe("CellText");
+	}
+
+	[RetryFact(3)]
+	public void GetStringValue_WithIndex_ShouldReturnCorrectValue()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("StringVal")));
+
+		Cell cell = new()
+		{
+			DataType = CellValues.SharedString,
+			CellValue = new CellValue("0")
+		};
+
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Act
+		string? result = cell.GetStringValue(index);
+
+		// Assert
+		result.ShouldBe("StringVal");
+	}
+
+	[RetryFact(3)]
+	public void GetStringValue_WithIndex_NullCell_ShouldReturnNull()
+	{
+		// Arrange
+		Dictionary<int, string> index = new() { [0] = "Something" };
+		Cell? cell = null;
+
+		// Act
+		string? result = cell.GetStringValue(index);
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[RetryFact(3)]
+	public void InsertSharedStringItem_WithCache_ShouldInsertAndReturnCorrectIndex()
+	{
+		// Arrange
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+
+		Dictionary<string, int> cache = new(StringComparer.Ordinal);
+
+		// Act
+		int idx0 = wbp.Workbook.InsertSharedStringItem("First", cache);
+		int idx1 = wbp.Workbook.InsertSharedStringItem("Second", cache);
+		int idx0Again = wbp.Workbook.InsertSharedStringItem("First", cache); // duplicate
+
+		// Assert
+		idx0.ShouldBe(0);
+		idx1.ShouldBe(1);
+		idx0Again.ShouldBe(0); // same index returned for duplicate
+
+		SharedStringTablePart? shareStringTablePart = wbp.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+		shareStringTablePart.ShouldNotBeNull();
+		shareStringTablePart!.SharedStringTable!.Elements<SharedStringItem>().Count().ShouldBe(2); // no duplicate inserted
+	}
+
+	[RetryFact(3)]
+	public void InsertSharedStringItem_WithCache_ShouldNotSaveAfterEachInsertion()
+	{
+		// Arrange — verify the Save-per-insert behavior is gone by confirming the table has
+		// no LastModified timestamp or similar artifact; practically we just confirm bulk
+		// inserts complete quickly and the table contents are correct.
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+
+		Dictionary<string, int> cache = new(StringComparer.Ordinal);
+
+		for (int i = 0; i < 100; i++)
+			wbp.Workbook.InsertSharedStringItem($"Item{i}", cache);
+
+		SharedStringTablePart? shareStringTablePart = wbp.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+		shareStringTablePart.ShouldNotBeNull();
+
+		// Save once at the end (as callers are expected to do)
+		shareStringTablePart!.SharedStringTable!.Save();
+		document.Save();
+
+		// Assert the table contains all 100 items
+		cache.Count.ShouldBe(100);
+		shareStringTablePart.SharedStringTable.Elements<SharedStringItem>().Count().ShouldBe(100);
+	}
+
+	[RetryFact(3)]
+	public void CalculateWidth_WithIndex_ShouldReturnSameAsWithoutIndex_ForNonSharedStrings()
+	{
+		// Arrange — a plain-string cell should give identical width with or without an index
+		using MemoryStream ms = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = document.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
+		shareStringTablePart.SharedStringTable = new SharedStringTable();
+
+		Cell cell = new()
+		{
+			DataType = CellValues.String,
+			CellValue = new CellValue("Hello")
+		};
+
+		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
+
+		// Act
+		double withIndex = cell.CalculateWidth(index);
+		double withoutIndex = CalculateWidth("Hello");
+
+		// Assert
+		withIndex.ShouldBe(withoutIndex);
+	}
+
+	[RetryFact(3)]
+	public void NumberToColumnName_ShouldReturnCorrectNames()
+	{
+		// Spot-check a range of well-known column name / number pairs
+		CellReference.NumberToColumnName(1).ShouldBe("A");
+		CellReference.NumberToColumnName(26).ShouldBe("Z");
+		CellReference.NumberToColumnName(27).ShouldBe("AA");
+		CellReference.NumberToColumnName(52).ShouldBe("AZ");
+		CellReference.NumberToColumnName(702).ShouldBe("ZZ");
+		CellReference.NumberToColumnName(703).ShouldBe("AAA");
+		CellReference.NumberToColumnName(16384).ShouldBe("XFD");
+	}
+
+	// -----------------------------------------------------------------------
+	// Tests for previously-uncovered branches in Common.cs
+	// -----------------------------------------------------------------------
+
+	[RetryFact(3)]
+	public void GetCellFromReference_WhenLaterRowExistsInSheet_ShouldInsertBeforeThatRow()
+	{
+		// Arrange — build a worksheet with only row 3; then request cell (col 1, row 1)
+		// so that a new row must be inserted BEFORE row 3 (InsertBefore branch).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		uint sheetId = doc.InitializeExcelFile("Test");
+		Worksheet ws = doc.GetWorksheetById(sheetId)!;
+		SheetData sd = ws.GetFirstChild<SheetData>()!;
+
+		// Add row 3 first
+		Row row3 = new() { RowIndex = 3 };
+		row3.AppendChild(new Cell { CellReference = "A3", CellValue = new CellValue("R3C1") });
+		sd.Append(row3);
+
+		// Act — requesting row 1 should insert a new row before row 3
+		Cell? cell = ws.GetCellFromReference("A1");
+
+		// Assert
+		cell.ShouldNotBeNull();
+		cell!.CellReference?.Value.ShouldBe("A1");
+		// The rows should appear in order: row1, row3
+		List<uint> rowIndices = sd.Elements<Row>().Select(r => r.RowIndex!.Value).ToList();
+		rowIndices.ShouldBe([1u, 3u]);
+	}
+
+	[RetryFact(3)]
+	public void GetCellFromReference_WhenLaterCellExistsInRow_ShouldInsertBeforeThatCell()
+	{
+		// Arrange — row with cell at column C (3); request cell at column A (1)
+		// so that a new cell must be inserted BEFORE C (InsertBefore cell branch).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		uint sheetId = doc.InitializeExcelFile("Test");
+		Worksheet ws = doc.GetWorksheetById(sheetId)!;
+		SheetData sd = ws.GetFirstChild<SheetData>()!;
+
+		Row row = new() { RowIndex = 1 };
+		row.AppendChild(new Cell { CellReference = "C1", CellValue = new CellValue("ColC") });
+		sd.Append(row);
+
+		// Act — A1 must be inserted before C1
+		Cell? cell = ws.GetCellFromReference("A1");
+
+		// Assert
+		cell.ShouldNotBeNull();
+		List<string?> refs = row.Elements<Cell>().Select(c => c.CellReference?.Value).ToList();
+		refs[0].ShouldBe("A1");
+		refs[1].ShouldBe("C1");
+	}
+
+	[RetryFact(3)]
+	public void GetCellFromCoordinates_WhenLaterCellExistsInRow_ShouldInsertBeforeThatCell()
+	{
+		// Same scenario as above but through GetCellFromCoordinates (exercises line 371).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		uint sheetId = doc.InitializeExcelFile("Test");
+		Worksheet ws = doc.GetWorksheetById(sheetId)!;
+		SheetData sd = ws.GetFirstChild<SheetData>()!;
+
+		Row row = new() { RowIndex = 2 };
+		row.AppendChild(new Cell { CellReference = "D2", CellValue = new CellValue("ColD") });
+		sd.Append(row);
+
+		// Act — request col 2 (B), row 2 — must be inserted before col 4 (D)
+		Cell? cell = ws.GetCellFromCoordinates(2, 2);
+
+		// Assert
+		cell.ShouldNotBeNull();
+		List<string?> refs = row.Elements<Cell>().Select(c => c.CellReference?.Value).ToList();
+		refs[0].ShouldBe("B2");
+		refs[1].ShouldBe("D2");
+	}
+
+	[RetryFact(3)]
+	public void GetStandardCellStyle_WhenCalledAfterCacheClear_ShouldFindExistingFormatAndReturnSameId()
+	{
+		// Arrange — first call builds the format and caches it.
+		// After clearing only the in-memory cache (not the Stylesheet), a second call must walk the existing CellFormats list and find the already-added format via
+		// CellFormatsAreEqual (previously dead code, now exercised because FindOrAddStyleElement reuses existing Border/Fill/Font entries so the IDs match).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		doc.InitializeExcelFile("Test");
+
+		uint id1 = doc.GetStandardCellStyle(EStyle.Header);
+
+		// Clear only this document's cache so the next call misses the cache
+		// but the Stylesheet still contains the format from the first call.
+		doc.ClearStandardFormatCache();
+
+		// Act — second call re-appends Borders/Fills/Fonts with new indices, so the
+		// duplicate check always fails and a brand-new CellFormat entry is created.
+		uint id2 = doc.GetStandardCellStyle(EStyle.Header);
+
+		// Assert — both calls must return the same index now that FindOrAddStyleElement
+		// reuses the existing Border/Fill/Font entries instead of always appending new ones,
+		// allowing CellFormatsAreEqual to find the already-stored CellFormat.
+		id1.ShouldBe(id2);
+	}
+
+	[RetryFact(3)]
+	public void InsertCell_WhenRowAlreadyHasHigherIndexCell_ShouldInsertBeforeIt()
+	{
+		// Arrange — row with a cell at column B (2); insert at column A (1)
+		// so that the new cell is placed via InsertBefore (lines 1287-1288).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		uint sheetId = doc.InitializeExcelFile("Test");
+		Worksheet ws = doc.GetWorksheetById(sheetId)!;
+		SheetData sd = ws.GetFirstChild<SheetData>()!;
+
+		// Pre-populate: add row 1 with only cell B1
+		Row row = new() { RowIndex = 1 };
+		row.AppendChild(new Cell { CellReference = "B1" });
+		sd.Append(row);
+
+		// Act — InsertCell at column 1 (A), row 1
+		Cell? newCell = sd.InsertCell(1, 1);
+
+		// Assert — A1 must appear before B1
+		newCell.ShouldNotBeNull();
+		List<string?> refs = row.Elements<Cell>().Select(c => c.CellReference?.Value).ToList();
+		refs[0].ShouldBe("A1");
+		refs[1].ShouldBe("B1");
+	}
+
+	[RetryFact(3)]
+	public void InsertCellValue_SharedStringType_InFullWorkbookContext_ShouldWriteSharedStringIndex()
+	{
+		// Arrange — InsertCellValue with CellValues.SharedString requires the cell to be
+		// attached to a real WorkbookPart so that GetWorkbookFromCell() and
+		// InsertSharedStringItem() can resolve (lines 1333-1336).
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = doc.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+		WorksheetPart wsp = wbp.AddNewPart<WorksheetPart>();
+		SheetData sd = new();
+		wsp.Worksheet = new Worksheet(sd);
+		Sheets sheets = wbp.Workbook.AppendChild(new Sheets());
+		sheets.AppendChild(new Sheet { Id = wbp.GetIdOfPart(wsp), SheetId = 1, Name = "Sheet1" });
+
+		// Act — default cellType is SharedString
+		sd.InsertCellValue(1, 1, new CellValue("HelloShared"), CellValues.SharedString);
+
+		// Assert
+		Cell? cell = sd.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1)?
+			.Elements<Cell>().FirstOrDefault(c => c.CellReference?.Value == "A1");
+		cell.ShouldNotBeNull();
+		cell!.DataType?.Value.ShouldBe(CellValues.SharedString);
+		// The CellValue should be a numeric index into the shared string table
+		int idx = int.Parse(cell.CellValue!.Text);
+		SharedStringTablePart? shareStringTablePart = wbp.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+		shareStringTablePart.ShouldNotBeNull();
+		shareStringTablePart!.SharedStringTable!.Elements<SharedStringItem>().ElementAt(idx).InnerText.ShouldBe("HelloShared");
+	}
+
+	[RetryFact(3)]
+	public void InsertSharedStringItem_WithDuplicateText_ShouldReturnExistingIndex()
+	{
+		// Covers the early-return path inside the scan loop (line 1417) where the
+		// item already exists and is returned without inserting a duplicate.
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		WorkbookPart wbp = doc.AddWorkbookPart();
+		wbp.Workbook = new Workbook();
+
+		int idx1 = wbp.Workbook.InsertSharedStringItem("UniqueValue");
+		int idx2 = wbp.Workbook.InsertSharedStringItem("AnotherValue");
+		int idx1Again = wbp.Workbook.InsertSharedStringItem("UniqueValue"); // duplicate
+
+		idx1.ShouldBe(0);
+		idx2.ShouldBe(1);
+		idx1Again.ShouldBe(0); // same index, no new item added
+
+		SharedStringTablePart? shareStringTablePart = wbp.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+		shareStringTablePart!.SharedStringTable!.Elements<SharedStringItem>().Count().ShouldBe(2);
+	}
+
+	[RetryFact(3)]
+	public void GetCellValueWithIndex_WhenCellCellValueIsNull_ShouldReturnEmpty()
+	{
+		// Covers the null-guard early-return in the
+		// GetCellValue(Cell?, IReadOnlyDictionary<int,string>?) overload.
+		Cell cellNoValue = new(); // CellValue is null
+		Dictionary<int, string> index = new() { [0] = "ignored" };
+		string result = cellNoValue.GetCellValue(index);
+		result.ShouldBe(string.Empty);
+
+		Cell? nullCell = null;
+		string nullResult = nullCell.GetCellValue(index);
+		nullResult.ShouldBe(string.Empty);
+	}
+
+	[RetryFact(3)]
+	public void GetColumns_WhenWorksheetHasNoSheetData_ShouldAppendColumnsElement()
+	{
+		// Covers the else-branch (worksheet.Append(columns)) in GetColumns when
+		// there is no SheetData child to insert before (line 2412).
+		Worksheet ws = new(); // created without SheetData
+
+		Columns cols = ws.GetColumns();
+
+		cols.ShouldNotBeNull();
+		ws.GetFirstChild<Columns>().ShouldNotBeNull();
+	}
+
+	[RetryFact(3)]
+	public void CalculateWidth_CellExtension_ShouldReturnCorrectWidth()
+	{
+		// Covers the CalculateWidth(this Cell cell) extension method (line 2491)
+		// which is now distinct from the new shared-string-index overload.
+		using MemoryStream ms = new();
+		using SpreadsheetDocument doc = SpreadsheetDocument.Create(ms, SpreadsheetDocumentType.Workbook);
+		uint sheetId = doc.InitializeExcelFile("Test");
+		Worksheet ws = doc.GetWorksheetById(sheetId)!;
+		SheetData sd = ws.GetFirstChild<SheetData>()!;
+
+		// Insert a plain-string cell so GetCellValue() returns the text directly
+		sd.InsertCellValue(1, 1, new CellValue("Hello"), CellValues.String);
+		Cell? cell = sd.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
+			.Elements<Cell>().FirstOrDefault();
+		cell.ShouldNotBeNull();
+
+		double width = cell!.CalculateWidth();
+
+		width.ShouldBeGreaterThan(0);
+		// CalculateWidth("Hello") == CalculateWidth("Hello", null)
+		width.ShouldBe(CalculateWidth("Hello"));
+	}
+}

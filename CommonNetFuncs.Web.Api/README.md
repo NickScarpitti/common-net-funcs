@@ -161,6 +161,17 @@ MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard
     .WithCompression(MessagePackCompression.Lz4Block);
 app.UseMsgPackRequestBody(options);
 
+// Program.cs – custom options (e.g. LZ4 compression to match a compressed client)
+MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard
+    .WithCompression(MessagePackCompression.Lz4Block);
+app.UseMsgPackRequestBody(options);
+
+// Custom options (e.g. with FlexibleDecimalResolver)
+app.UseMsgPackRequestBody(MessagePackSerializerOptions.Standard
+    .WithResolver(CompositeResolver.Create(
+        FlexibleDecimalResolver.Instance,
+        StandardResolver.Instance)));
+
 app.MapPost("/entities", (MyEntity entity) => Results.Ok(entity));
 ```
 

@@ -24,6 +24,7 @@
 		<ProjectReference Include="..\CommonNetFuncs.DeepClone\CommonNetFuncs.DeepClone.csproj" />
 		<ProjectReference Include="..\CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj" />
 		<ProjectReference Include="..\CommonNetFuncs.EFCore\CommonNetFuncs.EFCore.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.Excel.OpenXml\CommonNetFuncs.Excel.OpenXml.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

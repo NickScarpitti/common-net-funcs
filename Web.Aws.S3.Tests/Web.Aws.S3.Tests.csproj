@@ -25,7 +25,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Logging" />
+		<!-- <PackageReference Include="Microsoft.Extensions.Logging" /> -->
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="NLog" />
 		<PackageReference Include="Shouldly" />

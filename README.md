@@ -1,5 +1,6 @@
 [![License](https://img.shields.io/github/license/NickScarpitti/common-net-funcs.svg)](http://opensource.org/licenses/MIT)
 [![Coverage Status](https://coveralls.io/repos/github/NickScarpitti/common-net-funcs/badge.svg?branch=main)](https://coveralls.io/github/NickScarpitti/common-net-funcs?branch=main)
+[![All Tests](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/all-tests.yml/badge.svg)](https://github.com/NickScarpitti/common-net-funcs/actions/workflows/all-tests.yml)
 
 # CommonNetFuncs is a collection of helper classes and methods that aim to make coding in C# easier with less boilerplate code
 
@@ -17,22 +18,26 @@
    3. [Npoi](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Excel.Npoi)
    4. [OpenXML](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Excel.OpenXml)
 8. [FastMap](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.FastMap)
-9. [Images](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Images)
-10. Sql
+9. [Ffmpeg](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Ffmpeg)
+10. [Hangfire](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Hangfire)
+11. [Images](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Images)
+12. Office
+    1. [Common](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Office.Common)
+13. Sql
     1. [Common](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Sql.Common)
     2. [Odbc](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Sql.Odbc)
     3. [PostgreSql](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Sql.PostgreSql)
     4. [SqlServer](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Sql.SqlServer)
-11. [SubsetModelBinder](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.SubsetModelBinder)
-12. Web
+14. [SubsetModelBinder](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.SubsetModelBinder)
+15. Web
     1. [Api](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Api)
     2. Aws
        1. [S3](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.S3)
     3. [Common](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Common)
-    4. [Interface](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Interface)
-    5. [Jwt](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Jwt)
-    6. [Middleware](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Middleware)
-    7. [Requests](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Requests)
-13. Word
+    4. [Ftp](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Ftp)
+    5. [Interface](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Interface)
+    6. [Jwt](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Jwt)
+    7. [Middleware](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Middleware)
+    8. [Requests](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Web.Requests)
+16. Word
     1. [OpenXML](https://github.com/NickScarpitti/common-net-funcs/tree/main/CommonNetFuncs.Word.OpenXml)
-

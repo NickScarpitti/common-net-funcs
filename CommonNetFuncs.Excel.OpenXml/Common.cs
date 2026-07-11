@@ -1,6 +1,6 @@
-﻿using System.Collections.Concurrent;
-using System.Data;
+﻿using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
 using CommonNetFuncs.Excel.Common;
@@ -16,11 +16,14 @@ using Xdr = DocumentFormat.OpenXml.Drawing.Spreadsheet;
 
 namespace CommonNetFuncs.Excel.OpenXml;
 
-#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
 public static partial class Common
 {
 	private static readonly Lock formatCacheLock = new();
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+	// Pre-computed style-id sets used by CalculateWidth — static to avoid a new HashSet allocation on every call
+	private static readonly HashSet<uint> NumberStyleIds = [5, 6, 7, 8];
+	private static readonly HashSet<uint> BoldStyleIds = [1, 2, 3, 4, 6, 7, 8];
 
 	private const string WorksheetNotPartOfWorkbookError = "Worksheet is not part of a workbook.";
 
@@ -253,17 +256,28 @@ public static partial class Common
 	{
 		try
 		{
-			Row? row = ws.GetRow(cellReference.RowIndex + ((uint)rowOffset));
+			uint targetRowIndex = (uint)(cellReference.RowIndex + rowOffset);
+			uint targetColIndex = (uint)(cellReference.ColumnIndex + colOffset);
+			Row? row = ws.GetRow(targetRowIndex);
 			if (row == null)
 			{
-				row = new Row() { RowIndex = (uint)(cellReference.RowIndex + rowOffset) };
-				ws.Append(row);
+				row = new Row() { RowIndex = targetRowIndex };
+				SheetData? sheetData = ws.GetFirstChild<SheetData>();
+				Row? nextRow = sheetData?.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value > targetRowIndex);
+				if (nextRow != null)
+					sheetData!.InsertBefore(row, nextRow);
+				else
+					sheetData?.Append(row);
 			}
-			Cell? cell = row.GetCell(cellReference.ColumnIndex + ((uint)colOffset));
+			Cell? cell = row.GetCell(targetColIndex);
 			if (cell == null)
 			{
-				cell = new Cell() { CellReference = new CellReference(cellReference.ColumnIndex + ((uint)colOffset), cellReference.RowIndex + ((uint)rowOffset)).ToString() };
-				row.Append(cell);
+				cell = new Cell() { CellReference = new CellReference(targetColIndex, targetRowIndex).ToString() };
+				Cell? nextCell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference != null && new CellReference(c.CellReference!).ColumnIndex > targetColIndex);
+				if (nextCell != null)
+					row.InsertBefore(cell, nextCell);
+				else
+					row.Append(cell);
 			}
 			return cell;
 		}
@@ -327,17 +341,38 @@ public static partial class Common
 	{
 		try
 		{
-			Row? row = ws.GetRow((uint)(y + rowOffset));
+			uint targetRowIndex = (uint)(y + rowOffset);
+			uint targetColIndex = (uint)(x + colOffset);
+			Row? row = ws.GetRow(targetRowIndex);
 			if (row == null)
 			{
-				row = new Row() { RowIndex = (uint)(y + rowOffset) };
-				ws.Append(row);
+				row = new Row() { RowIndex = targetRowIndex };
+				SheetData? sheetData = ws.GetFirstChild<SheetData>();
+				Row? nextRow = sheetData?.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value > targetRowIndex);
+				if (nextRow != null)
+				{
+					// Ensure ordering of rows within the sheet is maintained when adding a new row
+					sheetData!.InsertBefore(row, nextRow);
+				}
+				else
+				{
+					sheetData?.Append(row);
+				}
 			}
-			Cell? cell = row.GetCell((uint)(x + colOffset));
+			Cell? cell = row.GetCell(targetColIndex);
 			if (cell == null)
 			{
-				cell = new Cell() { CellReference = new CellReference((uint)(x + colOffset), (uint)(y + rowOffset)).ToString() };
-				row.Append(cell);
+				cell = new() { CellReference = new CellReference(targetColIndex, targetRowIndex).ToString() };
+				Cell? nextCell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference != null && new CellReference(c.CellReference!).ColumnIndex > targetColIndex);
+				if (nextCell != null)
+				{
+					// Ensure ordering of cells within the row is maintained when adding a new cell
+					row.InsertBefore(cell, nextCell);
+				}
+				else
+				{
+					row.Append(cell);
+				}
 			}
 			return cell;
 		}
@@ -449,57 +484,93 @@ public static partial class Common
 		}
 	}
 
-	private static ConcurrentDictionary<string, Dictionary<string, uint>> WorkbookStandardFormatCache = [];
+	// Holds the two caches that GetStandardCellStyle uses for a single SpreadsheetDocument:
+	//   FormatCache   — maps a style key ("Header_false") to the resolved CellFormat index.
+	//   ElementCache  — maps a style element key ("Header_false_border") to the Border/Fill/Font index already added to the stylesheet, so subsequent calls reuse the same elements instead of appending duplicates.
+	// Storing both inside a ConditionalWeakTable value means both caches are automatically freed when the document is garbage collected — no explicit per-document cleanup is required.
+	// FormatCache is cleared by ClearStandardFormatCacheForWorkbook (e.g. between sheets).
+	// ElementCache is intentionally preserved across that call so multi-sheet exports can deduplicate CellFormats without bloating the stylesheet with duplicate elements.
+	private sealed class WorkbookStandardCacheEntry
+	{
+		public readonly Dictionary<string, uint> FormatCache = [];
+		public readonly Dictionary<string, uint> ElementCache = [];
+	}
+
+	// Non-readonly so ClearStandardFormatCache() can swap it out to drop all live entries.
+	private static ConditionalWeakTable<SpreadsheetDocument, WorkbookStandardCacheEntry> StandardCacheTable = new();
 
 	/// <summary>
 	/// Clears all cached standard formats for all workbooks
 	/// </summary>
 	public static void ClearStandardFormatCache()
 	{
-		WorkbookStandardFormatCache = [];
+		// Swap in a fresh table — any document that looks up its entry will find nothing and
+		// will rebuild both caches from scratch on the next GetStandardCellStyle call.
+		// The old table (and all WorkbookStandardCacheEntry instances it holds) becomes
+		// unreachable and will be collected by the GC.
+		StandardCacheTable = new();
 	}
 
 	/// <summary>
 	/// Clears standard format cache for specific workbook
 	/// </summary>
 	/// <param name="document">SpreadsheetDocument to clear in memory style references for</param>
-	public static void ClearStandardFormatCacheForWorkbook(SpreadsheetDocument document)
+	public static void ClearStandardFormatCache(this SpreadsheetDocument document)
 	{
-		if (document?.WorkbookPart != null)
+		if (document?.WorkbookPart != null && StandardCacheTable.TryGetValue(document, out WorkbookStandardCacheEntry? entry))
 		{
-			WorkbookStandardFormatCache.TryRemove(GetWorkbookId(document), out _);
+			lock (formatCacheLock)
+			{
+				entry.FormatCache.Clear();
+			}
 		}
 	}
 
-	private static ConcurrentDictionary<string, WorkbookStyleCache> WorkbookCustomFormatCaches = new();
+	public static void ClearStyleElementCache(this SpreadsheetDocument document)
+	{
+		if (document?.WorkbookPart != null && StandardCacheTable.TryGetValue(document, out WorkbookStandardCacheEntry? entry))
+		{
+			lock (formatCacheLock)
+			{
+				entry.ElementCache.Clear();
+			}
+		}
+	}
+
+	// Custom-style cache for a single SpreadsheetDocument. Storing it directly in a ConditionalWeakTable means the WorkbookStyleCache is automatically freed when the document is garbage collected — no explicit per-document cleanup is needed.
+	// ClearCustomFormatCacheForWorkbook() removes the entry explicitly (e.g. when finishing a template-based document). ClearCustomFormatCache() swaps in a fresh table globally.
+	private static ConditionalWeakTable<SpreadsheetDocument, WorkbookStyleCache> CustomCacheTable = new();
 
 	/// <summary>
 	/// Clears all cached custom formats for all workbooks
 	/// </summary>
 	public static void ClearCustomFormatCache()
 	{
-		WorkbookCustomFormatCaches = [];
+		CustomCacheTable = new();
 	}
 
 	/// <summary>
 	/// Clears custom format cache for specific workbook
 	/// </summary>
 	/// <param name="document">SpreadsheetDocument to clear in memory style references for</param>
-	public static void ClearCustomFormatCacheForWorkbook(SpreadsheetDocument document)
+	/// <remarks>Use this when using a template / base file as any residual created styles will corrupt subsequent documents made from the template / base file.</remarks>
+	/// <remarks>The <see cref="WriteAndClose"/> and <see cref="WriteAndCloseAsync"/> methods have a parameter "clearCachedStyles" to automatically clear the custom format cache for the workbook when set to true.</remarks>
+	public static void ClearCustomFormatCache(this SpreadsheetDocument document)
 	{
 		if (document?.WorkbookPart != null)
 		{
-			WorkbookCustomFormatCaches.TryRemove(GetWorkbookId(document), out _);
+			CustomCacheTable.Remove(document);
 		}
 	}
 
 	/// <summary>
-	/// Gets a copy of the workbook custom format caches.
+	/// Gets the custom format cache for the specified workbook, or <see langword="null"/> if no custom styles have been created for it yet (or after <see cref="ClearCustomFormatCache"/> was called).
 	/// </summary>
-	/// <returns>A dictionary containing the custom format caches.</returns>
-	public static Dictionary<string, WorkbookStyleCache> GetWorkbookCustomFormatCaches()
+	/// <param name="document">The SpreadsheetDocument to look up.</param>
+	/// <returns>The <see cref="WorkbookStyleCache"/> associated with the document, or <see langword="null"/> if none exists.</returns>
+	public static WorkbookStyleCache? GetCustomFormatCache(this SpreadsheetDocument document)
 	{
-		return new(WorkbookCustomFormatCaches);
+		return CustomCacheTable.TryGetValue(document, out WorkbookStyleCache? cache) ? cache : null;
 	}
 
 	/// <summary>
@@ -661,7 +732,8 @@ public static partial class Common
 	{
 		Stylesheet stylesheet = document.GetStylesheet()!;
 
-		Dictionary<string, uint> formatCache = WorkbookStandardFormatCache.GetOrAdd(GetWorkbookId(document), _ => []);
+		WorkbookStandardCacheEntry cacheEntry = StandardCacheTable.GetOrCreateValue(document);
+		Dictionary<string, uint> formatCache = cacheEntry.FormatCache;
 		string formatKey = $"{style}_{cellLocked}";
 
 		if (formatCache.TryGetValue(formatKey, out uint existingFormatId))
@@ -674,6 +746,11 @@ public static partial class Common
 		Fonts fonts = stylesheet.GetFonts()!;
 		CellFormat cellFormat = new();
 
+		// Per-document element-index cache: caches Border/Fill/Font indices so that repeated GetStandardCellStyle calls within the same document reuse existing elements rather than appending duplicates.
+		// Preserved across ClearStandardFormatCacheForWorkbook so that multi-sheet exports can correctly deduplicate CellFormats across sheets.
+		Dictionary<string, uint> elementCache = cacheEntry.ElementCache;
+		string ep = $"{style}_{cellLocked}"; // element-cache key prefix
+
 		Border border;
 		Fill fill;
 		switch (style)
@@ -682,33 +759,43 @@ public static partial class Common
 				cellFormat.Alignment = new Alignment { Horizontal = HorizontalAlignmentValues.Center };
 				cellFormat.ApplyAlignment = true;
 
-				border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
-					new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
-				borders.Append(border);
-#pragma warning disable S2971 // LINQ expressions should be simplified
-				cellFormat.BorderId = ((uint)borders.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
+				if (!elementCache.TryGetValue($"{ep}_border", out uint hBorder))
+				{
+					border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
+						new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
+					borders.Append(border);
+					hBorder = ((uint)borders.Count()) - 1;
+					elementCache[$"{ep}_border"] = hBorder;
+				}
+				cellFormat.BorderId = hBorder;
 				cellFormat.ApplyBorder = true;
 
-				fill = new()
+				if (!elementCache.TryGetValue($"{ep}_fill", out uint hFill))
 				{
-					PatternFill = new()
+					fill = new()
 					{
-						PatternType = PatternValues.Solid,
-						ForegroundColor = new()
+						PatternFill = new()
 						{
-							Indexed = (int)EIndexedExcelColors.Grey25Percent
-						}
-					},
-				};
-
-				fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
-				cellFormat.FillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
+							PatternType = PatternValues.Solid,
+							ForegroundColor = new()
+							{
+								Indexed = (int)EIndexedExcelColors.Grey25Percent
+							}
+						},
+					};
+					fills.Append(fill);
+					hFill = ((uint)fills.Count()) - 1;
+					elementCache[$"{ep}_fill"] = hFill;
+				}
+				cellFormat.FillId = hFill;
 				cellFormat.ApplyFill = true;
 
-				cellFormat.FontId = GetFontId(EFont.Header, fonts);
+				if (!elementCache.TryGetValue($"{ep}_font", out uint hFont))
+				{
+					hFont = GetFontId(EFont.Header, fonts);
+					elementCache[$"{ep}_font"] = hFont;
+				}
+				cellFormat.FontId = hFont;
 				cellFormat.ApplyFont = true;
 				break;
 
@@ -716,32 +803,43 @@ public static partial class Common
 				cellFormat.Alignment = new Alignment { Horizontal = HorizontalAlignmentValues.Center };
 				cellFormat.ApplyAlignment = true;
 
-				border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
-					new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Medium }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
-				borders.Append(border);
-#pragma warning disable S2971 // LINQ expressions should be simplified
-				cellFormat.BorderId = ((uint)borders.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
+				if (!elementCache.TryGetValue($"{ep}_border", out uint hBorder2))
+				{
+					border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
+						new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Medium }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
+					borders.Append(border);
+					hBorder2 = ((uint)borders.Count()) - 1;
+					elementCache[$"{ep}_border"] = hBorder2;
+				}
+				cellFormat.BorderId = hBorder2;
 				cellFormat.ApplyBorder = true;
 
-				fill = new()
+				if (!elementCache.TryGetValue($"{ep}_fill", out uint hFill2))
 				{
-					PatternFill = new()
+					fill = new()
 					{
-						PatternType = PatternValues.Solid,
-						ForegroundColor = new()
+						PatternFill = new()
 						{
-							Indexed = (int)EIndexedExcelColors.Grey25Percent
-						}
-					},
-				};
-				fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
-				cellFormat.FillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
+							PatternType = PatternValues.Solid,
+							ForegroundColor = new()
+							{
+								Indexed = (int)EIndexedExcelColors.Grey25Percent
+							}
+						},
+					};
+					fills.Append(fill);
+					hFill2 = ((uint)fills.Count()) - 1;
+					elementCache[$"{ep}_fill"] = hFill2;
+				}
+				cellFormat.FillId = hFill2;
 				cellFormat.ApplyFill = true;
 
-				cellFormat.FontId = GetFontId(EFont.Header, fonts);
+				if (!elementCache.TryGetValue($"{ep}_font", out uint hFont2))
+				{
+					hFont2 = GetFontId(EFont.Header, fonts);
+					elementCache[$"{ep}_font"] = hFont2;
+				}
+				cellFormat.FontId = hFont2;
 				cellFormat.ApplyFont = true;
 				break;
 
@@ -749,81 +847,106 @@ public static partial class Common
 				cellFormat.Alignment = new Alignment { Horizontal = HorizontalAlignmentValues.Center };
 				cellFormat.ApplyAlignment = true;
 
-				border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
-					new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
-				borders.Append(border);
-#pragma warning disable S2971 // LINQ expressions should be simplified
-				cellFormat.BorderId = ((uint)borders.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
+				if (!elementCache.TryGetValue($"{ep}_border", out uint bBorder))
+				{
+					border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
+						new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
+					borders.Append(border);
+					bBorder = ((uint)borders.Count()) - 1;
+					elementCache[$"{ep}_border"] = bBorder;
+				}
+				cellFormat.BorderId = bBorder;
 				cellFormat.ApplyBorder = true;
 
-				cellFormat.FontId = GetFontId(EFont.Default, fonts);
+				if (!elementCache.TryGetValue($"{ep}_font", out uint bFont))
+				{
+					bFont = GetFontId(EFont.Default, fonts);
+					elementCache[$"{ep}_font"] = bFont;
+				}
+				cellFormat.FontId = bFont;
 				cellFormat.ApplyFont = true;
 
 				break;
 
 			case EStyle.Error:
-				fill = new()
+				if (!elementCache.TryGetValue($"{ep}_fill", out uint eFill))
 				{
-					PatternFill = new()
+					fill = new()
 					{
-						PatternType = PatternValues.Solid,
-						ForegroundColor = new()
+						PatternFill = new()
 						{
-							Indexed = (int)EIndexedExcelColors.Red
-						}
-					},
-				};
-
-				fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
-				cellFormat.FillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
+							PatternType = PatternValues.Solid,
+							ForegroundColor = new()
+							{
+								Indexed = (int)EIndexedExcelColors.Red
+							}
+						},
+					};
+					fills.Append(fill);
+					eFill = ((uint)fills.Count()) - 1;
+					elementCache[$"{ep}_fill"] = eFill;
+				}
+				cellFormat.FillId = eFill;
 				cellFormat.ApplyFill = true;
 				break;
 
 			case EStyle.Blackout:
-				fill = new()
+				if (!elementCache.TryGetValue($"{ep}_fill", out uint blFill))
 				{
-					PatternFill = new()
+					fill = new()
 					{
-						PatternType = PatternValues.Solid,
-						ForegroundColor = new()
+						PatternFill = new()
 						{
-							Indexed = (int)EIndexedExcelColors.Black
-						}
-					},
-				};
-
-				fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
-				cellFormat.FillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
+							PatternType = PatternValues.Solid,
+							ForegroundColor = new()
+							{
+								Indexed = (int)EIndexedExcelColors.Black
+							}
+						},
+					};
+					fills.Append(fill);
+					blFill = ((uint)fills.Count()) - 1;
+					elementCache[$"{ep}_fill"] = blFill;
+				}
+				cellFormat.FillId = blFill;
 				cellFormat.ApplyFill = true;
 
-				cellFormat.FontId = GetFontId(EFont.Default, fonts); //Default font is black
+				if (!elementCache.TryGetValue($"{ep}_font", out uint blFont))
+				{
+					blFont = GetFontId(EFont.Default, fonts);
+					elementCache[$"{ep}_font"] = blFont;
+				}
+				cellFormat.FontId = blFont; //Default font is black
 				cellFormat.ApplyFont = true;
 				break;
 
 			case EStyle.Whiteout:
-				fill = new()
+				if (!elementCache.TryGetValue($"{ep}_fill", out uint wFill))
 				{
-					PatternFill = new()
+					fill = new()
 					{
-						PatternType = PatternValues.Solid,
-						ForegroundColor = new()
+						PatternFill = new()
 						{
-							Indexed = (int)EIndexedExcelColors.White
-						}
-					},
-				};
-				fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
-				cellFormat.FillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
+							PatternType = PatternValues.Solid,
+							ForegroundColor = new()
+							{
+								Indexed = (int)EIndexedExcelColors.White
+							}
+						},
+					};
+					fills.Append(fill);
+					wFill = ((uint)fills.Count()) - 1;
+					elementCache[$"{ep}_fill"] = wFill;
+				}
+				cellFormat.FillId = wFill;
 				cellFormat.ApplyFill = true;
 
-				cellFormat.FontId = GetFontId(EFont.Whiteout, fonts); // White font
+				if (!elementCache.TryGetValue($"{ep}_font", out uint wFont))
+				{
+					wFont = GetFontId(EFont.Whiteout, fonts);
+					elementCache[$"{ep}_font"] = wFont;
+				}
+				cellFormat.FontId = wFont; // White font
 				break;
 		}
 
@@ -848,7 +971,6 @@ public static partial class Common
 
 		// Check if an identical CellFormat already exists
 		CellFormats cellFormats = stylesheet.GetCellFormats()!;
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		for (uint i = 0; i < (uint)cellFormats.Count(); i++)
 		{
 			if (CellFormatsAreEqual(cellFormat, cellFormats.Elements<CellFormat>().ElementAt((int)i)))
@@ -857,26 +979,21 @@ public static partial class Common
 				return i;
 			}
 		}
-#pragma warning restore S2971 // LINQ expressions should be simplified
 
 		// If no matching format found, add the new one
 		// cellFormat.FormatId = (uint)cellFormats.Count() - 1;
 		cellFormats.Append(cellFormat);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		uint newFormatId = ((uint)cellFormats.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 
 		lock (formatCacheLock)
 		{
 			formatCache[formatKey] = newFormatId;
 		}
 
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		fonts.Count = (uint)fonts.Count();
 		fills.Count = (uint)fills.Count();
 		borders.Count = (uint)borders.Count();
 		cellFormats.Count = (uint)cellFormats.Count();
-#pragma warning restore S2971 // LINQ expressions should be simplified
 
 		return newFormatId;
 	}
@@ -910,10 +1027,8 @@ public static partial class Common
 				break;
 		}
 		fonts.Append(font);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		fonts.Count = (uint)fonts.Count();
 		return ((uint)fonts.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 	}
 
 	/// <summary>
@@ -953,7 +1068,7 @@ public static partial class Common
 			return false;
 		}
 
-		return alignment1.Horizontal == alignment2.Horizontal && alignment1.WrapText == alignment2.WrapText;
+		return Equals(alignment1.Horizontal, alignment2.Horizontal) && Equals(alignment1.WrapText, alignment2.WrapText);
 	}
 
 	/// <summary>
@@ -1001,14 +1116,13 @@ public static partial class Common
 	/// <param name="fill">Sets Fill value of CellFormat, creates if no identical fill exists yet</param>
 	/// <param name="border">Sets Border value of CellFormat, creates if no identical border exists yet</param>
 	/// <returns>ID of the new CellFormat</returns>
-	public static uint? GetCustomStyle(this SpreadsheetDocument document, bool cellLocked = false, Font? font = null,
-			HorizontalAlignmentValues? alignment = null, Fill? fill = null, Border? border = null, bool wrapText = false)
+	public static uint? GetCustomStyle(this SpreadsheetDocument document, bool cellLocked = false, Font? font = null, HorizontalAlignmentValues? alignment = null,
+		Fill? fill = null, Border? border = null, bool wrapText = false)
 	{
 		// GetStylesheet with default createIfMissing=true always returns non-null
 		Stylesheet stylesheet = document.GetStylesheet()!;
 
-		string workbookId = GetWorkbookId(document);
-		WorkbookStyleCache cache = WorkbookCustomFormatCaches.GetOrAdd(workbookId, _ => new WorkbookStyleCache());
+		WorkbookStyleCache cache = CustomCacheTable.GetOrCreateValue(document);
 
 		uint fontId = GetOrAddFont(stylesheet, cache, font);
 		uint fillId = GetOrAddFill(stylesheet, cache, fill);
@@ -1096,10 +1210,8 @@ public static partial class Common
 			fonts = stylesheet.Elements<Fonts>().First();
 		}
 		fonts.Append(font);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		fonts.Count = (uint)fonts.Count();
 		uint newFontId = ((uint)fonts.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 		cache.FontCache[fontHash] = newFontId;
 		return newFontId;
 	}
@@ -1131,10 +1243,8 @@ public static partial class Common
 			fills = stylesheet.Elements<Fills>().First();
 		}
 		fills.Append(fill);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		fills.Count = (uint)fills.Count();
 		uint newFillId = ((uint)fills.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 		cache.FillCache[fillHash] = newFillId;
 		return newFillId;
 	}
@@ -1166,10 +1276,8 @@ public static partial class Common
 			borders = stylesheet.Elements<Borders>().First();
 		}
 		borders.Append(border);
-#pragma warning disable S2971 // LINQ expressions should be simplified
 		borders.Count = (uint)borders.Count();
 		uint newBorderId = ((uint)borders.Count()) - 1;
-#pragma warning restore S2971 // LINQ expressions should be simplified
 		cache.BorderCache[borderHash] = newBorderId;
 		return newBorderId;
 	}
@@ -1182,19 +1290,6 @@ public static partial class Common
 	public static int GetHashCode(this OpenXmlElement element)
 	{
 		return element.OuterXml.GetHashCode();
-	}
-
-	/// <summary>
-	/// Gets a unique identifier for the current SpreadsheetDocument
-	/// </summary>
-	/// <param name="document">The SpreadsheetDocument to get a unique identifier for</param>
-	/// <returns>The unique identifier for SpreadsheetDocument</returns>
-	public static string GetWorkbookId(SpreadsheetDocument document)
-	{
-		// Use a combination of the file path (if available) and creation time
-		string filePath = document.PackageProperties.Identifier ?? string.Empty;
-		string creationTime = document.PackageProperties.Created?.ToString() ?? string.Empty;
-		return $"{filePath}_{creationTime}";
 	}
 
 	/// <summary>
@@ -1355,10 +1450,15 @@ public static partial class Common
 	/// <param name="text">Text of the SharedString to be created</param>
 	/// <returns>Index of the SharedString item</returns>
 	/// <exception cref="InvalidOperationException"></exception>
+	/// <remarks>
+	/// This method does not call Save() on the SharedStringTablePart. The caller must call SharedStringTable.Save() (or SpreadsheetDocument.Save()) once all insertions are done.
+	/// </remarks>
 	public static int InsertSharedStringItem(this Workbook workbook, string text)
 	{
 		// If the part does not contain a SharedStringTable, create one.
-		SharedStringTablePart shareStringTablePart = workbook.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault() ?? workbook.WorkbookPart?.AddNewPart<SharedStringTablePart>() ?? throw new InvalidOperationException("The WorkbookPart is missing.");
+		SharedStringTablePart shareStringTablePart = workbook.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault()
+			?? workbook.WorkbookPart?.AddNewPart<SharedStringTablePart>()
+			?? throw new InvalidOperationException("The WorkbookPart is missing.");
 		shareStringTablePart.SharedStringTable ??= new();
 
 		int i = 0;
@@ -1375,10 +1475,63 @@ public static partial class Common
 		}
 
 		// The text does not exist in the part. Create the SharedStringItem and return its index.
+		// NOTE: Save() is intentionally NOT called here — saving after every single insertion causes O(n²) XML serialization for bulk operations.
+		// The caller must call SharedStringTable.Save() (or SpreadsheetDocument.Save()) once all insertions are done.
 		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text(text)));
-		shareStringTablePart.SharedStringTable.Save();
 
 		return i;
+	}
+
+	/// <summary>
+	/// Looks up or inserts a shared-string item using a pre-built O(1) dictionary cache,
+	/// eliminating the O(n) linear scan of <see cref="InsertSharedStringItem(Workbook, string)"/>.
+	/// The caller is responsible for calling <see cref="SharedStringTable.Save"/> (or
+	/// <see cref="SpreadsheetDocument.Save"/>) once all insertions are complete.
+	/// </summary>
+	/// <param name="workbook">The workbook containing (or that will contain) the shared-string table.</param>
+	/// <param name="text">The text to look up or insert.</param>
+	/// <param name="shareStringTableCache">
+	/// A caller-managed dictionary mapping string values to their 0-based shared-string indices.
+	/// Must remain in sync with the shared-string table across all calls.
+	/// </param>
+	/// <returns>The 0-based shared-string index for <paramref name="text"/>.</returns>
+	/// <exception cref="InvalidOperationException">Thrown when the WorkbookPart is missing.</exception>
+	public static int InsertSharedStringItem(this Workbook workbook, string text, Dictionary<string, int> shareStringTableCache)
+	{
+		SharedStringTablePart shareStringTablePart = workbook.WorkbookPart?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault()
+			?? workbook.WorkbookPart?.AddNewPart<SharedStringTablePart>()
+			?? throw new InvalidOperationException("The WorkbookPart is missing.");
+		shareStringTablePart.SharedStringTable ??= new();
+
+		if (shareStringTableCache.TryGetValue(text, out int existingIndex))
+		{
+			return existingIndex;
+		}
+
+		int newIndex = shareStringTableCache.Count;
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text(text)));
+		shareStringTableCache[text] = newIndex; // Update Cache with the new index for future lookups
+		return newIndex;
+	}
+
+	/// <summary>
+	/// Builds an O(1) lookup dictionary from a <see cref="SharedStringTablePart"/>, mapping each 0-based shared-string index to its text value.
+	/// The returned dictionary can be reused across many cell reads within the same workbook to avoid repeated O(n) scans.
+	/// </summary>
+	/// <param name="sharedStringPart">The shared-string part to index.</param>
+	/// <returns>A read-only dictionary mapping integer index to string value.</returns>
+	public static IReadOnlyDictionary<int, string> BuildSharedStringIndex(this SharedStringTablePart sharedStringPart)
+	{
+		Dictionary<int, string> index = [];
+		if (sharedStringPart.SharedStringTable != null)
+		{
+			int i = 0;
+			foreach (SharedStringItem item in sharedStringPart.SharedStringTable.Elements<SharedStringItem>())
+			{
+				index[i++] = item.InnerText;
+			}
+		}
+		return index;
 	}
 
 	/// <summary>
@@ -1659,18 +1812,23 @@ public static partial class Common
 	/// </summary>
 	/// <param name="worksheetPart">WorksheetPart containing the range being measured</param>
 	/// <param name="range">The range being measured</param>
-	/// <returns>The width of the specified range in EMU</returns>
+	/// <returns>The width of the specified range in pixels</returns>
 	public static int GetRangeWidthInPx(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
 	{
 		Worksheet? worksheet = worksheetPart.Worksheet;
 		Columns? columns = worksheet?.Elements<Columns>().FirstOrDefault();
 
+		// Read the sheet-level default column width from sheetFormatPr; fall back to the OOXML default of 8.43
+		double defaultColWidthChars = worksheet?.GetFirstChild<SheetFormatProperties>()?.DefaultColumnWidth ?? 8.43;
+
 		double totalWidthChars = 0;
 		for (uint colIndex = range.start.ColumnIndex; colIndex <= range.end.ColumnIndex; colIndex++)
 		{
-			Column? column = worksheet?.GetOrCreateColumn(colIndex, columns: columns);
-			double columnWidthChars = column?.Width ?? 8.43; // Default column width (# in characters)
-			totalWidthChars += columnWidthChars; //(int)Math.Truncate((columnWidthChars *  7 + 5) / 7 * 256)/ 256;
+			// Look up an existing <col> entry without creating one — creating cols here would add
+			// width-less <col> elements that Excel treats as zero-width (hidden columns).
+			Column? column = columns?.Elements<Column>().FirstOrDefault(c => colIndex >= (c.Min?.Value ?? 0) && colIndex <= (c.Max?.Value ?? 0));
+			double columnWidthChars = (column?.Width?.HasValue == true) ? column.Width!.Value : defaultColWidthChars;
+			totalWidthChars += columnWidthChars;
 		}
 
 		return (int)Math.Round(totalWidthChars * 7, 0, MidpointRounding.ToZero);
@@ -1681,22 +1839,21 @@ public static partial class Common
 	/// </summary>
 	/// <param name="worksheetPart">WorksheetPart containing the range being measured</param>
 	/// <param name="range">The range being measured</param>
-	/// <returns>The height of the specified range in EMU</returns>
+	/// <returns>The height of the specified range in pixels</returns>
 	public static int GetRangeHeightInPx(WorksheetPart worksheetPart, (CellReference start, CellReference end) range)
 	{
 		Worksheet? worksheet = worksheetPart.Worksheet;
+
+		// Read the sheet-level default row height from sheetFormatPr; fall back to the OOXML default of 14.2pt
+		double defaultRowHeightPt = worksheet?.GetFirstChild<SheetFormatProperties>()?.DefaultRowHeight ?? 14.2;
 
 		int totalHeight = 0;
 		for (uint rowIndex = range.start.RowIndex; rowIndex <= range.end.RowIndex; rowIndex++)
 		{
 			Row? row = worksheet?.GetRow(rowIndex);
-			if (row == null)
-			{
-				SheetData? sheetData = worksheet?.GetFirstChild<SheetData>();
-				row = new Row { RowIndex = rowIndex };
-				sheetData!.Append(row);
-			}
-			double rowHeight = row?.Height ?? 14.2; // Default row height for Calibri 11pt
+			// Do not create missing rows here — appending rows mutates the sheet and can produce out-of-order row
+			// elements, which corrupts the sheet XML. Fall back to the sheet default row height instead.
+			double rowHeight = row?.Height?.HasValue == true ? row.Height!.Value : defaultRowHeightPt;
 			totalHeight += (int)(rowHeight * 12700 / 9525); // Convert to EMUs (1 point = 12700 EMUs), then to pixels (1 pixel = 9525 EMUs)
 		}
 
@@ -1823,6 +1980,10 @@ public static partial class Common
 				Worksheet? worksheet = worksheetPart.Worksheet;
 				SheetData sheetData = worksheet?.GetFirstChild<SheetData>() ?? new();
 
+				// Build shared-string index once for O(1) per-cell lookups so we're not doing O(n) scans of the shared-string table for every cell
+				SharedStringTablePart? sharedStringPart = workbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+				IReadOnlyDictionary<int, string>? sharedStringIndex = sharedStringPart?.BuildSharedStringIndex();
+
 				// Determine start and end cells
 				CellReference startCell = new(startCellReference ?? "A1");
 				CellReference endCell = (endCellReference != null) ? new(endCellReference) : sheetData.GetLastPopulatedCell();
@@ -1830,7 +1991,7 @@ public static partial class Common
 				// Add columns to DataTable
 				for (uint col = startCell.ColumnIndex; col <= endCell.ColumnIndex; col++)
 				{
-					string columnName = hasHeaders ? sheetData.GetCellValue(startCell.RowIndex, col) : $"Column{col - startCell.ColumnIndex}";
+					string columnName = hasHeaders ? sheetData.GetCellValue(startCell.RowIndex, col, sharedStringIndex) : $"Column{col - startCell.ColumnIndex}";
 					dataTable.Columns.Add(columnName);
 				}
 
@@ -1843,7 +2004,7 @@ public static partial class Common
 
 					for (uint col = startCell.ColumnIndex; col <= endCell.ColumnIndex; col++)
 					{
-						string cellValue = sheetData.GetCellValue(row, col);
+						string cellValue = sheetData.GetCellValue(row, col, sharedStringIndex);
 						dataRow[(int)(col - startCell.ColumnIndex)] = cellValue;
 						if (!string.IsNullOrWhiteSpace(cellValue))
 						{
@@ -1900,6 +2061,24 @@ public static partial class Common
 	}
 
 	/// <summary>
+	/// Gets the string value of the cell at the specified row and column, using a pre-built shared-string index for O(1) SharedString lookups.
+	/// </summary>
+	/// <param name="sheetData">The sheet data to search.</param>
+	/// <param name="row">The row index of the target cell.</param>
+	/// <param name="col">The column index of the target cell.</param>
+	/// <param name="sharedStringIndex">
+	/// Pre-built index from <see cref="BuildSharedStringIndex(SharedStringTablePart)"/>. Pass <see langword="null"/> to fall back to the standard O(n) lookup.
+	/// </param>
+	/// <returns>The string value of the cell, or an empty string if not found.</returns>
+	public static string GetCellValue(this SheetData sheetData, uint row, uint col, IReadOnlyDictionary<int, string>? sharedStringIndex)
+	{
+		CellReference cellRef = new(col, row);
+		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+		return cell?.GetCellValue(sharedStringIndex) ?? string.Empty;
+	}
+
+	/// <summary>
 	/// Gets the string value of a cell
 	/// </summary>
 	/// <param name="sheetData">SheetData containing cell value to be read</param>
@@ -1947,6 +2126,29 @@ public static partial class Common
 		}
 
 		return value;
+	}
+
+	/// <summary>
+	/// Gets the string value of a cell using a pre-built shared-string index for O(1) lookups, avoiding the O(n) <c>ElementAt</c> scan and XML ancestor traversal of <see cref="GetCellValue(Cell?)"/>.
+	/// </summary>
+	/// <param name="cell">The cell to read.</param>
+	/// <param name="sharedStringIndex">
+	/// Pre-built index from <see cref="BuildSharedStringIndex(SharedStringTablePart)"/>. Pass <see langword="null"/> to fall back to the standard lookup.
+	/// </param>
+	/// <returns>The string value of the cell, or an empty string if the cell is null or empty.</returns>
+	public static string GetCellValue(this Cell? cell, IReadOnlyDictionary<int, string>? sharedStringIndex)
+	{
+		if (cell?.CellValue == null)
+		{
+			return string.Empty;
+		}
+
+		string value = cell.CellValue.Text;
+		if ((cell.DataType?.Value == CellValues.SharedString) && (sharedStringIndex != null))
+		{
+			return int.TryParse(value, out int idx) && sharedStringIndex.TryGetValue(idx, out string? s) ? s : string.Empty;
+		}
+		return GetCellValue(cell);
 	}
 
 	/// <summary>
@@ -2009,6 +2211,35 @@ public static partial class Common
 	}
 
 	/// <summary>
+	/// Gets the stylized string value of a cell using a pre-built shared-string index for O(1) lookups, avoiding the O(n) <c>ElementAt</c> scan and XML ancestor traversal of <see cref="GetStringValue(Cell?)"/>.
+	/// </summary>
+	/// <param name="cell">The cell to read.</param>
+	/// <param name="sharedStringIndex">
+	/// Pre-built index from <see cref="BuildSharedStringIndex(SharedStringTablePart)"/>. Pass <see langword="null"/> to fall back to the standard O(n) lookup.
+	/// </param>
+	/// <returns>The stylized string value, or <see langword="null"/> if the cell is null.</returns>
+	public static string? GetStringValue(this Cell? cell, IReadOnlyDictionary<int, string>? sharedStringIndex)
+	{
+		if (cell == null)
+		{
+			return null;
+		}
+
+		bool hasFormula = cell.CellFormula != null;
+		string? rawValue = hasFormula ? cell.CellValue?.Text : cell.InnerText;
+		if (cell.DataType != null)
+		{
+			CellValues cellDataType = cell.DataType.Value;
+			if (cellDataType == CellValues.SharedString && sharedStringIndex != null)
+			{
+				return int.TryParse(rawValue, out int idx) && sharedStringIndex.TryGetValue(idx, out string? s) ? s : string.Empty;
+			}
+			return GetStringValue(cell); // fall back to standard lookup
+		}
+		return rawValue;
+	}
+
+	/// <summary>
 	/// Reads an Excel table into a DataTable object using OpenXML
 	/// </summary>
 	/// <param name="fileStream">Stream of Excel file being read</param>
@@ -2043,13 +2274,17 @@ public static partial class Common
 			CellReference startCell = new(tableRange[0]);
 			CellReference endCell = new(tableRange[1]);
 
+			// Build shared-string index once for O(1) per-cell lookups
+			SharedStringTablePart? sharedStringPart = workbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+			IReadOnlyDictionary<int, string>? sharedStringIndex = sharedStringPart?.BuildSharedStringIndex();
+
 			// Get headers
 			for (uint col = startCell.ColumnIndex; col <= endCell.ColumnIndex; col++)
 			{
 				Cell? headerCell = worksheet?.GetCellFromCoordinates((int)col, (int)startCell.RowIndex);
 				if (headerCell != null)
 				{
-					dataTable.Columns.Add(headerCell.GetStringValue() ?? $"Column{col - startCell.ColumnIndex + 1}");
+					dataTable.Columns.Add(headerCell.GetStringValue(sharedStringIndex) ?? $"Column{col - startCell.ColumnIndex + 1}");
 				}
 			}
 
@@ -2063,7 +2298,7 @@ public static partial class Common
 					Cell? cell = worksheet?.GetCellFromCoordinates((int)col, (int)row);
 					if (cell != null)
 					{
-						dataRow[((int)col) - ((int)startCell.ColumnIndex)] = cell.GetStringValue();
+						dataRow[((int)col) - ((int)startCell.ColumnIndex)] = cell.GetStringValue(sharedStringIndex);
 					}
 				}
 				dataTable.Rows.Add(dataRow);
@@ -2163,8 +2398,12 @@ public static partial class Common
 			return;
 		}
 
-		// Dictionary to store maximum width of each column
-		ConcurrentDictionary<uint, double> columnWidths = [];
+		// Build the shared-string index once so SharedString cell lookups are O(1) rather than the O(n) ElementAt() scan that the previous per-cell GetCellValue() performed.
+		WorkbookPart? wbp = worksheet.WorksheetPart?.GetParentParts().OfType<WorkbookPart>().FirstOrDefault();
+		SharedStringTablePart? sharedStringPart = wbp?.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+		IReadOnlyDictionary<int, string>? sharedStringIndex = sharedStringPart?.BuildSharedStringIndex();
+
+		Dictionary<uint, double> columnWidths = [];
 
 		// Iterate through all rows and cells
 		foreach (Row row in sheetData.Elements<Row>())
@@ -2179,8 +2418,8 @@ public static partial class Common
 				CellReference cellRef = new(cell.CellReference!.Value!);
 				uint columnIndex = cellRef.ColumnIndex - 1;
 
-				// Calculate the width needed for this cell
-				double width = cell.CalculateWidth();
+				// Calculate the width needed for this cell using the pre-built index
+				double width = cell.CalculateWidth(sharedStringIndex);
 
 				// Update maximum width for this column if necessary
 				if (!columnWidths.TryGetValue(columnIndex, out double value) || (width > value))
@@ -2220,7 +2459,14 @@ public static partial class Common
 		if (columns == null)
 		{
 			columns = new Columns();
-			worksheet.InsertAt(columns, 0);
+			// <cols> must appear after <sheetFormatPr> and before <sheetData> per the CT_Worksheet schema.
+			// Inserting at index 0 would place it before <dimension>, corrupting the file when no <cols>
+			// element already exists in the template. Insert before <sheetData> instead.
+			SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
+			if (sheetData != null)
+				worksheet.InsertBefore(columns, sheetData);
+			else
+				worksheet.Append(columns);
 		}
 		return columns;
 	}
@@ -2303,6 +2549,20 @@ public static partial class Common
 	}
 
 	/// <summary>
+	/// Calculates the fitted column width of a cell using a pre-built shared-string index for O(1) SharedString lookups instead of the O(n) <c>ElementAt</c> scan.
+	/// </summary>
+	/// <param name="cell">The cell to measure.</param>
+	/// <param name="sharedStringIndex">
+	/// Pre-built index from <see cref="BuildSharedStringIndex(SharedStringTablePart)"/>.
+	/// Pass <see langword="null"/> to fall back to the standard O(n) lookup.
+	/// </param>
+	/// <returns>The fitted width of the cell.</returns>
+	public static double CalculateWidth(this Cell cell, IReadOnlyDictionary<int, string>? sharedStringIndex)
+	{
+		return CalculateWidth(cell.GetCellValue(sharedStringIndex), cell.StyleIndex?.Value);
+	}
+
+	/// <summary>
 	/// Calculate the width of a cell based on the provided text
 	/// </summary>
 	/// <param name="text">The text value of the cell</param>
@@ -2316,8 +2576,6 @@ public static partial class Common
 		}
 
 		const int padding = 1; // Extra padding
-		HashSet<uint> numberStyles = [5, 6, 7, 8]; //styles that will add extra chars
-		HashSet<uint> boldStyles = [1, 2, 3, 4, 6, 7, 8]; //styles that will bold
 		double width = text.Length + padding;
 
 		// Add extra width for numbers to account for digit grouping
@@ -2326,7 +2584,7 @@ public static partial class Common
 			width++;
 		}
 
-		if ((styleIndex != null) && numberStyles.Contains((uint)styleIndex))
+		if ((styleIndex != null) && NumberStyleIds.Contains((uint)styleIndex))
 		{
 			int thousandCount = (int)Math.Truncate(width / 4);
 
@@ -2334,7 +2592,7 @@ public static partial class Common
 			width += 3 + thousandCount;
 		}
 
-		if ((styleIndex != null) && boldStyles.Contains((uint)styleIndex))
+		if ((styleIndex != null) && BoldStyleIds.Contains((uint)styleIndex))
 		{
 			// add an extra char for bold - not 100% accurate but good enough for what i need.
 			width++;
@@ -2961,14 +3219,78 @@ public static partial class Common
 
 	/// <summary>
 	/// Saves the workbook, closes the document, and resets the stream position to the beginning.
+	/// <remarks>Use this when the document is backed by a *stream* that needs to be reused or read from the beginning after closing the document.</remarks>
 	/// </summary>
 	/// <param name="document">The document to save and close.</param>
-	/// <param name="memoryStream">The stream to reset to position 0.</param>
-	public static void WriteAndClose(this SpreadsheetDocument document, MemoryStream memoryStream)
+	/// <param name="stream">The stream containing the file contents to reset to position 0.</param>
+	/// <param name="clearCachedStyles">Whether to clear the cached styles for the workbook after writing and closing. Defaults to <c>false</c>. Set to true if you are using a template / base file as any residual created styles may corrupt subsequent documents.</param>
+	public static void WriteAndClose(this SpreadsheetDocument document, Stream stream, bool clearCachedStyles = false)
 	{
+		if (clearCachedStyles)
+		{
+			ClearCustomFormatCache(document);
+		}
+
+		document.WorkbookPart?.Workbook?.Save();
+		document.Dispose();
+
+		if (stream.CanSeek)
+		{
+			stream.Position = 0;
+		}
+
+	}
+
+	/// <summary>
+	/// Saves the workbook, closes the document, and resets the stream position to the beginning.
+	/// <remarks>Use this when the document is backed by a *file* and you want to read the file into a MemorySteam</remarks>
+	/// </summary>
+	/// <param name="document">The document to save and close.</param>
+	/// <param name="memoryStream">The stream to receive the file contents.</param>
+	/// <param name="filePath">The file path of the saved document.</param>
+	/// <param name="clearCachedStyles">Whether to clear the cached styles for the workbook after writing and closing. Defaults to <c>false</c>. Set to true if you are using a template / base file as any residual created styles may corrupt subsequent documents.</param>
+	public static void WriteAndClose(this SpreadsheetDocument document, MemoryStream memoryStream, string filePath, bool clearCachedStyles = false)
+	{
+		if (clearCachedStyles)
+		{
+			ClearCustomFormatCache(document);
+		}
+
 		document.WorkbookPart?.Workbook?.Save();
 		document.Dispose();
 		memoryStream.Position = 0;
+
+		using FileStream fileStream = File.OpenRead(filePath);
+		fileStream.CopyTo(memoryStream);
+		if (memoryStream.CanSeek)
+		{
+			memoryStream.Position = 0;
+		}
+	}
+
+	/// <summary>
+	/// Saves the workbook, closes the document, and resets the stream position to the beginning.
+	/// <remarks>Use this when the document is backed by a *file* and you want to read the file into a MemorySteam</remarks>
+	/// </summary>
+	/// <param name="document">The document to save and close.</param>
+	/// <param name="memoryStream">The stream to receive the file contents.</param>
+	/// <param name="filePath">The file path of the saved document.</param>
+	/// <param name="clearCachedStyles">Whether to clear the cached styles for the workbook after writing and closing. Defaults to <c>false</c>. Set to true if you are using a template / base file as any residual created styles may corrupt subsequent documents.</param>
+	public static async Task WriteAndCloseAsync(this SpreadsheetDocument document, MemoryStream memoryStream, string filePath, bool clearCachedStyles = false)
+	{
+		if (clearCachedStyles)
+		{
+			ClearCustomFormatCache(document);
+		}
+
+		document.WorkbookPart?.Workbook?.Save();
+		document.Dispose();
+		await using FileStream fileStream = File.OpenRead(filePath);
+		await fileStream.CopyToAsync(memoryStream);
+		if (memoryStream.CanSeek)
+		{
+			memoryStream.Position = 0;
+		}
 	}
 
 	/// <summary>
@@ -3109,21 +3431,17 @@ public static partial class Common
 		/// <returns>Column name corresponding to the value of columnNumber</returns>
 		public static string NumberToColumnName(uint columnNumber)
 		{
-			int number = ((int)columnNumber) - 1; //Make this 1 based to avoid confusion
-			string columnName = string.Empty;
+			// Excel supports at most 16,384 columns (XFD) so names are always 1–3 characters.
+			// Filling a stack-allocated buffer in reverse avoids the O(n) intermediate string allocations that the original prepend-via-interpolation loop produced.
+			Span<char> chars = stackalloc char[3];
+			int pos = 2;
+			int number = (int)columnNumber - 1;
 			while (number >= 0)
 			{
-				int remainder = number % 26;
-				columnName = $"{Convert.ToChar('A' + remainder)}{columnName}";
-				number = (number / 26) - 1;
-				if (number < 0)
-				{
-					break;
-				}
+				chars[pos--] = (char)('A' + number % 26);
+				number = number / 26 - 1;
 			}
-			return columnName;
+			return new string(chars[(pos + 1)..]);
 		}
 	}
 }
-
-#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"

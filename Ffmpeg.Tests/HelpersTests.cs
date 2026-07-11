@@ -2,10 +2,10 @@
 using System.Diagnostics;
 using AutoFixture;
 using AutoFixture.AutoFakeItEasy;
-using CommonNetFuncs.Media.Ffmpeg;
+using CommonNetFuncs.Ffmpeg;
 using xRetry.v3;
 
-namespace Media.Ffmpeg.Tests;
+namespace Ffmpeg.Tests;
 
 public sealed class HelpersTests : IDisposable
 {

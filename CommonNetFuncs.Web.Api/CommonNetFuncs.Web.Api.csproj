@@ -28,13 +28,13 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.1.1</Version>
+		<Version>4.1.11</Version>
 		<MinVerTagPrefix>web.api-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
 		<MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
 		<!-- Optional: Detect breaking changes from a previous stable version -->
-		<PackageValidationBaselineVersion>4.0.43</PackageValidationBaselineVersion>
+		<PackageValidationBaselineVersion>4.1.4</PackageValidationBaselineVersion>
 		<EnablePackageValidation>true</EnablePackageValidation>
 	</PropertyGroup>
 
@@ -83,12 +83,14 @@
 		<PackageReference Include="Microsoft.AspNetCore.JsonPatch" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" />
+		<PackageReference Include="Microsoft.OpenApi" />
 		<PackageReference Include="MinVer">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
 		<PackageReference Include="Scalar.AspNetCore" />
+		<PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" />
 	</ItemGroup>
 
 	<ItemGroup>

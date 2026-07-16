@@ -214,21 +214,28 @@ worksheet.SetCellNumericValue(new CellReference("A1"), 3.14m);
 
 #### Cell Styles
 
-`GetStandardCellStyle` returns (or creates) one of the built-in preset styles. Repeated calls for the same style on the same document are served from an in-memory cache.
+`GetStandardCellStyle` returns (or creates) one of the built-in preset styles. Both the resolved format ID and the underlying Border/Fill/Font element indices are cached per document inside a `ConditionalWeakTable`, so they are freed automatically when the document is garbage collected — no explicit cleanup is required after a normal export.
 
 ```cs
 // Preset styles: Header, HeaderThickTop, Body, Error, Blackout, Whiteout
 uint headerId = document.GetStandardCellStyle(EStyle.Header);
 uint bodyId   = document.GetStandardCellStyle(EStyle.Body, cellLocked: false, wrapText: true);
 
-// Clear per-workbook cache (e.g., when reusing a template)
-ClearStandardFormatCacheForWorkbook(document);
+// Per-document: clear the format-ID cache only (element-index cache is preserved so that
+// multi-sheet exports still deduplicate CellFormats without duplicating stylesheet elements).
+document.ClearStandardFormatCache();
 
-// Clear global cache (all workbooks)
+// Per-document: clear the element-index cache (Border/Fill/Font indices). Rarely needed —
+// only when you explicitly want to force fresh elements on the next GetStandardCellStyle call.
+document.ClearStyleElementCache();
+
+// Global: replace the StandardCacheTable so all live documents start fresh on next access.
 ClearStandardFormatCache();
 ```
 
-`GetCustomStyle` creates a fully custom `CellFormat` and caches it per workbook. `WorkbookStyleCache` is shared with `GetOrAddFont`, `GetOrAddFill`, and `GetOrAddBorder` to prevent duplicate style elements:
+`GetCustomStyle` creates a fully custom `CellFormat` and caches it per document via a `ConditionalWeakTable`. The cache is freed automatically on GC. Use `document.ClearCustomFormatCache()` to remove it explicitly (e.g. after writing a template-based document). `document.GetCustomFormatCache()` returns the live `WorkbookStyleCache` for inspection.
+
+`WorkbookStyleCache` is shared with `GetOrAddFont`, `GetOrAddFill`, and `GetOrAddBorder` to prevent duplicate style elements:
 
 ```cs
 // Custom style with font, fill, border, alignment, and protection
@@ -241,12 +248,19 @@ uint styleId = document.GetCustomStyle(
     wrapText: true
 );
 
+// Inspect or clear the per-document custom format cache
+WorkbookStyleCache? cache = document.GetCustomFormatCache(); // null if no custom styles yet
+document.ClearCustomFormatCache();                           // removes the entry explicitly
+
+// Global: replace the CustomCacheTable for all documents
+ClearCustomFormatCache();
+
 // Or manage style elements individually using WorkbookStyleCache
 Stylesheet stylesheet = document.GetStylesheet()!;
-WorkbookStyleCache cache = new();
-uint fontId   = stylesheet.GetOrAddFont(cache, new Font { Bold = new Bold() });
-uint fillId   = stylesheet.GetOrAddFill(cache, myFill);
-uint borderId = stylesheet.GetOrAddBorder(cache, myBorder);
+WorkbookStyleCache manualCache = new();
+uint fontId   = stylesheet.GetOrAddFont(manualCache, new Font { Bold = new Bold() });
+uint fillId   = stylesheet.GetOrAddFill(manualCache, myFill);
+uint borderId = stylesheet.GetOrAddBorder(manualCache, myBorder);
 ```
 
 #### Column Sizing

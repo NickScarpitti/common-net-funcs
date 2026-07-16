@@ -150,12 +150,21 @@ Converts a MessagePack-encoded request body to JSON before the endpoint handler 
 
 #### UseMsgPackRequestBody
 
-Registers `MsgPackRequestMiddleware` globally so every endpoint accepts MessagePack request bodies. Optionally accepts custom `MessagePackSerializerOptions`; defaults to `MessagePackSerializer.DefaultOptions` when `null`.
+Registers `MsgPackRequestMiddleware` globally so every endpoint accepts MessagePack request bodies. Accepts an optional `MessagePackSerializerOptions` parameter; defaults to `MessagePackSerializerOptions.Standard` when `null` or omitted.
 
 ```cs
-// Program.cs
-// Default options
+// Program.cs – default options
 app.UseMsgPackRequestBody();
+
+// Program.cs – custom options (e.g. LZ4 compression to match a compressed client)
+MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard
+    .WithCompression(MessagePackCompression.Lz4Block);
+app.UseMsgPackRequestBody(options);
+
+// Program.cs – custom options (e.g. LZ4 compression to match a compressed client)
+MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard
+    .WithCompression(MessagePackCompression.Lz4Block);
+app.UseMsgPackRequestBody(options);
 
 // Custom options (e.g. with FlexibleDecimalResolver)
 app.UseMsgPackRequestBody(MessagePackSerializerOptions.Standard
@@ -179,7 +188,7 @@ An endpoint filter that intercepts the handler's return value before System.Text
 
 #### WithMsgPackOutput
 
-Attaches `MsgPackOutputFilter` to an endpoint or route group. Optionally accepts custom `MessagePackSerializerOptions`; defaults to `MessagePackSerializer.DefaultOptions` when `null`.
+Attaches `MsgPackOutputFilter` to an endpoint or route group. Optionally accepts custom `MessagePackSerializerOptions`; defaults to `MessagePackSerializerOptions.Standard` when `null`.
 
 ```cs
 // Apply to a single endpoint

@@ -3,6 +3,7 @@ using System.Xml.Serialization;
 using CommonNetFuncs.EFCore;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+// using Newtonsoft.Json;
 
 namespace EFCore.Tests;
 

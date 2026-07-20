@@ -35,10 +35,11 @@ jobs:
           - Excel.Npoi.Tests
           - Excel.OpenXml.Tests
           - FastMap.Tests
+          - Ffmpeg.Tests
           - Hangfire.Tests
           - Images.Tests
-          - Ffmpeg.Tests
           - Office.Common.Tests
+          - ReinforcedTypings.Tests
           - Sql.Common.Tests
           - SubsetModelBinder.Attribute.Tests
           - SubsetModelBinder.Generator.Tests

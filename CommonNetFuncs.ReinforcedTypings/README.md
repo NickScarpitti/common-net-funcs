@@ -42,11 +42,13 @@ Reinforced.Typings runs an `RtConfigurationMethod` (configured in your consuming
 
 ```xml
 <!-- Reinforced.Typings.settings.xml -->
-<Settings>
-  <Property Name="RtConfigurationMethod" Value="CommonNetFuncs.ReinforcedTypings.ReinforcedTypingsFluentConfig.Configure, CommonNetFuncs.ReinforcedTypings" />
-  <Property Name="RtTargetDirectory" Value="TypeScriptModels" />
+<PropertyGroup>
+  <RtConfigurationMethod>
+    CommonNetFuncs.ReinforcedTypings.ReinforcedTypingsFluentConfig.Configure
+  </RtConfigurationMethod>
+  <RtTargetDirectory>$(ProjectDir)TypeScriptModels</RtTargetDirectory>
   <!-- ...your project's other RT settings (RtAssemblies, RtDivideTypesAmongFiles, etc.)... -->
-</Settings>
+</PropertyGroup>
 ```
 
 `Configure` scans whichever assemblies your own RT settings are configured to export from (falling back to the assembly this package lives in if none are configured), so it behaves correctly whether it's referenced by one project or shared as a library across several. Hand-written `TsConst`/`TsCollection` output is written to the same target directory RT itself would use (`RtTargetDirectory` when dividing types among files, otherwise the directory portion of `RtTargetFile`), nested into namespace-mirroring subfolders using the same rules RT applies to its own generated files.

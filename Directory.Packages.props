@@ -6,7 +6,7 @@
     <PackageVersion Include="AutoFixture" Version="4.18.1" />
     <PackageVersion Include="AutoFixture.AutoFakeItEasy" Version="4.18.1" />
     <PackageVersion Include="AutoFixture.Xunit3" Version="4.19.0" />
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.101.1" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.101.3" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="CliWrap" Version="3.10.2" />
     <PackageVersion Include="ClosedXML" Version="0.105.0" />
@@ -52,14 +52,14 @@
     <PackageVersion Include="NSubstitute" Version="6.0.0" />
     <PackageVersion Include="Reinforced.Typings" Version="1.6.7" />
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.13" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.16" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="SkiaSharp" Version="4.150.1" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.150.1" />
     <PackageVersion Include="SkiaSharp.Svg" Version="1.60.0" />
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
     <PackageVersion Include="Svg.Skia" Version="5.1.1" />
-    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.4" />
     <PackageVersion Include="SSH.NET" Version="2025.1.0" />
     <PackageVersion Include="System.Data.Odbc" Version="10.0.10" />
     <PackageVersion Include="System.Linq.Async" Version="7.0.1" />

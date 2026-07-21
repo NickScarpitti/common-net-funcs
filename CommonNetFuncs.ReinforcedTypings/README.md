@@ -15,24 +15,24 @@ All of the above honor the resolved `[TsGlobal]`/fluent `Global(...)` settings (
 ## Contents
 
 - [CommonNetFuncs.ReinforcedTypings](#commonnetfuncsreinforcedtypings)
-  - [Contents](#contents)
-  - [Setup](#setup)
-  - [TsConst](#tsconst)
-    - [TsConst Usage Examples](#tsconst-usage-examples)
-      - [Export all fields, suppress one](#export-all-fields-suppress-one)
-      - [Export only selected fields](#export-only-selected-fields)
-      - [Non-string field types](#non-string-field-types)
-  - [TsCollection](#tscollection)
-    - [TsCollection Usage Examples](#tscollection-usage-examples)
-      - [Export all fields, suppress one](#export-all-fields-suppress-one-1)
-      - [Export only selected fields](#export-only-selected-fields-1)
-      - [Collections of exported types](#collections-of-exported-types)
-  - [Valibot Schema Generation](#valibot-schema-generation)
-    - [Valibot Usage Examples](#valibot-usage-examples)
-      - [Basic form model](#basic-form-model)
-      - [SubsetOf-bound input models](#subsetof-bound-input-models)
-  - [Installation](#installation)
-  - [License](#license)
+	- [Contents](#contents)
+	- [Setup](#setup)
+	- [TsConst](#tsconst)
+		- [TsConst Usage Examples](#tsconst-usage-examples)
+			- [Export all fields, suppress one](#export-all-fields-suppress-one)
+			- [Export only selected fields](#export-only-selected-fields)
+			- [Non-string field types](#non-string-field-types)
+	- [TsCollection](#tscollection)
+		- [TsCollection Usage Examples](#tscollection-usage-examples)
+			- [Export all fields, suppress one](#export-all-fields-suppress-one-1)
+			- [Export only selected fields](#export-only-selected-fields-1)
+			- [Collections of exported types](#collections-of-exported-types)
+	- [Valibot Schema Generation](#valibot-schema-generation)
+		- [Valibot Usage Examples](#valibot-usage-examples)
+			- [Basic form model](#basic-form-model)
+			- [SubsetOf-bound input models](#subsetof-bound-input-models)
+	- [Installation](#installation)
+	- [License](#license)
 
 ---
 
@@ -42,13 +42,33 @@ Reinforced.Typings runs an `RtConfigurationMethod` (configured in your consuming
 
 ```xml
 <!-- Reinforced.Typings.settings.xml -->
-<PropertyGroup>
-  <RtConfigurationMethod>
-    CommonNetFuncs.ReinforcedTypings.ReinforcedTypingsFluentConfig.Configure
-  </RtConfigurationMethod>
-  <RtTargetDirectory>$(ProjectDir)TypeScriptModels</RtTargetDirectory>
-  <!-- ...your project's other RT settings (RtAssemblies, RtDivideTypesAmongFiles, etc.)... -->
-</PropertyGroup>
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!--
+      RT also only looks for this type inside its "source assemblies", i.e. this project's own
+      compiled output plus anything listed in the RtAdditionalAssembly item group below - it does
+      NOT search every referenced package. Since Configure lives in the CommonNetFuncs.ReinforcedTypings
+      package assembly rather than this project's assembly, that DLL is fed in as an RtAdditionalAssembly
+      (see AddReinforcedTypingsFluentConfigAssembly target) so RT can actually find it.
+    -->
+    <RtConfigurationMethod>CommonNetFuncs.ReinforcedTypings.ReinforcedTypingsFluentConfig.Configure</RtConfigurationMethod>
+    <RtTargetDirectory>$(ProjectDir)TypeScriptModels</RtTargetDirectory>
+    <!-- ...your project's other RT settings (RtAssemblies, RtDivideTypesAmongFiles, etc.)... -->
+  </PropertyGroup>
+  <Target Name="AddReinforcedTypingsFluentConfigAssembly" BeforeTargets="ReinforcedTypingsGenerate">
+    <!--
+      RT only scans the assemblies listed as its "source assemblies" (this project's own build
+      output, plus whatever is added to RtAdditionalAssembly) when resolving RtConfigurationMethod.
+      CommonNetFuncs.ReinforcedTypings.ReinforcedTypingsFluentConfig lives in the package's own
+      assembly, so it has to be added explicitly here. @(ReferencePath) is only populated once assembly resolution has
+      run, so this must happen in a target rather than a plain top-level ItemGroup.
+    -->
+    <ItemGroup>
+      <RtAdditionalAssembly Include="@(ReferencePath)" Condition="'%(ReferencePath.FileName)' == 'CommonNetFuncs.ReinforcedTypings'" />
+    </ItemGroup>
+  </Target>
+</Project>
 ```
 
 `Configure` scans whichever assemblies your own RT settings are configured to export from (falling back to the assembly this package lives in if none are configured), so it behaves correctly whether it's referenced by one project or shared as a library across several. Hand-written `TsConst`/`TsCollection` output is written to the same target directory RT itself would use (`RtTargetDirectory` when dividing types among files, otherwise the directory portion of `RtTargetFile`), nested into namespace-mirroring subfolders using the same rules RT applies to its own generated files.

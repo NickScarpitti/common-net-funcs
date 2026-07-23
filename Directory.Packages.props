@@ -34,7 +34,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.2" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.21.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
     <!-- Microsoft.OpenApi must be 2.x.x until Microsoft.AspNetCore.OpenApi is updated to use the new version (3.x.x) -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.11.0" />

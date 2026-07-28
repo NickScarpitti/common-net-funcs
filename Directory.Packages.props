@@ -1,75 +1,75 @@
 <Project>
-	<PropertyGroup>
-		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-	</PropertyGroup>
-	<ItemGroup>
-		<PackageVersion Include="AutoFixture" Version="4.18.1" />
-		<PackageVersion Include="AutoFixture.AutoFakeItEasy" Version="4.18.1" />
-		<PackageVersion Include="AutoFixture.Xunit3" Version="4.19.0" />
-		<PackageVersion Include="AWSSDK.S3" Version="4.0.101.4" />
-		<PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-		<PackageVersion Include="CliWrap" Version="3.10.3" />
-		<PackageVersion Include="ClosedXML" Version="0.105.1" />
-		<PackageVersion Include="coverlet.collector" Version="10.0.1" />
-		<PackageVersion Include="CsvHelper" Version="33.1.0" />
-		<PackageVersion Include="DocumentFormat.OpenXml" Version="3.5.1" />
-		<!-- FakeItEasy must be 8.3.0 until AutoFixture.AutoFakeItEasy is updated to use the new version (9.x.x) -->
-		<PackageVersion Include="FakeItEasy" Version="8.3.0" />
-		<PackageVersion Include="FastExpressionCompiler" Version="5.4.1" />
-		<PackageVersion Include="Hangfire.AspNetCore" Version="1.8.24" />
-		<PackageVersion Include="Hangfire.Core" Version="1.8.24" />
-		<PackageVersion Include="MailKit" Version="4.17.0" />
-		<PackageVersion Include="Mapster" Version="10.0.11" />
-		<PackageVersion Include="Microsoft.AspNetCore.JsonPatch" Version="10.0.10" />
-		<PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.10" />
-		<PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
-		<PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.10" />
-		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.6.0" />
-		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" />
-		<PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.2" />
-		<PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="10.0.10" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.10" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
-		<PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.10" />
-		<PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.21.0" />
-		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
-		<!-- Microsoft.OpenApi must be 2.x.x until Microsoft.AspNetCore.OpenApi is updated to use the new version (3.x.x) -->
-		<PackageVersion Include="Microsoft.OpenApi" Version="2.11.0" />
-		<PackageVersion Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.7.37220.1" />
-		<PackageVersion Include="MemoryPack" Version="1.21.4" />
-		<PackageVersion Include="MessagePack" Version="3.1.8" />
-		<PackageVersion Include="MimeKit" Version="4.17.0" />
-		<PackageVersion Include="MinVer" Version="7.0.0" />
-		<PackageVersion Include="Moq" Version="4.20.72" />
-		<PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
-		<PackageVersion Include="NLog" Version="6.1.4" />
-		<PackageVersion Include="NLog.Extensions.Logging" Version="6.1.4" />
-		<PackageVersion Include="Npgsql" Version="10.0.3" />
-		<PackageVersion Include="NPOI" Version="2.8.0" />
-		<PackageVersion Include="NSubstitute" Version="6.0.0" />
-		<PackageVersion Include="Reinforced.Typings" Version="1.6.7" />
-		<PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
-		<PackageVersion Include="Scalar.AspNetCore" Version="2.16.16" />
-		<PackageVersion Include="Shouldly" Version="4.3.0" />
-		<PackageVersion Include="SkiaSharp" Version="4.150.1" />
-		<PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.150.1" />
-		<PackageVersion Include="SkiaSharp.Svg" Version="1.60.0" />
-		<PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
-		<PackageVersion Include="Svg.Skia" Version="5.1.1" />
-		<PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.4" />
-		<PackageVersion Include="SSH.NET" Version="2025.1.0" />
-		<PackageVersion Include="System.Data.Odbc" Version="10.0.10" />
-		<PackageVersion Include="System.Linq.Async" Version="7.0.1" />
-		<PackageVersion Include="System.Linq.Dynamic.Core" Version="1.7.3" />
-		<PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.10" />
-		<PackageVersion Include="Xabe.FFmpeg" Version="6.0.2" />
-		<PackageVersion Include="xRetry.v3" Version="1.0.0-rc3" />
-		<PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-		<PackageVersion Include="xunit.v3" Version="3.2.2" />
-		<PackageVersion Include="Z.EntityFramework.Extensions.EFCore" Version="10.105.7" />
-		<PackageVersion Include="Z.EntityFramework.Plus.EFCore" Version="10.105.7" />
-	</ItemGroup>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="AutoFixture" Version="4.18.1" />
+    <PackageVersion Include="AutoFixture.AutoFakeItEasy" Version="4.18.1" />
+    <PackageVersion Include="AutoFixture.Xunit3" Version="4.19.0" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.101.5" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageVersion Include="CliWrap" Version="3.10.3" />
+    <PackageVersion Include="ClosedXML" Version="0.105.1" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="CsvHelper" Version="33.1.0" />
+    <PackageVersion Include="DocumentFormat.OpenXml" Version="3.5.1" />
+    <!-- FakeItEasy must be 8.3.0 until AutoFixture.AutoFakeItEasy is updated to use the new version (9.x.x) -->
+    <PackageVersion Include="FakeItEasy" Version="8.3.0" />
+    <PackageVersion Include="FastExpressionCompiler" Version="5.4.1" />
+    <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.24" />
+    <PackageVersion Include="Hangfire.Core" Version="1.8.24" />
+    <PackageVersion Include="MailKit" Version="4.17.0" />
+    <PackageVersion Include="Mapster" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.AspNetCore.JsonPatch" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.6.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.2" />
+    <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.21.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <!-- Microsoft.OpenApi must be 2.x.x until Microsoft.AspNetCore.OpenApi is updated to use the new version (3.x.x) -->
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.11.0" />
+    <PackageVersion Include="Microsoft.VisualStudio.DiagnosticsHub.BenchmarkDotNetDiagnosers" Version="18.7.37220.1" />
+    <PackageVersion Include="MemoryPack" Version="1.21.4" />
+    <PackageVersion Include="MessagePack" Version="3.1.8" />
+    <PackageVersion Include="MimeKit" Version="4.17.0" />
+    <PackageVersion Include="MinVer" Version="7.0.0" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="NLog" Version="6.1.4" />
+    <PackageVersion Include="NLog.Extensions.Logging" Version="6.1.4" />
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
+    <PackageVersion Include="NPOI" Version="2.8.0" />
+    <PackageVersion Include="NSubstitute" Version="6.0.0" />
+    <PackageVersion Include="Reinforced.Typings" Version="1.6.7" />
+    <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.16" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="SkiaSharp" Version="4.150.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.150.1" />
+    <PackageVersion Include="SkiaSharp.Svg" Version="1.60.0" />
+    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
+    <PackageVersion Include="Svg.Skia" Version="5.1.1" />
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+    <PackageVersion Include="SSH.NET" Version="2025.1.0" />
+    <PackageVersion Include="System.Data.Odbc" Version="10.0.10" />
+    <PackageVersion Include="System.Linq.Async" Version="7.0.1" />
+    <PackageVersion Include="System.Linq.Dynamic.Core" Version="1.7.3" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.10" />
+    <PackageVersion Include="Xabe.FFmpeg" Version="6.0.2" />
+    <PackageVersion Include="xRetry.v3" Version="1.0.0-rc3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="Z.EntityFramework.Extensions.EFCore" Version="10.105.7" />
+    <PackageVersion Include="Z.EntityFramework.Plus.EFCore" Version="10.105.7" />
+  </ItemGroup>
 </Project>

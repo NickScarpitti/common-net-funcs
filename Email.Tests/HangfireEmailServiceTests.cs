@@ -1,4 +1,6 @@
-﻿using AutoFixture.Xunit3;
+﻿// HangfireEmailService.cs depends on CommonNetFuncs.Hangfire, which is excluded from Email's netstandard2.1 build.
+#if CORE_NATIVE_BUILD
+using AutoFixture.Xunit3;
 using CommonNetFuncs.Email;
 using CommonNetFuncs.Hangfire;
 
@@ -469,3 +471,4 @@ public sealed class HangfireEmailServiceTests
 
 	#endregion
 }
+#endif

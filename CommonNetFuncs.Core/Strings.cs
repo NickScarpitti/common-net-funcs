@@ -51,62 +51,157 @@ public static partial class Strings
 	public const string TimestampUrlFormat = "yyyyMMddHHmmssFFF";
 	public const string DateOnlyUrlFormat = "yyyyMMdd";
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"\s+")]
 	private static partial Regex MultiSpaceRegex();
+#else
+	private static readonly Regex multiSpaceRegexInstance = new(@"\s+", RegexOptions.Compiled);
+	private static Regex MultiSpaceRegex() => multiSpaceRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex("^[a-zA-Z0-9]*$")]
 	private static partial Regex AlphanumericRegex();
+#else
+	private static readonly Regex alphanumericRegexInstance = new("^[a-zA-Z0-9]*$", RegexOptions.Compiled);
+	private static Regex AlphanumericRegex() => alphanumericRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"^[a-zA-Z0-9\s]*$")]
 	private static partial Regex AlphanumericWithSpacesRegex();
+#else
+	private static readonly Regex alphanumericWithSpacesRegexInstance = new(@"^[a-zA-Z0-9\s]*$", RegexOptions.Compiled);
+	private static Regex AlphanumericWithSpacesRegex() => alphanumericWithSpacesRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex("^[a-zA-Z]*$")]
 	private static partial Regex AlphaOnlyRegex();
+#else
+	private static readonly Regex alphaOnlyRegexInstance = new("^[a-zA-Z]*$", RegexOptions.Compiled);
+	private static Regex AlphaOnlyRegex() => alphaOnlyRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"^[a-zA-Z\s]*$")]
 	private static partial Regex AlphaOnlyWithSpacesRegex();
+#else
+	private static readonly Regex alphaOnlyWithSpacesRegexInstance = new(@"^[a-zA-Z\s]*$", RegexOptions.Compiled);
+	private static Regex AlphaOnlyWithSpacesRegex() => alphaOnlyWithSpacesRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex("^[0-9]*$")]
 	private static partial Regex NumericOnlyRegex();
+#else
+	private static readonly Regex numericOnlyRegexInstance = new("^[0-9]*$", RegexOptions.Compiled);
+	private static Regex NumericOnlyRegex() => numericOnlyRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"^[0-9\s]*$")]
 	private static partial Regex NumericOnlyWithSpacesRegex();
+#else
+	private static readonly Regex numericOnlyWithSpacesRegexInstance = new(@"^[0-9\s]*$", RegexOptions.Compiled);
+	private static Regex NumericOnlyWithSpacesRegex() => numericOnlyWithSpacesRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"\D+")]
 	private static partial Regex ExtractNumbersRegex();
+#else
+	private static readonly Regex extractNumbersRegexInstance = new(@"\D+", RegexOptions.Compiled);
+	private static Regex ExtractNumbersRegex() => extractNumbersRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"(\d{3})(\d{4})")]
 	private static partial Regex SevenDigitPhoneNumberRegex();
+#else
+	private static readonly Regex sevenDigitPhoneNumberRegexInstance = new(@"(\d{3})(\d{4})", RegexOptions.Compiled);
+	private static Regex SevenDigitPhoneNumberRegex() => sevenDigitPhoneNumberRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"(\d{3})(\d{3})(\d{4})")]
 	private static partial Regex TenDigitPhoneNumberRegex();
+#else
+	private static readonly Regex tenDigitPhoneNumberRegexInstance = new(@"(\d{3})(\d{3})(\d{4})", RegexOptions.Compiled);
+	private static Regex TenDigitPhoneNumberRegex() => tenDigitPhoneNumberRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"(\d{1})(\d{3})(\d{3})(\d{4})")]
 	private static partial Regex ElevenDigitPhoneNumberRegex();
+#else
+	private static readonly Regex elevenDigitPhoneNumberRegexInstance = new(@"(\d{1})(\d{3})(\d{3})(\d{4})", RegexOptions.Compiled);
+	private static Regex ElevenDigitPhoneNumberRegex() => elevenDigitPhoneNumberRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"(\d{2})(\d{3})(\d{3})(\d{4})")]
 	private static partial Regex TwelveDigitPhoneNumberRegex();
+#else
+	private static readonly Regex twelveDigitPhoneNumberRegexInstance = new(@"(\d{2})(\d{3})(\d{3})(\d{4})", RegexOptions.Compiled);
+	private static Regex TwelveDigitPhoneNumberRegex() => twelveDigitPhoneNumberRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex("[A-Za-z]")]
 	internal static partial Regex RemoveLettersRegex();
+#else
+	private static readonly Regex removeLettersRegexInstance = new("[A-Za-z]", RegexOptions.Compiled);
+	internal static Regex RemoveLettersRegex() => removeLettersRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex("[0-9]")]
 	private static partial Regex RemoveNumbersRegex();
+#else
+	private static readonly Regex removeNumbersRegexInstance = new("[0-9]", RegexOptions.Compiled);
+	private static Regex RemoveNumbersRegex() => removeNumbersRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex("[A-Za-z ]")]
 	private static partial Regex LettersOnlyRegex();
+#else
+	private static readonly Regex lettersOnlyRegexInstance = new("[A-Za-z ]", RegexOptions.Compiled);
+	private static Regex LettersOnlyRegex() => lettersOnlyRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"[0-9]*\.?[0-9]+")]
 	private static partial Regex NumbersOnlyRegex();
+#else
+	private static readonly Regex numbersOnlyRegexInstance = new(@"[0-9]*\.?[0-9]+", RegexOptions.Compiled);
+	private static Regex NumbersOnlyRegex() => numbersOnlyRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"[0-9 ]*\.?[0-9]+((\/|\\)[0-9 ]*\.?[0-9]+)?")]
 	private static partial Regex NumbersWithFractionsOnlyRegex();
+#else
+	private static readonly Regex numbersWithFractionsOnlyRegexInstance = new(@"[0-9 ]*\.?[0-9]+((\/|\\)[0-9 ]*\.?[0-9]+)?", RegexOptions.Compiled);
+	private static Regex NumbersWithFractionsOnlyRegex() => numbersWithFractionsOnlyRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"(\s+|[^\w\s])")]
 	private static partial Regex TitleCaseSplitRegex();
+#else
+	private static readonly Regex titleCaseSplitRegexInstance = new(@"(\s+|[^\w\s])", RegexOptions.Compiled);
+	private static Regex TitleCaseSplitRegex() => titleCaseSplitRegexInstance;
+#endif
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"\w")]
 	private static partial Regex TitleCaseWordRegex();
+#else
+	private static readonly Regex titleCaseWordRegexInstance = new(@"\w", RegexOptions.Compiled);
+	private static Regex TitleCaseWordRegex() => titleCaseWordRegexInstance;
+#endif
 
 
 	/// <summary>
@@ -881,7 +976,11 @@ public static partial class Strings
 				int singleIndex = result.IndexOf(oldValue, StringComparison.InvariantCultureIgnoreCase);
 				if (singleIndex != -1)
 				{
-					result = string.Concat(result.AsSpan(0, singleIndex), newValue, result.AsSpan(singleIndex + oldValue.Length));
+#if NET6_0_OR_GREATER
+					result = string.Concat(result.AsSpan(0, singleIndex), newValue.AsSpan(), result.AsSpan(singleIndex + oldValue.Length));
+#else
+					result = string.Concat(result.Substring(0, singleIndex), newValue, result.Substring(singleIndex + oldValue.Length));
+#endif
 				}
 			}
 			else
@@ -1017,7 +1116,11 @@ public static partial class Strings
 	/// <returns><see langword="true"/> if testString contains only letters and numbers and optionally spaces</returns>
 	public static bool IsAlphanumeric(this ReadOnlySpan<char> testString, bool allowSpaces = false)
 	{
+#if NET7_0_OR_GREATER
 		return !testString.IsEmpty && (!allowSpaces ? AlphanumericRegex().IsMatch(testString) : AlphanumericWithSpacesRegex().IsMatch(testString));
+#else
+		return !testString.IsEmpty && testString.ToString().IsAlphanumeric(allowSpaces);
+#endif
 	}
 
 
@@ -1041,7 +1144,11 @@ public static partial class Strings
 	/// <returns><see langword="true"/> if testString only contains letters and optionally spaces</returns>
 	public static bool IsAlphaOnly(this ReadOnlySpan<char> testString, bool allowSpaces = false)
 	{
+#if NET7_0_OR_GREATER
 		return !testString.IsEmpty && (!allowSpaces ? AlphaOnlyRegex().IsMatch(testString) : AlphaOnlyWithSpacesRegex().IsMatch(testString));
+#else
+		return !testString.IsEmpty && testString.ToString().IsAlphaOnly(allowSpaces);
+#endif
 	}
 
 
@@ -1065,7 +1172,11 @@ public static partial class Strings
 	/// <returns><see langword="true"/> if testString only contains numbers and optionally spaces</returns>
 	public static bool IsNumericOnly(this ReadOnlySpan<char> testString, bool allowSpaces = false)
 	{
+#if NET7_0_OR_GREATER
 		return !testString.IsEmpty && (!allowSpaces ? NumericOnlyRegex().IsMatch(testString) : NumericOnlyWithSpacesRegex().IsMatch(testString));
+#else
+		return !testString.IsEmpty && testString.ToString().IsNumericOnly(allowSpaces);
+#endif
 	}
 
 
@@ -1691,7 +1802,7 @@ public static partial class Strings
 	public static DateTime? ToNDateTime(this string? value, IFormatProvider? formatProvider = null)
 	{
 		DateTime? dtn = null;
-		if (DateTime.TryParse(value, formatProvider ?? CultureInfo.InvariantCulture, out DateTime dt))
+		if (Internal.DateTimeCompat.TryParse(value, formatProvider ?? CultureInfo.InvariantCulture, out DateTime dt))
 		{
 			dtn = dt;
 		}
@@ -1711,7 +1822,7 @@ public static partial class Strings
 	public static DateTime? ToNDateTime(this ReadOnlySpan<char> value, IFormatProvider? formatProvider = null)
 	{
 		DateTime? dtn = null;
-		if (DateTime.TryParse(value, formatProvider ?? CultureInfo.InvariantCulture, out DateTime dt))
+		if (Internal.DateTimeCompat.TryParse(value.ToString(), formatProvider ?? CultureInfo.InvariantCulture, out DateTime dt))
 		{
 			dtn = dt;
 		}
@@ -1731,7 +1842,7 @@ public static partial class Strings
 	public static DateOnly? ToNDateOnly(this string? value, IFormatProvider? formatProvider = null)
 	{
 		DateOnly? dtn = null;
-		if (DateOnly.TryParse(value, formatProvider ?? CultureInfo.InvariantCulture, out DateOnly dt))
+		if (Internal.DateOnlyCompat.TryParse(value, formatProvider ?? CultureInfo.InvariantCulture, out DateOnly dt))
 		{
 			dtn = dt;
 		}
@@ -1751,7 +1862,7 @@ public static partial class Strings
 	public static DateOnly? ToNDateOnly(this ReadOnlySpan<char> value, IFormatProvider? formatProvider = null)
 	{
 		DateOnly? dtn = null;
-		if (DateOnly.TryParse(value, formatProvider ?? CultureInfo.InvariantCulture, out DateOnly dt))
+		if (Internal.DateOnlyCompat.TryParse(value, formatProvider ?? CultureInfo.InvariantCulture, out DateOnly dt))
 		{
 			dtn = dt;
 		}
@@ -1942,11 +2053,11 @@ public static partial class Strings
 	{
 		ReadOnlySpan<byte> bytes = algorithm switch
 		{
-			EHashAlgorithm.SHA1 => SHA1.HashData(Encoding.UTF8.GetBytes(originalString)),
-			EHashAlgorithm.SHA256 => SHA256.HashData(Encoding.UTF8.GetBytes(originalString)),
-			EHashAlgorithm.SHA384 => SHA384.HashData(Encoding.UTF8.GetBytes(originalString)),
-			EHashAlgorithm.MD5 => MD5.HashData(Encoding.UTF8.GetBytes(originalString)),
-			_ => SHA512.HashData(Encoding.UTF8.GetBytes(originalString)),
+			EHashAlgorithm.SHA1 => Internal.HashCompat.Sha1HashData(Encoding.UTF8.GetBytes(originalString)),
+			EHashAlgorithm.SHA256 => Internal.HashCompat.Sha256HashData(Encoding.UTF8.GetBytes(originalString)),
+			EHashAlgorithm.SHA384 => Internal.HashCompat.Sha384HashData(Encoding.UTF8.GetBytes(originalString)),
+			EHashAlgorithm.MD5 => Internal.HashCompat.Md5HashData(Encoding.UTF8.GetBytes(originalString)),
+			_ => Internal.HashCompat.Sha512HashData(Encoding.UTF8.GetBytes(originalString)),
 		};
 		StringBuilder builder = new();
 		for (int i = 0; i < bytes.Length; i++)
@@ -2274,7 +2385,16 @@ public static partial class Strings
 		decimal decimalNumberPart = (decimal)number - ToDecimal(wholeNumberPart);
 		long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
 		long numerator = (long)(decimalNumberPart * denominator);
+#if NET7_0_OR_GREATER
 		GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+#else
+		long gcd = Internal.MathCompat.Gcd(numerator, denominator);
+		if (gcd != 0)
+		{
+			numerator /= gcd;
+			denominator /= gcd;
+		}
+#endif
 		return $"{wholeNumberPart} {numerator}/{denominator}";
 	}
 
@@ -2292,7 +2412,16 @@ public static partial class Strings
 		decimal decimalNumberPart = number - ToDecimal(wholeNumberPart);
 		long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
 		long numerator = (long)(decimalNumberPart * denominator);
+#if NET7_0_OR_GREATER
 		GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+#else
+		long gcd = Internal.MathCompat.Gcd(numerator, denominator);
+		if (gcd != 0)
+		{
+			numerator /= gcd;
+			denominator /= gcd;
+		}
+#endif
 		return $"{wholeNumberPart} {numerator}/{denominator}";
 	}
 
@@ -2315,7 +2444,16 @@ public static partial class Strings
 		double decimalNumberPart = (double)number - ToDouble(wholeNumberPart);
 		long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
 		long numerator = (long)(decimalNumberPart * denominator);
+#if NET7_0_OR_GREATER
 		GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+#else
+		long gcd = Internal.MathCompat.Gcd(numerator, denominator);
+		if (gcd != 0)
+		{
+			numerator /= gcd;
+			denominator /= gcd;
+		}
+#endif
 		return $"{wholeNumberPart} {numerator}/{denominator}";
 	}
 
@@ -2333,7 +2471,16 @@ public static partial class Strings
 		double decimalNumberPart = number - ToDouble(wholeNumberPart);
 		long denominator = (long)Math.Pow(10, maxNumberOfDecimalsToConsider);
 		long numerator = (long)(decimalNumberPart * denominator);
+#if NET7_0_OR_GREATER
 		GreatestCommonDenominator(ref numerator, ref denominator, out long _);
+#else
+		long gcd = Internal.MathCompat.Gcd(numerator, denominator);
+		if (gcd != 0)
+		{
+			numerator /= gcd;
+			denominator /= gcd;
+		}
+#endif
 		return $"{wholeNumberPart} {numerator}/{denominator}";
 	}
 

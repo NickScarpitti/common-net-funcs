@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Core.CollectionClasses;
 
@@ -7,14 +6,24 @@ namespace CommonNetFuncs.Core.CollectionClasses;
 /// Fixed size dictionary that maintains insertion order and evicts the oldest item when capacity is exceeded.
 /// </summary>
 /// <remarks>This dictionary enforces a maximum capacity. When the capacity is exceeded, the oldest item is automatically removed to make room for new entries.
-/// This implementation is thread-safe and uses a <see cref="ReaderWriterLockSlim"/> to synchronize access.</remarks>
+/// This implementation is thread-safe and uses a <see cref="ReaderWriterLockSlim"/> to synchronize access.
+/// Uses <see cref="System.Collections.Generic.OrderedDictionary{TKey, TValue}"/> on net9.0+ (the fastest option available there), falling back to a
+/// <see cref="Dictionary{TKey, TValue}"/> + <see cref="LinkedList{T}"/> implementation on older target frameworks where OrderedDictionary doesn't exist.</remarks>
 /// <typeparam name="TKey">The type of the keys in the dictionary. Keys must be non-null.</typeparam>
 /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
 public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
 {
 	private readonly ReaderWriterLockSlim readWriteLock = new();
 	private readonly int capacity;
+
+#if NET9_0_OR_GREATER
 	private readonly OrderedDictionary<TKey, TValue?> dictionary;
+#else
+	private readonly Dictionary<TKey, LinkedListNode<KeyValuePair<TKey, TValue?>>> lookup;
+
+	// First = oldest item (next to be evicted), Last = newest item
+	private readonly LinkedList<KeyValuePair<TKey, TValue?>> order = new();
+#endif
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="FixedFifoDictionary{TKey,TValue}"/> class with the specified capacity and an optional source dictionary.
@@ -36,13 +45,17 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		}
 
 		this.capacity = capacity;
+#if NET9_0_OR_GREATER
 		dictionary = new OrderedDictionary<TKey, TValue?>(capacity);
+#else
+		lookup = new Dictionary<TKey, LinkedListNode<KeyValuePair<TKey, TValue?>>>(capacity);
+#endif
 
 		if (sourceDictionary != null)
 		{
 			foreach (KeyValuePair<TKey, TValue?> kvp in sourceDictionary)
 			{
-				dictionary[kvp.Key] = kvp.Value;
+				AddNewest(kvp.Key, kvp.Value);
 			}
 		}
 	}
@@ -55,7 +68,11 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 			readWriteLock.EnterReadLock();
 			try
 			{
+#if NET9_0_OR_GREATER
 				return dictionary.Keys;
+#else
+				return order.Select(static x => x.Key).ToList();
+#endif
 			}
 			finally
 			{
@@ -72,7 +89,11 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 			readWriteLock.EnterReadLock();
 			try
 			{
+#if NET9_0_OR_GREATER
 				return dictionary.Values;
+#else
+				return order.Select(static x => x.Value).ToList();
+#endif
 			}
 			finally
 			{
@@ -89,7 +110,11 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 			readWriteLock.EnterReadLock();
 			try
 			{
+#if NET9_0_OR_GREATER
 				return dictionary.Count;
+#else
+				return lookup.Count;
+#endif
 			}
 			finally
 			{
@@ -109,7 +134,11 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 			readWriteLock.EnterReadLock();
 			try
 			{
+#if NET9_0_OR_GREATER
 				return dictionary[key];
+#else
+				return lookup[key].Value.Value;
+#endif
 			}
 			finally
 			{
@@ -121,19 +150,25 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 			readWriteLock.EnterWriteLock();
 			try
 			{
+#if NET9_0_OR_GREATER
 				if (dictionary.ContainsKey(key))
 				{
 					dictionary[key] = value;
 				}
 				else
 				{
-					if (dictionary.Count >= capacity)
-					{
-						TKey oldestKey = dictionary.GetAt(0).Key;
-						dictionary.Remove(oldestKey);
-					}
-					dictionary[key] = value;
+					AddNewest(key, value);
 				}
+#else
+				if (lookup.TryGetValue(key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node))
+				{
+					node.Value = new(key, value);
+				}
+				else
+				{
+					AddNewest(key, value);
+				}
+#endif
 			}
 			finally
 			{
@@ -148,7 +183,11 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterReadLock();
 		try
 		{
+#if NET9_0_OR_GREATER
 			return dictionary.ContainsKey(key);
+#else
+			return lookup.ContainsKey(key);
+#endif
 		}
 		finally
 		{
@@ -162,7 +201,17 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterReadLock();
 		try
 		{
+#if NET9_0_OR_GREATER
 			return dictionary.TryGetValue(key, out value);
+#else
+			if (lookup.TryGetValue(key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node))
+			{
+				value = node.Value.Value;
+				return true;
+			}
+			value = default;
+			return false;
+#endif
 		}
 		finally
 		{
@@ -176,7 +225,12 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterWriteLock();
 		try
 		{
+#if NET9_0_OR_GREATER
 			dictionary.Clear();
+#else
+			lookup.Clear();
+			order.Clear();
+#endif
 		}
 		finally
 		{
@@ -189,7 +243,11 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterWriteLock();
 		try
 		{
+#if NET9_0_OR_GREATER
 			dictionary.TrimExcess();
+#else
+			lookup.TrimExcess();
+#endif
 		}
 		finally
 		{
@@ -203,18 +261,25 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterWriteLock();
 		try
 		{
-			if (!dictionary.TryAdd(key, value))
+#if NET9_0_OR_GREATER
+			if (dictionary.ContainsKey(key))
 			{
 				dictionary[key] = value;
 			}
 			else
 			{
-				if (dictionary.Count > capacity)
-				{
-					TKey oldestKey = dictionary.GetAt(0).Key;
-					dictionary.Remove(oldestKey);
-				}
+				AddNewest(key, value);
 			}
+#else
+			if (lookup.TryGetValue(key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node))
+			{
+				node.Value = new(key, value);
+			}
+			else
+			{
+				AddNewest(key, value);
+			}
+#endif
 		}
 		finally
 		{
@@ -228,21 +293,27 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterWriteLock();
 		try
 		{
-			if (!dictionary.TryAdd(item.Key, item.Value))
+#if NET9_0_OR_GREATER
+			if (dictionary.ContainsKey(item.Key))
 			{
-				// Update existing item
-				dictionary[item.Key] = item.Value; // Note: We're not changing its position in the queue
+				// Update existing item - not changing its position in the queue
+				dictionary[item.Key] = item.Value;
 			}
 			else
 			{
-				// Add new item
-				if (dictionary.Count > capacity)
-				{
-					// Remove oldest item
-					TKey oldestKey = dictionary.GetAt(0).Key;
-					dictionary.Remove(oldestKey);
-				}
+				AddNewest(item.Key, item.Value);
 			}
+#else
+			if (lookup.TryGetValue(item.Key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node))
+			{
+				// Update existing item - not changing its position in the queue
+				node.Value = item;
+			}
+			else
+			{
+				AddNewest(item.Key, item.Value);
+			}
+#endif
 		}
 		finally
 		{
@@ -258,40 +329,26 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 	/// <returns><see langword="true"/> if the key/value pair was added successfully, <see langword="false"/> otherwise.</returns>
 	public bool TryAdd(TKey key, TValue? value)
 	{
-		readWriteLock.EnterUpgradeableReadLock();
+		readWriteLock.EnterWriteLock();
 		try
 		{
+#if NET9_0_OR_GREATER
 			if (dictionary.ContainsKey(key))
 			{
 				return false;
 			}
-			readWriteLock.EnterWriteLock();
-			try
-			{
-				if (dictionary.Count >= capacity)
-				{
-					TKey oldestKey = dictionary.GetAt(dictionary.Count - 1).Key;
-					dictionary.Remove(oldestKey);
-				}
-				dictionary.Insert(0, key, value);
-				return true;
-			}
-			catch
+#else
+			if (lookup.ContainsKey(key))
 			{
 				return false;
 			}
-			finally
-			{
-				readWriteLock.ExitWriteLock();
-			}
-		}
-		catch
-		{
-			return false;
+#endif
+			AddNewest(key, value);
+			return true;
 		}
 		finally
 		{
-			readWriteLock.ExitUpgradeableReadLock();
+			readWriteLock.ExitWriteLock();
 		}
 	}
 
@@ -301,7 +358,7 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterWriteLock();
 		try
 		{
-			return dictionary.Remove(key);
+			return RemoveInternal(key);
 		}
 		finally
 		{
@@ -320,25 +377,29 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterUpgradeableReadLock();
 		try
 		{
-			if (!dictionary.TryGetValue(key, out TValue? value))
+#if NET9_0_OR_GREATER
+			if (dictionary.TryGetValue(key, out TValue? existing))
 			{
-				readWriteLock.EnterWriteLock();
-				try
-				{
-					value = valueFactory(key);
-					if (dictionary.Count >= capacity)
-					{
-						TKey oldestKey = dictionary.GetAt(0).Key;
-						dictionary.Remove(oldestKey);
-					}
-					dictionary[key] = value;
-				}
-				finally
-				{
-					readWriteLock.ExitWriteLock();
-				}
+				return existing!;
 			}
-			return value!;
+#else
+			if (lookup.TryGetValue(key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node))
+			{
+				return node.Value.Value!;
+			}
+#endif
+
+			readWriteLock.EnterWriteLock();
+			try
+			{
+				TValue value = valueFactory(key);
+				AddNewest(key, value);
+				return value;
+			}
+			finally
+			{
+				readWriteLock.ExitWriteLock();
+			}
 		}
 		finally
 		{
@@ -352,7 +413,11 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterReadLock();
 		try
 		{
-			return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Contains(item);
+#if NET9_0_OR_GREATER
+			return dictionary.TryGetValue(item.Key, out TValue? value) && EqualityComparer<TValue?>.Default.Equals(value, item.Value);
+#else
+			return lookup.TryGetValue(item.Key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node) && EqualityComparer<TValue?>.Default.Equals(node.Value.Value, item.Value);
+#endif
 		}
 		finally
 		{
@@ -366,7 +431,11 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterReadLock();
 		try
 		{
-			dictionary.ToList().CopyTo(array, arrayIndex);
+#if NET9_0_OR_GREATER
+			((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).CopyTo(array, arrayIndex);
+#else
+			order.ToList().CopyTo(array, arrayIndex);
+#endif
 		}
 		finally
 		{
@@ -380,7 +449,13 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterWriteLock();
 		try
 		{
-			return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item);
+#if NET9_0_OR_GREATER
+			return dictionary.TryGetValue(item.Key, out TValue? value) && EqualityComparer<TValue?>.Default.Equals(value, item.Value) && RemoveInternal(item.Key);
+#else
+			return lookup.TryGetValue(item.Key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node)
+				&& EqualityComparer<TValue?>.Default.Equals(node.Value.Value, item.Value)
+				&& RemoveInternal(item.Key);
+#endif
 		}
 		finally
 		{
@@ -394,7 +469,11 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 		readWriteLock.EnterReadLock();
 		try
 		{
-			return dictionary.GetEnumerator();
+#if NET9_0_OR_GREATER
+			return dictionary.ToList().GetEnumerator();
+#else
+			return order.ToList().GetEnumerator();
+#endif
 		}
 		finally
 		{
@@ -405,6 +484,43 @@ public class FixedFifoDictionary<TKey, TValue> : IDictionary<TKey, TValue?> wher
 	/// <inheritdoc />
 	IEnumerator IEnumerable.GetEnumerator()
 	{
-		return ((IEnumerable)dictionary).GetEnumerator();
+		return GetEnumerator();
+	}
+
+	// Callers must already hold the write lock.
+	private void AddNewest(TKey key, TValue? value)
+	{
+#if NET9_0_OR_GREATER
+		if (dictionary.Count >= capacity)
+		{
+			dictionary.RemoveAt(0);
+		}
+		dictionary.Add(key, value);
+#else
+		if (lookup.Count >= capacity)
+		{
+			RemoveInternal(order.First!.Value.Key);
+		}
+
+		LinkedListNode<KeyValuePair<TKey, TValue?>> node = order.AddLast(new KeyValuePair<TKey, TValue?>(key, value));
+		lookup[key] = node;
+#endif
+	}
+
+	// Callers must already hold the write lock.
+	private bool RemoveInternal(TKey key)
+	{
+#if NET9_0_OR_GREATER
+		return dictionary.Remove(key);
+#else
+		if (!lookup.TryGetValue(key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node))
+		{
+			return false;
+		}
+
+		order.Remove(node);
+		lookup.Remove(key);
+		return true;
+#endif
 	}
 }

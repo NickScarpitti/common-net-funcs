@@ -1,11 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFrameworks>net10.0;net8.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
 		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+	<!--
+		The net8.0 leg exists purely so ProjectReferences to multi-targeted CommonNetFuncs.* projects resolve to
+		their netstandard2.1 build (net8.0 isn't offered by those projects, but netstandard2.1 is compatible with
+		it), letting this same test suite exercise the netstandard2.1 fallback code paths on a real runtime.
+		Tests that only apply to APIs that exist on the net10.0 (native) build should be guarded with
+		`#if CORE_NATIVE_BUILD`.
+	-->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+		<DefineConstants>$(DefineConstants);CORE_NATIVE_BUILD</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -27,6 +38,7 @@
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="NLog.Extensions.Logging" />
 		<PackageReference Include="Shouldly" />
+		<PackageReference Include="xRetry.v3" />
 		<PackageReference Include="xunit.v3" />
 		<PackageReference Include="xunit.runner.visualstudio">
 			<PrivateAssets>all</PrivateAssets>

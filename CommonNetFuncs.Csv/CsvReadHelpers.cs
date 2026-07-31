@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using CsvHelper;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
@@ -38,7 +39,7 @@ public static class CsvReadHelpers
 	/// <returns><see cref="IEnumerable{T}"/> of TObj read from the CSV <see cref="Stream"/></returns>
 	public static IEnumerable<T> ReadCsv<T>(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
 	{
-		using StreamReader reader = new(stream, bufferSize: bufferSize);
+		using StreamReader reader = new(stream, Encoding.UTF8, true, bufferSize);
 		foreach (T item in ReadCsv<T>(reader, hasHeaders, cultureInfo, bufferSize))
 		{
 			yield return item;
@@ -140,7 +141,7 @@ public static class CsvReadHelpers
 	///  <returns><see cref="IAsyncEnumerable{T}"/> containing the values read from the CSV <see cref="Stream"/>.</returns>
 	public static async IAsyncEnumerable<T> ReadCsvAsyncEnumerable<T>(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
-		using StreamReader reader = new(stream, bufferSize: bufferSize);
+		using StreamReader reader = new(stream, Encoding.UTF8, true, bufferSize);
 		await foreach (T record in ReadCsvAsyncEnumerable<T>(reader, hasHeaders, cultureInfo, bufferSize, cancellationToken).ConfigureAwait(false))
 		{
 			yield return record;
@@ -195,7 +196,7 @@ public static class CsvReadHelpers
 	/// <returns><see cref="DataTable"/> populated by the values in the CSV <see cref="Stream"/>.</returns>
 	public static DataTable ReadCsvToDataTable(Stream stream, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
 	{
-		using StreamReader reader = new(stream, bufferSize: bufferSize);
+		using StreamReader reader = new(stream, Encoding.UTF8, true, bufferSize);
 		return ReadCsvToDataTable(reader, hasHeaders, null, cultureInfo, bufferSize);
 	}
 
@@ -225,7 +226,7 @@ public static class CsvReadHelpers
 	/// <returns><see cref="DataTable"/> populated from the CSV <see cref="Stream"/>.</returns>
 	public static DataTable ReadCsvToDataTable(Stream stream, Type dataType, bool hasHeaders = true, CultureInfo? cultureInfo = null, int bufferSize = 4096)
 	{
-		using StreamReader reader = new(stream, bufferSize: bufferSize);
+		using StreamReader reader = new(stream, Encoding.UTF8, true, bufferSize);
 		return ReadCsvToDataTable(reader, hasHeaders, dataType, cultureInfo, bufferSize);
 	}
 

@@ -1,6 +1,9 @@
 ﻿using System.Buffers;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
+#if !NET6_0_OR_GREATER
+using CommonNetFuncs.Compression.Internal;
+#endif
 
 namespace CommonNetFuncs.Compression;
 
@@ -41,7 +44,11 @@ public static class Streams
 			ECompressionType.Brotli => new BrotliStream(stream, level, leaveOpen),
 			ECompressionType.Gzip => new GZipStream(stream, level, leaveOpen),
 			ECompressionType.Deflate => new DeflateStream(stream, level, leaveOpen),
+#if NET6_0_OR_GREATER
 			ECompressionType.ZLib => new ZLibStream(stream, level, leaveOpen),
+#else
+			ECompressionType.ZLib => new ZLibCompatStream(stream, level, leaveOpen),
+#endif
 			_ => throw new NotImplementedException($"Compression type {compressionType} is not supported.")
 		};
 	}
@@ -55,7 +62,11 @@ public static class Streams
 			ECompressionType.Brotli => new BrotliStream(stream, CompressionMode.Decompress, leaveOpen),
 			ECompressionType.Gzip => new GZipStream(stream, CompressionMode.Decompress, leaveOpen),
 			ECompressionType.Deflate => new DeflateStream(stream, CompressionMode.Decompress, leaveOpen),
+#if NET6_0_OR_GREATER
 			ECompressionType.ZLib => new ZLibStream(stream, CompressionMode.Decompress, leaveOpen),
+#else
+			ECompressionType.ZLib => new ZLibCompatStream(stream, CompressionMode.Decompress, leaveOpen),
+#endif
 			_ => throw new NotImplementedException($"Compression type {compressionType} is not supported.")
 		};
 	}
@@ -588,14 +599,14 @@ public static class Streams
 		{
 			while ((bytesRead = source.Read(buffer, 0, ChunkSize)) > 0)
 			{
+				cancellationToken.ThrowIfCancellationRequested();
+
 				totalBytes += bytesRead;
 
 				if (totalBytes > maxBytes)
 				{
 					throw new CompressionLimitExceededException($"Operation would exceed maximum size limit of {maxBytes} bytes");
 				}
-
-				cancellationToken.ThrowIfCancellationRequested();
 
 				destination.Write(buffer, 0, bytesRead);
 			}

@@ -1,4 +1,6 @@
-﻿using System.Collections.Frozen;
+﻿#if NET8_0_OR_GREATER
+using System.Collections.Frozen;
+#endif
 using CliWrap;
 using CliWrap.Buffered;
 
@@ -14,9 +16,15 @@ public static class Optimizer
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+#if NET8_0_OR_GREATER
 	private static readonly FrozenSet<string> GifsicleExtensions = ["gif"];
 	private static readonly FrozenSet<string> JpegoptimExtensions = ["jpg", "jpeg"];
 	private static readonly FrozenSet<string> OptipngExtensions = ["png", "bmp", "pnm", "tiff"];
+#else
+	private static readonly HashSet<string> GifsicleExtensions = ["gif"];
+	private static readonly HashSet<string> JpegoptimExtensions = ["jpg", "jpeg"];
+	private static readonly HashSet<string> OptipngExtensions = ["png", "bmp", "pnm", "tiff"];
+#endif
 
 	/// <summary>
 	/// Optimizes image to be smaller size if possible

@@ -12,9 +12,14 @@ namespace CommonNetFuncs.Images;
 /// </summary>
 public static partial class Base64
 {
+#if NET7_0_OR_GREATER
 	//[GeneratedRegex(@"data:image\/([^;]+);base64,([^'"")\s]+)")]
 	[GeneratedRegex(@"data:image\/([^;]+);base64,([^'"")\s]+)|base64([^'"")\s]+)")]
 	private static partial Regex ExtractBase64Regex();
+#else
+	private static readonly Regex extractBase64RegexInstance = new(@"data:image\/([^;]+);base64,([^'"")\s]+)|base64([^'"")\s]+)", RegexOptions.Compiled);
+	private static Regex ExtractBase64Regex() => extractBase64RegexInstance;
+#endif
 
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 

@@ -22,6 +22,7 @@
 		<Project Path="Hangfire.Tests/Hangfire.Tests.csproj" />
 		<Project Path="Images.Tests/Images.Tests.csproj" />
 		<Project Path="Office.Common.Tests/Office.Common.Tests.csproj" />
+		<Project Path="ReinforcedTypings.Tests/ReinforcedTypings.Tests.csproj" />
 		<Project Path="Sql.Common.Tests/Sql.Common.Tests.csproj" />
 		<Project Path="SubsetModelBinder.Attribute.Tests/SubsetModelBinder.Attribute.Tests.csproj" />
 		<Project Path="SubsetModelBinder.Generator.Tests/SubsetModelBinder.Generator.Tests.csproj" />
@@ -54,6 +55,7 @@
 	<Project Path="CommonNetFuncs.Hangfire/CommonNetFuncs.Hangfire.csproj" />
 	<Project Path="CommonNetFuncs.Images/CommonNetFuncs.Images.csproj" />
 	<Project Path="CommonNetFuncs.Office.Common/CommonNetFuncs.Office.Common.csproj" />
+	<Project Path="CommonNetFuncs.ReinforcedTypings/CommonNetFuncs.ReinforcedTypings.csproj" />
 	<Project Path="CommonNetFuncs.Sql.Common/CommonNetFuncs.Sql.Common.csproj" />
 	<Project Path="CommonNetFuncs.Sql.Odbc/CommonNetFuncs.Sql.Odbc.csproj" />
 	<Project Path="CommonNetFuncs.Sql.PostgreSql/CommonNetFuncs.Sql.PostgreSql.csproj" />

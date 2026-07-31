@@ -10,7 +10,7 @@ using static CommonNetFuncs.Web.Common.ContentTypes;
 namespace CommonNetFuncs.Web.Interface;
 
 /// <summary>
-/// For use with the DataTables JavaScript framework
+/// For use with the DataTables.net JavaScript framework
 /// </summary>
 public static class DataTableHelpers
 {

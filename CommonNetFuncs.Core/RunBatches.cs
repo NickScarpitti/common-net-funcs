@@ -1,5 +1,7 @@
 ﻿namespace CommonNetFuncs.Core;
 
+using CommonNetFuncs.Core.Internal;
+
 /// <summary>
 /// Run batches of operations on a collection of items.
 /// </summary>
@@ -16,9 +18,9 @@ public static class RunBatches
 	/// </summary>
 	public static async Task<bool> RunBatchedProcessAsync<T>(this IEnumerable<T> itemsToProcess, Func<IEnumerable<T>, Task<bool>> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true, CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(itemsToProcess);
-		ArgumentNullException.ThrowIfNull(processor);
-		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
+		ThrowHelper.ThrowIfNull(itemsToProcess, nameof(itemsToProcess));
+		ThrowHelper.ThrowIfNull(processor, nameof(processor));
+		ThrowHelper.ThrowIfNegativeOrZero(batchSize, nameof(batchSize));
 
 		// Materialize distinct items once - use HashSet directly to avoid double materialization
 		List<T> distinctItems = new(new HashSet<T>(itemsToProcess));
@@ -51,7 +53,7 @@ public static class RunBatches
 	public static Task<bool> RunBatchedProcessAsync<T>(this IEnumerable<T> itemsToProcess, Func<List<T>, Task<bool>> listProcessor, int batchSize = 10000, bool breakOnFail = true,
 			bool logProgress = true, CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(listProcessor);
+		ThrowHelper.ThrowIfNull(listProcessor, nameof(listProcessor));
 		// Adapt the List processor to work with IEnumerable - batch from GetRange is always List<TNumber>
 		return RunBatchedProcessAsync(itemsToProcess, async batch => await listProcessor((List<T>)batch).ConfigureAwait(false), batchSize, breakOnFail, logProgress, cancellationToken);
 	}
@@ -62,9 +64,9 @@ public static class RunBatches
 	//public static bool RunBatchedProcess<TObj>(this IEnumerable<TObj> itemsToProcess, SyncBatchProcessor<TObj> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true)
 	public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, Func<IEnumerable<T>, bool> processor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true, CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(itemsToProcess);
-		ArgumentNullException.ThrowIfNull(processor);
-		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
+		ThrowHelper.ThrowIfNull(itemsToProcess, nameof(itemsToProcess));
+		ThrowHelper.ThrowIfNull(processor, nameof(processor));
+		ThrowHelper.ThrowIfNegativeOrZero(batchSize, nameof(batchSize));
 
 		// Materialize distinct items once - use HashSet directly to avoid double materialization
 		List<T> distinctItems = new(new HashSet<T>(itemsToProcess));
@@ -98,7 +100,7 @@ public static class RunBatches
 	public static bool RunBatchedProcess<T>(this IEnumerable<T> itemsToProcess, Func<List<T>, bool> listProcessor, int batchSize = 10000, bool breakOnFail = true, bool logProgress = true,
 			CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(listProcessor);
+		ThrowHelper.ThrowIfNull(listProcessor, nameof(listProcessor));
 		// Adapt the List processor to work with IEnumerable - batch from GetRange is always List<TNumber>
 		return RunBatchedProcess(itemsToProcess, batch => listProcessor((List<T>)batch), batchSize, breakOnFail, logProgress, cancellationToken);
 	}

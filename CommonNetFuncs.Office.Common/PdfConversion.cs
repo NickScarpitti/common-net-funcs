@@ -17,7 +17,11 @@ public static class PdfConversion
 		csv
 	}
 
+#if NET9_0_OR_GREATER
 	private static readonly Lock conversionLock = new();
+#else
+	private static readonly object conversionLock = new();
+#endif
 	private static readonly SemaphoreSlim semaphore = new(1);
 
 	/// <summary>
@@ -43,7 +47,7 @@ public static class PdfConversion
 
 		if (string.IsNullOrWhiteSpace(pdfCommand))
 		{
-			throw new ArgumentException($"Invalid extension on file to be converted to PDF. Valid extensions are:\n{string.Join(",\n", Enum.GetNames<EOfficeFileTypes>())}");
+			throw new ArgumentException($"Invalid extension on file to be converted to PDF. Valid extensions are:\n{string.Join(",\n", Enum.GetNames(typeof(EOfficeFileTypes)))}");
 		}
 
 		(Process process, string pdfFileName, string tempFileName) = CreatePdfConversionProcess(fileName, libreOfficeExecutable, pdfCommand, ref outputPath);
@@ -62,7 +66,11 @@ public static class PdfConversion
 					}
 					else
 					{
+#if NET7_0_OR_GREATER
 						process.WaitForExit((TimeSpan)conversionTimeout);
+#else
+						process.WaitForExit((int)((TimeSpan)conversionTimeout).TotalMilliseconds);
+#endif
 					}
 
 					if (!process.HasExited)
@@ -124,7 +132,7 @@ public static class PdfConversion
 
 		if (string.IsNullOrWhiteSpace(pdfCommand))
 		{
-			throw new ArgumentException($"Invalid extension on file to be converted to PDF. Valid extensions are:\n{string.Join(",\n", Enum.GetNames<EOfficeFileTypes>())}");
+			throw new ArgumentException($"Invalid extension on file to be converted to PDF. Valid extensions are:\n{string.Join(",\n", Enum.GetNames(typeof(EOfficeFileTypes)))}");
 		}
 
 		(Process process, string pdfFileName, string tempFileName) = CreatePdfConversionProcess(fileName, libreOfficeExecutable, pdfCommand, ref outputPath);
@@ -135,7 +143,18 @@ public static class PdfConversion
 			for (int i = 0; i <= maxRetries; i++)
 			{
 				process.Start();
+#if NET5_0_OR_GREATER
 				await process.WaitForExitAsync(cancellationToken ?? default).ConfigureAwait(false);
+#else
+				// Task.Run(action, token) only honors the token before the delegate starts running, not while
+				// process.WaitForExit() is blocked, so register a callback to kill the process on cancellation instead.
+				CancellationToken token = cancellationToken ?? default;
+				using (token.Register(static state => TryKillProcess((Process)state!), process))
+				{
+					await Task.Run(() => process.WaitForExit(), CancellationToken.None).ConfigureAwait(false);
+				}
+				token.ThrowIfCancellationRequested();
+#endif
 
 				if (process.ExitCode != 0)
 				{
@@ -179,6 +198,23 @@ public static class PdfConversion
 
 		public LibreOfficeFailedException(string message, Exception inner) : base(message, inner) { }
 	}
+
+#if !NET5_0_OR_GREATER
+	private static void TryKillProcess(Process process)
+	{
+		try
+		{
+			if (!process.HasExited)
+			{
+				process.Kill();
+			}
+		}
+		catch (InvalidOperationException)
+		{
+			// Process already exited or never started; nothing to do.
+		}
+	}
+#endif
 
 	private static string? GetPdfCommand(this string fileName)
 	{
@@ -243,7 +279,16 @@ public static class PdfConversion
 	{
 		if (File.Exists(pdfFileName))
 		{
-			File.Move(pdfFileName, Combine(outputPath ?? string.Empty, $"{GetFileNameWithoutExtension(fileName)}.pdf"), overwrite: overwriteExistingFile);
+			string destination = Combine(outputPath ?? string.Empty, $"{GetFileNameWithoutExtension(fileName)}.pdf");
+#if NET5_0_OR_GREATER
+			File.Move(pdfFileName, destination, overwrite: overwriteExistingFile);
+#else
+			if (overwriteExistingFile && File.Exists(destination))
+			{
+				File.Delete(destination);
+			}
+			File.Move(pdfFileName, destination);
+#endif
 		}
 	}
 }

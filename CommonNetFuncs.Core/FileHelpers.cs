@@ -3,6 +3,7 @@ using System.IO.Pipelines;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using CommonNetFuncs.Core.Internal;
 
 namespace CommonNetFuncs.Core;
 
@@ -11,11 +12,20 @@ namespace CommonNetFuncs.Core;
 /// </summary>
 public static partial class FileHelpers
 {
+#if NET8_0_OR_GREATER
 	private static readonly SearchValues<char> invalidFileNameChars = SearchValues.Create("/\\:<>\"|?*");
+#else
+	private static readonly char[] invalidFileNameChars = "/\\:<>\"|?*".ToCharArray();
+#endif
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"\(([^)]*)\)$")]
 	private static partial Regex IncrementedFileNameRegex();
+#else
+	private static readonly Regex incrementedFileNameRegexInstance = new(@"\(([^)]*)\)$", RegexOptions.Compiled);
+	private static Regex IncrementedFileNameRegex() => incrementedFileNameRegexInstance;
+#endif
 
 
 	/// <summary>
@@ -240,7 +250,7 @@ public static partial class FileHelpers
 			using (algorithm)
 			{
 				byte[] hash = await algorithm.ComputeHashAsync(stream).ConfigureAwait(false);
-				return Convert.ToHexStringLower(hash);
+				return HashCompat.ToHexStringLower(hash);
 			}
 		}
 		catch (Exception ex)
@@ -308,7 +318,11 @@ public static partial class FileHelpers
 	internal static string CleanFileName(string fileName)
 	{
 		// Early exit if no invalid characters present
+#if NET8_0_OR_GREATER
 		if (!fileName.AsSpan().ContainsAny(invalidFileNameChars))
+#else
+		if (fileName.IndexOfAny(invalidFileNameChars) < 0)
+#endif
 		{
 			return fileName;
 		}

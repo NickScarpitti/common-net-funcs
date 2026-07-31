@@ -3683,7 +3683,7 @@ public sealed class AsyncTests
 		// Arrange
 		int concurrent = 0;
 		int maxConcurrent = 0;
-		Lock lockObj = new();
+		object lockObj = new();
 		using SemaphoreSlim semaphore = new(2, 2);
 
 		List<Task<int>> tasks = Enumerable.Range(0, 6).Select(_ => new Task<int>(() =>
@@ -3718,7 +3718,7 @@ public sealed class AsyncTests
 		// Arrange
 		int concurrent = 0;
 		int maxConcurrent = 0;
-		Lock lockObj = new();
+		object lockObj = new();
 
 		List<Task<int>> tasks = Enumerable.Range(0, 6).Select(_ => new Task<int>(() =>
 		{

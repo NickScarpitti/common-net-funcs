@@ -27,7 +27,7 @@ public sealed class FilesTests
 
 		// Assert
 		zipFileStream.Length.ShouldBeGreaterThan(0);
-		await using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Read);
+		using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Read);
 		archive.Entries.Count.ShouldBe(1);
 		archive.Entries[0].Name.ShouldBe(fileName);
 	}
@@ -44,7 +44,7 @@ public sealed class FilesTests
 
 		// Assert
 		zipFileStream.Length.ShouldBeGreaterThan(0);
-		await using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Read);
+		using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Read);
 		archive.Entries.Count.ShouldBe(1);
 		archive.Entries[0].Name.ShouldBe(fileName);
 	}
@@ -66,7 +66,7 @@ public sealed class FilesTests
 
 		// Assert
 		zipFileStream.Length.ShouldBeGreaterThan(0);
-		await using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Read);
+		using ZipArchive archive = new(zipFileStream, ZipArchiveMode.Read);
 		archive.Entries.Count.ShouldBe(files.Count);
 		foreach ((Stream?, string fileName) file in files)
 		{
@@ -90,7 +90,7 @@ public sealed class FilesTests
 
 		// Assert
 		zipFileStream?.Length.ShouldBeGreaterThan(0);
-		await using ZipArchive archive = new(zipFileStream ?? new(), ZipArchiveMode.Read);
+		using ZipArchive archive = new(zipFileStream ?? new(), ZipArchiveMode.Read);
 		archive.Entries.Count.ShouldBe(files.Count);
 		foreach ((Stream?, string fileName) file in files)
 		{
@@ -108,14 +108,14 @@ public sealed class FilesTests
 			(new MemoryStream(Enumerable.Range(0, 100).Select(i => (byte)(i + 1)).ToArray()), "file2.txt")
 		];
 		await using MemoryStream memoryStream = new();
-		await using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true))
+		using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true))
 		{
 			// Act
 			await files.AddFilesToZip(archive, cancellationToken: TestContext.Current.CancellationToken);
 		}
 
 		// Reopen the ZipArchive in Read mode to verify its contents
-		await using ZipArchive readArchive = new(memoryStream, ZipArchiveMode.Read, true);
+		using ZipArchive readArchive = new(memoryStream, ZipArchiveMode.Read, true);
 
 		// Assert
 		readArchive.Entries.Count.ShouldBe(files.Count);
@@ -134,13 +134,13 @@ public sealed class FilesTests
 		await using MemoryStream memoryStream = new();
 
 		// Act
-		await using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true))
+		using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true))
 		{
 			await fileStream.AddFileToZip(archive, fileName, cancellationToken: TestContext.Current.CancellationToken);
 		}
 
 		// Assert
-		await using ZipArchive readArchive = new(memoryStream, ZipArchiveMode.Read, true);
+		using ZipArchive readArchive = new(memoryStream, ZipArchiveMode.Read, true);
 		readArchive.Entries.Count.ShouldBe(1);
 		readArchive.Entries[0].Name.ShouldBe(fileName);
 	}
@@ -154,13 +154,13 @@ public sealed class FilesTests
 		await using MemoryStream memoryStream = new();
 
 		// Act
-		await using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true))
+		using (ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true))
 		{
 			await fileStream.AddFileToZip(archive, fileName, cancellationToken: TestContext.Current.CancellationToken);
 		}
 
 		// Assert
-		await using ZipArchive readArchive = new(memoryStream, ZipArchiveMode.Read, true);
+		using ZipArchive readArchive = new(memoryStream, ZipArchiveMode.Read, true);
 		readArchive.Entries.Count.ShouldBe(0);
 	}
 

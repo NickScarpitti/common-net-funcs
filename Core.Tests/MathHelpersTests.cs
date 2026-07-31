@@ -107,6 +107,68 @@ public sealed class MathHelpersTests
 		Should.Throw<ArgumentException>(() => GenerateRange(5, 1));
 	}
 
+	// On net10.0+ these resolve to the same generic GenerateRange<TNumber>, but on netstandard2.1 they resolve to the separate long/float/double/decimal overloads, which otherwise go untested.
+	[Theory]
+	[InlineData(1L, 5L, new long[] { 1, 2, 3, 4, 5 })]
+	[InlineData(-2L, 2L, new long[] { -2, -1, 0, 1, 2 })]
+	[InlineData(10L, 12L, new long[] { 10, 11, 12 })]
+	public void GenerateRange_Long_Works(long start, long end, long[] expected)
+	{
+		IEnumerable<long> range = GenerateRange(start, end);
+		range.ShouldBe(expected);
+	}
+
+	[Fact]
+	public void GenerateRange_Long_ThrowsOnInvalidRange()
+	{
+		Should.Throw<ArgumentException>(() => GenerateRange(5L, 1L));
+	}
+
+	[Theory]
+	[InlineData(1f, 5f, new float[] { 1, 2, 3, 4, 5 })]
+	[InlineData(-2f, 2f, new float[] { -2, -1, 0, 1, 2 })]
+	public void GenerateRange_Float_Works(float start, float end, float[] expected)
+	{
+		IEnumerable<float> range = GenerateRange(start, end);
+		range.ShouldBe(expected);
+	}
+
+	[Fact]
+	public void GenerateRange_Float_ThrowsOnInvalidRange()
+	{
+		Should.Throw<ArgumentException>(() => GenerateRange(5f, 1f));
+	}
+
+	[Theory]
+	[InlineData(1.0, 5.0, new[] { 1.0, 2.0, 3.0, 4.0, 5.0 })]
+	[InlineData(-2.0, 2.0, new[] { -2.0, -1.0, 0.0, 1.0, 2.0 })]
+	public void GenerateRange_Double_Works(double start, double end, double[] expected)
+	{
+		IEnumerable<double> range = GenerateRange(start, end);
+		range.ShouldBe(expected);
+	}
+
+	[Fact]
+	public void GenerateRange_Double_ThrowsOnInvalidRange()
+	{
+		Should.Throw<ArgumentException>(() => GenerateRange(5.0, 1.0));
+	}
+
+	[Fact]
+	public void GenerateRange_Decimal_Works()
+	{
+		IEnumerable<decimal> range = GenerateRange(1.0m, 5.0m);
+		range.ShouldBe([1.0m, 2.0m, 3.0m, 4.0m, 5.0m]);
+	}
+
+	[Fact]
+	public void GenerateRange_Decimal_ThrowsOnInvalidRange()
+	{
+		Should.Throw<ArgumentException>(() => GenerateRange(5.0m, 1.0m));
+	}
+
+	// GreatestCommonDenominator<T> relies on generic math (INumber<T>) and is fully excluded from the netstandard2.1 build of CommonNetFuncs.Core.
+#if CORE_NATIVE_BUILD
 	[Theory]
 	[InlineData(12L, 8L, 4L, 3L, 2L)]       // basic reduction
 	[InlineData(25L, 15L, 5L, 5L, 3L)]      // larger numbers
@@ -164,6 +226,7 @@ public sealed class MathHelpersTests
 		numerator.ShouldBe((decimal)expectedNum);
 		denominator.ShouldBe((decimal)expectedDen);
 	}
+#endif
 
 	[Fact]
 	public void GetPrecision_RespectsCurrentCulture()
@@ -323,7 +386,7 @@ public sealed class MathHelpersTests
 	}
 
 	[Fact]
-	public void GetMedian_NullCollection_ThrowsArgumentException()
+	public void GetMedian_NullIntCollection_ThrowsArgumentException()
 	{
 		IEnumerable<int>? numbers = null;
 		Should.Throw<ArgumentException>(() => numbers!.GetMedian());
@@ -365,6 +428,69 @@ public sealed class MathHelpersTests
 		numbers.GetMedian().ShouldBe(expected);
 	}
 
+	// On net10.0+ these resolve to the same generic GetMedian<TNumber>, but on netstandard2.1 they resolve to the separate long/float overloads, which otherwise go untested.
+	[Theory]
+	[InlineData(new long[] { 1, 2, 3 }, 2L)]                // sorted odd count
+	[InlineData(new long[] { 3, 1, 2 }, 2L)]                // unsorted odd count
+	[InlineData(new long[] { -5, -3, -1 }, -3L)]            // negative values odd count
+	public void GetMedian_OddCount_Long_ReturnsMiddleElement(long[] numbers, long expected)
+	{
+		numbers.GetMedian().ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(new long[] { 1, 2, 3, 4 }, 2L)]             // sorted even count — (2+3)/2 = 2 (integer division)
+	[InlineData(new long[] { 4, 3, 1, 2 }, 2L)]             // unsorted even count
+	public void GetMedian_EvenCount_Long_ReturnsAverageOfMiddleTwo(long[] numbers, long expected)
+	{
+		numbers.GetMedian().ShouldBe(expected);
+	}
+
+	[Fact]
+	public void GetMedian_NullLongCollection_ThrowsArgumentException()
+	{
+		IEnumerable<long>? numbers = null;
+		Should.Throw<ArgumentException>(() => numbers!.GetMedian());
+	}
+
+	[Fact]
+	public void GetMedian_EmptyLongCollection_ThrowsArgumentException()
+	{
+		IEnumerable<long> numbers = Array.Empty<long>();
+		Should.Throw<ArgumentException>(() => numbers.GetMedian());
+	}
+
+	[Theory]
+	[InlineData(new float[] { 1, 2, 3 }, 2f)]               // sorted odd count
+	[InlineData(new float[] { 3, 1, 2 }, 2f)]               // unsorted odd count
+	[InlineData(new float[] { 1.5f, 2.5f, 3.5f }, 2.5f)]    // fractional values odd count
+	public void GetMedian_OddCount_Float_ReturnsMiddleElement(float[] numbers, float expected)
+	{
+		numbers.GetMedian().ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(new float[] { 1, 2, 3, 4 }, 2.5f)]          // sorted even count — (2+3)/2 = 2.5
+	[InlineData(new float[] { 4, 1, 3, 2 }, 2.5f)]          // unsorted even count
+	public void GetMedian_EvenCount_Float_ReturnsAverageOfMiddleTwo(float[] numbers, float expected)
+	{
+		numbers.GetMedian().ShouldBe(expected);
+	}
+
+	[Fact]
+	public void GetMedian_NullFloatCollection_ThrowsArgumentException()
+	{
+		IEnumerable<float>? numbers = null;
+		Should.Throw<ArgumentException>(() => numbers!.GetMedian());
+	}
+
+	[Fact]
+	public void GetMedian_EmptyFloatCollection_ThrowsArgumentException()
+	{
+		IEnumerable<float> numbers = Array.Empty<float>();
+		Should.Throw<ArgumentException>(() => numbers.GetMedian());
+	}
+
 	[Theory]
 	[InlineData(new[] { 1.0, 2.0, 3.0 }, 2.0)]             // sorted odd count
 	[InlineData(new[] { 3.0, 1.0, 2.0 }, 2.0)]             // unsorted odd count
@@ -386,6 +512,20 @@ public sealed class MathHelpersTests
 	}
 
 	[Fact]
+	public void GetMedian_NullDoubleCollection_ThrowsArgumentException()
+	{
+		IEnumerable<double>? numbers = null;
+		Should.Throw<ArgumentException>(() => numbers!.GetMedian());
+	}
+
+	[Fact]
+	public void GetMedian_EmptyDoubleCollection_ThrowsArgumentException()
+	{
+		IEnumerable<double> numbers = Array.Empty<double>();
+		Should.Throw<ArgumentException>(() => numbers.GetMedian());
+	}
+
+	[Fact]
 	public void GetMedian_OddCount_Decimal_ReturnsMiddleElement()
 	{
 		decimal[] numbers = [1.1m, 3.3m, 2.2m];
@@ -397,6 +537,20 @@ public sealed class MathHelpersTests
 	{
 		decimal[] numbers = [1.0m, 2.0m, 3.0m, 4.0m];
 		numbers.GetMedian().ShouldBe(2.5m);
+	}
+
+	[Fact]
+	public void GetMedian_NullDecimalCollection_ThrowsArgumentException()
+	{
+		IEnumerable<decimal>? numbers = null;
+		Should.Throw<ArgumentException>(() => numbers!.GetMedian());
+	}
+
+	[Fact]
+	public void GetMedian_EmptyDecimalCollection_ThrowsArgumentException()
+	{
+		decimal[] numbers = [];
+		Should.Throw<ArgumentException>(() => numbers.GetMedian());
 	}
 
 	[Fact]

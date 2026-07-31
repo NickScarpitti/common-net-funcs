@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using CommonNetFuncs.Core.Internal;
 using FastExpressionCompiler;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
@@ -324,7 +325,7 @@ public static class Inspect
 			}
 		}
 
-		return Convert.ToHexStringLower(algorithm.ComputeHash(ms.ToArray()));
+		return HashCompat.ToHexStringLower(algorithm.ComputeHash(ms.ToArray()));
 	}
 
 	/// <summary>
@@ -363,7 +364,7 @@ public static class Inspect
 		}
 		await ms.FlushAsync().ConfigureAwait(false);
 		ms.Position = 0; // Reset stream position for reading
-		return Convert.ToHexStringLower(await algorithm.ComputeHashAsync(ms).ConfigureAwait(false));
+		return HashCompat.ToHexStringLower(await algorithm.ComputeHashAsync(ms).ConfigureAwait(false));
 	}
 
 	/// <summary>
@@ -391,7 +392,7 @@ public static class Inspect
 				using MemoryStream itemMs = new();
 				using BinaryWriter itemWriter = new(itemMs);
 				WriteValue(itemWriter, item);
-				itemHashes.Add(BitConverter.ToString(MD5.HashData(itemMs.ToArray())));
+				itemHashes.Add(BitConverter.ToString(HashCompat.Md5HashData(itemMs.ToArray())));
 			}
 
 			// Sort the hashes to ensure order independence
@@ -454,7 +455,7 @@ public static class Inspect
 				await using MemoryStream itemMs = new();
 				await using BinaryWriter itemWriter = new(itemMs);
 				await WriteValueAsync(itemWriter, item).ConfigureAwait(false);
-				itemHashes.Add(BitConverter.ToString(await MD5.HashDataAsync(itemMs).ConfigureAwait(false)));
+				itemHashes.Add(BitConverter.ToString(await HashCompat.Md5HashDataAsync(itemMs).ConfigureAwait(false)));
 			}
 
 			// Sort the hashes to ensure order independence

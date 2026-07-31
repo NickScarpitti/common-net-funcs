@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using CommonNetFuncs.Core.Internal;
 
 namespace CommonNetFuncs.Core;
 
@@ -165,7 +166,7 @@ public static class TypeChecks
 	/// <returns><see langword="true"/> if type is a read-only collection type</returns>
 	public static bool IsReadOnlyCollectionType(this Type type)
 	{
-		ArgumentNullException.ThrowIfNull(type);
+		ThrowHelper.ThrowIfNull(type, nameof(type));
 
 		// Check if the type itself is a generic IReadOnlyCollection<> or IReadOnlyList<> or ReadOnlyCollection<>
 		//if (type.IsGenericType)

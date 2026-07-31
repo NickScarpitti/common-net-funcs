@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFrameworks>net10.0;netstandard2.1</TargetFrameworks>
 		<Platforms>AnyCPU;x86;x64</Platforms>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<LangVersion>latest</LangVersion>
@@ -28,7 +28,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.1.11</Version>
+		<Version>4.1.13</Version>
 		<MinVerTagPrefix>csv-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>

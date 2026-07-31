@@ -339,7 +339,15 @@ public static class Manipulation
 
 			if (isSameFile)
 			{
+#if NET5_0_OR_GREATER
 				File.Move(tempFilePath, outputFilePath, true);
+#else
+				if (File.Exists(outputFilePath))
+				{
+					File.Delete(outputFilePath);
+				}
+				File.Move(tempFilePath, outputFilePath);
+#endif
 			}
 
 			return true;

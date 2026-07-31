@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFrameworks>net10.0;netstandard2.1</TargetFrameworks>
 		<Platforms>AnyCPU;x86;x64</Platforms>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<LangVersion>latest</LangVersion>
@@ -28,7 +28,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.1.12</Version>
+		<Version>4.1.14</Version>
 		<MinVerTagPrefix>email-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -84,10 +84,26 @@
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
 	</ItemGroup>
 
+	<!-- System.Text.Json is part of the net10.0 shared framework, but must be referenced explicitly on netstandard2.1 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+		<PackageReference Include="System.Text.Json" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj" />
 		<ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
+	</ItemGroup>
+
+	<!--
+		HangfireEmailService.cs depends on CommonNetFuncs.Hangfire, which requires the Microsoft.AspNetCore.App
+		shared framework and therefore cannot target netstandard2.1.
+	-->
+	<ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.1'">
 		<ProjectReference Include="..\CommonNetFuncs.Hangfire\CommonNetFuncs.Hangfire.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+		<Compile Remove="HangfireEmailService.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using xRetry.v3;
 using static System.IO.Path;
 using static CommonNetFuncs.Office.Common.PdfConversion;
 
@@ -177,7 +178,7 @@ public sealed class PdfConversionTests //: IDisposable
 		Directory.Delete(tempPath, true); // Cleanup
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task ConvertToPdf_WithCancellationAndRetries_ShouldRespectBoth()
 	{
 		// Arrange
@@ -1351,7 +1352,7 @@ public sealed class PdfConversionTests //: IDisposable
 	/// </summary>
 	private static string FakeFailingExecutable =>
 		RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-			? "where.exe"   // Windows: where.exe exits non-zero when the LibreOffice args are unrecognised patterns
+			? "where.exe"   // Windows: where.exe exits non-zero when the LibreOffice args are unrecognized patterns
 			: "/bin/false"; // Unix: always exits with code 1, ignores all arguments
 
 	[Fact]

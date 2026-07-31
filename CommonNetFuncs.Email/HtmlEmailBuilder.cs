@@ -11,8 +11,13 @@ public static partial class HtmlEmailBuilder
 	const string LineBreak = "<br><br>";
 	const string CloseTr = "</tr>";
 
+#if NET7_0_OR_GREATER
 	[GeneratedRegex(@"https?://[^\n\t< ]+", RegexOptions.IgnoreCase, "en-US")]
 	private static partial Regex UrlRegex();
+#else
+	private static readonly Regex urlRegexInstance = new(@"https?://[^\n\t< ]+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	private static Regex UrlRegex() => urlRegexInstance;
+#endif
 
 	/// <summary>
 	/// Creates an HTML body for an email using the inputs provided

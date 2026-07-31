@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using CommonNetFuncs.Core.CollectionClasses;
+using CommonNetFuncs.Core.Internal;
 
 namespace CommonNetFuncs.Core;
 

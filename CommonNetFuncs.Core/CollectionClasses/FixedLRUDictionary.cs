@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using CommonNetFuncs.Core;
 
 namespace CommonNetFuncs.Core.CollectionClasses;
 
@@ -8,14 +7,25 @@ namespace CommonNetFuncs.Core.CollectionClasses;
 /// </summary>
 /// <remarks>This dictionary enforces a maximum capacity. When the capacity is exceeded, the least recently used
 /// item is automatically removed to make room for new entries. Accessing or adding an item updates its usage order,
-/// moving it to the most recently used position.  This implementation is thread-safe and uses a <see cref="ReaderWriterLockSlim"/> to synchronize access.</remarks>
+/// moving it to the most recently used position. This implementation is thread-safe and uses a <see cref="ReaderWriterLockSlim"/> to synchronize access.
+/// Uses <see cref="System.Collections.Generic.OrderedDictionary{TKey, TValue}"/> on net9.0+ (the fastest option available there), falling back to a
+/// <see cref="Dictionary{TKey, TValue}"/> + <see cref="LinkedList{T}"/> implementation on older target frameworks where OrderedDictionary doesn't exist.</remarks>
 /// <typeparam name="TKey">The type of the keys in the dictionary. Keys must be non-null.</typeparam>
 /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
 public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where TKey : notnull
 {
 	private readonly ReaderWriterLockSlim readWriteLock = new();
 	private readonly int capacity;
+
+#if NET9_0_OR_GREATER
+	// Index 0 = least recently used (next to be evicted), last index = most recently used
 	private readonly OrderedDictionary<TKey, TValue?> dictionary;
+#else
+	private readonly Dictionary<TKey, LinkedListNode<KeyValuePair<TKey, TValue?>>> lookup;
+
+	// First = least recently used (next to be evicted), Last = most recently used
+	private readonly LinkedList<KeyValuePair<TKey, TValue?>> order = new();
+#endif
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="FixedLruDictionary{TKey, TValue}"/> class with the specified capacity and an optional source dictionary.
@@ -37,13 +47,17 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 		}
 
 		this.capacity = capacity;
+#if NET9_0_OR_GREATER
 		dictionary = new OrderedDictionary<TKey, TValue?>(capacity);
+#else
+		lookup = new Dictionary<TKey, LinkedListNode<KeyValuePair<TKey, TValue?>>>(capacity);
+#endif
 
 		if (sourceDictionary != null)
 		{
 			foreach (KeyValuePair<TKey, TValue?> kvp in sourceDictionary)
 			{
-				dictionary[kvp.Key] = kvp.Value;
+				AddMostRecentlyUsed(kvp.Key, kvp.Value);
 			}
 		}
 	}
@@ -56,7 +70,11 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 			readWriteLock.EnterReadLock();
 			try
 			{
+#if NET9_0_OR_GREATER
 				return dictionary.Keys;
+#else
+				return order.Select(static x => x.Key).ToList();
+#endif
 			}
 			finally
 			{
@@ -73,7 +91,11 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 			readWriteLock.EnterReadLock();
 			try
 			{
+#if NET9_0_OR_GREATER
 				return dictionary.Values;
+#else
+				return order.Select(static x => x.Value).ToList();
+#endif
 			}
 			finally
 			{
@@ -90,7 +112,11 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 			readWriteLock.EnterReadLock();
 			try
 			{
+#if NET9_0_OR_GREATER
 				return dictionary.Count;
+#else
+				return lookup.Count;
+#endif
 			}
 			finally
 			{
@@ -107,34 +133,29 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 	{
 		get
 		{
-			readWriteLock.EnterUpgradeableReadLock();
+			readWriteLock.EnterWriteLock();
 			try
 			{
+#if NET9_0_OR_GREATER
 				if (!dictionary.TryGetValue(key, out TValue? value))
 				{
 					throw new KeyNotFoundException();
 				}
-
-				// Move to front if not already there
-				int idx = dictionary.IndexOf(key);
-				if (idx > 0)
-				{
-					readWriteLock.EnterWriteLock();
-					try
-					{
-						dictionary.RemoveAt(idx);
-						dictionary.Insert(0, key, value);
-					}
-					finally
-					{
-						readWriteLock.ExitWriteLock();
-					}
-				}
+				MoveToMostRecentlyUsed(key, value);
 				return value;
+#else
+				if (!lookup.TryGetValue(key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node))
+				{
+					throw new KeyNotFoundException();
+				}
+
+				MoveToMostRecentlyUsed(node);
+				return node.Value.Value;
+#endif
 			}
 			finally
 			{
-				readWriteLock.ExitUpgradeableReadLock();
+				readWriteLock.ExitWriteLock();
 			}
 		}
 		set
@@ -142,13 +163,20 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 			readWriteLock.EnterWriteLock();
 			try
 			{
-				if (!dictionary.Remove(key) && dictionary.Count >= capacity)
+#if NET9_0_OR_GREATER
+				if (dictionary.ContainsKey(key))
 				{
-					TKey oldestKey = dictionary.GetAt(dictionary.Count - 1).Key;
-					dictionary.Remove(oldestKey);
+					dictionary.Remove(key);
 				}
-
-				dictionary.Insert(0, key, value);
+				AddMostRecentlyUsed(key, value);
+#else
+				if (lookup.TryGetValue(key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node))
+				{
+					order.Remove(node);
+					lookup.Remove(key);
+				}
+				AddMostRecentlyUsed(key, value);
+#endif
 			}
 			finally
 			{
@@ -163,7 +191,11 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 		readWriteLock.EnterReadLock();
 		try
 		{
+#if NET9_0_OR_GREATER
 			return dictionary.ContainsKey(key);
+#else
+			return lookup.ContainsKey(key);
+#endif
 		}
 		finally
 		{
@@ -174,33 +206,31 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 	/// <inheritdoc />
 	public bool TryGetValue(TKey key, out TValue? value)
 	{
-		readWriteLock.EnterUpgradeableReadLock();
+		readWriteLock.EnterWriteLock();
 		try
 		{
+#if NET9_0_OR_GREATER
 			if (!dictionary.TryGetValue(key, out value))
 			{
 				return false;
 			}
-
-			int idx = dictionary.IndexOf(key);
-			if (idx > 0)
-			{
-				readWriteLock.EnterWriteLock();
-				try
-				{
-					dictionary.RemoveAt(idx);
-					dictionary.Insert(0, key, value);
-				}
-				finally
-				{
-					readWriteLock.ExitWriteLock();
-				}
-			}
+			MoveToMostRecentlyUsed(key, value);
 			return true;
+#else
+			if (!lookup.TryGetValue(key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node))
+			{
+				value = default;
+				return false;
+			}
+
+			MoveToMostRecentlyUsed(node);
+			value = node.Value.Value;
+			return true;
+#endif
 		}
 		finally
 		{
-			readWriteLock.ExitUpgradeableReadLock();
+			readWriteLock.ExitWriteLock();
 		}
 	}
 
@@ -210,7 +240,12 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 		readWriteLock.EnterWriteLock();
 		try
 		{
+#if NET9_0_OR_GREATER
 			dictionary.Clear();
+#else
+			lookup.Clear();
+			order.Clear();
+#endif
 		}
 		finally
 		{
@@ -223,7 +258,11 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 		readWriteLock.EnterWriteLock();
 		try
 		{
+#if NET9_0_OR_GREATER
 			dictionary.TrimExcess();
+#else
+			lookup.TrimExcess();
+#endif
 		}
 		finally
 		{
@@ -237,17 +276,18 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 		readWriteLock.EnterWriteLock();
 		try
 		{
+#if NET9_0_OR_GREATER
 			if (dictionary.ContainsKey(key))
 			{
 				throw new ArgumentException("An item with the same key has already been added.", nameof(key));
 			}
-
-			if (dictionary.Count >= capacity)
+#else
+			if (lookup.ContainsKey(key))
 			{
-				TKey oldestKey = dictionary.GetAt(dictionary.Count - 1).Key;
-				dictionary.Remove(oldestKey);
+				throw new ArgumentException("An item with the same key has already been added.", nameof(key));
 			}
-			dictionary.Insert(0, key, value);
+#endif
+			AddMostRecentlyUsed(key, value);
 		}
 		finally
 		{
@@ -263,40 +303,26 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 	/// <returns><see langword="true"/> if the key/value pair was added successfully, <see langword="false"/> otherwise.</returns>
 	public bool TryAdd(TKey key, TValue? value)
 	{
-		readWriteLock.EnterUpgradeableReadLock();
+		readWriteLock.EnterWriteLock();
 		try
 		{
+#if NET9_0_OR_GREATER
 			if (dictionary.ContainsKey(key))
 			{
 				return false;
 			}
-			readWriteLock.EnterWriteLock();
-			try
-			{
-				if (dictionary.Count >= capacity)
-				{
-					TKey oldestKey = dictionary.GetAt(dictionary.Count - 1).Key;
-					dictionary.Remove(oldestKey);
-				}
-				dictionary.Insert(0, key, value);
-				return true;
-			}
-			catch
+#else
+			if (lookup.ContainsKey(key))
 			{
 				return false;
 			}
-			finally
-			{
-				readWriteLock.ExitWriteLock();
-			}
-		}
-		catch
-		{
-			return false;
+#endif
+			AddMostRecentlyUsed(key, value);
+			return true;
 		}
 		finally
 		{
-			readWriteLock.ExitUpgradeableReadLock();
+			readWriteLock.ExitWriteLock();
 		}
 	}
 
@@ -306,7 +332,7 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 		readWriteLock.EnterWriteLock();
 		try
 		{
-			return dictionary.Remove(key);
+			return RemoveInternal(key);
 		}
 		finally
 		{
@@ -326,7 +352,11 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 		readWriteLock.EnterReadLock();
 		try
 		{
-			return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Contains(item);
+#if NET9_0_OR_GREATER
+			return dictionary.TryGetValue(item.Key, out TValue? value) && EqualityComparer<TValue?>.Default.Equals(value, item.Value);
+#else
+			return lookup.TryGetValue(item.Key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node) && EqualityComparer<TValue?>.Default.Equals(node.Value.Value, item.Value);
+#endif
 		}
 		finally
 		{
@@ -340,7 +370,11 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 		readWriteLock.EnterReadLock();
 		try
 		{
-			dictionary.ToList().CopyTo(array, arrayIndex);
+#if NET9_0_OR_GREATER
+			((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).CopyTo(array, arrayIndex);
+#else
+			order.ToList().CopyTo(array, arrayIndex);
+#endif
 		}
 		finally
 		{
@@ -354,7 +388,13 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 		readWriteLock.EnterWriteLock();
 		try
 		{
-			return ((ICollection<KeyValuePair<TKey, TValue?>>)dictionary).Remove(item);
+#if NET9_0_OR_GREATER
+			return dictionary.TryGetValue(item.Key, out TValue? value) && EqualityComparer<TValue?>.Default.Equals(value, item.Value) && RemoveInternal(item.Key);
+#else
+			return lookup.TryGetValue(item.Key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node)
+				&& EqualityComparer<TValue?>.Default.Equals(node.Value.Value, item.Value)
+				&& RemoveInternal(item.Key);
+#endif
 		}
 		finally
 		{
@@ -370,51 +410,30 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 	/// <returns>The value associated with the specified key.</returns>
 	public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
 	{
-		readWriteLock.EnterUpgradeableReadLock();
+		readWriteLock.EnterWriteLock();
 		try
 		{
-			if (dictionary.TryGetValue(key, out TValue? value))
+#if NET9_0_OR_GREATER
+			if (dictionary.TryGetValue(key, out TValue? existing))
 			{
-				dictionary.IndexOf(key);
-				int idx = dictionary.IndexOf(key);
-				if (idx > 0)
-				{
-					readWriteLock.EnterWriteLock();
-					try
-					{
-						dictionary.RemoveAt(idx);
-						dictionary.Insert(0, key, value);
-					}
-					finally
-					{
-						readWriteLock.ExitWriteLock();
-					}
-				}
-				return value!;
+				MoveToMostRecentlyUsed(key, existing);
+				return existing!;
 			}
-			else
+#else
+			if (lookup.TryGetValue(key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node))
 			{
-				readWriteLock.EnterWriteLock();
-				try
-				{
-					value = valueFactory(key);
-					if (dictionary.Count >= capacity)
-					{
-						TKey oldestKey = dictionary.GetAt(dictionary.Count - 1).Key;
-						dictionary.Remove(oldestKey);
-					}
-					dictionary.Insert(0, key, value);
-					return value!;
-				}
-				finally
-				{
-					readWriteLock.ExitWriteLock();
-				}
+				MoveToMostRecentlyUsed(node);
+				return node.Value.Value!;
 			}
+#endif
+
+			TValue value = valueFactory(key);
+			AddMostRecentlyUsed(key, value);
+			return value;
 		}
 		finally
 		{
-			readWriteLock.ExitUpgradeableReadLock();
+			readWriteLock.ExitWriteLock();
 		}
 	}
 
@@ -424,7 +443,11 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 		readWriteLock.EnterReadLock();
 		try
 		{
-			return dictionary.GetEnumerator();
+#if NET9_0_OR_GREATER
+			return dictionary.ToList().GetEnumerator();
+#else
+			return order.ToList().GetEnumerator();
+#endif
 		}
 		finally
 		{
@@ -436,5 +459,64 @@ public class FixedLruDictionary<TKey, TValue> : IDictionary<TKey, TValue?> where
 	IEnumerator IEnumerable.GetEnumerator()
 	{
 		return GetEnumerator();
+	}
+
+#if NET9_0_OR_GREATER
+	// Callers must already hold the write lock.
+	private void MoveToMostRecentlyUsed(TKey key, TValue? value)
+	{
+		if (dictionary.Count > 0 && !EqualityComparer<TKey>.Default.Equals(dictionary.GetAt(dictionary.Count - 1).Key, key))
+		{
+			dictionary.Remove(key);
+			dictionary.Add(key, value);
+		}
+	}
+#else
+	// Callers must already hold the write lock.
+	private void MoveToMostRecentlyUsed(LinkedListNode<KeyValuePair<TKey, TValue?>> node)
+	{
+		if (node != order.Last)
+		{
+			order.Remove(node);
+			order.AddLast(node);
+		}
+	}
+#endif
+
+	// Callers must already hold the write lock.
+	private void AddMostRecentlyUsed(TKey key, TValue? value)
+	{
+#if NET9_0_OR_GREATER
+		if (dictionary.Count >= capacity)
+		{
+			dictionary.RemoveAt(0);
+		}
+		dictionary.Add(key, value);
+#else
+		if (lookup.Count >= capacity)
+		{
+			RemoveInternal(order.First!.Value.Key);
+		}
+
+		LinkedListNode<KeyValuePair<TKey, TValue?>> node = order.AddLast(new KeyValuePair<TKey, TValue?>(key, value));
+		lookup[key] = node;
+#endif
+	}
+
+	// Callers must already hold the write lock.
+	private bool RemoveInternal(TKey key)
+	{
+#if NET9_0_OR_GREATER
+		return dictionary.Remove(key);
+#else
+		if (!lookup.TryGetValue(key, out LinkedListNode<KeyValuePair<TKey, TValue?>>? node))
+		{
+			return false;
+		}
+
+		order.Remove(node);
+		lookup.Remove(key);
+		return true;
+#endif
 	}
 }

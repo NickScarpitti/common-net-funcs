@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFrameworks>net10.0;netstandard2.1</TargetFrameworks>
 		<Platforms>AnyCPU;x86;x64</Platforms>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<LangVersion>latest</LangVersion>
@@ -28,7 +28,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.1.13</Version>
+		<Version>4.1.15</Version>
 		<MinVerTagPrefix>ffmpeg-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -81,6 +81,11 @@
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
 		<PackageReference Include="Xabe.FFmpeg" />
+	</ItemGroup>
+
+	<!-- System.Text.Json ships as part of the shared framework on net; needs an explicit package reference on netstandard2.1 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
 
 	<ItemGroup>

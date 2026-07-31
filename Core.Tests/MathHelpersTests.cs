@@ -386,7 +386,7 @@ public sealed class MathHelpersTests
 	}
 
 	[Fact]
-	public void GetMedian_NullCollection_ThrowsArgumentException()
+	public void GetMedian_NullIntCollection_ThrowsArgumentException()
 	{
 		IEnumerable<int>? numbers = null;
 		Should.Throw<ArgumentException>(() => numbers!.GetMedian());
@@ -446,6 +446,20 @@ public sealed class MathHelpersTests
 		numbers.GetMedian().ShouldBe(expected);
 	}
 
+	[Fact]
+	public void GetMedian_NullLongCollection_ThrowsArgumentException()
+	{
+		IEnumerable<long>? numbers = null;
+		Should.Throw<ArgumentException>(() => numbers!.GetMedian());
+	}
+
+	[Fact]
+	public void GetMedian_EmptyLongCollection_ThrowsArgumentException()
+	{
+		IEnumerable<long> numbers = Array.Empty<long>();
+		Should.Throw<ArgumentException>(() => numbers.GetMedian());
+	}
+
 	[Theory]
 	[InlineData(new float[] { 1, 2, 3 }, 2f)]               // sorted odd count
 	[InlineData(new float[] { 3, 1, 2 }, 2f)]               // unsorted odd count
@@ -461,6 +475,20 @@ public sealed class MathHelpersTests
 	public void GetMedian_EvenCount_Float_ReturnsAverageOfMiddleTwo(float[] numbers, float expected)
 	{
 		numbers.GetMedian().ShouldBe(expected);
+	}
+
+	[Fact]
+	public void GetMedian_NullFloatCollection_ThrowsArgumentException()
+	{
+		IEnumerable<float>? numbers = null;
+		Should.Throw<ArgumentException>(() => numbers!.GetMedian());
+	}
+
+	[Fact]
+	public void GetMedian_EmptyFloatCollection_ThrowsArgumentException()
+	{
+		IEnumerable<float> numbers = Array.Empty<float>();
+		Should.Throw<ArgumentException>(() => numbers.GetMedian());
 	}
 
 	[Theory]
@@ -484,6 +512,20 @@ public sealed class MathHelpersTests
 	}
 
 	[Fact]
+	public void GetMedian_NullDoubleCollection_ThrowsArgumentException()
+	{
+		IEnumerable<double>? numbers = null;
+		Should.Throw<ArgumentException>(() => numbers!.GetMedian());
+	}
+
+	[Fact]
+	public void GetMedian_EmptyDoubleCollection_ThrowsArgumentException()
+	{
+		IEnumerable<double> numbers = Array.Empty<double>();
+		Should.Throw<ArgumentException>(() => numbers.GetMedian());
+	}
+
+	[Fact]
 	public void GetMedian_OddCount_Decimal_ReturnsMiddleElement()
 	{
 		decimal[] numbers = [1.1m, 3.3m, 2.2m];
@@ -495,6 +537,20 @@ public sealed class MathHelpersTests
 	{
 		decimal[] numbers = [1.0m, 2.0m, 3.0m, 4.0m];
 		numbers.GetMedian().ShouldBe(2.5m);
+	}
+
+	[Fact]
+	public void GetMedian_NullDecimalCollection_ThrowsArgumentException()
+	{
+		IEnumerable<decimal>? numbers = null;
+		Should.Throw<ArgumentException>(() => numbers!.GetMedian());
+	}
+
+	[Fact]
+	public void GetMedian_EmptyDecimalCollection_ThrowsArgumentException()
+	{
+		decimal[] numbers = [];
+		Should.Throw<ArgumentException>(() => numbers.GetMedian());
 	}
 
 	[Fact]

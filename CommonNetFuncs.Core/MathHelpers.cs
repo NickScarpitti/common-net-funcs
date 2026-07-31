@@ -398,7 +398,7 @@ public static class MathHelpers
 	{
 		if (numbers?.Any() != true)
 		{
-			throw new ArgumentException("Array cannot be null or empty.");
+			throw new ArgumentException("numbers parameter cannot be null or empty.");
 		}
 
 		TNumber[] sorted = numbers.Order().ToArray();
@@ -414,7 +414,7 @@ public static class MathHelpers
 	{
 		if (numbers?.Any() != true)
 		{
-			throw new ArgumentException("Array cannot be null or empty.");
+			throw new ArgumentException("numbers parameter cannot be null or empty.");
 		}
 
 		int[] sorted = numbers.OrderBy(static x => x).ToArray();
@@ -428,7 +428,7 @@ public static class MathHelpers
 	{
 		if (numbers?.Any() != true)
 		{
-			throw new ArgumentException("Array cannot be null or empty.");
+			throw new ArgumentException("numbers parameter cannot be null or empty.");
 		}
 
 		long[] sorted = numbers.OrderBy(static x => x).ToArray();
@@ -442,7 +442,7 @@ public static class MathHelpers
 	{
 		if (numbers?.Any() != true)
 		{
-			throw new ArgumentException("Array cannot be null or empty.");
+			throw new ArgumentException("numbers parameter cannot be null or empty.");
 		}
 
 		float[] sorted = numbers.OrderBy(static x => x).ToArray();
@@ -456,7 +456,7 @@ public static class MathHelpers
 	{
 		if (numbers?.Any() != true)
 		{
-			throw new ArgumentException("Array cannot be null or empty.");
+			throw new ArgumentException("numbers parameter cannot be null or empty.");
 		}
 
 		double[] sorted = numbers.OrderBy(static x => x).ToArray();
@@ -470,7 +470,7 @@ public static class MathHelpers
 	{
 		if (numbers?.Any() != true)
 		{
-			throw new ArgumentException("Array cannot be null or empty.");
+			throw new ArgumentException("numbers parameter cannot be null or empty.");
 		}
 
 		decimal[] sorted = numbers.OrderBy(static x => x).ToArray();

@@ -70,7 +70,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.x.x
+          dotnet-version: |
+            10.0.x
+            8.0.x
 
       - name: Add Fonts
         if: matrix.test-suite == 'Office.Common.Tests'
@@ -109,20 +111,51 @@ jobs:
           echo "Testing project: $PROJECT_NAME"
         shell: bash
 
-      - name: Test
-        # run: dotnet test --verbosity normal -p:TestTfmsInParallel=false --collect:"XPlat Code Coverage" --results-directory ./coverage -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/*.g.cs;**/*.generated.cs;**/*.designer.cs;**/obj/**;**/bin/**"
-        run: dotnet test --verbosity normal -p:TestTfmsInParallel=false --collect:"XPlat Code Coverage" --results-directory ./coverage -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/*.g.cs;**/*.generated.cs;**/*.designer.cs;**/obj/**;**/bin/**" DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[${{ steps.derive-project.outputs.project-name }}]*"
+      - name: Check for net8.0 target
+        id: check-net8
+        run: |
+          if grep -q "net8.0" ./${{ matrix.test-suite }}/*.csproj; then
+            echo "has-net8=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-net8=false" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
+      # Each TFM is tested in its own step (instead of one combined `dotnet test`) so both frameworks are
+      # guaranteed to actually run in CI and each gets its own coverage output to merge afterwards.
+      - name: Test (net10.0)
+        run: dotnet test -f net10.0 --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage/net10.0 -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/*.g.cs;**/*.generated.cs;**/*.designer.cs;**/obj/**;**/bin/**" DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[${{ steps.derive-project.outputs.project-name }}]*"
         working-directory: ./${{ matrix.test-suite }}
+
+      - name: Test (net8.0)
+        if: steps.check-net8.outputs.has-net8 == 'true'
+        run: dotnet test -f net8.0 --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage/net8.0 -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/*.g.cs;**/*.generated.cs;**/*.designer.cs;**/obj/**;**/bin/**" DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[${{ steps.derive-project.outputs.project-name }}]*"
+        working-directory: ./${{ matrix.test-suite }}
+
+      # Combines the net10.0 (and, where applicable, net8.0) cobertura reports into a single accurate report
+      # per project, instead of only uploading whichever single file a glob happened to match.
+      - name: Merge Coverage Reports
+        if: always()
+        continue-on-error: true
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          "$HOME/.dotnet/tools/reportgenerator" -reports:"./coverage/**/coverage.cobertura.xml" -targetdir:"./coverage/merged" -reporttypes:Cobertura
+        working-directory: ./${{ matrix.test-suite }}
+        shell: bash
+
       - name: Coveralls Parallel
+        if: always()
         uses: coverallsapp/github-action@v2.3.6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./${{ matrix.test-suite }}/coverage/**/coverage.cobertura.xml
+          file: ./${{ matrix.test-suite }}/coverage/merged/Cobertura.xml
           flag-name: ${{ matrix.test-suite }}
           parallel: true
+          allow-empty: true
 
   finish:
     needs: test
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
       - name: Coveralls Finished

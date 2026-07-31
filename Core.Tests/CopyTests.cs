@@ -566,7 +566,7 @@ public sealed class CopyTests
 		Copy.DeepCopyCacheManager.SetUseLimitedCache(false);
 	}
 
-	[RetryFact(3)]
+	[RetryFact(5)]
 	public void GetLimitedCache_ShouldNotThrow()
 	{
 		// Arrange

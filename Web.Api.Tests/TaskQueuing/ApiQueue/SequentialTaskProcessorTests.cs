@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Reflection;
+using System.Threading.Channels;
 using CommonNetFuncs.Web.Api.TaskQueuing;
 using CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 using static Xunit.TestContext;
@@ -520,6 +521,41 @@ public class SequentialTaskProcessorTests
 		await Task.Delay(50, Current.CancellationToken);
 
 		// Dispose should handle the exception gracefully
+		Should.NotThrow(processor.Dispose);
+	}
+
+	[Fact]
+	public async Task Dispose_Should_Handle_Exception_While_Completing_Writer()
+	{
+		// Arrange
+		BoundedChannelOptions options = new(10);
+		SequentialTaskProcessor processor = new(options);
+		await processor.StartAsync(CancellationToken.None);
+
+		// Force writer.Complete() (called internally by Dispose) to throw by completing the channel writer ahead of time via reflection.
+		FieldInfo writerField = typeof(SequentialTaskProcessor).GetField("writer", BindingFlags.NonPublic | BindingFlags.Instance)!;
+		ChannelWriter<QueuedTask> writer = (ChannelWriter<QueuedTask>)writerField.GetValue(processor)!;
+		writer.Complete();
+
+		// Act & Assert - Dispose should catch the InvalidOperationException from the already-completed writer and continue cleanup.
+		Should.NotThrow(processor.Dispose);
+	}
+
+	[Fact]
+	public void Dispose_Should_Handle_Exception_From_Faulted_Task_Left_In_Reader()
+	{
+		// Arrange - do not start the processor, so the queued item is never consumed by ExecuteAsync and remains in the channel.
+		BoundedChannelOptions options = new(10);
+		SequentialTaskProcessor processor = new(options);
+
+		QueuedTask queuedTask = new(_ => Task.FromResult<object?>(null));
+		queuedTask.CompletionSource.SetException(new InvalidOperationException("Test exception"));
+
+		FieldInfo writerField = typeof(SequentialTaskProcessor).GetField("writer", BindingFlags.NonPublic | BindingFlags.Instance)!;
+		ChannelWriter<QueuedTask> writer = (ChannelWriter<QueuedTask>)writerField.GetValue(processor)!;
+		writer.TryWrite(queuedTask).ShouldBeTrue();
+
+		// Act & Assert - Dispose's reader-draining loop calls CompletionSource.Task.Wait(), which throws AggregateException for a faulted task; Dispose should catch it.
 		Should.NotThrow(processor.Dispose);
 	}
 

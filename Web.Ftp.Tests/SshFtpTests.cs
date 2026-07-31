@@ -1,4 +1,7 @@
-﻿using CommonNetFuncs.Web.Ftp;
+﻿using AutoFixture;
+using AutoFixture.AutoFakeItEasy;
+using CommonNetFuncs.Web.Ftp;
+using FakeItEasy;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
@@ -11,6 +14,20 @@ namespace Web.Ftp.Tests;
 /// </summary>
 public class SshFtpTests
 {
+	// SftpClient.IsConnected is the only virtual member on SftpClient, so it's the only thing FakeItEasy can override.
+	// Faking it to true (without a real network connection) lets these tests exercise the "client believes it's connected"
+	// branch of each extension method; the underlying real SftpClient methods then throw their own SshConnectionException
+	// (message "Client not connected.") because the internal SFTP session was never actually established.
+	private static SftpClient CreateConnectedFakeClient()
+	{
+		IFixture fixture = new Fixture().Customize(new AutoFakeItEasyCustomization());
+		FileTransferConnection connection = fixture.Create<FileTransferConnection>();
+		SftpClient sftpClient = A.Fake<SftpClient>(options => options.WithArgumentsForConstructor(() =>
+			new SftpClient(connection.HostName, connection.Port, connection.UserName, connection.Password)));
+		A.CallTo(() => sftpClient.IsConnected).Returns(true);
+		return sftpClient;
+	}
+
 	#region GetHostName Tests
 
 	[Fact]
@@ -387,6 +404,112 @@ public class SshFtpTests
 		// Act & Assert
 		SshConnectionException exception = await Should.ThrowAsync<SshConnectionException>(async () => await client.DeleteFileAsync(path));
 		exception.Message.ShouldBe("SFTP client is not connected.");
+	}
+
+	#endregion
+
+	#region Connected (faked) client tests
+
+	// These exercise the "IsConnected() == true" branch of each guard clause, which is unreachable when the client is null.
+	// Since the fake client was never actually connected to a real server, the underlying real SftpClient calls then throw
+	// their own SshConnectionException("Client not connected.") once they reach the SFTP session null-check.
+
+	[Fact]
+	public void DisconnectClient_WhenConnected_ShouldAttemptDisconnectAndReturnConnectionState()
+	{
+		SftpClient client = CreateConnectedFakeClient();
+
+		// The fake reports IsConnected == true, so DisconnectClient calls the real (non-virtual) Disconnect(); since there's
+		// no actual session, SSH.NET no-ops rather than throwing, and the final IsConnected() check (still faked true) returns true.
+		bool result = client.DisconnectClient();
+		result.ShouldBeTrue();
+	}
+
+	[Fact]
+	public void DirectoryOrFileExists_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		SftpClient client = CreateConnectedFakeClient();
+		Should.Throw<SshConnectionException>(() => client.DirectoryOrFileExists("/test/path")).Message.ShouldBe("Client not connected.");
+	}
+
+	[Fact]
+	public async Task DirectoryOrFileExistsAsync_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		SftpClient client = CreateConnectedFakeClient();
+		SshConnectionException exception = await Should.ThrowAsync<SshConnectionException>(async () => await client.DirectoryOrFileExistsAsync("/test/path"));
+		exception.Message.ShouldBe("Client not connected.");
+	}
+
+	[Fact]
+	public void GetFileList_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		SftpClient client = CreateConnectedFakeClient();
+		Should.Throw<SshConnectionException>(() => client.GetFileList("/test/path")).Message.ShouldBe("Client not connected.");
+	}
+
+	[Fact]
+	public async Task GetFileListAsync_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		SftpClient client = CreateConnectedFakeClient();
+		await Should.ThrowAsync<SshConnectionException>(async () =>
+		{
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			await foreach (string _ in client.GetFileListAsync("/test/path")) { }
+#pragma warning restore S108 // Nested blocks of code should not be left empty
+		});
+	}
+
+	[Fact]
+	public async Task GetDataFromCsvAsync_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		SftpClient client = CreateConnectedFakeClient();
+		await Should.ThrowAsync<SshConnectionException>(async () => await client.GetDataFromCsvAsync<TestCsvModel>("/test/file.csv"));
+	}
+
+	[Fact]
+	public async Task GetDataFromCsvAsyncEnumerable_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		SftpClient client = CreateConnectedFakeClient();
+		await Should.ThrowAsync<SshConnectionException>(async () =>
+		{
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			await foreach (TestCsvModel _ in client.GetDataFromCsvAsyncEnumerable<TestCsvModel>("/test/file.csv")) { }
+#pragma warning restore S108 // Nested blocks of code should not be left empty
+		});
+	}
+
+	[Fact]
+	public void GetDataFromCsvEnumerable_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		SftpClient client = CreateConnectedFakeClient();
+		Should.Throw<SshConnectionException>(() =>
+		{
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			foreach (TestCsvModel _ in client.GetDataFromCsvEnumerable<TestCsvModel>("/test/file.csv")) { }
+#pragma warning restore S108 // Nested blocks of code should not be left empty
+		});
+	}
+
+	[Fact]
+	public void GetDataFromCsv_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		SftpClient client = CreateConnectedFakeClient();
+		Should.Throw<SshConnectionException>(() => client.GetDataFromCsv<TestCsvModel>("/test/file.csv"));
+	}
+
+	[Fact]
+	public void DeleteSftpFile_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		SftpClient client = CreateConnectedFakeClient();
+		Should.Throw<SshConnectionException>(() => client.DeleteSftpFile("/test/file.txt")).Message.ShouldBe("Client not connected.");
+	}
+
+	[Fact]
+	public async Task DeleteFileAsync_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		SftpClient client = CreateConnectedFakeClient();
+		SshConnectionException exception = await Should.ThrowAsync<SshConnectionException>(async () => await client.DeleteFileAsync("/test/file.txt"));
+		exception.Message.ShouldBe("Client not connected.");
 	}
 
 	#endregion

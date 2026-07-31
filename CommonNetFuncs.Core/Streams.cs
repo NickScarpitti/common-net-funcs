@@ -1,5 +1,7 @@
 ﻿namespace CommonNetFuncs.Core;
 
+using CommonNetFuncs.Core.Internal;
+
 public static class Streams
 {
 	/// <summary>
@@ -99,8 +101,8 @@ public sealed class CountingStream(Stream innerStream) : Stream
 	// Implement CopyToAsync for better performance when copying streams
 	public override async Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken)
 	{
-		ArgumentNullException.ThrowIfNull(destination);
-		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bufferSize);
+		ThrowHelper.ThrowIfNull(destination, nameof(destination));
+		ThrowHelper.ThrowIfNegativeOrZero(bufferSize, nameof(bufferSize));
 
 		byte[] buffer = new byte[bufferSize];
 		int bytesRead;
@@ -198,7 +200,7 @@ public sealed class CountingStream(Stream innerStream) : Stream
 
 	private void ThrowIfDisposed()
 	{
-		ObjectDisposedException.ThrowIf(disposed, this);
+		CommonNetFuncs.Core.Internal.ThrowHelper.ThrowIfDisposed(disposed, this);
 	}
 
 	~CountingStream()

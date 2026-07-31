@@ -1,8 +1,10 @@
-﻿using System.Collections.Frozen;
+﻿#if NET8_0_OR_GREATER
+using System.Collections.Frozen;
+#endif
 using System.Security.Cryptography;
 using System.Text;
+using CommonNetFuncs.Core.Internal;
 using static System.Math;
-using static System.Random;
 
 namespace CommonNetFuncs.Core;
 
@@ -16,8 +18,14 @@ public static class Random
 	private const string NumberToGenerateError = "Number to generate must be greater than 0.";
 	private const string MaxValueError = "Max value must be greater than 0.";
 
-	internal static readonly FrozenSet<char> DefaultCharSet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+#if NET8_0_OR_GREATER
+	// FrozenSet lookups are faster than HashSet once built, ideal for this never-mutated default set
+	internal static readonly FrozenSet<char> DefaultCharSet = new HashSet<char>(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']).ToFrozenSet();
+#else
+	internal static readonly HashSet<char> DefaultCharSet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
 		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+#endif
 
 	/// <summary>
 	/// Generate a random integer between 0 and maxValue - 1
@@ -275,7 +283,7 @@ public static class Random
 
 		decimalPlaces = decimalPlaces <= 15 ? decimalPlaces : 15;
 		double result = GetRandomDouble();
-		return Round(result, decimalPlaces, MidpointRounding.ToZero);
+		return MathCompat.Round(result, decimalPlaces);
 	}
 
 	/// <summary>
@@ -324,7 +332,7 @@ public static class Random
 	public static double GetRepeatableRandomDouble(int decimalPlaces, System.Random rnd)
 	{
 		double result = GetRepeatableRandomDouble(rnd);
-		return Round(result, decimalPlaces, MidpointRounding.ToZero);
+		return MathCompat.Round(result, decimalPlaces);
 	}
 
 	/// <summary>
@@ -428,7 +436,7 @@ public static class Random
 		}
 		decimalPlaces = decimalPlaces <= 28 ? decimalPlaces : 28;
 		decimal result = GetRandomDecimal();
-		return Round(result, decimalPlaces, MidpointRounding.ToZero);
+		return MathCompat.Round(result, decimalPlaces);
 	}
 
 	/// <summary>
@@ -489,7 +497,7 @@ public static class Random
 		decimalPlaces = decimalPlaces <= 28 ? decimalPlaces : 28;
 
 		decimal result = GetRepeatableRandomDecimal(rnd);
-		return Round(result, decimalPlaces, MidpointRounding.ToZero);
+		return MathCompat.Round(result, decimalPlaces);
 	}
 
 	/// <summary>
@@ -626,7 +634,7 @@ public static class Random
 	public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> items)
 	{
 		T[] arr = items.ToArray();
-		Shared.Shuffle(arr);
+		RandomCompat.Shuffle(arr.AsSpan());
 		return arr;
 	}
 
@@ -639,7 +647,7 @@ public static class Random
 	public static List<T> Shuffle<T>(this IList<T> items)
 	{
 		T[] arr = items.ToArray();
-		Shared.Shuffle(arr);
+		RandomCompat.Shuffle(arr.AsSpan());
 		return arr.ToList();
 	}
 
@@ -651,7 +659,7 @@ public static class Random
 	/// <returns>Shuffled IEnumerable of items</returns>
 	public static void Shuffle<T>(this T[] items)
 	{
-		Shared.Shuffle(items);
+		RandomCompat.Shuffle(items.AsSpan());
 	}
 
 	/// <summary>
@@ -662,7 +670,7 @@ public static class Random
 	/// <returns>Shuffled IEnumerable of items</returns>
 	public static void Shuffle<T>(this Span<T> items)
 	{
-		Shared.Shuffle(items);
+		RandomCompat.Shuffle(items);
 	}
 
 	/// <summary>
@@ -721,7 +729,7 @@ public static class Random
 	/// <returns>Randomly selected objects</returns>
 	public static IEnumerable<T> GetRandomElements<T>(this IEnumerable<T> items, int selectQuantity = 1)
 	{
-		return Shared.GetItems(items.ToArray(), selectQuantity);
+		return RandomCompat.GetItems(items.ToArray(), selectQuantity);
 	}
 
 	/// <summary>

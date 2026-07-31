@@ -19,6 +19,9 @@ using NPOI.XSSF.UserModel;
 using SkiaSharp;
 using static System.Convert;
 using static System.Math;
+#if !NET6_0_OR_GREATER
+using CommonNetFuncs.Excel.Npoi.Internal;
+#endif
 
 namespace CommonNetFuncs.Excel.Npoi;
 
@@ -219,8 +222,13 @@ public sealed class CellFont : IFont
 /// </summary>
 public static partial class Common
 {
+#if NET7_0_OR_GREATER
 	[GeneratedRegex("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")]
 	private static partial Regex HexColorRegex();
+#else
+	private static readonly Regex hexColorRegexInstance = new("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", RegexOptions.Compiled);
+	private static Regex HexColorRegex() => hexColorRegexInstance;
+#endif
 
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -1368,10 +1376,10 @@ public static partial class Common
 
 			decimal scale = (rangeAspect < imgAspect) ? ((rangeWidth - 3m) / imgWidth) : (rangeHeight - 3m) / imgHeight;
 
-			int resizeWidth = (int)Round(imgWidth * scale, 0, MidpointRounding.ToZero);
-			int resizeHeight = (int)Round(imgHeight * scale, 0, MidpointRounding.ToZero);
-			int xMargin = (int)Round((rangeWidth - resizeWidth) * Units.EMU_PER_PIXEL / 2.0, 0, MidpointRounding.ToZero);
-			int yMargin = (int)Round((rangeHeight - resizeHeight) * Units.EMU_PER_PIXEL * 1.75 / 2.0, 0, MidpointRounding.ToZero);
+			int resizeWidth = (int)Internal.MathCompat.Round(imgWidth * scale, 0);
+			int resizeHeight = (int)Internal.MathCompat.Round(imgHeight * scale, 0);
+			int xMargin = (int)Internal.MathCompat.Round((rangeWidth - resizeWidth) * Units.EMU_PER_PIXEL / 2.0, 0);
+			int yMargin = (int)Internal.MathCompat.Round((rangeHeight - resizeHeight) * Units.EMU_PER_PIXEL * 1.75 / 2.0, 0);
 
 			anchor.AnchorType = anchorType;
 			anchor.Col1 = area.FirstColumn;
@@ -1441,7 +1449,7 @@ public static partial class Common
 			}
 			totalWidth += columnWidth;
 		}
-		return (int)Round(totalWidth, 0, MidpointRounding.ToZero);
+		return (int)Internal.MathCompat.Round(totalWidth, 0);
 	}
 
 
@@ -1466,7 +1474,7 @@ public static partial class Common
 			totalHeight += ws.GetRow(i)?.HeightInPoints ?? 0;
 		}
 
-		return (int)Round(totalHeight * Units.EMU_PER_POINT / Units.EMU_PER_PIXEL, 0, MidpointRounding.ToZero); //Approximation of point to px
+		return (int)Internal.MathCompat.Round(totalHeight * Units.EMU_PER_POINT / Units.EMU_PER_PIXEL, 0); //Approximation of point to px
 	}
 
 

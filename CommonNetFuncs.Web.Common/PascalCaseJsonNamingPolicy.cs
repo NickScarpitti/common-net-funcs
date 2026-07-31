@@ -11,21 +11,12 @@ public sealed class PascalCaseJsonNamingPolicy : JsonNamingPolicy
 			return name;
 		}
 
-#if NETCOREAPP
-
+		// string.Create(int, TState, SpanAction<char, TState>) is available on netstandard2.1 too, so no TFM split is needed here.
 		return string.Create(name.Length, name, (chars, value) =>
 		{
 			value.CopyTo(chars);
 			FixCasing(chars);
 		});
-
-#else
-
-		char[] chars = name.ToCharArray();
-		FixCasing(chars);
-		return new string(chars);
-
-#endif
 	}
 
 	private static void FixCasing(Span<char> chars)

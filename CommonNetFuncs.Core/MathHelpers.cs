@@ -170,6 +170,7 @@ public static class MathHelpers
 		return position == -1 ? 0 : valueString.Length - position - 1;
 	}
 
+#if NET7_0_OR_GREATER
 	/// <summary>
 	/// Generates a continuous range of numbers between start and end parameters (inclusive)
 	/// </summary>
@@ -193,7 +194,109 @@ public static class MathHelpers
 			}
 		}
 	}
+#else
+	/// <summary>
+	/// Generates a continuous range of numbers between start and end parameters (inclusive)
+	/// </summary>
+	/// <param name="start">Number to start range with (inclusive)</param>
+	/// <param name="end">Number to end range with (inclusive)</param>
+	/// <returns>An IEnumerable containing a continuous range of numbers between start and end parameters (inclusive)</returns>
+	public static IEnumerable<int> GenerateRange(int start, int end)
+	{
+		if (start > end)
+		{
+			throw new ArgumentException($"Parameter '{nameof(start)}' ({start}) cannot be greater than parameter '{nameof(end)}' ({end})");
+		}
 
+		return GenerateRangeInternal();
+
+		IEnumerable<int> GenerateRangeInternal()
+		{
+			for (int i = start; i <= end; i++)
+			{
+				yield return i;
+			}
+		}
+	}
+
+	/// <inheritdoc cref="GenerateRange(int, int)"/>
+	public static IEnumerable<long> GenerateRange(long start, long end)
+	{
+		if (start > end)
+		{
+			throw new ArgumentException($"Parameter '{nameof(start)}' ({start}) cannot be greater than parameter '{nameof(end)}' ({end})");
+		}
+
+		return GenerateRangeInternal();
+
+		IEnumerable<long> GenerateRangeInternal()
+		{
+			for (long i = start; i <= end; i++)
+			{
+				yield return i;
+			}
+		}
+	}
+
+	/// <inheritdoc cref="GenerateRange(int, int)"/>
+	public static IEnumerable<float> GenerateRange(float start, float end)
+	{
+		if (start > end)
+		{
+			throw new ArgumentException($"Parameter '{nameof(start)}' ({start}) cannot be greater than parameter '{nameof(end)}' ({end})");
+		}
+
+		return GenerateRangeInternal();
+
+		IEnumerable<float> GenerateRangeInternal()
+		{
+			for (float i = start; i <= end; i++)
+			{
+				yield return i;
+			}
+		}
+	}
+
+	/// <inheritdoc cref="GenerateRange(int, int)"/>
+	public static IEnumerable<double> GenerateRange(double start, double end)
+	{
+		if (start > end)
+		{
+			throw new ArgumentException($"Parameter '{nameof(start)}' ({start}) cannot be greater than parameter '{nameof(end)}' ({end})");
+		}
+
+		return GenerateRangeInternal();
+
+		IEnumerable<double> GenerateRangeInternal()
+		{
+			for (double i = start; i <= end; i++)
+			{
+				yield return i;
+			}
+		}
+	}
+
+	/// <inheritdoc cref="GenerateRange(int, int)"/>
+	public static IEnumerable<decimal> GenerateRange(decimal start, decimal end)
+	{
+		if (start > end)
+		{
+			throw new ArgumentException($"Parameter '{nameof(start)}' ({start}) cannot be greater than parameter '{nameof(end)}' ({end})");
+		}
+
+		return GenerateRangeInternal();
+
+		IEnumerable<decimal> GenerateRangeInternal()
+		{
+			for (decimal i = start; i <= end; i++)
+			{
+				yield return i;
+			}
+		}
+	}
+#endif
+
+#if NET7_0_OR_GREATER
 	/// <summary>
 	/// Calculates the greatest common denominator (GCD) of the specified numerator and denominator, and reduces the numerator and denominator to their lowest terms.
 	/// </summary>
@@ -220,6 +323,7 @@ public static class MathHelpers
 			denominator /= greatestCommonDenominator;
 		}
 	}
+#endif
 
 	/// <summary>
 	/// Compares two <see cref="double"/> values for equality within a specified tolerance.
@@ -289,6 +393,7 @@ public static class MathHelpers
 		return Math.Abs(a - b) > (double)tolerance;
 	}
 
+#if NET7_0_OR_GREATER
 	public static TNumber GetMedian<TNumber>(this IEnumerable<TNumber> numbers) where TNumber : struct, System.Numerics.INumber<TNumber>
 	{
 		if (numbers?.Any() != true)
@@ -303,4 +408,75 @@ public static class MathHelpers
 				? sorted[mid]
 				: (sorted[mid - 1] + sorted[mid]) / TNumber.CreateChecked(2);
 	}
+#else
+	/// <inheritdoc cref="GetMedian{TNumber}(IEnumerable{TNumber})"/>
+	public static int GetMedian(this IEnumerable<int> numbers)
+	{
+		if (numbers?.Any() != true)
+		{
+			throw new ArgumentException("Array cannot be null or empty.");
+		}
+
+		int[] sorted = numbers.OrderBy(static x => x).ToArray();
+
+		int mid = sorted.Length / 2;
+		return sorted.Length % 2 != 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+	}
+
+	/// <inheritdoc cref="GetMedian{TNumber}(IEnumerable{TNumber})"/>
+	public static long GetMedian(this IEnumerable<long> numbers)
+	{
+		if (numbers?.Any() != true)
+		{
+			throw new ArgumentException("Array cannot be null or empty.");
+		}
+
+		long[] sorted = numbers.OrderBy(static x => x).ToArray();
+
+		int mid = sorted.Length / 2;
+		return sorted.Length % 2 != 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+	}
+
+	/// <inheritdoc cref="GetMedian{TNumber}(IEnumerable{TNumber})"/>
+	public static float GetMedian(this IEnumerable<float> numbers)
+	{
+		if (numbers?.Any() != true)
+		{
+			throw new ArgumentException("Array cannot be null or empty.");
+		}
+
+		float[] sorted = numbers.OrderBy(static x => x).ToArray();
+
+		int mid = sorted.Length / 2;
+		return sorted.Length % 2 != 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+	}
+
+	/// <inheritdoc cref="GetMedian{TNumber}(IEnumerable{TNumber})"/>
+	public static double GetMedian(this IEnumerable<double> numbers)
+	{
+		if (numbers?.Any() != true)
+		{
+			throw new ArgumentException("Array cannot be null or empty.");
+		}
+
+		double[] sorted = numbers.OrderBy(static x => x).ToArray();
+
+		int mid = sorted.Length / 2;
+		return sorted.Length % 2 != 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+	}
+
+	/// <inheritdoc cref="GetMedian{TNumber}(IEnumerable{TNumber})"/>
+	public static decimal GetMedian(this IEnumerable<decimal> numbers)
+	{
+		if (numbers?.Any() != true)
+		{
+			throw new ArgumentException("Array cannot be null or empty.");
+		}
+
+		decimal[] sorted = numbers.OrderBy(static x => x).ToArray();
+
+		int mid = sorted.Length / 2;
+		return sorted.Length % 2 != 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+	}
+#endif
 }

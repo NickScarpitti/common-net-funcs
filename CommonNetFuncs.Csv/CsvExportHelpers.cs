@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Globalization;
+using System.Text;
 using CsvHelper;
 using static System.Convert;
 using static CommonNetFuncs.Core.ExceptionLocation;
@@ -22,7 +23,7 @@ public static class CsvExportHelpers
 	public static async Task<MemoryStream> ExportToCsv<T>(this IEnumerable<T> dataList, MemoryStream? memoryStream = null, CancellationToken cancellationToken = default)
 	{
 		memoryStream ??= new();
-		await using StreamWriter streamWriter = new(memoryStream, leaveOpen: true);
+		await using StreamWriter streamWriter = new(memoryStream, new UTF8Encoding(false), 1024, true);
 		await using CsvWriter csvWriter = new(streamWriter, CultureInfo.InvariantCulture);
 		try
 		{
@@ -49,7 +50,7 @@ public static class CsvExportHelpers
 	{
 		memoryStream ??= new();
 		await using MemoryStream sourceMemoryStream = new();
-		await using StreamWriter streamWriter = new(sourceMemoryStream);
+		await using StreamWriter streamWriter = new(sourceMemoryStream, new UTF8Encoding(false));
 		try
 		{
 			//Headers
@@ -89,7 +90,12 @@ public static class CsvExportHelpers
 				await streamWriter.WriteAsync(streamWriter.NewLine).ConfigureAwait(false);
 			}
 
+			cancellationToken.ThrowIfCancellationRequested();
+#if NET8_0_OR_GREATER
 			await streamWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
+#else
+			await streamWriter.FlushAsync().ConfigureAwait(false);
+#endif
 			sourceMemoryStream.Position = 0;
 			await memoryStream.WriteStreamToStream(sourceMemoryStream, cancellationToken).ConfigureAwait(false);
 		}

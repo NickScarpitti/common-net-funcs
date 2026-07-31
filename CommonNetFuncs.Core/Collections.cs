@@ -7,6 +7,7 @@ using System.Reflection;
 using FastExpressionCompiler;
 using static System.Convert;
 using static CommonNetFuncs.Core.ReflectionCaches;
+using CommonNetFuncs.Core.Internal;
 
 namespace CommonNetFuncs.Core;
 
@@ -167,8 +168,8 @@ public static partial class Collections
 	/// <returns><see cref="IEnumerable{T}"> with values updated according to <paramref name="updateMethod"/></returns>
 	public static void SetValue<T>(this IEnumerable<T> items, Action<T> updateMethod, CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(items);
-		ArgumentNullException.ThrowIfNull(updateMethod);
+		ThrowHelper.ThrowIfNull(items, nameof(items));
+		ThrowHelper.ThrowIfNull(updateMethod, nameof(updateMethod));
 
 		foreach (T item in items)
 		{
@@ -186,8 +187,8 @@ public static partial class Collections
 	/// <returns><see cref="IEnumerable{T}"/> with values updated according to <paramref name="updateMethod"/>.</returns>
 	public static void SetValue(this IEnumerable<string?> items, Func<string?, string?> updateMethod, CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(items);
-		ArgumentNullException.ThrowIfNull(updateMethod);
+		ThrowHelper.ThrowIfNull(items, nameof(items));
+		ThrowHelper.ThrowIfNull(updateMethod, nameof(updateMethod));
 
 		IList<string?> list = items as IList<string?> ?? items.ToList();
 
@@ -207,8 +208,8 @@ public static partial class Collections
 	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
 	public static void SetValue(this Array array, Action<Array, int[]> updateMethod, CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(array);
-		ArgumentNullException.ThrowIfNull(updateMethod);
+		ThrowHelper.ThrowIfNull(array, nameof(array));
+		ThrowHelper.ThrowIfNull(updateMethod, nameof(updateMethod));
 
 		if (array.LongLength == 0)
 		{
@@ -232,8 +233,8 @@ public static partial class Collections
 	/// <returns><see cref="IEnumerable{T}"> with values updated according to <paramref name="updateMethod"/></returns>
 	public static IEnumerable<T> SetValueEnumerate<T>(this IEnumerable<T> items, Action<T> updateMethod, CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(items);
-		ArgumentNullException.ThrowIfNull(updateMethod);
+		ThrowHelper.ThrowIfNull(items, nameof(items));
+		ThrowHelper.ThrowIfNull(updateMethod, nameof(updateMethod));
 
 		return Enumerate();
 
@@ -258,8 +259,8 @@ public static partial class Collections
 	/// <exception cref="ArgumentNullException">Thrown if <paramref name="items"/> or <paramref name="updateMethod"/> are null</exception>
 	public static IEnumerable<string?> SetValueEnumerate(this IEnumerable<string?> items, Func<string?, string?> updateMethod, CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(items);
-		ArgumentNullException.ThrowIfNull(updateMethod);
+		ThrowHelper.ThrowIfNull(items, nameof(items));
+		ThrowHelper.ThrowIfNull(updateMethod, nameof(updateMethod));
 
 		List<string?> list = items.ToList();
 
@@ -287,8 +288,8 @@ public static partial class Collections
 	/// <returns><see cref="IEnumerable{T}"/> with values updated according to <paramref name="updateMethod"/>.</returns>
 	public static void SetValueParallel<T>(this IEnumerable<T> items, Action<T> updateMethod, int maxDegreeOfParallelism = -1, CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(items);
-		ArgumentNullException.ThrowIfNull(updateMethod);
+		ThrowHelper.ThrowIfNull(items, nameof(items));
+		ThrowHelper.ThrowIfNull(updateMethod, nameof(updateMethod));
 
 		Parallel.ForEach(items, new() { MaxDegreeOfParallelism = maxDegreeOfParallelism }, item =>
 		{
@@ -728,7 +729,7 @@ public static partial class Collections
 						{
 							pair.PropertyInfo!.SetValue(item, DateOnly.FromDateTime((DateTime)value));
 						}
-						else if (DateOnly.TryParse((string)value, CultureInfo.InvariantCulture, out DateOnly dateOnlyValue))
+						else if (DateOnlyCompat.TryParse((string)value, CultureInfo.InvariantCulture, out DateOnly dateOnlyValue))
 						{
 							pair.PropertyInfo!.SetValue(item, dateOnlyValue);
 						}
@@ -743,7 +744,7 @@ public static partial class Collections
 						{
 							pair.PropertyInfo!.SetValue(item, ((DateOnly)value).ToDateTime(TimeOnly.MinValue));
 						}
-						else if (DateTime.TryParse((string)value, CultureInfo.InvariantCulture, out DateTime dateTimeValue))
+						else if (DateTimeCompat.TryParse((string)value, CultureInfo.InvariantCulture, out DateTime dateTimeValue))
 						{
 							pair.PropertyInfo!.SetValue(item, dateTimeValue);
 						}

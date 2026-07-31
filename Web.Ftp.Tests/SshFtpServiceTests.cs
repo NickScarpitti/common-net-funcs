@@ -132,6 +132,25 @@ public class SshFtpServiceTests
 		await Should.ThrowAsync<SshConnectionException>(async () => await service.DirectoryExistsAsync(path));
 	}
 
+	// The fake reports IsConnected == true (constructor default), so these exercise the wrapper method body itself,
+	// which then hits the real (non-virtual) SftpClient call and throws SshConnectionException("Client not connected.")
+	// because there's no actual SFTP session.
+
+	[Fact]
+	public void DirectoryExists_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		const string path = "/test/path";
+		Should.Throw<SshConnectionException>(() => service.DirectoryExists(path)).Message.ShouldBe("Client not connected.");
+	}
+
+	[Fact]
+	public async Task DirectoryExistsAsync_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		const string path = "/test/path";
+		SshConnectionException exception = await Should.ThrowAsync<SshConnectionException>(async () => await service.DirectoryExistsAsync(path));
+		exception.Message.ShouldBe("Client not connected.");
+	}
+
 	[Fact]
 	public void GetFileList_WhenNotConnected_ShouldThrowException()
 	{
@@ -174,6 +193,32 @@ public class SshFtpServiceTests
 	}
 
 	[Fact]
+	public void GetFileList_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		const string path = "/test/path";
+		Should.Throw<SshConnectionException>(() => service.GetFileList(path).ToList()).Message.ShouldBe("Client not connected.");
+	}
+
+	[Fact]
+	public async Task GetFileListAsync_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		const string path = "/test/path";
+		await Should.ThrowAsync<SshConnectionException>(async () =>
+		{
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			await foreach (string _ in service.GetFileListAsync(path)) { }
+#pragma warning restore S108 // Nested blocks of code should not be left empty
+		});
+	}
+
+	[Fact]
+	public void DeleteFile_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		const string filePath = "/test/file.txt";
+		Should.Throw<SshConnectionException>(() => service.DeleteFile(filePath)).Message.ShouldBe("Client not connected.");
+	}
+
+	[Fact]
 	public async Task DeleteFileAsync_WhenNotConnected_ShouldThrowException()
 	{
 		// Arrange
@@ -182,6 +227,14 @@ public class SshFtpServiceTests
 
 		// Act & Assert
 		await Should.ThrowAsync<SshConnectionException>(async () => await service.DeleteFileAsync(filePath));
+	}
+
+	[Fact]
+	public async Task DeleteFileAsync_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		const string filePath = "/test/file.txt";
+		SshConnectionException exception = await Should.ThrowAsync<SshConnectionException>(async () => await service.DeleteFileAsync(filePath));
+		exception.Message.ShouldBe("Client not connected.");
 	}
 
 	[Fact]
@@ -216,6 +269,13 @@ public class SshFtpServiceTests
 	}
 
 	[Fact]
+	public void GetDataFromCsv_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		const string filePath = "/test/file.csv";
+		Should.Throw<SshConnectionException>(() => service.GetDataFromCsv<TestCsvModel>(filePath));
+	}
+
+	[Fact]
 	public async Task GetDataFromCsvAsync_WhenNotConnected_ShouldThrowException()
 	{
 		// Arrange
@@ -223,6 +283,13 @@ public class SshFtpServiceTests
 		A.CallTo(() => sftpClient.IsConnected).Returns(false);
 
 		// Act & Assert
+		await Should.ThrowAsync<SshConnectionException>(async () => await service.GetDataFromCsvAsync<TestCsvModel>(filePath));
+	}
+
+	[Fact]
+	public async Task GetDataFromCsvAsync_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		const string filePath = "/test/file.csv";
 		await Should.ThrowAsync<SshConnectionException>(async () => await service.GetDataFromCsvAsync<TestCsvModel>(filePath));
 	}
 
@@ -241,6 +308,18 @@ public class SshFtpServiceTests
 			{
 				// This block is intentionally empty for the exception test
 			}
+#pragma warning restore S108 // Nested blocks of code should not be left empty
+		});
+	}
+
+	[Fact]
+	public async Task GetDataFromCsvAsyncEnumerable_WhenConnected_ShouldThrowUnderlyingConnectionException()
+	{
+		const string filePath = "/test/file.csv";
+		await Should.ThrowAsync<SshConnectionException>(async () =>
+		{
+#pragma warning disable S108 // Nested blocks of code should not be left empty
+			await foreach (TestCsvModel _ in service.GetDataFromCsvAsyncEnumerable<TestCsvModel>(filePath)) { }
 #pragma warning restore S108 // Nested blocks of code should not be left empty
 		});
 	}

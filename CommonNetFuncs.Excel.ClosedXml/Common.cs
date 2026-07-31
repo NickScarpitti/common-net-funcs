@@ -74,6 +74,35 @@ public static class Common
 
 	private const string ErrorLocationFormat = "{Class}.{Method} Error";
 
+	// Math.Round(..., MidpointRounding.ToZero) is only available on net8.0+; netstandard2.1 needs a manual equivalent.
+	private static double RoundToZero(double value, int digits)
+	{
+#if NET8_0_OR_GREATER
+		return Math.Round(value, digits, MidpointRounding.ToZero);
+#else
+		double factor = Math.Pow(10, digits);
+		double scaled = value * factor;
+		double floor = Math.Floor(scaled);
+		double diff = scaled - floor;
+		double rounded = diff < 0.5 ? floor : diff > 0.5 ? floor + 1 : (value >= 0 ? floor : floor + 1);
+		return rounded / factor;
+#endif
+	}
+
+	private static decimal RoundToZero(decimal value, int digits)
+	{
+#if NET8_0_OR_GREATER
+		return Math.Round(value, digits, MidpointRounding.ToZero);
+#else
+		decimal factor = (decimal)Math.Pow(10, digits);
+		decimal scaled = value * factor;
+		decimal floor = Math.Floor(scaled);
+		decimal diff = scaled - floor;
+		decimal rounded = diff < 0.5m ? floor : diff > 0.5m ? floor + 1 : (value >= 0 ? floor : floor + 1);
+		return rounded / factor;
+#endif
+	}
+
 	/// <summary>
 	/// Checks if cell is empty
 	/// </summary>
@@ -613,7 +642,7 @@ public static class Common
 			}
 			totalWidth += columnWidth;
 		}
-		return (int)Math.Round(totalWidth, 0, MidpointRounding.ToZero);
+		return (int)RoundToZero(totalWidth, 0);
 	}
 
 	/// <summary>
@@ -635,7 +664,7 @@ public static class Common
 		{
 			totalHeight += ws.Row(i).Height; // in points
 		}
-		return (int)Math.Round(totalHeight * 96.0 / 72.0, 0, MidpointRounding.ToZero); // points to px at 96 DPI
+		return (int)RoundToZero(totalHeight * 96.0 / 72.0, 0); // points to px at 96 DPI
 	}
 
 	/// <summary>
@@ -831,10 +860,10 @@ public static class Common
 
 			decimal scale = (rangeAspect < imgAspect) ? ((rangeWidth - 3m) / imgWidth) : ((rangeHeight - 3m) / imgHeight);
 
-			int resizeWidth = (int)Math.Round(imgWidth * scale, 0, MidpointRounding.ToZero);
-			int resizeHeight = (int)Math.Round(imgHeight * scale, 0, MidpointRounding.ToZero);
-			int xMargin = (int)Math.Round((rangeWidth - resizeWidth) / 2.0, 0, MidpointRounding.ToZero);
-			int yMargin = (int)Math.Round((rangeHeight - resizeHeight) / 2.0, 0, MidpointRounding.ToZero);
+			int resizeWidth = (int)RoundToZero(imgWidth * scale, 0);
+			int resizeHeight = (int)RoundToZero(imgHeight * scale, 0);
+			int xMargin = (int)RoundToZero((rangeWidth - resizeWidth) / 2.0m, 0);
+			int yMargin = (int)RoundToZero((rangeHeight - resizeHeight) / 2.0m, 0);
 
 			using MemoryStream ms = new(imageData);
 			IXLPicture picture = ws.AddPicture(ms);

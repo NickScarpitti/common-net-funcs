@@ -18,7 +18,11 @@ namespace CommonNetFuncs.Excel.OpenXml;
 
 public static partial class Common
 {
+#if NET9_0_OR_GREATER
 	private static readonly Lock formatCacheLock = new();
+#else
+	private static readonly object formatCacheLock = new();
+#endif
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 	// Pre-computed style-id sets used by CalculateWidth — static to avoid a new HashSet allocation on every call
@@ -1748,10 +1752,10 @@ public static partial class Common
 
 		decimal scale = (rangeAspect < imgAspect) ? ((rangeWidthPx - 3m) / imgWidthPx) : ((rangeHeightPx - 3m) / imgHeightPx);
 
-		int resizeWidth = (int)Math.Round(imgWidthPx * scale, 0, MidpointRounding.ToZero);
-		int resizeHeight = (int)Math.Round(imgHeightPx * scale, 0, MidpointRounding.ToZero);
-		int xMargin = (int)Math.Round((rangeWidthPx - resizeWidth) * 9525 / 2.0m, 0, MidpointRounding.ToZero);
-		int yMargin = (int)Math.Round((rangeHeightPx - resizeHeight) * 9525 * 1.75m / 2.0m, 0, MidpointRounding.ToZero);
+		int resizeWidth = (int)Internal.MathCompat.Round(imgWidthPx * scale, 0);
+		int resizeHeight = (int)Internal.MathCompat.Round(imgHeightPx * scale, 0);
+		int xMargin = (int)Internal.MathCompat.Round((rangeWidthPx - resizeWidth) * 9525 / 2.0m, 0);
+		int yMargin = (int)Internal.MathCompat.Round((rangeHeightPx - resizeHeight) * 9525 * 1.75m / 2.0m, 0);
 
 		ImagePart imagePart = drawingsPart.AddImagePart(ImagePartType.Png);
 		using (MemoryStream stream = new(imageData))
@@ -1831,7 +1835,7 @@ public static partial class Common
 			totalWidthChars += columnWidthChars;
 		}
 
-		return (int)Math.Round(totalWidthChars * 7, 0, MidpointRounding.ToZero);
+		return (int)Internal.MathCompat.Round(totalWidthChars * 7, 0);
 	}
 
 	/// <summary>
@@ -3357,8 +3361,13 @@ public static partial class Common
 	// Helper classes to deal with cell references more easily
 	public partial class CellReference
 	{
+#if NET7_0_OR_GREATER
 		[GeneratedRegex(@"([A-Z]+)(\d+)")]
 		private static partial Regex CellRefRegex();
+#else
+		private static readonly Regex cellRefRegexInstance = new(@"([A-Z]+)(\d+)", RegexOptions.Compiled);
+		private static Regex CellRefRegex() => cellRefRegexInstance;
+#endif
 
 		private uint rowIndex;
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
+using CommonNetFuncs.Core.Internal;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
@@ -1390,7 +1391,7 @@ public static class Async
 		cancellationTokenSource ??= new();
 		ConcurrentBag<T> results = [];
 		CancellationToken token = cancellationTokenSource.Token;
-		await Parallel.ForEachAsync(tasks, async (task, _) =>
+		await AsyncCompat.ForEachAsync(tasks, async (task, _) =>
 		{
 			bool semaphoreAcquired = false;
 			try
@@ -1438,7 +1439,7 @@ public static class Async
 	{
 		cancellationTokenSource ??= new();
 		CancellationToken token = cancellationTokenSource.Token;
-		await Parallel.ForEachAsync(tasks, async (task, _) =>
+		await AsyncCompat.ForEachAsync(tasks, async (task, _) =>
 		{
 			bool semaphoreAcquired = false;
 			try
@@ -1573,7 +1574,7 @@ public sealed class ResultTaskGroup<T>(List<Task<T>>? tasks = null, SemaphoreSli
 		}
 
 		T[] results = new T[Tasks.Count];
-		await Parallel.ForAsync(0, Tasks.Count, cancellationToken ?? new(), async (i, cancellationToken) =>
+		await AsyncCompat.ForAsync(0, Tasks.Count, cancellationToken ?? new(), async (i, cancellationToken) =>
 		{
 			try
 			{
@@ -1627,7 +1628,7 @@ public sealed class TaskGroup(List<Task>? tasks = null, SemaphoreSlim? semaphore
 			return;
 		}
 
-		await Parallel.ForEachAsync(Tasks, cancellationToken ?? new(), async (task, cancellationToken) =>
+		await AsyncCompat.ForEachAsync(Tasks, cancellationToken ?? new(), async (task, cancellationToken) =>
 		{
 			try
 			{

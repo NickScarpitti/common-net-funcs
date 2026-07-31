@@ -1,4 +1,6 @@
-﻿﻿using CommonNetFuncs.Core;
+﻿﻿// UnitConversion.cs relies on generic math (INumber<T>/IBinaryInteger<T>) and is fully excluded from the netstandard2.1 build of CommonNetFuncs.Core.
+#if CORE_NATIVE_BUILD
+using CommonNetFuncs.Core;
 
 namespace Core.Tests;
 
@@ -615,3 +617,4 @@ public sealed class UnitConversionTests
 		result.ShouldBe(expectedMeters, 0.01m);
 	}
 }
+#endif

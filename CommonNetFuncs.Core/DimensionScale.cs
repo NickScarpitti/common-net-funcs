@@ -51,7 +51,7 @@ public static class DimensionScale
 		decimal ratio = ratios.Min(); // Use the smallest ratio to ensure the object fits within the container without losing its aspect ratio
 
 		// Calculate the new dimensions and return them
-		return ((int)Round(originalWidth * ratio, 0, MidpointRounding.ToZero), (int)Round(originalHeight * ratio, 0, MidpointRounding.ToZero));
+		return ((int)Internal.MathCompat.Round(originalWidth * ratio, 0), (int)CommonNetFuncs.Core.Internal.MathCompat.Round(originalHeight * ratio, 0));
 	}
 
 	/// <summary>
@@ -98,7 +98,7 @@ public static class DimensionScale
 
 		// Calculate the new dimensions and return them
 		return (resultDecimalPlaces == null) ? (originalWidth * ratio, originalHeight * ratio) :
-			(Round(originalWidth * ratio, (int)resultDecimalPlaces, MidpointRounding.ToZero), Round(originalHeight * ratio, (int)resultDecimalPlaces, MidpointRounding.ToZero));
+			(Internal.MathCompat.Round(originalWidth * ratio, (int)resultDecimalPlaces), CommonNetFuncs.Core.Internal.MathCompat.Round(originalHeight * ratio, (int)resultDecimalPlaces));
 	}
 
 	/// <summary>
@@ -156,7 +156,7 @@ public static class DimensionScale
 		decimal ratio = Min(Min(((decimal)maxWidth) / originalWidth, ((decimal)maxHeight) / originalHeight), ((decimal)maxDepth) / originalDepth);
 
 		// Calculate the new dimensions and return them
-		return ((int)Round(originalWidth * ratio, 0, MidpointRounding.ToZero), (int)Round(originalHeight * ratio, 0, MidpointRounding.ToZero), (int)Round(originalDepth * ratio, 0, MidpointRounding.ToZero));
+		return ((int)Internal.MathCompat.Round(originalWidth * ratio, 0), (int)Internal.MathCompat.Round(originalHeight * ratio, 0), (int)Internal.MathCompat.Round(originalDepth * ratio, 0));
 	}
 
 	/// <summary>
@@ -215,6 +215,6 @@ public static class DimensionScale
 
 		// Calculate the new dimensions and return them
 		return (resultDecimalPlaces == null) ? (originalWidth * ratio, originalHeight * ratio, originalDepth * ratio) :
-			(Round(originalWidth * ratio, (int)resultDecimalPlaces, MidpointRounding.ToZero), Round(originalHeight * ratio, (int)resultDecimalPlaces, MidpointRounding.ToZero), Round(originalDepth * ratio, (int)resultDecimalPlaces, MidpointRounding.ToZero));
+			(Internal.MathCompat.Round(originalWidth * ratio, (int)resultDecimalPlaces), Internal.MathCompat.Round(originalHeight * ratio, (int)resultDecimalPlaces), Internal.MathCompat.Round(originalDepth * ratio, (int)resultDecimalPlaces));
 	}
 }

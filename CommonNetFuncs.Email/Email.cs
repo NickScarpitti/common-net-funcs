@@ -101,7 +101,9 @@ public sealed class MailAttachment : IMailAttachment, IAsyncDisposable, IDisposa
 
 public sealed class MailAttachmentBytes : IMailAttachment
 {
+#if NET10_0_OR_GREATER
 	[Newtonsoft.Json.JsonConstructor] // Required for Hangfire serialization
+#endif
 	public MailAttachmentBytes(string? AttachmentName = null, byte[]? AttachmentBytes = null)
 	{
 		this.AttachmentName = AttachmentName;
@@ -695,9 +697,18 @@ public static class Email
 				else
 				{
 					await using MemoryStream memoryStream = new();
+#if NET10_0_OR_GREATER
 					await using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
+#else
+					using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
+#endif
 
-					await attachments.Where(x => !x.AttachmentName.IsNullOrWhiteSpace()).Select(x => (x.GetStream(), x.AttachmentName!)).AddFilesToZip(archive, CompressionLevel.SmallestSize, cancellationToken).ConfigureAwait(false);
+#if NET7_0_OR_GREATER
+					const CompressionLevel zipCompressionLevel = CompressionLevel.SmallestSize;
+#else
+					const CompressionLevel zipCompressionLevel = CompressionLevel.Optimal;
+#endif
+					await attachments.Where(x => !x.AttachmentName.IsNullOrWhiteSpace()).Select(x => (x.GetStream(), x.AttachmentName!)).AddFilesToZip(archive, zipCompressionLevel, cancellationToken).ConfigureAwait(false);
 
 					//foreach (MailAttachment attachment in attachments)
 					//{
@@ -711,7 +722,11 @@ public static class Email
 					//        await entryStream.FlushAsync();
 					//    }
 					//}
+#if NET10_0_OR_GREATER
 					await archive.DisposeAsync();
+#else
+					archive.Dispose();
+#endif
 					memoryStream.Position = 0;
 					await bodyBuilder.Attachments.AddAsync("Files.zip", memoryStream, cancellationToken).ConfigureAwait(false);
 				}

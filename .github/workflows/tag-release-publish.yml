@@ -204,64 +204,143 @@ jobs:
 
       - name: Build, pack & publish changed packages
         run: |
-          set -e
+          set -uo pipefail   # removed "set -e" so one project's failure doesn't kill the whole loop
+          OVERALL_FAILURE=0
 
           for csproj in $(find . -type f -name "CommonNetFuncs.*.csproj" -not -path "*/bin/*" -not -path "*/obj/*"); do
-            filename=$(basename "$csproj" .csproj)
-            project_name=${filename#CommonNetFuncs.}
-            project_dir=$(dirname "$csproj")
+            (
+              set -e   # fail fast WITHIN this project's subshell only
+              filename=$(basename "$csproj" .csproj)
+              project_name=${filename#CommonNetFuncs.}
+              project_dir=$(dirname "$csproj")
 
-            echo "=========================================="
-            echo "Processing CommonNetFuncs.$project_name..."
+              echo "=========================================="
+              echo "Processing CommonNetFuncs.$project_name..."
 
-            # --- Check this project's own test result before building/publishing ---
-            expected_job="test (${project_name}.Tests)"
-            test_result=$(grep -F "${expected_job}|" test_results.txt | cut -d'|' -f2 || true)
+              # --- Check this project's own test result before building/publishing ---
+              expected_job="test (${project_name}.Tests)"
+              test_result=$(grep -F "${expected_job}|" test_results.txt | cut -d'|' -f2 || true)
 
-            if [ -z "$test_result" ]; then
-              echo "WARNING: No matching test job found for '$expected_job'. Proceeding without test gating."
-            elif [ "$test_result" != "success" ]; then
-              echo "SKIPPING $project_name: tests did not pass (status: $test_result)"
-              continue
+              if [ -z "$test_result" ]; then
+                echo "WARNING: No matching test job found for '$expected_job'. Proceeding without test gating."
+              elif [ "$test_result" != "success" ]; then
+                echo "SKIPPING $project_name: tests did not pass (status: $test_result)"
+                exit 0
+              fi
+
+              # --- Get the version currently defined in the .csproj ---
+              project_version=$(grep -oP '(?<=<Version>)[^<]+' "$csproj" | head -1)
+              echo "- Project version: $project_version"
+
+              # --- Query NuGet.org's API for the currently published version ---
+              package_name_lower=$(echo "CommonNetFuncs.$project_name" | tr '[:upper:]' '[:lower:]')
+              nuget_url="https://api.nuget.org/v3/registration5-gz-semver2/${package_name_lower}/index.json"
+
+              nuget_version=$(curl -s "$nuget_url" | jq -r '.items[-1].upper // "0.0.0"' 2>/dev/null || echo "0.0.0")
+              [ -z "$nuget_version" ] && nuget_version="0.0.0"
+              echo "- NuGet version: $nuget_version"
+
+              # --- Skip if the project version matches what's already published ---
+              if [ "$project_version" = "$nuget_version" ]; then
+                echo "- SKIPPING: Package is already up to date on NuGet.org"
+                exit 0
+              fi
+
+              # --- Version differs: clean, build, pack, and push the new package ---
+              echo "- Building and publishing new version..."
+              rm -f "$project_dir"/bin/Release/*.nupkg
+              rm -f "$project_dir"/bin/Release/*.snupkg
+
+              dotnet clean "$csproj" -c Release -v q
+
+              # -p:DebugType=portable: NEW - forces separate .pdb generation so the .snupkg symbol package actually contains symbols.
+              # Without this, a project using <DebugType>embedded</DebugType> produces an EMPTY .snupkg, which NuGet.org rejects with a 400 error.
+              # -p:MinVerVersionOverride forces the build to use the EXACT version already validated above, instead of letting MinVer (if present) try to re-derive it from git tags, which can fail/fallback in CI environments.
+              # This is a no-op / harmless if MinVer isn't actually used by this project.
+              dotnet build "$csproj" -c Release -p:MinVerVersionOverride=$project_version -p:DebugType=portable
+              dotnet pack "$csproj" -c Release /p:ContinuousIntegrationBuild=true -p:MinVerVersionOverride=$project_version -p:DebugType=portable
+
+              # --- Push the main package first ---
+              dotnet nuget push "$project_dir/bin/Release/"*.nupkg \
+                -k "${{ secrets.NUGET_API_KEY }}" \
+                -s https://api.nuget.org/v3/index.json \
+                --skip-duplicate
+
+              echo "SUCCESS: Published CommonNetFuncs.$project_name $project_version"
+            )
+
+            # --- Capture per-project success/failure without killing the outer loop ---
+            if [ $? -ne 0 ]; then
+              echo "ERROR: Failed to process CommonNetFuncs.$project_name - continuing to next project."
+              OVERALL_FAILURE=1
             fi
-
-            # --- Get the version currently defined in the .csproj ---
-            project_version=$(grep -oP '(?<=<Version>)[^<]+' "$csproj" | head -1)
-            echo "- Project version: $project_version"
-
-            # --- Query NuGet.org's API for the currently published version ---
-            package_name_lower=$(echo "CommonNetFuncs.$project_name" | tr '[:upper:]' '[:lower:]')
-            nuget_url="https://api.nuget.org/v3/registration5-gz-semver2/${package_name_lower}/index.json"
-
-            nuget_version=$(curl -s "$nuget_url" | jq -r '.items[-1].upper // "0.0.0"' 2>/dev/null || echo "0.0.0")
-            [ -z "$nuget_version" ] && nuget_version="0.0.0"
-            echo "- NuGet version: $nuget_version"
-
-            # --- Skip if the project version matches what's already published ---
-            if [ "$project_version" = "$nuget_version" ]; then
-              echo "- SKIPPING: Package is already up to date on NuGet.org"
-              continue
-            fi
-
-            # --- Version differs: clean, build, pack, and push the new package ---
-            echo "- Building and publishing new version..."
-            rm -f "$project_dir"/bin/Release/*.nupkg
-            rm -f "$project_dir"/bin/Release/*.snupkg
-
-            dotnet clean "$csproj" -c Release -v q
-            # dotnet build "$csproj" -c Release
-            # dotnet pack "$csproj" -c Release /p:ContinuousIntegrationBuild=true
-
-            # -p:MinVerVersionOverride forces the build to use the EXACT version already validated above, instead of letting MinVer (if present) try to re-derive it from git tags, which can fail/fallback in CI environments.
-            # This is a no-op / harmless if MinVer isn't actually used by this project.
-            dotnet build "$csproj" -c Release -p:MinVerVersionOverride=$project_version
-            dotnet pack "$csproj" -c Release /p:ContinuousIntegrationBuild=true -p:MinVerVersionOverride=$project_version
-
-            dotnet nuget push "$project_dir/bin/Release/*.nupkg" \
-              -k "${{ secrets.NUGET_API_KEY }}" \
-              -s https://api.nuget.org/v3/index.json \
-              --skip-duplicate
           done
 
           echo "=========================================="
-          echo "All packages processed."
+          if [ "$OVERALL_FAILURE" -eq 1 ]; then
+            echo "One or more projects failed to publish. See logs above for details."
+            exit 1   # still marks the job/step as failed overall, AFTER all projects were attempted
+          else
+            echo "All packages processed successfully."
+          fi
+
+        # run: |
+        #   set -e
+
+        #   for csproj in $(find . -type f -name "CommonNetFuncs.*.csproj" -not -path "*/bin/*" -not -path "*/obj/*"); do
+        #     filename=$(basename "$csproj" .csproj)
+        #     project_name=${filename#CommonNetFuncs.}
+        #     project_dir=$(dirname "$csproj")
+
+        #     echo "=========================================="
+        #     echo "Processing CommonNetFuncs.$project_name..."
+
+        #     # --- Check this project's own test result before building/publishing ---
+        #     expected_job="test (${project_name}.Tests)"
+        #     test_result=$(grep -F "${expected_job}|" test_results.txt | cut -d'|' -f2 || true)
+
+        #     if [ -z "$test_result" ]; then
+        #       echo "WARNING: No matching test job found for '$expected_job'. Proceeding without test gating."
+        #     elif [ "$test_result" != "success" ]; then
+        #       echo "SKIPPING $project_name: tests did not pass (status: $test_result)"
+        #       continue
+        #     fi
+
+        #     # --- Get the version currently defined in the .csproj ---
+        #     project_version=$(grep -oP '(?<=<Version>)[^<]+' "$csproj" | head -1)
+        #     echo "- Project version: $project_version"
+
+        #     # --- Query NuGet.org's API for the currently published version ---
+        #     package_name_lower=$(echo "CommonNetFuncs.$project_name" | tr '[:upper:]' '[:lower:]')
+        #     nuget_url="https://api.nuget.org/v3/registration5-gz-semver2/${package_name_lower}/index.json"
+
+        #     nuget_version=$(curl -s "$nuget_url" | jq -r '.items[-1].upper // "0.0.0"' 2>/dev/null || echo "0.0.0")
+        #     [ -z "$nuget_version" ] && nuget_version="0.0.0"
+        #     echo "- NuGet version: $nuget_version"
+
+        #     # --- Skip if the project version matches what's already published ---
+        #     if [ "$project_version" = "$nuget_version" ]; then
+        #       echo "- SKIPPING: Package is already up to date on NuGet.org"
+        #       continue
+        #     fi
+
+        #     # --- Version differs: clean, build, pack, and push the new package ---
+        #     echo "- Building and publishing new version..."
+        #     rm -f "$project_dir"/bin/Release/*.nupkg
+        #     rm -f "$project_dir"/bin/Release/*.snupkg
+
+        #     dotnet clean "$csproj" -c Release -v q
+
+        #     # -p:MinVerVersionOverride forces the build to use the EXACT version already validated above, instead of letting MinVer (if present) try to re-derive it from git tags, which can fail/fallback in CI environments.
+        #     # This is a no-op / harmless if MinVer isn't actually used by this project.
+        #     dotnet build "$csproj" -c Release -p:MinVerVersionOverride=$project_version -p:DebugType=portable
+        #     dotnet pack "$csproj" -c Release /p:ContinuousIntegrationBuild=true -p:MinVerVersionOverride=$project_version -p:DebugType=portable
+
+        #     dotnet nuget push "$project_dir/bin/Release/*.nupkg" \
+        #       -k "${{ secrets.NUGET_API_KEY }}" \
+        #       -s https://api.nuget.org/v3/index.json \
+        #       --skip-duplicate
+        #   done
+
+        #   echo "=========================================="
+        #   echo "All packages processed."

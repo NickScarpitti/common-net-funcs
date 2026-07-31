@@ -204,7 +204,7 @@ jobs:
 
       - name: Build, pack & publish changed packages
         run: |
-          set -uo pipefail   # removed "set -e" so one project's failure doesn't kill the whole loop
+          set +e -uo pipefail   # removed "set -e" so one project's failure doesn't kill the whole loop
           OVERALL_FAILURE=0
 
           for csproj in $(find . -type f -name "CommonNetFuncs.*.csproj" -not -path "*/bin/*" -not -path "*/obj/*"); do

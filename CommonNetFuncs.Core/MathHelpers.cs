@@ -194,7 +194,8 @@ public static class MathHelpers
 			}
 		}
 	}
-#else
+#endif
+
 	/// <summary>
 	/// Generates a continuous range of numbers between start and end parameters (inclusive)
 	/// </summary>
@@ -294,7 +295,6 @@ public static class MathHelpers
 			}
 		}
 	}
-#endif
 
 #if NET7_0_OR_GREATER
 	/// <summary>
@@ -408,7 +408,8 @@ public static class MathHelpers
 				? sorted[mid]
 				: (sorted[mid - 1] + sorted[mid]) / TNumber.CreateChecked(2);
 	}
-#else
+#endif
+
 	/// <inheritdoc cref="GetMedian{TNumber}(IEnumerable{TNumber})"/>
 	public static int GetMedian(this IEnumerable<int> numbers)
 	{
@@ -478,5 +479,4 @@ public static class MathHelpers
 		int mid = sorted.Length / 2;
 		return sorted.Length % 2 != 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 	}
-#endif
 }

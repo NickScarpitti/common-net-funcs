@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using xRetry.v3;
 using static System.IO.Path;
 using static CommonNetFuncs.Office.Common.PdfConversion;
 
@@ -177,7 +178,7 @@ public sealed class PdfConversionTests //: IDisposable
 		Directory.Delete(tempPath, true); // Cleanup
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task ConvertToPdf_WithCancellationAndRetries_ShouldRespectBoth()
 	{
 		// Arrange

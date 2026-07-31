@@ -146,7 +146,14 @@ public static class PdfConversion
 #if NET5_0_OR_GREATER
 				await process.WaitForExitAsync(cancellationToken ?? default).ConfigureAwait(false);
 #else
-				await Task.Run(() => process.WaitForExit(), cancellationToken ?? default).ConfigureAwait(false);
+				// Task.Run(action, token) only honors the token before the delegate starts running, not while
+				// process.WaitForExit() is blocked, so register a callback to kill the process on cancellation instead.
+				CancellationToken token = cancellationToken ?? default;
+				using (token.Register(static state => TryKillProcess((Process)state!), process))
+				{
+					await Task.Run(() => process.WaitForExit(), CancellationToken.None).ConfigureAwait(false);
+				}
+				token.ThrowIfCancellationRequested();
 #endif
 
 				if (process.ExitCode != 0)
@@ -191,6 +198,23 @@ public static class PdfConversion
 
 		public LibreOfficeFailedException(string message, Exception inner) : base(message, inner) { }
 	}
+
+#if !NET5_0_OR_GREATER
+	private static void TryKillProcess(Process process)
+	{
+		try
+		{
+			if (!process.HasExited)
+			{
+				process.Kill();
+			}
+		}
+		catch (InvalidOperationException)
+		{
+			// Process already exited or never started; nothing to do.
+		}
+	}
+#endif
 
 	private static string? GetPdfCommand(this string fileName)
 	{

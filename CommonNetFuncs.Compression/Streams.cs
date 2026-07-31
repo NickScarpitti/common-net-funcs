@@ -599,14 +599,14 @@ public static class Streams
 		{
 			while ((bytesRead = source.Read(buffer, 0, ChunkSize)) > 0)
 			{
+				cancellationToken.ThrowIfCancellationRequested();
+
 				totalBytes += bytesRead;
 
 				if (totalBytes > maxBytes)
 				{
 					throw new CompressionLimitExceededException($"Operation would exceed maximum size limit of {maxBytes} bytes");
 				}
-
-				cancellationToken.ThrowIfCancellationRequested();
 
 				destination.Write(buffer, 0, bytesRead);
 			}

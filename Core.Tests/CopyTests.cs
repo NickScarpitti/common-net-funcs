@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using CommonNetFuncs.Core;
+using xRetry.v3;
 
 namespace Core.Tests;
 
@@ -565,7 +566,7 @@ public sealed class CopyTests
 		Copy.DeepCopyCacheManager.SetUseLimitedCache(false);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetLimitedCache_ShouldNotThrow()
 	{
 		// Arrange

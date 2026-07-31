@@ -69,6 +69,9 @@
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="Shouldly" />
 		<PackageReference Include="NLog.Extensions.Logging" />
+		<PackageReference Include="xRetry.v3" />
+
+
 	</ItemGroup>
 
 	<ItemGroup>

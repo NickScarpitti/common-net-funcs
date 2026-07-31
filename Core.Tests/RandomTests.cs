@@ -1849,4 +1849,98 @@ public sealed class RandomTests
 		result.Length.ShouldBe(length);
 		result.All(DefaultCharSet.Contains).ShouldBeTrue();
 	}
+
+	// -------------------------------------------------------------------------
+	// GetRandomBytes
+	// -------------------------------------------------------------------------
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(1)]
+	[InlineData(16)]
+	public void GetRandomBytes_WithCount_ReturnsArrayOfCorrectLength(int count)
+	{
+		byte[] result = GetRandomBytes(count);
+		result.Length.ShouldBe(count);
+	}
+
+	[Fact]
+	public void GetRandomBytes_WithCount_ReturnsDifferentValuesOnSubsequentCalls()
+	{
+		byte[] result1 = GetRandomBytes(32);
+		byte[] result2 = GetRandomBytes(32);
+		result1.SequenceEqual(result2).ShouldBeFalse();
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(1)]
+	[InlineData(16)]
+	public void GetRandomBytes_WithCountAndRnd_ReturnsArrayOfCorrectLength(int count)
+	{
+		byte[] result = GetRandomBytes(count, new Random(42));
+		result.Length.ShouldBe(count);
+	}
+
+	[Fact]
+	public void GetRandomBytes_WithCountAndRnd_IsRepeatable()
+	{
+		byte[] result1 = GetRandomBytes(32, new Random(42));
+		byte[] result2 = GetRandomBytes(32, new Random(42));
+		result1.SequenceEqual(result2).ShouldBeTrue();
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(1)]
+	[InlineData(16)]
+	public void GetRandomBytes_WithRefBytesCountAndRnd_FillsArrayOfCorrectLength(int count)
+	{
+		byte[] bytes = [];
+		byte[] result = GetRandomBytes(ref bytes, count, new Random(42));
+		result.Length.ShouldBe(count);
+		bytes.Length.ShouldBe(count);
+		bytes.ShouldBeSameAs(result);
+	}
+
+	[Fact]
+	public void GetRandomBytes_WithRefBytesCountAndRnd_IsRepeatable()
+	{
+		byte[] bytes1 = [];
+		byte[] bytes2 = [];
+		byte[] result1 = GetRandomBytes(ref bytes1, 32, new Random(42));
+		byte[] result2 = GetRandomBytes(ref bytes2, 32, new Random(42));
+		result1.SequenceEqual(result2).ShouldBeTrue();
+	}
+
+	[Theory]
+	[InlineData(0, "seed1")]
+	[InlineData(1, "seed2")]
+	[InlineData(16, "seed3")]
+	public void GetRepeatableRandomBytes_WithSeed_FillsArrayOfCorrectLength(int quantity, string seed)
+	{
+		byte[] bytes = [];
+		byte[] result = GetRepeatableRandomBytes<object, string>(ref bytes, seed, quantity);
+		result.Length.ShouldBe(quantity);
+		bytes.Length.ShouldBe(quantity);
+		bytes.ShouldBeSameAs(result);
+	}
+
+	[Fact]
+	public void GetRepeatableRandomBytes_WithSeed_IsRepeatable()
+	{
+		byte[] bytes1 = [];
+		byte[] bytes2 = [];
+		byte[] result1 = GetRepeatableRandomBytes<object, string>(ref bytes1, "seed", 32);
+		byte[] result2 = GetRepeatableRandomBytes<object, string>(ref bytes2, "seed", 32);
+		result1.SequenceEqual(result2).ShouldBeTrue();
+	}
+
+	[Fact]
+	public void GetRepeatableRandomBytes_WithDefaultQuantity_ReturnsSingleByte()
+	{
+		byte[] bytes = [];
+		byte[] result = GetRepeatableRandomBytes<object, string>(ref bytes, "seed");
+		result.Length.ShouldBe(1);
+	}
 }

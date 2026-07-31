@@ -41,6 +41,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\CommonNetFuncs.Compression\CommonNetFuncs.Compression.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

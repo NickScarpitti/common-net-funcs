@@ -1,5 +1,6 @@
 ﻿using AutoFixture;
 using CommonNetFuncs.Core;
+using static CommonNetFuncs.Core.Random;
 
 namespace Core.Tests;
 
@@ -21,7 +22,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = GetRandomBytes(item);
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -50,7 +51,7 @@ public sealed class RunBatchesTests
 
 		async Task<bool> BatchProcessor(List<int> batch)
 		{
-			byte[] data = fixture.CreateMany<byte>(batch[0]).ToArray();
+			byte[] data = GetRandomBytes(batch[0]);
 			await using MemoryStream stream = new(data);
 			_ = await stream.ReadStreamAsync();
 			processedItems.AddRange(batch);
@@ -80,7 +81,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = GetRandomBytes(item);
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -111,7 +112,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = GetRandomBytes(item);
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -138,7 +139,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = GetRandomBytes(item);
 				using MemoryStream stream = new(data);
 				_ = stream.ToArray();
 				processedItems.Add(item);
@@ -169,7 +170,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = GetRandomBytes(item);
 				using MemoryStream stream = new(data);
 				_ = stream.ToArray();
 				processedItems.Add(item);
@@ -198,7 +199,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = GetRandomBytes(item);
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -229,7 +230,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = GetRandomBytes(item);
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -257,7 +258,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = GetRandomBytes(item);
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -284,7 +285,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (TestItem item in batch)
 			{
-				byte[] data = fixture.CreateMany<byte>(100).ToArray();
+				byte[] data = GetRandomBytes(100);
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -372,7 +373,7 @@ public sealed class RunBatchesTests
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = GetRandomBytes(item);
 				await using MemoryStream stream = new(data);
 				_ = await stream.ReadStreamAsync();
 				processedItems.Add(item);
@@ -468,14 +469,14 @@ public sealed class RunBatchesTests
 	public void RunBatchedProcess_Sync_LogProgressFalse_DoesNotLog()
 	{
 		// Arrange
-		List<int> processedItems = [];
+		List<int> processedItems = new();
 		List<int> items = Enumerable.Range(1, 100).ToList();
 
 		bool BatchProcessor(List<int> batch)
 		{
 			foreach (int item in batch)
 			{
-				byte[] data = fixture.CreateMany<byte>(item).ToArray();
+				byte[] data = GetRandomBytes(item);
 				using MemoryStream stream = new(data);
 				_ = stream.ToArray();
 				processedItems.Add(item);

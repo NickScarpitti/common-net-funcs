@@ -12,6 +12,7 @@ using CommonNetFuncs.Core;
 using CommonNetFuncs.Web.Aws.S3;
 using FakeItEasy;
 using static CommonNetFuncs.Compression.Streams;
+using static CommonNetFuncs.Core.Random;
 
 namespace Web.Aws.S3.Tests;
 
@@ -38,7 +39,7 @@ public sealed class ApiAwsS3Tests
 		// Arrange
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
-		byte[] fileContent = fixture.CreateMany<byte>(1000).ToArray();
+		byte[] fileContent = GetRandomBytes(1000);
 		await using MemoryStream fileData = new(fileContent);
 
 		A.CallTo(() => s3Client.GetBucketLocationAsync(bucketName, A<CancellationToken>._)).Returns(new GetBucketLocationResponse { HttpStatusCode = HttpStatusCode.OK });
@@ -47,9 +48,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.PutObjectAsync(A<PutObjectRequest>._, A<CancellationToken>._)).Returns(response);
 
 		// Act
+
 		bool result = await sut.UploadS3File(bucketName, fileName, fileData, null, compressSteam: compressStream, compressionType: compressionType, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		result.ShouldBeTrue();
 		A.CallTo(() => s3Client.PutObjectAsync(A<PutObjectRequest>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
 	}
@@ -60,11 +63,13 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadS3File_WhenInvalidCompressionType_ThrowsNotSupportedException(ECompressionType compressionType)
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 		await using MemoryStream fileData = new();
 
 		// Act & Assert
+
 		await Should.ThrowAsync<NotSupportedException>(async () => await sut.UploadS3File(bucketName, fileName, fileData, compressionType: compressionType));
 	}
 
@@ -76,6 +81,7 @@ public sealed class ApiAwsS3Tests
 	public async Task GetS3File_WhenFileExists_RetrievesSuccessfully(bool decompressGzipData, string contentEncoding)
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 		byte[] fileContent = Encoding.UTF8.GetBytes("Test content");
@@ -97,9 +103,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._)).Returns(response);
 
 		// Act
+
 		await sut.GetS3File(bucketName, fileName, fileData, decompressGzipData: decompressGzipData, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		fileData.Length.ShouldBeGreaterThan(0);
 		A.CallTo(() => s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
 	}
@@ -110,6 +118,7 @@ public sealed class ApiAwsS3Tests
 	public async Task DeleteS3File_WhenFileExists_DeletesSuccessfully(bool fileExists)
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 
@@ -121,9 +130,11 @@ public sealed class ApiAwsS3Tests
 		}
 
 		// Act
+
 		bool result = await sut.DeleteS3File(bucketName, fileName, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		result.ShouldBe(fileExists);
 		if (fileExists)
 		{
@@ -137,6 +148,7 @@ public sealed class ApiAwsS3Tests
 	public async Task S3FileExists_ReturnsExpectedResult(HttpStatusCode statusCode, bool expectedResult)
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 
@@ -144,9 +156,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._)).Returns(response);
 
 		// Act
+
 		bool result = await sut.S3FileExists(bucketName, fileName, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		result.ShouldBe(expectedResult);
 	}
 
@@ -154,6 +168,7 @@ public sealed class ApiAwsS3Tests
 	public async Task GetAllS3BucketFiles_WhenBucketExists_ReturnsAllFiles()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		List<S3Object> s3Objects = fixture.CreateMany<S3Object>(3).ToList();
 
@@ -166,9 +181,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.ListObjectsV2Async(A<ListObjectsV2Request>._, A<CancellationToken>._)).Returns(response);
 
 		// Act
+
 		List<string>? result = await sut.GetAllS3BucketFiles(bucketName, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		result.ShouldNotBeNull();
 		result.Count.ShouldBe(s3Objects.Count);
 		result.ShouldBe(s3Objects.Select(x => x.Key));
@@ -178,6 +195,7 @@ public sealed class ApiAwsS3Tests
 	public async Task GetS3Url_WhenBucketValid_ReturnsPreSignedUrl()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 		const string expectedUrl = "https://test-bucket.s3.amazonaws.com/test-file";
@@ -186,9 +204,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.GetPreSignedURLAsync(A<GetPreSignedUrlRequest>._)).Returns(expectedUrl);
 
 		// Act
+
 		string? result = await sut.GetS3Url(bucketName, fileName);
 
 		// Assert
+
 		result.ShouldBe(expectedUrl);
 	}
 
@@ -196,6 +216,7 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadS3File_FilePath_Success()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 		string filePath = Path.GetTempFileName();
@@ -205,9 +226,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.PutObjectAsync(A<PutObjectRequest>._, A<CancellationToken>._)).Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act
+
 		bool result = await sut.UploadS3File(bucketName, fileName, filePath, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		result.ShouldBeTrue();
 		A.CallTo(() => s3Client.PutObjectAsync(A<PutObjectRequest>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
 
@@ -218,10 +241,12 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadS3File_FilePath_ThrowsOnInvalidFileName()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string filePath = Path.GetTempFileName();
 
 		// Act & Assert
+
 		await Should.ThrowAsync<ArgumentException>(async () => await sut.UploadS3File(bucketName, "   ", filePath));
 
 		File.Delete(filePath);
@@ -231,11 +256,13 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadS3File_FilePath_ThrowsOnFileNotFound()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 		string filePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.txt");
 
 		// Act & Assert
+
 		await Should.ThrowAsync<FileNotFoundException>(async () => await sut.UploadS3File(bucketName, fileName, filePath));
 	}
 
@@ -243,6 +270,7 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadS3File_FilePath_HandlesAmazonS3Exception()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 		string filePath = Path.GetTempFileName();
@@ -251,9 +279,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.GetBucketLocationAsync(bucketName, A<CancellationToken>._)).Throws(new AmazonS3Exception("AWS error"));
 
 		// Act
+
 		bool result = await sut.UploadS3File(bucketName, fileName, filePath, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		result.ShouldBeFalse();
 
 		File.Delete(filePath);
@@ -263,6 +293,7 @@ public sealed class ApiAwsS3Tests
 	public async Task GetS3File_FilePath_Success()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 		string filePath = Path.GetTempFileName();
@@ -278,9 +309,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.GetObjectAsync(A<GetObjectRequest>._, A<CancellationToken>._)).Returns(response);
 
 		// Act
+
 		await sut.GetS3File(bucketName, fileName, filePath, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		File.Exists(filePath).ShouldBeTrue();
 		(await File.ReadAllTextAsync(filePath, TestContext.Current.CancellationToken)).ShouldBe("Test content");
 
@@ -291,6 +324,7 @@ public sealed class ApiAwsS3Tests
 	public async Task GetS3File_FilePath_HandlesAmazonS3Exception()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 		string filePath = Path.GetTempFileName();
@@ -298,10 +332,12 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.GetBucketLocationAsync(bucketName, A<CancellationToken>._)).Throws(new AmazonS3Exception("AWS error"));
 
 		// Act
+
 		await sut.GetS3File(bucketName, fileName, filePath, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
 		// No exception thrown, file should be empty
+
 		File.Exists(filePath).ShouldBeTrue();
 
 		File.Delete(filePath);
@@ -311,6 +347,7 @@ public sealed class ApiAwsS3Tests
 	public async Task GetS3File_FilePath_HandlesGeneralException()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 		string filePath = Path.GetTempFileName();
@@ -318,9 +355,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.GetBucketLocationAsync(bucketName, A<CancellationToken>._)).Throws(new Exception("General error"));
 
 		// Act
+
 		await sut.GetS3File(bucketName, fileName, filePath, cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		File.Exists(filePath).ShouldBeTrue();
 
 		File.Delete(filePath);
@@ -330,15 +369,18 @@ public sealed class ApiAwsS3Tests
 	public async Task GetS3Url_WhenBucketInvalid_ReturnsNull()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 
 		A.CallTo(() => s3Client.GetBucketLocationAsync(bucketName, A<CancellationToken>._)).Returns(new GetBucketLocationResponse { HttpStatusCode = HttpStatusCode.NotFound });
 
 		// Act
+
 		string? result = await sut.GetS3Url(bucketName, fileName);
 
 		// Assert
+
 		result.ShouldBe(string.Empty);
 	}
 
@@ -346,15 +388,18 @@ public sealed class ApiAwsS3Tests
 	public async Task GetS3Url_HandlesAmazonS3Exception()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 
 		A.CallTo(() => s3Client.GetBucketLocationAsync(bucketName, A<CancellationToken>._)).Throws(new AmazonS3Exception("AWS error"));
 
 		// Act
+
 		string? result = await sut.GetS3Url(bucketName, fileName);
 
 		// Assert
+
 		result.ShouldBe(string.Empty);
 	}
 
@@ -362,15 +407,18 @@ public sealed class ApiAwsS3Tests
 	public async Task GetS3Url_HandlesGeneralException()
 	{
 		// Arrange
+
 		string bucketName = fixture.Create<string>();
 		string fileName = fixture.Create<string>();
 
 		A.CallTo(() => s3Client.GetBucketLocationAsync(bucketName, A<CancellationToken>._)).Throws(new Exception("General error"));
 
 		// Act
+
 		string? result = await sut.GetS3Url(bucketName, fileName);
 
 		// Assert
+
 		result.ShouldBe(string.Empty);
 	}
 
@@ -378,14 +426,17 @@ public sealed class ApiAwsS3Tests
 	public async Task IsBucketValid_CacheHit_ReturnsCachedValue()
 	{
 		// Arrange
+
 		string bucketName = Guid.NewGuid().ToString();
 		ConcurrentDictionary<string, bool> validatedBuckets = new();
 		validatedBuckets[bucketName] = true;
 
 		// Act
+
 		bool result = await sut.IsBucketValid(bucketName, validatedBuckets);
 
 		// Assert
+
 		result.ShouldBeTrue();
 	}
 
@@ -393,15 +444,18 @@ public sealed class ApiAwsS3Tests
 	public async Task IsBucketValid_CacheMiss_ValidatesAndCaches()
 	{
 		// Arrange
+
 		string bucketName = Guid.NewGuid().ToString();
 		ConcurrentDictionary<string, bool> validatedBuckets = new();
 
 		A.CallTo(() => s3Client.GetBucketLocationAsync(bucketName, A<CancellationToken>._)).Returns(new GetBucketLocationResponse { HttpStatusCode = HttpStatusCode.OK });
 
 		// Act
+
 		bool result = await sut.IsBucketValid(bucketName, validatedBuckets);
 
 		// Assert
+
 		result.ShouldBeTrue();
 		validatedBuckets[bucketName].ShouldBeTrue();
 	}
@@ -410,10 +464,12 @@ public sealed class ApiAwsS3Tests
 	public async Task IsBucketValid_RetryOnInvalid()
 	{
 		// Arrange
+
 		string bucketName = Guid.NewGuid().ToString();
 		ConcurrentDictionary<string, bool> validatedBuckets = new();
 
 		// First call returns false, second returns true
+
 		int callCount = 0;
 		A.CallTo(() => s3Client.GetBucketLocationAsync(bucketName, A<CancellationToken>._)).ReturnsLazily(() =>
 			{
@@ -422,9 +478,11 @@ public sealed class ApiAwsS3Tests
 			});
 
 		// Act
+
 		bool result = await sut.IsBucketValid(bucketName, validatedBuckets);
 
 		// Assert
+
 		result.ShouldBeTrue();
 		validatedBuckets[bucketName].ShouldBeTrue();
 	}
@@ -433,10 +491,12 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadMultipartAsync_SuccessfulUpload_ReturnsTrue()
 	{
 		// Arrange
+
 		const string bucketName = "bucket";
 		const string fileName = "file";
 		const string uploadId = "upload-id";
 		byte[] data = new byte[25 * 1024 * 1024]; // 25MB, triggers multipart
+
 		await using MemoryStream stream = new(data);
 
 		InitiateMultipartUploadResponse initiateResponse = new() { UploadId = uploadId };
@@ -445,15 +505,18 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.InitiateMultipartUploadAsync(A<InitiateMultipartUploadRequest>._, A<CancellationToken>._)).Returns(initiateResponse);
 
 		// Simulate 3 parts
+
 		A.CallTo(() => s3Client.UploadPartAsync(A<UploadPartRequest>._, A<CancellationToken>._))
 			.ReturnsLazily((UploadPartRequest req, CancellationToken _) => new UploadPartResponse { HttpStatusCode = HttpStatusCode.OK, ETag = $"etag-{req.PartNumber}" });
 
 		A.CallTo(() => s3Client.CompleteMultipartUploadAsync(A<CompleteMultipartUploadRequest>._, A<CancellationToken>._)).Returns(completeResponse);
 
 		// Act
+
 		bool result = await sut.UploadMultipartAsync(bucketName, fileName, stream, CancellationToken.None);
 
 		// Assert
+
 		result.ShouldBeTrue();
 		A.CallTo(() => s3Client.InitiateMultipartUploadAsync(A<InitiateMultipartUploadRequest>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
 		A.CallTo(() => s3Client.UploadPartAsync(A<UploadPartRequest>._, A<CancellationToken>._)).MustHaveHappened(3, Times.Exactly);
@@ -464,10 +527,12 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadMultipartAsync_PartUploadFails_ThrowsAndAborts()
 	{
 		// Arrange
+
 		const string bucketName = "bucket";
 		const string fileName = "file";
 		const string uploadId = "upload-id";
 		byte[] data = new byte[15 * 1024 * 1024]; // 15MB, triggers multipart
+
 		await using MemoryStream stream = new(data);
 
 		InitiateMultipartUploadResponse initiateResponse = new() { UploadId = uploadId };
@@ -475,6 +540,7 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.InitiateMultipartUploadAsync(A<InitiateMultipartUploadRequest>._, A<CancellationToken>._)).Returns(initiateResponse);
 
 		// Simulate one part fails (returns null)
+
 		A.CallTo(() => s3Client.UploadPartAsync(A<UploadPartRequest>._, A<CancellationToken>._)).ReturnsNextFromSequence
 			(
 				new UploadPartResponse { HttpStatusCode = HttpStatusCode.OK, ETag = "etag-1" },
@@ -484,9 +550,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.AbortMultipartUploadAsync(A<AbortMultipartUploadRequest>._, A<CancellationToken>._)).Returns(new AbortMultipartUploadResponse());
 
 		// Act
+
 		bool result = await sut.UploadMultipartAsync(bucketName, fileName, stream, CancellationToken.None);
 
 		// Assert
+
 		result.ShouldBeFalse();
 		A.CallTo(() => s3Client.AbortMultipartUploadAsync(A<AbortMultipartUploadRequest>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
 	}
@@ -495,6 +563,7 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadMultipartAsync_ExceptionDuringComplete_AbortsAndReturnsFalse()
 	{
 		// Arrange
+
 		const string bucketName = "bucket";
 		const string fileName = "file";
 		const string uploadId = "upload-id";
@@ -512,9 +581,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.AbortMultipartUploadAsync(A<AbortMultipartUploadRequest>._, A<CancellationToken>._)).Returns(new AbortMultipartUploadResponse());
 
 		// Act
+
 		bool result = await sut.UploadMultipartAsync(bucketName, fileName, stream, CancellationToken.None);
 
 		// Assert
+
 		result.ShouldBeFalse();
 		A.CallTo(() => s3Client.AbortMultipartUploadAsync(A<AbortMultipartUploadRequest>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
 	}
@@ -523,6 +594,7 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadPartAsync_Success_ReturnsPartETag()
 	{
 		// Arrange
+
 		const string bucketName = "bucket";
 		const string fileName = "file";
 		const string uploadId = "upload-id";
@@ -537,9 +609,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.UploadPartAsync(A<UploadPartRequest>._, A<CancellationToken>._)).Returns(uploadPartResponse);
 
 		// Act
+
 		PartETag? result = await sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, CancellationToken.None);
 
 		// Assert
+
 		result.ShouldNotBeNull();
 		result.PartNumber.ShouldBe(partNumber);
 		result.ETag.ShouldBe("etag-1");
@@ -549,6 +623,7 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadPartAsync_PartUploadFails_ReturnsNull()
 	{
 		// Arrange
+
 		const string bucketName = "bucket";
 		const string fileName = "file";
 		const string uploadId = "upload-id";
@@ -563,9 +638,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.UploadPartAsync(A<UploadPartRequest>._, A<CancellationToken>._)).Returns(uploadPartResponse);
 
 		// Act
+
 		PartETag? result = await sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, CancellationToken.None);
 
 		// Assert
+
 		result.ShouldBeNull();
 	}
 
@@ -573,6 +650,7 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadPartAsync_ReadsLessThanExpected_ThrowsAndReturnsNull()
 	{
 		// Arrange
+
 		const string bucketName = "bucket";
 		const string fileName = "file";
 		const string uploadId = "upload-id";
@@ -581,12 +659,15 @@ public sealed class ApiAwsS3Tests
 		const long totalSize = chunkSize;
 		SemaphoreSlim semaphore = new(1, 1);
 		// Stream with less data than chunkSize
+
 		await using MemoryStream stream = new(new byte[1024]);
 
 		// Act
+
 		PartETag? result = await sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, CancellationToken.None);
 
 		// Assert
+
 		result.ShouldBeNull();
 	}
 
@@ -594,6 +675,7 @@ public sealed class ApiAwsS3Tests
 	public async Task UploadPartAsync_ExceptionDuringUpload_ReturnsNull()
 	{
 		// Arrange
+
 		const string bucketName = "bucket";
 		const string fileName = "file";
 		const string uploadId = "upload-id";
@@ -607,9 +689,11 @@ public sealed class ApiAwsS3Tests
 		A.CallTo(() => s3Client.UploadPartAsync(A<UploadPartRequest>._, A<CancellationToken>._)).Throws(new Exception("fail"));
 
 		// Act
+
 		PartETag? result = await sut.UploadPartAsync(bucketName, fileName, uploadId, stream, partNumber, chunkSize, totalSize, semaphore, CancellationToken.None);
 
 		// Assert
+
 		result.ShouldBeNull();
 	}
 
@@ -620,6 +704,7 @@ public sealed class ApiAwsS3Tests
 	public async Task DetectCompressionTypeAndReset_SeekableStream_ReturnsCorrectTypeAndResets(ECompressionType compressionType)
 	{
 		// Arrange
+
 		byte[] original = Encoding.UTF8.GetBytes("Hello Compression!");
 		MemoryStream stream;
 		if (compressionType == ECompressionType.Gzip)
@@ -650,9 +735,11 @@ public sealed class ApiAwsS3Tests
 		long initialPosition = stream.Position;
 
 		// Act
+
 		(ECompressionType detected, Stream resetStream) = await DetectCompressionTypeAndReset(stream);
 
 		// Assert
+
 		detected.ShouldBe(compressionType);
 		resetStream.ShouldBe(stream);
 		stream.Position.ShouldBe(initialPosition);
@@ -665,6 +752,7 @@ public sealed class ApiAwsS3Tests
 	public async Task DetectCompressionTypeAndReset_UnseekableStream_ReturnsCorrectTypeAndConcatenatedStream(ECompressionType compressionType)
 	{
 		// Arrange
+
 		byte[] original = Encoding.UTF8.GetBytes("Hello Compression!");
 		MemoryStream baseStream;
 		if (compressionType == ECompressionType.Gzip)
@@ -691,16 +779,20 @@ public sealed class ApiAwsS3Tests
 		}
 
 		// Wrap in a stream that is not seekable
+
 		UnseekableStream unseekable = new(baseStream);
 
 		// Act
+
 		(ECompressionType detected, Stream resetStream) = await DetectCompressionTypeAndReset(unseekable);
 
 		// Assert
+
 		detected.ShouldBe(compressionType);
 		resetStream.ShouldBeOfType<ConcatenatedStream>();
 
 		// Decompress if needed, then read the original string
+
 		Stream toRead;
 		if (compressionType == ECompressionType.Gzip)
 		{
@@ -724,17 +816,21 @@ public sealed class ApiAwsS3Tests
 	public async Task DetectCompressionTypeAndReset_UnseekableStream_Empty_ReturnsNone()
 	{
 		// Arrange
+
 		UnseekableStream emptyStream = new(new MemoryStream());
 
 		// Act
+
 		(ECompressionType detected, Stream resetStream) = await DetectCompressionTypeAndReset(emptyStream);
 
 		// Assert
+
 		detected.ShouldBe(ECompressionType.None);
 		resetStream.ShouldBeOfType<ConcatenatedStream>();
 	}
 
 	// Helper for unseekable stream
+
 	private sealed class UnseekableStream(Stream inner) : Stream
 	{
 		private readonly Stream inner = inner;

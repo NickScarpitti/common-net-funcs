@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using AutoFixture;
 using CommonNetFuncs.Core;
+using static CommonNetFuncs.Core.Random;
 
 namespace Core.Tests;
 
@@ -16,13 +17,16 @@ public sealed class StreamsTests
 	public async Task ReadStreamAsync_ReadsAllBytes(int length)
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(length).ToArray();
+
+		byte[] data = GetRandomBytes(length);
 		await using MemoryStream stream = new(data);
 
 		// Act
+
 		byte[] result = await stream.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		result.ShouldBe(data);
 	}
 
@@ -33,13 +37,16 @@ public sealed class StreamsTests
 	public async Task ReadStreamAsync_RespectsBufferSize(int bufferSize)
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(bufferSize * 2).ToArray();
+
+		byte[] data = GetRandomBytes(bufferSize * 2);
 		await using MemoryStream stream = new(data);
 
 		// Act
+
 		byte[] result = await stream.ReadStreamAsync(bufferSize, TestContext.Current.CancellationToken);
 
 		// Assert
+
 		result.ShouldBe(data);
 	}
 
@@ -47,12 +54,15 @@ public sealed class StreamsTests
 	public async Task ReadStreamAsync_ReturnsEmptyArrayForEmptyStream()
 	{
 		// Arrange
+
 		await using MemoryStream stream = new();
 
 		// Act
+
 		byte[] result = await stream.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		result.ShouldBeEmpty();
 	}
 
@@ -60,17 +70,21 @@ public sealed class StreamsTests
 	public async Task ReadStreamAsync_HandlesNonSeekableStream()
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(1024).ToArray();
+
+		byte[] data = GetRandomBytes(1024);
 		await using NonSeekableMemoryStream stream = new(data);
 
 		// Act
+
 		byte[] result = await stream.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
 
 		// Assert
+
 		result.ShouldBe(data);
 	}
 
 	// Helper for non-seekable stream
+
 	private sealed class NonSeekableMemoryStream(byte[] buffer) : MemoryStream(buffer)
 	{
 		public override bool CanSeek => false;
@@ -98,14 +112,17 @@ public sealed class StreamsTests
 	public async Task WriteStreamToStream_MemoryStream_CopiesData()
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(1024).ToArray();
+
+		byte[] data = GetRandomBytes(1024);
 		await using MemoryStream source = new(data);
 		await using MemoryStream target = new();
 
 		// Act
+
 		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
 
 		// Assert
+
 		target.ToArray().ShouldBe(data);
 		target.Position.ShouldBe(0);
 	}
@@ -114,14 +131,17 @@ public sealed class StreamsTests
 	public async Task WriteStreamToStream_Stream_CopiesData()
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(2048).ToArray();
+
+		byte[] data = GetRandomBytes(2048);
 		await using MemoryStream source = new(data);
 		await using MemoryStream target = new();
 
 		// Act
+
 		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
 
 		// Assert
+
 		target.ToArray().ShouldBe(data);
 		target.Position.ShouldBe(0);
 	}
@@ -130,17 +150,21 @@ public sealed class StreamsTests
 	public async Task WriteStreamToStream_Stream_ResetsSourcePosition()
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(128).ToArray();
+
+		byte[] data = GetRandomBytes(128);
 		await using MemoryStream source = new(data);
 		await using MemoryStream target = new();
 
 		// Move position to end
+
 		source.Position = source.Length;
 
 		// Act
+
 		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
 
 		// Assert
+
 		target.ToArray().ShouldBe(data);
 		target.Position.ShouldBe(0);
 	}
@@ -149,30 +173,36 @@ public sealed class StreamsTests
 	public async Task WriteStreamToStream_Copies_All_Data()
 	{
 		// Arrange
+
 		await using FileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
 		await using MemoryStream target = new();
 		byte[] data = await source.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
 		source.Position = 0;
 
 		// Act
+
 		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
 
 		// Assert
+
 		target.ToArray().ShouldBe(data);
 		target.Position.ShouldBe(0);
 		source.Position.ShouldBe(0); // Source is reset to 0 by the method
+
 	}
 
 	[Fact]
 	public async Task WriteStreamToStream_Respects_CancellationToken()
 	{
 		// Arrange
+
 		await using ControllableFileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
 		await using MemoryStream target = new();
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
 		// Act & Assert
+
 		await Should.ThrowAsync<OperationCanceledException>(async () => await target.WriteStreamToStream(source, cts.Token));
 	}
 
@@ -180,11 +210,13 @@ public sealed class StreamsTests
 	public async Task WriteStreamToStream_Throws_If_Source_Disposed()
 	{
 		// Arrange
+
 		await using ControllableFileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
 		await using MemoryStream target = new();
 		await source.DisposeAsync();
 
 		// Act & Assert
+
 		await Should.ThrowAsync<ObjectDisposedException>(async () => await target.WriteStreamToStream(source));
 	}
 
@@ -192,11 +224,13 @@ public sealed class StreamsTests
 	public async Task WriteStreamToStream_Throws_If_Target_Disposed()
 	{
 		// Arrange
+
 		await using ControllableFileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
 		await using MemoryStream target = new();
 		await target.DisposeAsync();
 
 		// Act & Assert
+
 		await Should.ThrowAsync<InvalidOperationException>(async () => await target.WriteStreamToStream(source));
 	}
 
@@ -204,15 +238,18 @@ public sealed class StreamsTests
 	public async Task WriteStreamToStream_Leaves_Target_At_Position_Zero_And_Flushed()
 	{
 		// Arrange
+
 		await using FileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
 		await using MemoryStream target = new();
 		byte[] data = await source.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
 		source.Position = 0;
 
 		// Act
+
 		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
 
 		// Assert
+
 		target.Position.ShouldBe(0);
 		target.ToArray().ShouldBe(data);
 	}
@@ -221,30 +258,39 @@ public sealed class StreamsTests
 	public async Task WriteStreamToStream_Source_Position_Is_Reset()
 	{
 		// Arrange
+
 		await using FileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
 		await using MemoryStream target = new();
 		byte[] data = await source.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
 		source.Position = 0;
 
 		// Move source position to end
+
 		source.Position = source.Length;
 
 		// Act
+
 		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
 
 		// Assert
+
 		source.Position.ShouldBe(0);
 		target.ToArray().ShouldBe(data);
 	}
 
 	[Theory]
 	[InlineData(false, true, true, true)]  // source: !CanRead
+
 	[InlineData(true, false, true, true)]  // source: !CanSeek
+
 	[InlineData(true, true, false, true)]  // target: !CanSeek
+
 	[InlineData(true, true, true, false)]  // target: !CanWrite
+
 	public async Task WriteStreamToStream_Stream_Throws_On_Invalid_Capabilities(bool sourceCanRead, bool sourceCanSeek, bool targetCanSeek, bool targetCanWrite)
 	{
 		// Arrange
+
 		string tempSource = Path.GetTempFileName();
 		string tempTarget = Path.GetTempFileName();
 		await File.WriteAllBytesAsync(tempSource, new byte[] { 1, 2, 3, 4 }, TestContext.Current.CancellationToken);
@@ -255,6 +301,7 @@ public sealed class StreamsTests
 		Stream target = new ControllableFileStream(tempTarget, FileMode.Open, targetCanWrite ? FileAccess.ReadWrite : FileAccess.Read, FileShare.None, targetCanSeek);
 
 		// Act & Assert
+
 		await Should.ThrowAsync<InvalidOperationException>(async () => await target.WriteStreamToStream(source));
 
 		await source.DisposeAsync();
@@ -264,6 +311,7 @@ public sealed class StreamsTests
 	}
 
 	// Helper for non-seekable stream
+
 	private sealed class ControllableFileStream(string path, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, bool canSeek = true, bool canRead = true) : FileStream(path, fileMode, fileAccess, fileShare)
 	{
 		public override bool CanSeek => canSeek;
@@ -273,6 +321,7 @@ public sealed class StreamsTests
 
 	[Theory]
 	[InlineData(false, true, true, true)]  // source: !CanRead
+
 	[InlineData(true, false, true, true)]  // source: !CanSeek
 	[InlineData(true, true, false, true)]  // target: !CanSeek
 	[InlineData(true, true, true, false)]  // target: !CanWrite
@@ -356,7 +405,7 @@ public sealed class StreamsTests
 		using MemoryStream inner = new();
 		using CountingStream counting = new(inner);
 
-		byte[] buffer = fixture.CreateMany<byte>(100).ToArray();
+		byte[] buffer = GetRandomBytes(100);
 
 		// Act
 		counting.Write(buffer, 0, buffer.Length);
@@ -372,7 +421,7 @@ public sealed class StreamsTests
 		await using MemoryStream inner = new();
 		await using CountingStream counting = new(inner);
 
-		byte[] buffer = fixture.CreateMany<byte>(200).ToArray();
+		byte[] buffer = GetRandomBytes(200);
 
 		// Act
 		await counting.WriteAsync(buffer, CancellationToken.None);
@@ -388,7 +437,7 @@ public sealed class StreamsTests
 		await using MemoryStream inner = new();
 		await using CountingStream counting = new(inner);
 
-		byte[] buffer = fixture.CreateMany<byte>(300).ToArray();
+		byte[] buffer = GetRandomBytes(300);
 
 		// Act
 		await counting.WriteAsync(buffer, CancellationToken.None);
@@ -404,7 +453,7 @@ public sealed class StreamsTests
 		using MemoryStream inner = new();
 		using CountingStream counting = new(inner);
 
-		byte[] buffer = fixture.CreateMany<byte>(50).ToArray();
+		byte[] buffer = GetRandomBytes(50);
 
 		// Act
 		counting.Write(buffer, 0, buffer.Length);
@@ -422,7 +471,7 @@ public sealed class StreamsTests
 	public async Task CountingStream_CopyToAsync_CopiesData()
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(256).ToArray();
+		byte[] data = GetRandomBytes(256);
 		await using MemoryStream inner = new(data);
 		await using CountingStream counting = new(inner);
 		await using MemoryStream dest = new();
@@ -470,7 +519,7 @@ public sealed class StreamsTests
 	public void CountingStream_Seek_DelegatesToInnerStream(long offset, SeekOrigin origin)
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(10).ToArray();
+		byte[] data = GetRandomBytes(10);
 		using MemoryStream innerStream = new(data);
 		using CountingStream countingStream = new(innerStream);
 
@@ -594,7 +643,7 @@ public sealed class StreamsTests
 	public async Task CountingStream_ReadAsync_Memory_ReturnsCorrectData()
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(100).ToArray();
+		byte[] data = GetRandomBytes(100);
 		await using MemoryStream inner = new(data);
 		await using CountingStream counting = new(inner);
 		Memory<byte> buffer = new byte[data.Length];
@@ -628,7 +677,7 @@ public sealed class StreamsTests
 	public async Task CountingStream_WriteAsync_Memory_IncrementsCounter()
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(150).ToArray();
+		byte[] data = GetRandomBytes(150);
 		await using MemoryStream inner = new();
 		await using CountingStream counting = new(inner);
 		ReadOnlyMemory<byte> buffer = data;
@@ -669,7 +718,7 @@ public sealed class StreamsTests
 	public void CountingStream_Position_SetterWorks()
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(100).ToArray();
+		byte[] data = GetRandomBytes(100);
 		using MemoryStream inner = new(data);
 		using CountingStream counting = new(inner);
 
@@ -718,7 +767,7 @@ public sealed class StreamsTests
 	public void CountingStream_Length_ReturnsInnerStreamLength()
 	{
 		// Arrange
-		byte[] data = fixture.CreateMany<byte>(200).ToArray();
+		byte[] data = GetRandomBytes(200);
 		using MemoryStream inner = new(data);
 		using CountingStream counting = new(inner);
 
@@ -753,6 +802,7 @@ public sealed class StreamsTests
 		{
 			await counting.DisposeAsync();
 			await counting.DisposeAsync(); // Should not throw on second dispose
+
 		});
 	}
 }

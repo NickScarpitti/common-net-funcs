@@ -1,21 +1,18 @@
-﻿using AutoFixture;
-using CommonNetFuncs.Compression;
+﻿using CommonNetFuncs.Compression;
 using static CommonNetFuncs.Compression.Streams;
+using static CommonNetFuncs.Core.Random;
 
 namespace Compression.Tests;
 
 public sealed class StreamsTests
 {
-	private readonly Fixture fixture;
-
 	private readonly byte[] smallData;
 	private readonly byte[] largeData;
 
 	public StreamsTests()
 	{
-		fixture = new Fixture();
-		smallData = fixture.CreateMany<byte>(100).ToArray();
-		largeData = fixture.CreateMany<byte>((1024 * 1024) + 177).ToArray();
+		smallData = GetRandomBytes(100);
+		largeData = GetRandomBytes((1024 * 1024) + 177);
 	}
 
 	[Theory]
@@ -229,7 +226,7 @@ public sealed class StreamsTests
 	public async Task Compress_Should_Handle_Medium_Sized_Data(ECompressionType compressionType, int dataSize)
 	{
 		// Arrange - Create medium-sized data to hit the <= 10240 branch in Compress method
-		byte[] mediumData = fixture.CreateMany<byte>(dataSize).ToArray();
+		byte[] mediumData = GetRandomBytes(dataSize);
 
 		// Act
 		byte[] compressedData = await mediumData.Compress(compressionType, cancellationToken: TestContext.Current.CancellationToken);
@@ -655,7 +652,7 @@ public sealed class StreamsTests
 	public void CopyWithLimit_Should_Respect_Cancellation_Token()
 	{
 		// Arrange
-		byte[] reallyLargeData = fixture.CreateMany<byte>(5 * 1024 * 1024).ToArray(); // 5 MB
+		byte[] reallyLargeData = GetRandomBytes(5 * 1024 * 1024); // 5 MB
 		using MemoryStream source = new(reallyLargeData);
 		using MemoryStream destination = new();
 		using CancellationTokenSource cts = new();

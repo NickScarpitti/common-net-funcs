@@ -2,6 +2,7 @@
 using AutoFixture;
 using static CommonNetFuncs.Compression.Files;
 using static CommonNetFuncs.Compression.Streams;
+using static CommonNetFuncs.Core.Random;
 
 namespace Compression.Tests;
 
@@ -19,7 +20,7 @@ public sealed class FilesTests
 	{
 		// Arrange
 		string fileName = fixture.Create<string>();
-		MemoryStream fileStream = new(fixture.CreateMany<byte>(100).ToArray());
+		MemoryStream fileStream = new(GetRandomBytes(100));
 		MemoryStream zipFileStream = new();
 
 		// Act
@@ -37,7 +38,7 @@ public sealed class FilesTests
 	{
 		// Arrange
 		string fileName = fixture.Create<string>();
-		await using MemoryStream fileStream = new(fixture.CreateMany<byte>(100).ToArray());
+		await using MemoryStream fileStream = new(GetRandomBytes(100));
 
 		// Act
 		await using MemoryStream zipFileStream = await (fileStream, fileName).ZipFile(cancellationToken: TestContext.Current.CancellationToken);

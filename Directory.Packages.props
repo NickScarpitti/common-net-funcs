@@ -57,8 +57,8 @@
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.16.17" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
-    <PackageVersion Include="SkiaSharp" Version="4.150.1" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.150.1" />
+    <PackageVersion Include="SkiaSharp" Version="4.151.0" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.151.0" />
     <PackageVersion Include="SkiaSharp.Svg" Version="1.60.0" />
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
     <PackageVersion Include="Svg.Skia" Version="5.1.1" />

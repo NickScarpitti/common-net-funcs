@@ -101,7 +101,7 @@ public static class Random
 	/// </summary>
 	/// <param name="minValue">Min value (inclusive) to return. Must be greater >= 0</param>
 	/// <param name="maxValue">Max value (non-inclusive) to return</param>
-	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <returns>Random number between minValue and maxValue - 1</returns>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if maxValue is less than or equal to 0.</exception>
 	/// <exception cref="ArgumentException">Thrown if minValue is greater than maxValue.</exception>
@@ -146,7 +146,7 @@ public static class Random
 	/// Generate a random integer between 0 and maxValue - 1
 	/// </summary>
 	/// <param name="maxValue">Max value (non-inclusive) to return</param>
-	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <returns>Random number between 0 and maxValue - 1</returns>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if maxValue is less than or equal to 0.</exception>
 	/// <exception cref="ArgumentException">Thrown if minValue is greater than maxValue.</exception>
@@ -171,7 +171,7 @@ public static class Random
 	/// <summary>
 	/// Generate a random integer between 0 and int.MaxValue - 1
 	/// </summary>
-	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <returns>Random number between 0 and int.MaxValue - 1</returns>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if maxValue is less than or equal to 0.</exception>
 	/// <exception cref="ArgumentException">Thrown if minValue is greater than maxValue.</exception>
@@ -230,7 +230,7 @@ public static class Random
 	/// Generate a number of random integers between minValue and maxValue - 1
 	/// </summary>
 	/// <param name="numberToGenerate">The number of random integers to generate.</param>
-	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <param name="minValue">Min value (inclusive) to return in result. Must be greater >= 0</param>
 	/// <param name="maxValue">Max value (non-inclusive) to return in result</param>
 	/// <param name="cancellationToken">The cancellation token for this operation.</param>
@@ -300,6 +300,7 @@ public static class Random
 	/// <summary>
 	/// Generates a random, 15 decimal place double with no whole number component.
 	/// </summary>
+	/// <param name="rnd">Random number generator to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <returns>A random 15 decimal place double with no whole number component.</returns>
 	public static double GetRepeatableRandomDouble(System.Random rnd)
 	{
@@ -325,7 +326,7 @@ public static class Random
 	/// <summary>
 	/// Generates a random double with the desired number of decimal places with no whole number component.
 	/// </summary>
-	/// <param name="rnd">Random number generator to use for repeatable randomization</param>
+	/// <param name="rnd">Random number generator to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <param name="decimalPlaces">Number of decimal places to include in the result (max of 15)</param>
 	/// <returns>A random double with the desired number of decimal places with no whole number component.</returns>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if decimalPlaces is less than or equal to 0.</exception>
@@ -381,7 +382,7 @@ public static class Random
 	/// Generates a number of random doubles with the desired number of decimal places with no whole number component.
 	/// </summary>
 	/// <param name="numberToGenerate">Number of random doubles to generate.</param>
-	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <param name="decimalPlaces">Number of decimal places to include in the results (max of 15)</param>
 	/// <param name="cancellationToken">Cancellation token for this operation.</param>
 	/// <returns>A random double with the desired number of decimal places with no whole number component.</returns>
@@ -453,7 +454,7 @@ public static class Random
 	/// <summary>
 	/// Gets a random decimal 28 decimal places long with no whole number component.
 	/// </summary>
-	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <returns>A random 28 decimal place decimal with no whole number component</returns>
 	public static decimal GetRepeatableRandomDecimal(System.Random rnd)
 	{
@@ -485,7 +486,7 @@ public static class Random
 	/// Gets a random decimal with the specified number of decimal places with no whole number component.
 	/// </summary>
 	/// <param name="decimalPlaces">Number of decimal places to include in the randomly generated number (max of 28)</param>
-	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <returns>Random decimal with the specified number of decimal places with no whole number component.</returns>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if decimalPlaces is less than or equal to 0.</exception>
 	public static decimal GetRepeatableRandomDecimal(int decimalPlaces, System.Random rnd)
@@ -546,7 +547,7 @@ public static class Random
 	/// Gets a number of random decimals with the specified number of decimal places with no whole number component.
 	/// </summary>
 	/// <param name="numberToGenerate">Number of random decimals to generate.</param>
-	/// <param name="rnd">Random number generator to use for repeatable randomization</param>
+	/// <param name="rnd">Random number generator to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <param name="decimalPlaces">Number of decimal places to include in the randomly generated numbers (max of 28)</param>
 	/// <param name="cancellationToken">Cancellation token for this operation.</param>
 	/// <returns>An enumerable of random decimals with the specified number of decimal places with no whole number component.</returns>
@@ -609,7 +610,7 @@ public static class Random
 	/// </summary>
 	/// <typeparam name="T">Type of objects being shuffled.</typeparam>
 	/// <param name="list">List of objects to shuffle.</param>
-	/// <param name="rnd">Random instance to use for repeatable randomization.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <param name="cancellationToken">The cancellation token for this operation.</param>
 	/// <returns>Shuffled list of items.</returns>
 	public static IList<T> RepeatableShuffleListInPlace<T>(this IList<T> list, System.Random rnd, CancellationToken cancellationToken = default)
@@ -713,7 +714,7 @@ public static class Random
 	/// </summary>
 	/// <typeparam name="T">Type of object to return</typeparam>
 	/// <param name="items">Items to select from</param>
-	/// <param name="rnd">Random instance to use for repeatable randomization</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <returns>Randomly selected object</returns>
 	public static T? GetRepeatableRandomElement<T>(this IEnumerable<T> items, System.Random rnd)
 	{
@@ -747,7 +748,7 @@ public static class Random
 	}
 
 	/// <summary>
-	/// Select a random object from a IEnumerable of objects
+	/// Select a random object from a IEnumerable of objects.
 	/// </summary>
 	/// <typeparam name="T">Type of objects being shuffled</typeparam>
 	/// <param name="items">Items to select from</param>
@@ -832,7 +833,7 @@ public static class Random
 	/// </summary>
 	/// <typeparam name="T">Type of objects being shuffled.</typeparam>
 	/// <param name="items">Items to select from.</param>
-	/// <param name="rnd">Random instance to use for repeatable randomization.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <param name="selectQuantity">Maximum number of items to select. If there are fewer unique elements than this value, <paramref name="items"/> is simply shuffled and returned.</param>
 	/// <returns><see cref="IEnumerable{T}"/> of randomly selected objects no larger than <paramref name="selectQuantity"/>.</returns>
 	/// <exception cref="ArgumentException">Throws when selectQuantity is less than 1.</exception>
@@ -972,7 +973,7 @@ public static class Random
 	/// Generates a random string of the indicated length using a range of ASCII characters.
 	/// </summary>
 	/// <param name="maxLength">Upper bound for length of strings to be generated.</param>
-	/// <param name="rng">Random instance to use for repeatable randomization.</param>
+	/// <param name="rng">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <param name="minLength">Lower bound for length of strings to be generated.</param>
 	/// <param name="lowerAsciiBound">First decimal number for an ASCII character (inclusive) to use (max 126).</param>
 	/// <param name="upperAsciiBound">Last decimal number for an ASCII character (inclusive) to use (max 126).</param>
@@ -1087,7 +1088,7 @@ public static class Random
 	/// </summary>
 	/// <param name="numberToGenerate">Number of random strings to be generated.</param>
 	/// <param name="maxLength">Upper bound for length of strings to be generated.</param>
-	/// <param name="rnd">Random instance to use for repeatable randomization.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <param name="minLength">Lower bound for length of strings to be generated.</param>
 	/// <param name="lowerAsciiBound">First decimal number for an ASCII character (inclusive) to use (max 126).</param>
 	/// <param name="upperAsciiBound">Last decimal number for an ASCII character (inclusive) to use (max 126).</param>
@@ -1151,7 +1152,7 @@ public static class Random
 	/// Generates a random string of the indicated length using either a custom character set, or the default of a-z A-Z 1-9.
 	/// </summary>
 	/// <param name="length">Length of the random string to be generated.</param>
-	/// <param name="rnd">Random instance to use for repeatable randomization.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
 	/// <param name="charSet">Characters that are to be used in the generated string.</param>
 	/// <param name="cancellationToken">The cancellation token for this operation.</param>
 	/// <returns>A random string of the given length comprised only of characters in either the default or custom character set</returns>
@@ -1176,4 +1177,59 @@ public static class Random
 
 		return result.ToString();
 	}
+
+	/// <summary>
+	/// Generates a random byte array of the specified length.
+	/// </summary>
+	/// <param name="count">Number of random bytes to generate.</param>
+	/// <returns>A random byte array of the specified length.</returns>
+	public static byte[] GetRandomBytes(int count)
+	{
+		byte[] data = new byte[count];
+		System.Random rnd = new();
+		rnd.NextBytes(data);
+		return data;
+	}
+
+	/// <summary>
+	/// Generates a random byte array of the specified length.
+	/// </summary>
+	/// <param name="count">Number of random bytes to generate.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization.</param>
+	/// <returns>A random byte array of the specified length.</returns>
+	public static byte[] GetRandomBytes(int count, System.Random rnd)
+	{
+		byte[] data = new byte[count];
+		rnd.NextBytes(data);
+		return data;
+	}
+
+	/// <summary>
+	/// Generates a random byte array of the specified length.
+	/// </summary>
+	/// <param name="bytes">Byte array to fill with random bytes.</param>
+	/// <param name="count">Number of random bytes to generate.</param>
+	/// <param name="rnd">Random instance to use for repeatable randomization and / or eliminating the need to create a new <see cref="System.Random"/> instance when being used multiple times.</param>
+	/// <returns>A random byte array of the specified length.</returns>
+	public static byte[] GetRandomBytes(ref byte[] bytes, int count, System.Random rnd)
+	{
+		bytes = new byte[count];
+		rnd.NextBytes(bytes);
+		return bytes;
+	}
+
+	/// <summary>
+	/// Generates a repeatable random byte array of the specified length.
+	/// </summary>
+	/// <typeparam name="T">Type of objects being shuffled</typeparam>
+	/// <typeparam name="TSeed">Type of seed to use for repeatable randomization</typeparam>
+	/// <param name="bytes">Byte array to fill with random bytes</param>
+	/// <param name="seed">Seed to use for repeatable randomization</param>
+	/// <param name="quantity">Number of bytes to generate</param>
+	/// <returns>Randomly generated byte array</returns>
+	public static byte[] GetRepeatableRandomBytes<T, TSeed>(ref byte[] bytes, TSeed seed, int quantity = 1) where TSeed : notnull
+	{
+		return GetRandomBytes(ref bytes, quantity, new(seed.GetHashCode()));
+	}
+
 }

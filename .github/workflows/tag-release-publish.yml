@@ -1,0 +1,260 @@
+name: Release and Publish
+
+# Instead of triggering directly on .csproj changes, this workflow now triggers whenever the "All Tests" workflow finishes running on main.
+# This ensures tagging/release/publish only happens AFTER tests have actually run for that commit.
+# This also fires again on manual re-runs (e.g., "Re-run failed jobs"), which covers the case where tests are flaky and pass on a retry.
+on:
+  workflow_run:
+    workflows: ["All Tests"]
+    types: [completed]
+    branches: [main]
+
+# "contents: write" lets GITHUB_TOKEN push tags and create Releases.
+# "actions: read" lets us query the Jobs API to check per-project test results.
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  # ===========================================================
+  # JOB 1: Tag new versions + generate changelog + GH Release
+  # ===========================================================
+  release:
+    runs-on: ubuntu-latest
+    # Don't bother running any of this if the test workflow run was cancelled outright
+    if: github.event.workflow_run.conclusion != 'cancelled'
+    outputs:
+      created_tags: ${{ steps.tag.outputs.created_tags }}
+    steps:
+      # Checkout the EXACT commit that the test workflow ran against, not just whatever "main" currently points to (they could differ if more commits landed in between).
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      # Set up a bot identity so commits/tags made by Actions are attributed properly
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # NEW: Pull the individual job results (per test-suite matrix entry) from the triggering "All Tests" run.
+      # filter=latest ensures we get the result of the MOST RECENT attempt for each job, so manual re-runs are respected.
+      - name: Fetch per-project test results
+        id: test-results
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID=${{ github.event.workflow_run.id }}
+          echo "Fetching job results for All Tests run $RUN_ID"
+
+          curl -s -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/jobs?filter=latest&per_page=100" \
+            > jobs.json
+
+          # Build a simple "job-name|conclusion" lookup file, e.g.:
+          #   test (Core.Tests)|success
+          #   test (Csv.Tests)|failure
+          jq -r '.jobs[] | "\(.name)|\(.conclusion)"' jobs.json > test_results.txt
+
+          echo "DEBUG: Test job results:"
+          cat test_results.txt
+
+      - name: Tag projects & build changelogs
+        id: tag
+        run: |
+          set -e
+          CREATED_TAGS=""
+
+          # Loop through every CommonNetFuncs.*.csproj file in the repo, skipping build output folders (bin/obj)
+          for csproj in $(find . -type f -name "CommonNetFuncs.*.csproj" -not -path "*/bin/*" -not -path "*/obj/*"); do
+
+            # --- Extract project name from filename ---
+            # e.g. "CommonNetFuncs.Excel.ClosedXml.csproj" -> "Excel.ClosedXml"
+            filename=$(basename "$csproj" .csproj)
+            project_name=${filename#CommonNetFuncs.}
+            project_name_lower=$(echo "$project_name" | tr '[:upper:]' '[:lower:]')
+            project_dir=$(dirname "$csproj")
+
+            echo "=========================================="
+            echo "Checking project file: $csproj"
+
+            # --- Check this project's own test result before doing anything else ---
+            # Job display names look like "test (Core.Tests)" - matches the matrix value used in all-tests.yml, which is derived from the *.Tests folder name.
+            expected_job="test (${project_name}.Tests)"
+            test_result=$(grep -F "${expected_job}|" test_results.txt | cut -d'|' -f2 || true)
+
+            if [ -z "$test_result" ]; then
+              echo "WARNING: No matching test job found for '$expected_job'. Proceeding without test gating for $project_name."
+            elif [ "$test_result" != "success" ]; then
+              echo "SKIPPING $project_name: tests did not pass (status: $test_result)"
+              continue
+            else
+              echo "Tests passed for $project_name, continuing..."
+            fi
+
+            # --- Read the <Version>x.x.x</Version> value out of the csproj ---
+            version=$(grep -oP '(?<=<Version>)[^<]+' "$csproj" | head -1)
+            if [ -z "$version" ]; then
+              echo "ERROR: Could not find version in project file: $csproj"
+              echo "Continuing to next project..."
+              continue
+            fi
+            echo "DEBUG: Found version: $version"
+
+            # --- Build the two tag names for this project ---
+            # 1) Project-scoped tag, e.g. "core-3.0.6" (matches existing convention)
+            # 2) Bare version tag, e.g. "3.0.6"
+            project_tag="${project_name_lower}-${version}"
+            bare_tag="${version}"
+
+            # --- Check if the project-scoped tag already exists ---
+            if git rev-parse "$project_tag" >/dev/null 2>&1; then
+              echo "Tag $project_tag already exists, skipping..."
+              continue
+            fi
+
+            # --- Create and push the project-scoped tag ---
+            echo "Tagging $project_name version $version"
+            git tag "$project_tag"
+            git push origin "$project_tag"
+            echo "SUCCESS: Created tag $project_tag"
+
+            # --- Create and push the bare version tag (e.g. "3.0.6") ---
+            # NOTE: Bare version tags are shared across ALL projects, so if two projects are on the same version number, only the FIRST one processed will "claim" the bare tag.
+            #This just skips duplicates instead of failing the whole workflow.
+            if git rev-parse "$bare_tag" >/dev/null 2>&1; then
+              echo "WARNING: Bare version tag $bare_tag already exists (likely from another project). Skipping bare tag for $project_name."
+            else
+              git tag "$bare_tag"
+              git push origin "$bare_tag"
+              echo "SUCCESS: Created tag $bare_tag"
+            fi
+
+            # --- Generate a changelog scoped to just this project's folder ---
+            prev_tag=$(git tag --list "${project_name_lower}-*" --sort=-creatordate | grep -v "^${project_tag}$" | head -1)
+
+            echo "Generating changelog for $project_name ($prev_tag -> $project_tag)"
+            if [ -n "$prev_tag" ]; then
+              log=$(git log "${prev_tag}..${project_tag}" --pretty=format:"- %s (%h)" -- "$project_dir")
+            else
+              log=$(git log "${project_tag}" --pretty=format:"- %s (%h)" -- "$project_dir")
+            fi
+
+            [ -z "$log" ] && log="No documented changes."
+            echo "$log" > "release_notes_${project_tag}.md"
+
+            # Track which project tags were created so the next step
+            # knows which ones need a GitHub Release
+            CREATED_TAGS="${CREATED_TAGS}${project_tag}|"
+            echo "Completed $project_name"
+          done
+
+          echo "created_tags=$CREATED_TAGS" >> "$GITHUB_OUTPUT"
+
+      # --- Create a GitHub Release for each newly created project tag ---
+      - name: Create GitHub Releases
+        run: |
+          IFS='|' read -ra TAGS <<< "${{ steps.tag.outputs.created_tags }}"
+          for tag_name in "${TAGS[@]}"; do
+            [ -z "$tag_name" ] && continue
+            echo "Creating release for $tag_name"
+            gh release create "$tag_name" \
+              --title "$tag_name" \
+              --notes-file "release_notes_${tag_name}.md"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ===========================================================
+  # JOB 2: Build, pack & publish updated packages to NuGet.org
+  # ===========================================================
+  publish-nuget:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x" # adjust to match your project's target SDK
+
+      # NEW: Re-fetch the same per-project test results here too, since this is a separate job/runner and doesn't have access to files from the "release" job.
+      - name: Fetch per-project test results
+        id: test-results
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID=${{ github.event.workflow_run.id }}
+          curl -s -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/jobs?filter=latest&per_page=100" \
+            > jobs.json
+
+          jq -r '.jobs[] | "\(.name)|\(.conclusion)"' jobs.json > test_results.txt
+          cat test_results.txt
+
+      - name: Build, pack & publish changed packages
+        run: |
+          set -e
+
+          for csproj in $(find . -type f -name "CommonNetFuncs.*.csproj" -not -path "*/bin/*" -not -path "*/obj/*"); do
+            filename=$(basename "$csproj" .csproj)
+            project_name=${filename#CommonNetFuncs.}
+            project_dir=$(dirname "$csproj")
+
+            echo "=========================================="
+            echo "Processing CommonNetFuncs.$project_name..."
+
+            # --- Check this project's own test result before building/publishing ---
+            expected_job="test (${project_name}.Tests)"
+            test_result=$(grep -F "${expected_job}|" test_results.txt | cut -d'|' -f2 || true)
+
+            if [ -z "$test_result" ]; then
+              echo "WARNING: No matching test job found for '$expected_job'. Proceeding without test gating."
+            elif [ "$test_result" != "success" ]; then
+              echo "SKIPPING $project_name: tests did not pass (status: $test_result)"
+              continue
+            fi
+
+            # --- Get the version currently defined in the .csproj ---
+            project_version=$(grep -oP '(?<=<Version>)[^<]+' "$csproj" | head -1)
+            echo "- Project version: $project_version"
+
+            # --- Query NuGet.org's API for the currently published version ---
+            package_name_lower=$(echo "CommonNetFuncs.$project_name" | tr '[:upper:]' '[:lower:]')
+            nuget_url="https://api.nuget.org/v3/registration5-gz-semver2/${package_name_lower}/index.json"
+
+            nuget_version=$(curl -s "$nuget_url" | jq -r '.items[-1].upper // "0.0.0"' 2>/dev/null || echo "0.0.0")
+            [ -z "$nuget_version" ] && nuget_version="0.0.0"
+            echo "- NuGet version: $nuget_version"
+
+            # --- Skip if the project version matches what's already published ---
+            if [ "$project_version" = "$nuget_version" ]; then
+              echo "- SKIPPING: Package is already up to date on NuGet.org"
+              continue
+            fi
+
+            # --- Version differs: clean, build, pack, and push the new package ---
+            echo "- Building and publishing new version..."
+            rm -f "$project_dir"/bin/Release/*.nupkg
+            rm -f "$project_dir"/bin/Release/*.snupkg
+
+            dotnet clean "$csproj" -c Release -v q
+            dotnet build "$csproj" -c Release
+            dotnet pack "$csproj" -c Release /p:ContinuousIntegrationBuild=true
+
+            dotnet nuget push "$project_dir/bin/Release/*.nupkg" \
+              -k "${{ secrets.NUGET_API_KEY }}" \
+              -s https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
+
+          echo "=========================================="
+          echo "All packages processed."

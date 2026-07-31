@@ -1352,7 +1352,7 @@ public sealed class PdfConversionTests //: IDisposable
 	/// </summary>
 	private static string FakeFailingExecutable =>
 		RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-			? "where.exe"   // Windows: where.exe exits non-zero when the LibreOffice args are unrecognised patterns
+			? "where.exe"   // Windows: where.exe exits non-zero when the LibreOffice args are unrecognized patterns
 			: "/bin/false"; // Unix: always exits with code 1, ignores all arguments
 
 	[Fact]

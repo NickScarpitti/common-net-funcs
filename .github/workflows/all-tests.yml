@@ -13,35 +13,148 @@ on:
     branches: ["main"]
 
 jobs:
-  # NEW: Dynamically discovers every "*.Tests" project folder instead of a hardcoded list.
-  # Any new CommonNetFuncs.*.Tests project you add will automatically be picked up here
-  # without needing to edit this file.
+  # Discovers every "*.Tests" project folder AND determines which of them need to run,
+  # using TRUE dependency-graph awareness: it parses each project's <ProjectReference>
+  # entries to figure out what depends on what, then - starting from whatever projects
+  # actually changed - walks UP the dependency chain to flag every project (and
+  # therefore every test suite) that could be affected, even transitively.
   discover-tests:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      all-projects: ${{ steps.set-matrix.outputs.all-projects }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need full history to diff against the base commit
 
-      - name: Discover test projects
+      - name: Determine changed test suites (dependency-aware)
         id: set-matrix
         shell: bash
         run: |
-          # Find every top-level folder ending in ".Tests"
-          projects=$(find . -maxdepth 1 -type d -name "*.Tests" -printf "%f\n" | sort)
+          set -e
 
-          if [ -z "$projects" ]; then
-            echo "ERROR: No test projects found!"
-            exit 1
+          # --- Record every test suite that exists, for carryforward/coverage purposes ---
+          all_projects=$(find . -maxdepth 1 -type d -name "*.Tests" -printf "%f\n" | sort)
+          all_json=$(printf '%s\n' "$all_projects" | jq -R . | jq -sc .)
+          echo "all-projects=$all_json" >> "$GITHUB_OUTPUT"
+          echo "All known test suites: $all_json"
+
+          # --- Figure out the correct base/head SHAs to diff against ---
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+            if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+              BASE_SHA=""
+            fi
           fi
 
-          # Convert the newline-separated list into a JSON array for use as a matrix
-          json=$(printf '%s\n' "$projects" | jq -R . | jq -sc .)
-          echo "Discovered test projects: $json"
-          echo "matrix=$json" >> "$GITHUB_OUTPUT"
+          if [ -z "$BASE_SHA" ]; then
+            echo "No base commit available (new branch) - running ALL test suites."
+            echo "matrix=$all_json" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          changed_files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          echo "Changed files since $BASE_SHA:"
+          echo "$changed_files"
+
+          # --- Safety net: shared/global files affect everything, no need to graph it ---
+          if echo "$changed_files" | grep -qE '^\.github/workflows/all-tests\.yml$|Directory\.Build\.props$|\.sln$'; then
+            echo "Global/shared file changed - running ALL test suites."
+            echo "matrix=$all_json" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # =========================================================
+          # STEP 1: Build the dependency graph from every *.csproj file.
+          # ASSUMPTION: each project's csproj filename matches its folder name exactly (true for this repo, e.g. "Core.Tests/Core.Tests.csproj" and "CommonNetFuncs.Core/CommonNetFuncs.Core.csproj").
+          # =========================================================
+          declare -A dependents   # dependents[X] = space-separated list of nodes that depend ON X
+
+          all_nodes=()
+          for dir in */ ; do
+            dir="${dir%/}"
+            csproj="./$dir/$dir.csproj"
+            [ -f "$csproj" ] || continue
+            all_nodes+=("$dir")
+          done
+          echo "Discovered ${#all_nodes[@]} total projects (source + test) with csproj files."
+
+          for node in "${all_nodes[@]}"; do
+            csproj="./$node/$node.csproj"
+
+            # Pull out every ProjectReference path, e.g. "..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj"
+            refs_raw=$(grep -oP '(?<=Include=")[^"]+\.csproj(?=")' "$csproj" 2>/dev/null || true)
+
+            while IFS= read -r ref_path; do
+              [ -z "$ref_path" ] && continue
+              ref_path_unix=$(echo "$ref_path" | tr '\\' '/')
+              ref_name=$(basename "$ref_path_unix" .csproj)
+
+              # "$node" depends on "$ref_name" -> record $node as a DEPENDENT of $ref_name
+              dependents["$ref_name"]="${dependents[$ref_name]:-} $node"
+            done <<< "$refs_raw"
+          done
+
+          # =========================================================
+          # STEP 2: Seed the affected set with whatever projects had direct file changes (matched purely by top-level folder name).
+          # =========================================================
+          declare -A affected
+          queue=()
+
+          for node in "${all_nodes[@]}"; do
+            if echo "$changed_files" | grep -qE "^${node}/"; then
+              if [ -z "${affected[$node]:-}" ]; then
+                echo "Direct change detected in: $node"
+                affected["$node"]=1
+                queue+=("$node")
+              fi
+            fi
+          done
+
+          # =========================================================
+          # STEP 3: BFS outward through the reverse (dependents) graph so anything that depends on a changed project (directly or through a chain of references) also gets flagged as affected.
+          # =========================================================
+          while [ ${#queue[@]} -gt 0 ]; do
+            current="${queue[0]}"
+            queue=("${queue[@]:1}")
+
+            for dep in ${dependents[$current]:-}; do
+              if [ -z "${affected[$dep]:-}" ]; then
+                echo "Cascading change: $dep depends on $current"
+                affected["$dep"]=1
+                queue+=("$dep")
+              fi
+            done
+          done
+
+          # =========================================================
+          # STEP 4: Extract just the ".Tests" nodes from the affected set -
+          # these are the actual matrix entries to run.
+          # =========================================================
+          selected=()
+          for node in "${!affected[@]}"; do
+            case "$node" in
+              *.Tests) selected+=("$node") ;;
+            esac
+          done
+
+          if [ ${#selected[@]} -eq 0 ]; then
+            echo "No relevant project changes detected - skipping all test suites."
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+          else
+            matrix_json=$(printf '%s\n' "${selected[@]}" | sort -u | jq -R . | jq -sc .)
+            echo "Running tests for (including cascaded dependents): $(printf '%s ' "${selected[@]}")"
+            echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
+          fi
 
   test:
     needs: discover-tests
+    if: needs.discover-tests.outputs.matrix != '[]'
     runs-on: ubuntu-latest
     container:
       image: zeshue/aspnet9-jammy-ffmpeg:1.0.2
@@ -52,7 +165,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # CHANGED: values now come from discover-tests instead of a hardcoded list
         test-suite: ${{ fromJson(needs.discover-tests.outputs.matrix) }}
 
     steps:
@@ -152,7 +264,7 @@ jobs:
           allow-empty: true
 
   finish:
-    needs: test
+    needs: [discover-tests, test]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
@@ -161,6 +273,8 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
+          carryforward: ${{ join(fromJson(needs.discover-tests.outputs.all-projects), ',') }} # Prevents Coveralls issues with unsubmitted coverage reports when some test suites were skipped due to no changes
+
 
 # # This workflow will build a .NET project
 # # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
@@ -177,7 +291,35 @@ jobs:
 #     branches: ["main"]
 
 # jobs:
+#   # NEW: Dynamically discovers every "*.Tests" project folder instead of a hardcoded list.
+#   # Any new CommonNetFuncs.*.Tests project you add will automatically be picked up here
+#   # without needing to edit this file.
+#   discover-tests:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       matrix: ${{ steps.set-matrix.outputs.matrix }}
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Discover test projects
+#         id: set-matrix
+#         shell: bash
+#         run: |
+#           # Find every top-level folder ending in ".Tests"
+#           projects=$(find . -maxdepth 1 -type d -name "*.Tests" -printf "%f\n" | sort)
+
+#           if [ -z "$projects" ]; then
+#             echo "ERROR: No test projects found!"
+#             exit 1
+#           fi
+
+#           # Convert the newline-separated list into a JSON array for use as a matrix
+#           json=$(printf '%s\n' "$projects" | jq -R . | jq -sc .)
+#           echo "Discovered test projects: $json"
+#           echo "matrix=$json" >> "$GITHUB_OUTPUT"
+
 #   test:
+#     needs: discover-tests
 #     runs-on: ubuntu-latest
 #     container:
 #       image: zeshue/aspnet9-jammy-ffmpeg:1.0.2
@@ -188,34 +330,8 @@ jobs:
 #     strategy:
 #       fail-fast: false
 #       matrix:
-#         test-suite:
-#           - Compression.Tests
-#           - Core.Tests
-#           - Csv.Tests
-#           - DeepClone.Tests
-#           - EFCore.Tests
-#           - Email.Tests
-#           - Excel.ClosedXml.Tests
-#           - Excel.Npoi.Tests
-#           - Excel.OpenXml.Tests
-#           - FastMap.Tests
-#           - Ffmpeg.Tests
-#           - Hangfire.Tests
-#           - Images.Tests
-#           - Office.Common.Tests
-#           - ReinforcedTypings.Tests
-#           - Sql.Common.Tests
-#           - SubsetModelBinder.Attribute.Tests
-#           - SubsetModelBinder.Generator.Tests
-#           - Web.Api.Tests
-#           - Web.Aws.S3.Tests
-#           - Web.Common.Tests
-#           - Web.Ftp.Tests
-#           - Web.Interface.Tests
-#           - Web.Jwt.Tests
-#           - Web.Middleware.Tests
-#           - Web.Requests.Tests
-#           - Word.OpenXml.Tests
+#         # CHANGED: values now come from discover-tests instead of a hardcoded list
+#         test-suite: ${{ fromJson(needs.discover-tests.outputs.matrix) }}
 
 #     steps:
 #       - uses: actions/checkout@v4
@@ -285,8 +401,6 @@ jobs:
 #           fi
 #         shell: bash
 
-#       # Each TFM is tested in its own step (instead of one combined `dotnet test`) so both frameworks are
-#       # guaranteed to actually run in CI and each gets its own coverage output to merge afterwards.
 #       - name: Test (net10.0)
 #         run: dotnet test -f net10.0 --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage/net10.0 -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/*.g.cs;**/*.generated.cs;**/*.designer.cs;**/obj/**;**/bin/**" DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[${{ steps.derive-project.outputs.project-name }}]*"
 #         working-directory: ./${{ matrix.test-suite }}
@@ -296,8 +410,6 @@ jobs:
 #         run: dotnet test -f net8.0 --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage/net8.0 -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/*.g.cs;**/*.generated.cs;**/*.designer.cs;**/obj/**;**/bin/**" DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[${{ steps.derive-project.outputs.project-name }}]*"
 #         working-directory: ./${{ matrix.test-suite }}
 
-#       # Combines the net10.0 (and, where applicable, net8.0) cobertura reports into a single accurate report
-#       # per project, instead of only uploading whichever single file a glob happened to match.
 #       - name: Merge Coverage Reports
 #         if: always()
 #         continue-on-error: true

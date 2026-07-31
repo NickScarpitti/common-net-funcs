@@ -572,6 +572,8 @@ public sealed class CopyTests
 		// Arrange
 		Copy.CopyCacheManager.SetUseLimitedCache(true);
 		Copy.CopyCacheManager.SetLimitedCacheSize(10);
+		Copy.CopyCacheManager.ClearAllCaches();
+		Copy.CopyCacheTypedManager.ClearAllCaches(); // Also clear the typed shortcut cache, or a stale entry from another test short-circuits GetOrCreatePropertyMaps before it touches CopyCacheManager
 		SourceClass source = new() { Id = 42, Name = "CacheTest" };
 		DestinationClass dest = new();
 

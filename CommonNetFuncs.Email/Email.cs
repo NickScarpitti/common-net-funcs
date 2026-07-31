@@ -533,6 +533,7 @@ public static class Email
 							logger.Error(ex, "{ErrorLocation} Error\nFailed to send email.\nSMTP Server: {SmtpServer} | SMTP Port: {SmtpPort} | SMTP User: {SmtpUser}\n\tConfiguration: {ConfigText}", ex.GetLocationOfException(),
 								sendEmailConfig.SmtpSettings.SmtpServer, sendEmailConfig.SmtpSettings.SmtpPort, sendEmailConfig.SmtpSettings.SmtpUser, configText);
 							success = false; //Sets success to false when the email send fails on the last attempt
+							break; //No need to delay after the final failed attempt
 						}
 					}
 					await Task.Delay(500, cancellationToken).ConfigureAwait(false);

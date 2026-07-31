@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Xabe.FFmpeg;
 
 namespace Ffmpeg.Tests;

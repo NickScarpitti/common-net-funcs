@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using CommonNetFuncs.Ffmpeg;
 using CommonNetFuncs.Ffmpeg.FfmpegRawCalls;

@@ -1,4 +1,4 @@
-using CommonNetFuncs.Ffmpeg;
+﻿using CommonNetFuncs.Ffmpeg;
 using CommonNetFuncs.Ffmpeg.FfmpegRawCalls;
 using Xabe.FFmpeg;
 using xRetry.v3;

@@ -34,7 +34,7 @@
 		<RootNamespace>CommonNetFuncs.SubsetModelBinder</RootNamespace>
 		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 
-		<Configurations>Debug;Release;ReducedBuild</Configurations>
+		<Configurations>Debug;Release;ReducedBuild;no-tests</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -46,6 +46,7 @@
 		<!-- Optional: Detect breaking changes from a previous stable version -->
 		<PackageValidationBaselineVersion>4.0.0</PackageValidationBaselineVersion>
 		<EnablePackageValidation>true</EnablePackageValidation>
+		<ApiCompatGenerateSuppressionFile>true</ApiCompatGenerateSuppressionFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -23,7 +23,7 @@
 		</Description>
 		<PackageTags>dotnet;helpers;web;asp.net;asp.net core;mvc;middleware</PackageTags>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Configurations>Debug;Release;ReducedBuild</Configurations>
+		<Configurations>Debug;Release;ReducedBuild;no-tests</Configurations>
 		<UserSecretsId>b731a0f3-93ee-424e-ae47-58ba663427cd</UserSecretsId>
 	</PropertyGroup>
 
@@ -35,6 +35,7 @@
 		<MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
 		<PackageValidationBaselineVersion>4.0.0</PackageValidationBaselineVersion>
 		<EnablePackageValidation>true</EnablePackageValidation>
+		<ApiCompatGenerateSuppressionFile>true</ApiCompatGenerateSuppressionFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<OutputType>Exe</OutputType>
@@ -6,6 +6,7 @@
 		<Nullable>enable</Nullable>
 		<!-- Suppress CS0436 warnings from MessagePack source generators -->
 		<NoWarn>$(NoWarn);CS0436</NoWarn>
+		<Configurations>Debug;Release;no-tests</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>

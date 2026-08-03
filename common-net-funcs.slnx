@@ -1,5 +1,8 @@
 <Solution>
 	<Configurations>
+		<BuildType Name="Debug" />
+		<BuildType Name="no-tests" />
+		<BuildType Name="Release" />
 		<Platform Name="Any CPU" />
 		<Platform Name="x64" />
 		<Platform Name="x86" />
@@ -8,77 +11,308 @@
 		<File Path=".editorconfig" />
 	</Folder>
 	<Folder Name="/Solution Items/Tests/">
-		<Project Path="Compression.Tests/Compression.Tests.csproj" />
-		<Project Path="Core.Tests/Core.Tests.csproj" />
-		<Project Path="Csv.Tests/Csv.Tests.csproj" />
-		<Project Path="DeepClone.Tests/DeepClone.Tests.csproj" />
-		<Project Path="EFCore.Tests/EFCore.Tests.csproj" />
-		<Project Path="Email.Tests/Email.Tests.csproj" />
-		<Project Path="Excel.ClosedXml.Tests/Excel.ClosedXml.Tests.csproj" />
-		<Project Path="Excel.Npoi.Tests/Excel.Npoi.Tests.csproj" />
-		<Project Path="Excel.OpenXml.Tests/Excel.OpenXml.Tests.csproj" />
-		<Project Path="FastMap.Tests/FastMap.Tests.csproj" />
-		<Project Path="Ffmpeg.Tests/Ffmpeg.Tests.csproj" />
-		<Project Path="Hangfire.Tests/Hangfire.Tests.csproj" />
-		<Project Path="Images.Tests/Images.Tests.csproj" />
-		<Project Path="Office.Common.Tests/Office.Common.Tests.csproj" />
-		<Project Path="ReinforcedTypings.Tests/ReinforcedTypings.Tests.csproj" />
-		<Project Path="Sql.Common.Tests/Sql.Common.Tests.csproj" />
-		<Project Path="SubsetModelBinder.Attribute.Tests/SubsetModelBinder.Attribute.Tests.csproj" />
-		<Project Path="SubsetModelBinder.Generator.Tests/SubsetModelBinder.Generator.Tests.csproj" />
-		<Project Path="Web.Api.Tests/Web.Api.Tests.csproj" />
-		<Project Path="Web.Aws.S3.Tests/Web.Aws.S3.Tests.csproj" />
-		<Project Path="Web.Common.Tests/Web.Common.Tests.csproj" />
-		<Project Path="Web.Ftp.Tests/Web.Ftp.Tests.csproj" />
-		<Project Path="Web.Interface.Tests/Web.Interface.Tests.csproj" />
-		<Project Path="Web.Jwt.Tests/Web.Jwt.Tests.csproj" />
-		<Project Path="Web.Middleware.Tests/Web.Middleware.Tests.csproj" />
-		<Project Path="Web.Requests.Tests/Web.Requests.Tests.csproj" />
-		<Project Path="Word.OpenXml.Tests/Word.OpenXml.Tests.csproj" />
+		<Project Path="Compression.Tests/Compression.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Core.Tests/Core.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Csv.Tests/Csv.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="DeepClone.Tests/DeepClone.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="EFCore.Tests/EFCore.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Email.Tests/Email.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Excel.ClosedXml.Tests/Excel.ClosedXml.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Excel.Npoi.Tests/Excel.Npoi.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Excel.OpenXml.Tests/Excel.OpenXml.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="FastMap.Tests/FastMap.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Ffmpeg.Tests/Ffmpeg.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Hangfire.Tests/Hangfire.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Images.Tests/Images.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Office.Common.Tests/Office.Common.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="ReinforcedTypings.Tests/ReinforcedTypings.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Sql.Common.Tests/Sql.Common.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="SubsetModelBinder.Attribute.Tests/SubsetModelBinder.Attribute.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="SubsetModelBinder.Generator.Tests/SubsetModelBinder.Generator.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Web.Api.Tests/Web.Api.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Web.Aws.S3.Tests/Web.Aws.S3.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Web.Common.Tests/Web.Common.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Web.Ftp.Tests/Web.Ftp.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Web.Interface.Tests/Web.Interface.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Web.Jwt.Tests/Web.Jwt.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Web.Middleware.Tests/Web.Middleware.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Web.Requests.Tests/Web.Requests.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
+		<Project Path="Word.OpenXml.Tests/Word.OpenXml.Tests.csproj">
+			<BuildType Solution="no-tests|*" Project="Release" />
+			<Build Solution="no-tests|Any CPU" Project="false" />
+		</Project>
 	</Folder>
-	<Project Path="BenchmarkSuite/BenchmarkSuite.csproj" />
-	<Project Path="CommonNetFuncs.Compression/CommonNetFuncs.Compression.csproj" />
-	<Project Path="CommonNetFuncs.Core/CommonNetFuncs.Core.csproj" />
-	<Project Path="CommonNetFuncs.Csv/CommonNetFuncs.Csv.csproj" />
-	<Project Path="CommonNetFuncs.DeepClone/CommonNetFuncs.DeepClone.csproj" />
-	<Project Path="CommonNetFuncs.EFCore/CommonNetFuncs.EFCore.csproj" />
-	<Project Path="CommonNetFuncs.Email/CommonNetFuncs.Email.csproj" />
-	<Project Path="CommonNetFuncs.Excel.ClosedXml/CommonNetFuncs.Excel.ClosedXml.csproj" />
-	<Project Path="CommonNetFuncs.Excel.Common/CommonNetFuncs.Excel.Common.csproj" />
-	<Project Path="CommonNetFuncs.Excel.Npoi/CommonNetFuncs.Excel.Npoi.csproj" />
+	<Project Path="BenchmarkSuite/BenchmarkSuite.csproj">
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+		<Build Solution="no-tests|Any CPU" Project="false" />
+	</Project>
+	<Project Path="CommonNetFuncs.Compression/CommonNetFuncs.Compression.csproj">
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Core/CommonNetFuncs.Core.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Csv/CommonNetFuncs.Csv.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.DeepClone/CommonNetFuncs.DeepClone.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.EFCore/CommonNetFuncs.EFCore.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Email/CommonNetFuncs.Email.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Excel.ClosedXml/CommonNetFuncs.Excel.ClosedXml.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Excel.Common/CommonNetFuncs.Excel.Common.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Excel.Npoi/CommonNetFuncs.Excel.Npoi.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
 	<Project Path="CommonNetFuncs.Excel.OpenXml/CommonNetFuncs.Excel.OpenXml.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
 		<Platform Solution="*|x64" Project="x64" />
 		<Platform Solution="*|x86" Project="x86" />
 	</Project>
-	<Project Path="CommonNetFuncs.FastMap/CommonNetFuncs.FastMap.csproj" />
-	<Project Path="CommonNetFuncs.Ffmpeg/CommonNetFuncs.Ffmpeg.csproj" />
-	<Project Path="CommonNetFuncs.Hangfire/CommonNetFuncs.Hangfire.csproj" />
-	<Project Path="CommonNetFuncs.Images/CommonNetFuncs.Images.csproj" />
-	<Project Path="CommonNetFuncs.Office.Common/CommonNetFuncs.Office.Common.csproj" />
-	<Project Path="CommonNetFuncs.ReinforcedTypings/CommonNetFuncs.ReinforcedTypings.csproj" />
-	<Project Path="CommonNetFuncs.Sql.Common/CommonNetFuncs.Sql.Common.csproj" />
-	<Project Path="CommonNetFuncs.Sql.Odbc/CommonNetFuncs.Sql.Odbc.csproj" />
-	<Project Path="CommonNetFuncs.Sql.PostgreSql/CommonNetFuncs.Sql.PostgreSql.csproj" />
-	<Project Path="CommonNetFuncs.Sql.SqlServer/CommonNetFuncs.Sql.SqlServer.csproj" />
+	<Project Path="CommonNetFuncs.FastMap/CommonNetFuncs.FastMap.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Ffmpeg/CommonNetFuncs.Ffmpeg.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Hangfire/CommonNetFuncs.Hangfire.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Images/CommonNetFuncs.Images.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Office.Common/CommonNetFuncs.Office.Common.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.ReinforcedTypings/CommonNetFuncs.ReinforcedTypings.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Sql.Common/CommonNetFuncs.Sql.Common.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Sql.Odbc/CommonNetFuncs.Sql.Odbc.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Sql.PostgreSql/CommonNetFuncs.Sql.PostgreSql.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Sql.SqlServer/CommonNetFuncs.Sql.SqlServer.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
 	<Project Path="CommonNetFuncs.SubsetModelBinder.Attribute/CommonNetFuncs.SubsetModelBinder.Attribute.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
 		<Platform Solution="*|x64" Project="x64" />
 		<Platform Solution="*|x86" Project="x86" />
 	</Project>
 	<Project Path="CommonNetFuncs.SubsetModelBinder.Generator/CommonNetFuncs.SubsetModelBinder.Generator.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
 		<Platform Solution="*|x64" Project="x64" />
 		<Platform Solution="*|x86" Project="x86" />
 	</Project>
 	<Project Path="CommonNetFuncs.SubsetModelBinder/CommonNetFuncs.SubsetModelBinder.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
 		<Platform Solution="*|x64" Project="x64" />
 		<Platform Solution="*|x86" Project="x86" />
 	</Project>
-	<Project Path="CommonNetFuncs.Web.Api/CommonNetFuncs.Web.Api.csproj" />
-	<Project Path="CommonNetFuncs.Web.Aws.S3/CommonNetFuncs.Web.Aws.S3.csproj" />
-	<Project Path="CommonNetFuncs.Web.Common/CommonNetFuncs.Web.Common.csproj" />
-	<Project Path="CommonNetFuncs.Web.Ftp/CommonNetFuncs.Web.Ftp.csproj" />
-	<Project Path="CommonNetFuncs.Web.Interface/CommonNetFuncs.Web.Interface.csproj" />
-	<Project Path="CommonNetFuncs.Web.Jwt/CommonNetFuncs.Web.Jwt.csproj" />
-	<Project Path="CommonNetFuncs.Web.Middleware/CommonNetFuncs.Web.Middleware.csproj" />
-	<Project Path="CommonNetFuncs.Web.Requests/CommonNetFuncs.Web.Requests.csproj" />
-	<Project Path="CommonNetFuncs.Word.OpenXml/CommonNetFuncs.Word.OpenXml.csproj" />
+	<Project Path="CommonNetFuncs.Web.Api/CommonNetFuncs.Web.Api.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Web.Aws.S3/CommonNetFuncs.Web.Aws.S3.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Web.Common/CommonNetFuncs.Web.Common.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Web.Ftp/CommonNetFuncs.Web.Ftp.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Web.Interface/CommonNetFuncs.Web.Interface.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Web.Jwt/CommonNetFuncs.Web.Jwt.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Web.Middleware/CommonNetFuncs.Web.Middleware.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Web.Requests/CommonNetFuncs.Web.Requests.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
+	<Project Path="CommonNetFuncs.Word.OpenXml/CommonNetFuncs.Word.OpenXml.csproj">
+		<BuildType Solution="no-tests|x64" Project="ReducedBuild" />
+		<BuildType Solution="no-tests|x86" Project="ReducedBuild" />
+		<Platform Solution="no-tests|x64" Project="x64" />
+		<Platform Solution="no-tests|x86" Project="x86" />
+	</Project>
 </Solution>

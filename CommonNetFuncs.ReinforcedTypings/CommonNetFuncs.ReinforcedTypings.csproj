@@ -24,7 +24,7 @@
 		</Description>
 		<PackageTags>dotnet;helpers;reinforced.typings;asp.net;asp.net core;mvc;typescript</PackageTags>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Configurations>Debug;Release;ReducedBuild</Configurations>
+		<Configurations>Debug;Release;ReducedBuild;no-tests</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -34,8 +34,9 @@
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
 		<MinVerSkip Condition="'$(Configuration)'=='ReducedBuild'">true</MinVerSkip>
 		<!-- Optional: Detect breaking changes from a previous stable version -->
-		<!-- <PackageValidationBaselineVersion>4.1.3</PackageValidationBaselineVersion> -->
-		<!-- <EnablePackageValidation>true</EnablePackageValidation> -->
+		<PackageValidationBaselineVersion>4.2.3</PackageValidationBaselineVersion>
+		<EnablePackageValidation>true</EnablePackageValidation>
+		<ApiCompatGenerateSuppressionFile>true</ApiCompatGenerateSuppressionFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

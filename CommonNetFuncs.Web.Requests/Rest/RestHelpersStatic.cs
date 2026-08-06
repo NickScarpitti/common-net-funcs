@@ -1,4 +1,5 @@
-﻿using System.Collections.Frozen;
+﻿using System.Buffers;
+using System.Collections.Frozen;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -566,12 +567,44 @@ public static class RestHelpersStatic
 	/// <param name="contentType">Content type of the response.</param>
 	/// <param name="contentEncoding">Content encoding of the response.</param>
 	/// <param name="jsonSerializerOptions">JSON serializer options.</param>
+	/// <param name="messagePackSerializerOptions">MessagePack serializer options.</param>
 	/// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
 	/// <returns>Deserialized response content.</returns>
 	/// <exception cref="NotImplementedException"></exception>
-	public static async IAsyncEnumerable<TResponse?> ReadResponseStreamAsync<TResponse>(this Stream responseStream, string? contentType, string? contentEncoding, JsonSerializerOptions? jsonSerializerOptions, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+	public static async IAsyncEnumerable<TResponse?> ReadResponseStreamAsync<TResponse>(this Stream responseStream, string? contentType, string? contentEncoding, JsonSerializerOptions? jsonSerializerOptions,
+		MessagePackSerializerOptions? messagePackSerializerOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
-		if (contentType.ContainsInvariant("json"))
+		if (contentType.StrEq(MsgPack)) //Message Pack uses native compression, but content may still be compressed if the server chose to do so anyway
+		{
+			Stream streamToRead = responseStream;
+			try
+			{
+				if (contentEncoding.StrEq(GZip))
+				{
+					streamToRead = responseStream.Decompress(ECompressionType.Gzip);
+				}
+				else if (contentEncoding.StrEq(Brotli))
+				{
+					streamToRead = responseStream.Decompress(ECompressionType.Brotli);
+				}
+
+				//MessagePackStreamReader reads one top-level msgpack structure at a time off of a stream containing a concatenated sequence of them
+				using MessagePackStreamReader messagePackStreamReader = new(streamToRead, leaveOpen: true);
+				while (await messagePackStreamReader.ReadAsync(cancellationToken).ConfigureAwait(false) is ReadOnlySequence<byte> msgPackData)
+				{
+					TResponse? item = MessagePackSerializer.Deserialize<TResponse>(msgPackData, messagePackSerializerOptions ?? MessagePackSerializerOptions.Standard, cancellationToken);
+					if (item != null)
+					{
+						yield return item;
+					}
+				}
+			}
+			finally
+			{
+				await streamToRead.DisposeAsync().ConfigureAwait(false);
+			}
+		}
+		else if (contentType.ContainsInvariant("json"))
 		{
 			Stream streamToRead = responseStream;
 			try
@@ -587,12 +620,10 @@ public static class RestHelpersStatic
 
 				await foreach (TResponse? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<TResponse?>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false))
 				{
-#pragma warning disable S2955 // Generic parameters not constrained to reference types should not be compared to "null"
 					if (item != null)
 					{
 						yield return item;
 					}
-#pragma warning restore S2955 // Generic parameters not constrained to reference types should not be compared to "null"
 				}
 			}
 			finally

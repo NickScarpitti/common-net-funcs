@@ -253,12 +253,16 @@ jobs:
 
               dotnet clean "$csproj" -c Release -v q
 
-              # -p:DebugType=portable: NEW - forces separate .pdb generation so the .snupkg symbol package actually contains symbols.
+              # NOTE: Do NOT pass -p:MinVerVersionOverride here. It's a global MSBuild property that cascades to every
+              # ProjectReference built in this invocation (e.g. Core, Compression, Web.Common), forcing THEIR resolved
+              # version to match this project's override too. That causes the generated nuspec <dependencies> to require
+              # the wrong (too-high) version for referenced packages. Tags for every project are already pushed by the
+              # "release" job and fetched here (fetch-tags: true), so MinVer can correctly derive each project's own
+              # version from its own MinVerTagPrefix without an override.
+              # -p:DebugType=portable: forces separate .pdb generation so the .snupkg symbol package actually contains symbols.
               # Without this, a project using <DebugType>embedded</DebugType> produces an EMPTY .snupkg, which NuGet.org rejects with a 400 error.
-              # -p:MinVerVersionOverride forces the build to use the EXACT version already validated above, instead of letting MinVer (if present) try to re-derive it from git tags, which can fail/fallback in CI environments.
-              # This is a no-op / harmless if MinVer isn't actually used by this project.
-              dotnet build "$csproj" -c Release -p:MinVerVersionOverride=$project_version -p:DebugType=portable
-              dotnet pack "$csproj" -c Release /p:ContinuousIntegrationBuild=true -p:MinVerVersionOverride=$project_version -p:DebugType=portable
+              dotnet build "$csproj" -c Release -p:DebugType=portable
+              dotnet pack "$csproj" -c Release /p:ContinuousIntegrationBuild=true -p:DebugType=portable
 
               # --- Push the main package first ---
               dotnet nuget push "$project_dir/bin/Release/"*.nupkg \

@@ -1,12 +1,14 @@
 ﻿using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using CommonNetFuncs.Compression;
 using CommonNetFuncs.Web.Requests.Rest;
 using CommonNetFuncs.Web.Requests.Rest.Options;
 using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 using FakeItEasy;
 using MessagePack;
 using xRetry.v3;
+using static CommonNetFuncs.Web.Common.ContentTypes;
 
 namespace Web.Requests.Tests;
 
@@ -296,6 +298,62 @@ public sealed class RestHelpersWrapperTests : IDisposable
 	}
 
 	[Fact]
+	public async Task GetStreaming_ShouldUseMemPackHeaders_WhenConfiguredWithoutCompression()
+	{
+		// Arrange
+		StreamingRestObject<TestModel> streamingResponse = new()
+		{
+			Result = AsyncEnumerableFromList(new List<TestModel>(), TestContext.Current.CancellationToken),
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+
+		A.CallTo(() => fakeRestClient.StreamingRestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+			.Returns(Task.FromResult(streamingResponse));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi", CompressionOptions: new CompressionOptions(UseMemPack: true));
+
+		// Act
+		await foreach (TestModel? _ in wrapper.GetStreaming<TestModel>(options, TestContext.Current.CancellationToken))
+		{
+			// No-op
+		}
+
+		// Assert
+		A.CallTo(() => fakeRestClient.StreamingRestObjectRequest<TestModel, TestModel>(
+				A<RequestOptions<TestModel>>.That.Matches(r => r.HttpHeaders != null && r.HttpHeaders["Content-Type"] == MemPack && r.HttpHeaders["Accept"] == MemPack),
+				A<CancellationToken>._))
+			.MustHaveHappenedOnceExactly();
+	}
+
+	[RetryFact(3)]
+	public async Task GetStreaming_ShouldUseMsgPackHeaders_WhenConfiguredWithoutCompression()
+	{
+		// Arrange
+		StreamingRestObject<TestModel> streamingResponse = new()
+		{
+			Result = AsyncEnumerableFromList(new List<TestModel>(), TestContext.Current.CancellationToken),
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+
+		A.CallTo(() => fakeRestClient.StreamingRestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+			.Returns(Task.FromResult(streamingResponse));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi", CompressionOptions: new CompressionOptions(UseMsgPack: true));
+
+		// Act
+		await foreach (TestModel? _ in wrapper.GetStreaming<TestModel>(options, TestContext.Current.CancellationToken))
+		{
+			// No-op
+		}
+
+		// Assert
+		A.CallTo(() => fakeRestClient.StreamingRestObjectRequest<TestModel, TestModel>(
+				A<RequestOptions<TestModel>>.That.Matches(r => r.HttpHeaders != null && r.HttpHeaders["Content-Type"] == MsgPack && r.HttpHeaders["Accept"] == MsgPack),
+				A<CancellationToken>._))
+			.MustHaveHappenedOnceExactly();
+	}
+
+	[Fact]
 	public async Task GetStreaming_ShouldReturnEmpty_WhenRequestFails()
 	{
 		// Arrange
@@ -447,6 +505,35 @@ public sealed class RestHelpersWrapperTests : IDisposable
 	}
 
 	[Fact]
+	public async Task PostRequestStreaming_ShouldUseMemPackHeaders_WhenConfiguredWithoutCompression()
+	{
+		// Arrange
+		TestModel postObject = new() { Id = 1, Name = "Test" };
+		StreamingRestObject<TestModel> streamingResponse = new()
+		{
+			Result = AsyncEnumerableFromList(new List<TestModel>(), TestContext.Current.CancellationToken),
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+
+		A.CallTo(() => fakeRestClient.StreamingRestObjectRequest<TestModel, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(streamingResponse));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi", CompressionOptions: new CompressionOptions(UseMemPack: true));
+
+		// Act
+		await foreach (TestModel? _ in wrapper.PostRequestStreaming(options, postObject, TestContext.Current.CancellationToken))
+		{
+			// No-op
+		}
+
+		// Assert
+		A.CallTo(() => fakeRestClient.StreamingRestObjectRequest<TestModel, TestModel>(
+				A<RequestOptions<TestModel>>.That.Matches(r => r.HttpHeaders != null && r.HttpHeaders["Content-Type"] == MemPack && r.HttpHeaders["Accept"] == MemPack),
+				A<CancellationToken>._))
+			.MustHaveHappenedOnceExactly();
+	}
+
+	[Fact]
 	public async Task PostRequestStreaming_ShouldReturnEmpty_WhenRequestFails()
 	{
 		// Arrange
@@ -592,6 +679,35 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		results.Count.ShouldBe(2);
 		results[0].ShouldBe("Result1");
 		results[1].ShouldBe("Result2");
+	}
+
+	[Fact]
+	public async Task GenericPostRequestStreaming_ShouldUseMsgPackHeaders_WhenConfiguredWithoutCompression()
+	{
+		// Arrange
+		TestModel postObject = new() { Id = 1, Name = "Test" };
+		StreamingRestObject<string> streamingResponse = new()
+		{
+			Result = AsyncEnumerableFromList(new List<string>(), TestContext.Current.CancellationToken),
+			Response = new HttpResponseMessage(HttpStatusCode.OK)
+		};
+
+		A.CallTo(() => fakeRestClient.StreamingRestObjectRequest<string, TestModel>(A<RequestOptions<TestModel>>._, A<CancellationToken>._))
+				.Returns(Task.FromResult(streamingResponse));
+
+		RestHelperOptions options = new("test-endpoint", "TestApi", CompressionOptions: new CompressionOptions(UseMsgPack: true));
+
+		// Act
+		await foreach (string? _ in wrapper.GenericPostRequestStreaming<string, TestModel>(options, postObject, TestContext.Current.CancellationToken))
+		{
+			// No-op
+		}
+
+		// Assert
+		A.CallTo(() => fakeRestClient.StreamingRestObjectRequest<string, TestModel>(
+				A<RequestOptions<TestModel>>.That.Matches(r => r.HttpHeaders != null && r.HttpHeaders["Content-Type"] == MsgPack && r.HttpHeaders["Accept"] == MsgPack),
+				A<CancellationToken>._))
+			.MustHaveHappenedOnceExactly();
 	}
 
 	[Fact]

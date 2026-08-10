@@ -46,78 +46,87 @@ internal static class WrapperHelpers
 	{
 		IEnumerable<KeyValuePair<string, string>>? compressionHeaders = null;
 
-		if (!isStreaming)
+		if (compressionOptions?.UseCompression == true)
 		{
-			if (compressionOptions?.UseCompression == true)
+			if (compressionOptions.CompressionType != null)
 			{
-				if (compressionOptions.CompressionType != null)
+				if (compressionOptions.CompressionType == ECompressionType.Gzip)
 				{
-					if (compressionOptions.CompressionType == ECompressionType.Gzip)
+					if (compressionOptions.UseMemPack)
 					{
-						if (compressionOptions.UseMemPack)
-						{
-							compressionHeaders = MemPackHeadersWithGzip;
-						}
-						else if (compressionOptions.UseMsgPack)
-						{
-							compressionHeaders = MsgPackHeadersWithGzip;
-						}
-						else
-						{
-							compressionHeaders = JsonHeadersWithGzip;
-						}
+						compressionHeaders = MemPackHeadersWithGzip;
 					}
-					else if (compressionOptions.CompressionType == ECompressionType.Brotli)
+					else if (compressionOptions.UseMsgPack)
 					{
-						if (compressionOptions.UseMemPack)
-						{
-							compressionHeaders = MemPackHeadersWithBrotli;
-						}
-						else if (compressionOptions.UseMsgPack)
-						{
-							compressionHeaders = MsgPackHeadersWithBrotli;
-						}
-						else
-						{
-							compressionHeaders = JsonHeadersWithBrotli;
-						}
+						compressionHeaders = MsgPackHeadersWithGzip;
 					}
 					else
 					{
-						if (compressionOptions.UseMemPack)
-						{
-							compressionHeaders = MemPackHeadersWithGzip;
-						}
-						else if (compressionOptions.UseMsgPack)
-						{
-							compressionHeaders = MsgPackHeadersWithGzip;
-						}
-						else
-						{
-							compressionHeaders = JsonHeadersWithGzip;
-						}
+						compressionHeaders = JsonHeadersWithGzip;
+					}
+				}
+				else if (compressionOptions.CompressionType == ECompressionType.Brotli)
+				{
+					if (compressionOptions.UseMemPack)
+					{
+						compressionHeaders = MemPackHeadersWithBrotli;
+					}
+					else if (compressionOptions.UseMsgPack)
+					{
+						compressionHeaders = MsgPackHeadersWithBrotli;
+					}
+					else
+					{
+						compressionHeaders = JsonHeadersWithBrotli;
 					}
 				}
 				else
 				{
 					if (compressionOptions.UseMemPack)
 					{
-						compressionHeaders = MemPackHeaders;
+						compressionHeaders = MemPackHeadersWithGzip;
 					}
 					else if (compressionOptions.UseMsgPack)
 					{
-						compressionHeaders = MsgPackHeaders;
+						compressionHeaders = MsgPackHeadersWithGzip;
 					}
 					else
 					{
-						compressionHeaders = JsonHeaders;
+						compressionHeaders = JsonHeadersWithGzip;
 					}
 				}
 			}
+			else
+			{
+				if (compressionOptions.UseMemPack)
+				{
+					compressionHeaders = MemPackHeaders;
+				}
+				else if (compressionOptions.UseMsgPack)
+				{
+					compressionHeaders = MsgPackHeaders;
+				}
+				else
+				{
+					compressionHeaders = JsonHeaders;
+				}
+			}
 		}
-		else
+		else if (isStreaming)
 		{
-			compressionHeaders = JsonNoEncodeHeaders; //Need to use JSON with no compression when streaming data
+			// When streaming without compression, use appropriate headers based on serialization type
+			if (compressionOptions?.UseMemPack == true)
+			{
+				compressionHeaders = MemPackHeaders;
+			}
+			else if (compressionOptions?.UseMsgPack == true)
+			{
+				compressionHeaders = MsgPackHeaders;
+			}
+			else
+			{
+				compressionHeaders = JsonNoEncodeHeaders; // Default to JSON with no compression when streaming
+			}
 		}
 
 		// Add compression headers to the existing dictionary if they don't already exist
@@ -175,7 +184,12 @@ internal static class WrapperHelpers
 	internal static void UpdateStreamingHeaders(RestHelperOptions options)
 	{
 		options.HttpHeaders ??= new Dictionary<string, string>();
-		options.HttpHeaders[AcceptHeader] = Json; // When streaming, we always want to use JSON
+		// Leave the accept header to PopulateHeaders when a MessagePack/MemoryPack format is requested via CompressionOptions
+		bool usesExplicitFormat = options.CompressionOptions?.UseMemPack == true || options.CompressionOptions?.UseMsgPack == true;
+		if (!usesExplicitFormat && !options.HttpHeaders.ContainsKey(AcceptHeader))
+		{
+			options.HttpHeaders[AcceptHeader] = Json;
+		}
 	}
 
 	internal static bool ShouldRetry(HttpResponseMessage? response, ResilienceOptions options)

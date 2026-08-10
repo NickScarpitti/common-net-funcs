@@ -5,6 +5,7 @@ using System.Text.Json;
 using CommonNetFuncs.Web.Requests;
 using CommonNetFuncs.Web.Requests.Rest;
 using MemoryPack;
+using MemoryPack.Streaming;
 using MessagePack;
 
 namespace Web.Requests.Tests;
@@ -252,6 +253,76 @@ public sealed class RestHelpersStaticTests
 		}
 
 		results.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public async Task StreamingRestRequest_YieldsMessagePackResults()
+	{
+		TestModel model1 = new() { Name = "a", Value = 1 };
+		TestModel model2 = new() { Name = "b", Value = 2 };
+		MemoryStream stream = new();
+		await stream.WriteAsync(MessagePackSerializer.Serialize(model1, cancellationToken: TestContext.Current.CancellationToken), TestContext.Current.CancellationToken);
+		await stream.WriteAsync(MessagePackSerializer.Serialize(model2, cancellationToken: TestContext.Current.CancellationToken), TestContext.Current.CancellationToken);
+		stream.Position = 0;
+
+		FakeHttpMessageHandler handler = new();
+		HttpClient client = new(handler);
+		RequestOptions<TestModel> options = new()
+		{
+			Url = "http://test",
+			HttpMethod = HttpMethod.Get,
+			HttpHeaders = new Dictionary<string, string> { { "Accept", "application/x-msgpack" } }
+		};
+
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
+		{
+			Content = new StreamContent(stream)
+		};
+		handler.Response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-msgpack");
+
+		List<TestModel?> results = new();
+		await foreach (TestModel? item in client.StreamingRestRequest<TestModel, TestModel>(options, cancellationToken: TestContext.Current.CancellationToken))
+		{
+			results.Add(item);
+		}
+
+		results.Count.ShouldBe(2);
+		results[0]!.Name.ShouldBe("a");
+		results[1]!.Name.ShouldBe("b");
+	}
+
+	[Fact]
+	public async Task StreamingRestRequest_YieldsMemoryPackResults()
+	{
+		List<TestModel> models = new() { new() { Name = "a", Value = 1 }, new() { Name = "b", Value = 2 } };
+		MemoryStream stream = new();
+		await MemoryPackStreamingSerializer.SerializeAsync(stream, models.Count, models, cancellationToken: TestContext.Current.CancellationToken);
+		stream.Position = 0;
+
+		FakeHttpMessageHandler handler = new();
+		HttpClient client = new(handler);
+		RequestOptions<TestModel> options = new()
+		{
+			Url = "http://test",
+			HttpMethod = HttpMethod.Get,
+			HttpHeaders = new Dictionary<string, string> { { "Accept", "application/x-memorypack" } }
+		};
+
+		handler.Response = new HttpResponseMessage(HttpStatusCode.OK)
+		{
+			Content = new StreamContent(stream)
+		};
+		handler.Response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-memorypack");
+
+		List<TestModel?> results = new();
+		await foreach (TestModel? item in client.StreamingRestRequest<TestModel, TestModel>(options, cancellationToken: TestContext.Current.CancellationToken))
+		{
+			results.Add(item);
+		}
+
+		results.Count.ShouldBe(2);
+		results[0]!.Name.ShouldBe("a");
+		results[1]!.Name.ShouldBe("b");
 	}
 
 	[Fact]
@@ -521,6 +592,70 @@ public sealed class RestHelpersStaticTests
 		}
 
 		results.ShouldBe(["a", "b"]);
+	}
+
+	[Fact]
+	public async Task HandleResponseAsync_YieldsMessagePackResults()
+	{
+		TestModel model1 = new() { Name = "a", Value = 1 };
+		TestModel model2 = new() { Name = "b", Value = 2 };
+		MemoryStream stream = new();
+		await stream.WriteAsync(MessagePackSerializer.Serialize(model1, cancellationToken: TestContext.Current.CancellationToken), TestContext.Current.CancellationToken);
+		await stream.WriteAsync(MessagePackSerializer.Serialize(model2, cancellationToken: TestContext.Current.CancellationToken), TestContext.Current.CancellationToken);
+		stream.Position = 0;
+
+		HttpResponseMessage response = new(HttpStatusCode.OK)
+		{
+			Content = new StreamContent(stream)
+		};
+		response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-msgpack");
+
+		RequestOptions<TestModel> options = new()
+		{
+			Url = "http://test",
+			HttpMethod = HttpMethod.Get
+		};
+
+		List<TestModel?> results = new();
+		await foreach (TestModel? item in response.HandleResponseAsync<TestModel, TestModel>(options, cancellationToken: TestContext.Current.CancellationToken))
+		{
+			results.Add(item);
+		}
+
+		results.Count.ShouldBe(2);
+		results[0]!.Name.ShouldBe("a");
+		results[1]!.Name.ShouldBe("b");
+	}
+
+	[Fact]
+	public async Task HandleResponseAsync_YieldsMemoryPackResults()
+	{
+		List<TestModel> models = new() { new() { Name = "a", Value = 1 }, new() { Name = "b", Value = 2 } };
+		MemoryStream stream = new();
+		await MemoryPackStreamingSerializer.SerializeAsync(stream, models.Count, models, cancellationToken: TestContext.Current.CancellationToken);
+		stream.Position = 0;
+
+		HttpResponseMessage response = new(HttpStatusCode.OK)
+		{
+			Content = new StreamContent(stream)
+		};
+		response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-memorypack");
+
+		RequestOptions<TestModel> options = new()
+		{
+			Url = "http://test",
+			HttpMethod = HttpMethod.Get
+		};
+
+		List<TestModel?> results = new();
+		await foreach (TestModel? item in response.HandleResponseAsync<TestModel, TestModel>(options, cancellationToken: TestContext.Current.CancellationToken))
+		{
+			results.Add(item);
+		}
+
+		results.Count.ShouldBe(2);
+		results[0]!.Name.ShouldBe("a");
+		results[1]!.Name.ShouldBe("b");
 	}
 
 	[Fact]
@@ -975,6 +1110,78 @@ public sealed class RestHelpersStaticTests
 
 		List<TestModel?> results = new();
 		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-msgpack", null, null, cancellationToken: TestContext.Current.CancellationToken))
+		{
+			results.Add(item);
+		}
+
+		results.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public async Task ReadResponseStreamAsync_YieldsMemoryPackResults()
+	{
+		List<TestModel> models = new() { new() { Name = "a", Value = 1 }, new() { Name = "b", Value = 2 } };
+		MemoryStream stream = new();
+		await MemoryPackStreamingSerializer.SerializeAsync(stream, models.Count, models, cancellationToken: TestContext.Current.CancellationToken);
+		stream.Position = 0;
+
+		List<TestModel?> results = new();
+		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-memorypack", null, null, cancellationToken: TestContext.Current.CancellationToken))
+		{
+			results.Add(item);
+		}
+
+		results.Count.ShouldBe(2);
+		results[0]!.Name.ShouldBe("a");
+		results[0]!.Value.ShouldBe(1);
+		results[1]!.Name.ShouldBe("b");
+		results[1]!.Value.ShouldBe(2);
+	}
+
+	[Theory]
+	[InlineData(CompressionType.GZip)]
+	[InlineData(CompressionType.Brotli)]
+	public async Task ReadResponseStreamAsync_HandlesMemoryPackWithCompression(CompressionType compressionType)
+	{
+		TestModel model = new() { Name = "compressed", Value = 42 };
+		MemoryStream memPackStream = new();
+		await MemoryPackStreamingSerializer.SerializeAsync(memPackStream, 1, new[] { model }, cancellationToken: TestContext.Current.CancellationToken);
+		byte[] memPackBytes = memPackStream.ToArray();
+		MemoryStream compressedStream = new();
+
+		if (compressionType == CompressionType.GZip)
+		{
+			await using System.IO.Compression.GZipStream gzip = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
+			await gzip.WriteAsync(memPackBytes, TestContext.Current.CancellationToken);
+		}
+		else
+		{
+			await using System.IO.Compression.BrotliStream brotli = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
+			await brotli.WriteAsync(memPackBytes, TestContext.Current.CancellationToken);
+		}
+		compressedStream.Position = 0;
+
+		string encoding = compressionType == CompressionType.GZip ? "gzip" : "br";
+		List<TestModel?> results = new();
+		await foreach (TestModel? item in compressedStream.ReadResponseStreamAsync<TestModel>("application/x-memorypack", encoding, null, cancellationToken: TestContext.Current.CancellationToken))
+		{
+			results.Add(item);
+		}
+
+		results.Count.ShouldBe(1);
+		results[0]!.Name.ShouldBe("compressed");
+		results[0]!.Value.ShouldBe(42);
+	}
+
+	[Fact]
+	public async Task ReadResponseStreamAsync_MemoryPackEmptyStreamYieldsNoResults()
+	{
+		MemoryStream stream = new();
+		await MemoryPackStreamingSerializer.SerializeAsync(stream, 0, Array.Empty<TestModel>(), cancellationToken: TestContext.Current.CancellationToken);
+		stream.Position = 0;
+
+		List<TestModel?> results = new();
+		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-memorypack", null, null, cancellationToken: TestContext.Current.CancellationToken))
 		{
 			results.Add(item);
 		}

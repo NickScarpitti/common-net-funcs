@@ -20,6 +20,11 @@ This lightweight project contains helper methods for several common functions re
       - [Basic Usage](#basic-usage)
       - [RestHelperOptionsDefaultConfig](#resthelperoptionsdefaultconfig)
       - [Dependency Injection Setup](#dependency-injection-setup)
+  - [MessagePack Streaming](#messagepack-streaming)
+    - [Overview](#messagepack-streaming-overview)
+    - [MessagePack Streaming Usage Examples](#messagepack-streaming-usage-examples)
+      - [Server-Side Controller](#server-side-controller)
+      - [Client-Side Usage](#client-side-usage)
   - [PatchCreator](#patchcreator)
     - [PatchCreator Usage Examples](#patchcreator-usage-examples)
       - [CreatePatch](#createpatch)
@@ -223,6 +228,182 @@ public class MyService(RestHelpersWrapper wrapper)
 ```
 
 > **Tip:** When only sharing serializer or compression defaults without authentication, omit `UseBearerToken` (or leave it `null`) and no bearer token logic is applied.
+
+</details>
+
+---
+
+## MessagePack Streaming
+
+True streaming support for MessagePack serialization in ASP.NET Core APIs. While MessagePack cannot directly serialize `IAsyncEnumerable<T>`, this infrastructure writes individual MessagePack-serialized items to the response stream, allowing clients to reconstruct the stream on their end.
+
+<a name="messagepack-streaming-overview"></a>
+### Overview
+
+**How It Works:**
+
+**Server Side:**
+1. Returns `IActionResult` via `StreamMessagePack()` extension method
+2. `MessagePackStreamingResult` iterates through the `IAsyncEnumerable<T>`
+3. Each item is serialized individually with MessagePack
+4. Serialized bytes are written directly to response stream and flushed
+5. Creates a concatenated sequence of MessagePack structures
+
+**Client Side:**
+- The existing `ReadResponseStreamAsync` method in `RestHelpersStatic.cs` already handles this!
+- Uses `MessagePackStreamReader` to read MessagePack structures one at a time
+- Reconstructs them back into `IAsyncEnumerable<T>`
+- **No client-side changes needed** - existing `StreamingRestRequest()` calls work as-is with `MsgPackHeaders`
+
+**Benefits:**
+- ✅ True streaming: Data flows item-by-item, not loaded entirely into memory
+- ✅ Memory efficient: Both server and client process items as they arrive
+- ✅ Binary efficiency: MessagePack provides compact serialization
+- ✅ No breaking changes: Existing client code continues to work
+- ✅ Transparent: Clients don't need to know about the chunking mechanism
+
+### MessagePack Streaming Usage Examples
+
+<details>
+<summary><h3>Usage Examples</h3></summary>
+
+#### Server-Side Controller
+
+```cs
+using CommonNetFuncs.Web.Requests.MessagePack;
+using Microsoft.AspNetCore.Mvc;
+
+[ApiController]
+[Route("api/[controller]")]
+public class DataController : ControllerBase
+{
+    private readonly IDataService _dataService;
+
+    public DataController(IDataService dataService)
+    {
+        _dataService = dataService;
+    }
+
+    // Basic usage with defaults (200 OK when data, 204 No Content when empty)
+    [HttpGet]
+    public IActionResult GetStreamingData()
+    {
+        return this.StreamMessagePack(_dataService.GetDataAsyncEnumerable());
+    }
+
+    // With custom MessagePack options
+    [HttpGet("compressed")]
+    public IActionResult GetStreamingDataCompressed()
+    {
+        var options = MessagePackSerializerOptions.Standard
+            .WithCompression(MessagePackCompression.Lz4BlockArray);
+
+        return this.StreamMessagePack(_dataService.GetDataAsyncEnumerable(), options);
+    }
+
+    // With custom status codes
+    [HttpGet("custom-status")]
+    public IActionResult GetStreamingDataCustomStatus()
+    {
+        return this.StreamMessagePack(
+            _dataService.GetDataAsyncEnumerable(),
+            successStatusCode: 200,  // Custom success code
+            emptyStatusCode: 204     // Custom empty code
+        );
+    }
+}
+```
+
+#### Minimal API Usage
+
+For Minimal APIs, use the static `MessagePackStreaming.Stream` helper instead of the controller extension:
+
+```cs
+using CommonNetFuncs.Web.Requests.MessagePack;
+using MessagePack;
+
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+// Basic usage with defaults
+app.MapGet("/api/data", (IDataService dataService) =>
+{
+    return MessagePackStreaming.Stream(dataService.GetDataAsyncEnumerable());
+});
+
+// With custom MessagePack options (compression)
+app.MapGet("/api/data/compressed", (IDataService dataService) =>
+{
+    var options = MessagePackSerializerOptions.Standard
+        .WithCompression(MessagePackCompression.Lz4BlockArray);
+
+    return MessagePackStreaming.Stream(dataService.GetDataAsyncEnumerable(), options);
+});
+
+// With custom status codes
+app.MapGet("/api/data/custom-status", (IDataService dataService) =>
+{
+    return MessagePackStreaming.Stream(
+        dataService.GetDataAsyncEnumerable(),
+        successStatusCode: 202,  // Accepted instead of OK
+        emptyStatusCode: 404     // Not Found instead of No Content
+    );
+});
+
+app.Run();
+```
+
+**Both the controller extension (`this.StreamMessagePack`) and the Minimal API helper (`MessagePackStreaming.Stream`) use the same underlying `MessagePackStreamingResult<T>` implementation, ensuring consistent behavior across both patterns.**
+
+#### Client-Side Usage
+
+No changes needed! Use existing `StreamingRestRequest` with MessagePack headers:
+
+```cs
+using CommonNetFuncs.Web.Requests.Rest;
+using static CommonNetFuncs.Web.Requests.Rest.RestHelperConstants;
+
+RestHelpers rest = new();
+
+// Stream data with MessagePack
+List<MyModel> results = [];
+await foreach (MyModel? item in rest.StreamingRestRequest<MyModel, object?>(
+    new RequestOptions<object?>
+    {
+        Url = "https://api.example.com/api/Data",
+        HttpMethod = HttpMethod.Get,
+        HttpHeaders = MsgPackHeaders  // This triggers MessagePack streaming
+    }))
+{
+    if (item != null)
+    {
+        results.Add(item);
+    }
+}
+```
+
+Or use LINQ to materialize directly:
+
+```cs
+List<MyModel> model = await rest.StreamingRestRequest<MyModel, object?>(
+    new RequestOptions<object?>
+    {
+        Url = "https://api.example.com/api/Data",
+        HttpMethod = HttpMethod.Get,
+        HttpHeaders = MsgPackHeaders
+    })
+    .Where(x => x != null)
+    .Select(x => x!)
+    .ToListAsync();
+```
+
+**Comparison with Other Serializers:**
+
+| Serializer | Supports IAsyncEnumerable | Native Streaming | Binary Format |
+|------------|---------------------------|------------------|---------------|
+| JSON       | ✅ Yes (array)            | ✅ Yes           | ❌ No         |
+| MemoryPack | ✅ Yes (native)           | ✅ Yes           | ✅ Yes        |
+| MessagePack| ✅ Yes (via extension)    | ✅ Yes (custom)  | ✅ Yes        |
 
 </details>
 

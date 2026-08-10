@@ -31,6 +31,63 @@ public sealed class WrapperHelpersTests
 	}
 
 	[Fact]
+	public void PopulateHeaders_ShouldAddMemPackHeaders_WhenStreamingWithoutCompression()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = false,
+			UseMemPack = true
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: true);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(MemPack);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(MemPack);
+		headers.ShouldNotContainKey("Accept-Encoding");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldAddMsgPackHeaders_WhenStreamingWithoutCompression()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = false,
+			UseMsgPack = true
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: true);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(MsgPack);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(MsgPack);
+		headers.ShouldNotContainKey("Accept-Encoding");
+	}
+
+	[Fact]
+	public void PopulateHeaders_ShouldAddNoEncodeJsonHeaders_WhenStreamingWithoutCompressionOrFormat()
+	{
+		Dictionary<string, string> headers = [];
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions
+		{
+			UseCompression = false
+		});
+
+		WrapperHelpers.PopulateHeaders(headers, options, isStreaming: true);
+
+		headers.ShouldContainKey("Content-Type");
+		headers["Content-Type"].ShouldBe(Json);
+		headers.ShouldContainKey(AcceptHeader);
+		headers[AcceptHeader].ShouldBe(Json);
+		headers.ShouldContainKey("Accept-Encoding");
+		headers["Accept-Encoding"].ShouldBe("identity");
+	}
+
+	[Fact]
 	public void PopulateHeaders_ShouldAddCustomHeaders_WhenProvided()
 	{
 		Dictionary<string, string> headers = [];
@@ -576,7 +633,7 @@ public sealed class WrapperHelpersTests
 	}
 
 	[Fact]
-	public void UpdateStreamingHeaders_ShouldOverrideExistingAcceptHeader()
+	public void UpdateStreamingHeaders_ShouldNotOverrideExistingAcceptHeader()
 	{
 		RestHelperOptions options = new("test", "api", HttpHeaders: new Dictionary<string, string>
 		{
@@ -585,7 +642,29 @@ public sealed class WrapperHelpersTests
 
 		WrapperHelpers.UpdateStreamingHeaders(options);
 
-		options.HttpHeaders?[AcceptHeader].ShouldBe(Json);
+		options.HttpHeaders?[AcceptHeader].ShouldBe("application/xml");
+	}
+
+	[Fact]
+	public void UpdateStreamingHeaders_ShouldNotSetAcceptHeader_WhenMemPackConfigured()
+	{
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions { UseMemPack = true });
+
+		WrapperHelpers.UpdateStreamingHeaders(options);
+
+		options.HttpHeaders.ShouldNotBeNull();
+		options.HttpHeaders.ShouldNotContainKey(AcceptHeader);
+	}
+
+	[Fact]
+	public void UpdateStreamingHeaders_ShouldNotSetAcceptHeader_WhenMsgPackConfigured()
+	{
+		RestHelperOptions options = new("test", "api", CompressionOptions: new CompressionOptions { UseMsgPack = true });
+
+		WrapperHelpers.UpdateStreamingHeaders(options);
+
+		options.HttpHeaders.ShouldNotBeNull();
+		options.HttpHeaders.ShouldNotContainKey(AcceptHeader);
 	}
 
 	#endregion

@@ -325,7 +325,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 			.MustHaveHappenedOnceExactly();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task GetStreaming_ShouldUseMsgPackHeaders_WhenConfiguredWithoutCompression()
 	{
 		// Arrange

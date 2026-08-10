@@ -10,27 +10,19 @@ namespace CommonNetFuncs.Web.Requests.MessagePack;
 /// Each item is serialized individually and written to the stream, allowing MessagePackStreamReader on the client to read them one at a time.
 /// </summary>
 /// <typeparam name="T">Type of items to stream</typeparam>
-public class MessagePackStreamingResult<T> : IActionResult
+/// <param name="data">The async enumerable data to stream</param>
+/// <param name="options">Optional MessagePack serializer options</param>
+/// <param name="successStatusCode">Status code to return when data is present (default: 200 OK)</param>
+/// <param name="emptyStatusCode">Status code to return when no data is present (default: 204 No Content)</param>
+/// <remarks>
+/// Creates a new MessagePackStreamingResult.
+/// </remarks>
+public class MessagePackStreamingResult<T>(IAsyncEnumerable<T> data, MessagePackSerializerOptions? options = null, int? successStatusCode = null, int? emptyStatusCode = null) : IActionResult
 {
-	private readonly IAsyncEnumerable<T> _data;
-	private readonly MessagePackSerializerOptions? _options;
-	private readonly int? _successStatusCode;
-	private readonly int? _emptyStatusCode;
-
-	/// <summary>
-	/// Creates a new MessagePackStreamingResult.
-	/// </summary>
-	/// <param name="data">The async enumerable data to stream</param>
-	/// <param name="options">Optional MessagePack serializer options</param>
-	/// <param name="successStatusCode">Status code to return when data is present (default: 200 OK)</param>
-	/// <param name="emptyStatusCode">Status code to return when no data is present (default: 204 No Content)</param>
-	public MessagePackStreamingResult(IAsyncEnumerable<T> data, MessagePackSerializerOptions? options = null, int? successStatusCode = null, int? emptyStatusCode = null)
-	{
-		_data = data ?? throw new ArgumentNullException(nameof(data));
-		_options = options;
-		_successStatusCode = successStatusCode;
-		_emptyStatusCode = emptyStatusCode;
-	}
+	private readonly IAsyncEnumerable<T> _data = data ?? throw new ArgumentNullException(nameof(data));
+	private readonly MessagePackSerializerOptions? _options = options;
+	private readonly int? _successStatusCode = successStatusCode;
+	private readonly int? _emptyStatusCode = emptyStatusCode;
 
 	public async Task ExecuteResultAsync(ActionContext context)
 	{

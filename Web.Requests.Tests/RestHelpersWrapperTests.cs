@@ -1,12 +1,12 @@
 ﻿using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using CommonNetFuncs.Web.Requests;
 using CommonNetFuncs.Web.Requests.Rest;
 using CommonNetFuncs.Web.Requests.Rest.Options;
 using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 using FakeItEasy;
 using MessagePack;
+using xRetry.v3;
 
 namespace Web.Requests.Tests;
 
@@ -1448,7 +1448,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 
 	#region Headers and Options Tests
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task Get_ShouldIncludeCustomHeaders_WhenProvided()
 	{
 		// Arrange

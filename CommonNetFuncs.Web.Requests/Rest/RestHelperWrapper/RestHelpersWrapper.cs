@@ -140,7 +140,7 @@ public sealed class RestHelpersWrapper
 		try
 		{
 			headers.Clear();
-			PopulateHeaders(headers, options, false);
+			PopulateHeaders(headers, options, true);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -294,7 +294,7 @@ public sealed class RestHelpersWrapper
 		try
 		{
 			headers.Clear();
-			PopulateHeaders(headers, options, false);
+			PopulateHeaders(headers, options, true);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -445,7 +445,7 @@ public sealed class RestHelpersWrapper
 		try
 		{
 			headers.Clear();
-			PopulateHeaders(headers, options, false);
+			PopulateHeaders(headers, options, true);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)

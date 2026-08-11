@@ -4,6 +4,7 @@ using ClosedXML.Excel;
 using CommonNetFuncs.Excel.ClosedXml;
 using CommonNetFuncs.Excel.Common;
 using static CommonNetFuncs.Excel.ClosedXml.Export;
+using static Xunit.TestContext;
 
 namespace Excel.ClosedXml.Tests;
 
@@ -76,7 +77,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet worksheet = workbook.AddWorksheet(TestSheetName);
 		List<TestData> testData = fixture.CreateMany<TestData>(3).ToList();
 
-		bool result = ExportFromTable(workbook, worksheet, testData, createTable, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = ExportFromTable(workbook, worksheet, testData, createTable, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeTrue();
 		worksheet.Cell(1, 1).Value.ToString().ShouldBe("StringProperty");
@@ -104,7 +105,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet worksheet = workbook.AddWorksheet(TestSheetName);
 		IEnumerable<TestData>? testData = null;
 
-		bool result = ExportFromTable(workbook, worksheet, testData, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = ExportFromTable(workbook, worksheet, testData, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeTrue();
 		worksheet.CellsUsed().Count().ShouldBe(0);
@@ -116,7 +117,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet worksheet = workbook.AddWorksheet(TestSheetName);
 		TestData[] testData = Array.Empty<TestData>();
 
-		bool result = ExportFromTable(workbook, worksheet, testData, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = ExportFromTable(workbook, worksheet, testData, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeTrue();
 		worksheet.CellsUsed().Count().ShouldBe(0);
@@ -141,7 +142,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet worksheet = workbook.AddWorksheet(TestSheetName);
 		List<TestData> testData = fixture.CreateMany<TestData>(2).ToList();
 
-		bool result = ExportFromTable(workbook, worksheet, testData, wrapText: true, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = ExportFromTable(workbook, worksheet, testData, wrapText: true, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeTrue();
 		worksheet.Cell(1, 1).Style.Alignment.WrapText.ShouldBeTrue();
@@ -166,7 +167,7 @@ public sealed class ExportTests : IDisposable
 			dataTable.Rows.Add(fixture.Create<string>(), fixture.Create<int>(), fixture.Create<DateTime>());
 		}
 
-		bool result = ExportFromTable(workbook, worksheet, dataTable, createTable, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = ExportFromTable(workbook, worksheet, dataTable, createTable, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeTrue();
 		worksheet.Cell(1, 1).Value.ToString().ShouldBe("Column1");
@@ -186,7 +187,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet worksheet = workbook.AddWorksheet(TestSheetName);
 		DataTable? dataTable = null;
 
-		bool result = ExportFromTable(workbook, worksheet, dataTable, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = ExportFromTable(workbook, worksheet, dataTable, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeTrue();
 		worksheet.CellsUsed().Count().ShouldBe(0);
@@ -199,7 +200,7 @@ public sealed class ExportTests : IDisposable
 		using DataTable dataTable = new();
 		dataTable.Columns.Add("Column1");
 
-		bool result = ExportFromTable(workbook, worksheet, dataTable, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = ExportFromTable(workbook, worksheet, dataTable, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeTrue();
 		worksheet.CellsUsed().Count().ShouldBe(0);
@@ -232,7 +233,7 @@ public sealed class ExportTests : IDisposable
 	{
 		List<TestData> data = fixture.CreateMany<TestData>(5).ToList();
 
-		MemoryStream? ms = await data.GenericExcelExport(cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await data.GenericExcelExport(cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		ms!.Length.ShouldBeGreaterThan(0);
@@ -246,7 +247,7 @@ public sealed class ExportTests : IDisposable
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 		string longSheet = new('A', 32); // > 31 chars
 
-		MemoryStream? ms = await data.GenericExcelExport(sheetName: longSheet, cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await data.GenericExcelExport(sheetName: longSheet, cancellationToken: Current.CancellationToken);
 
 		// Validation failure returns new empty MemoryStream, not null
 		ms.ShouldNotBeNull();
@@ -260,7 +261,7 @@ public sealed class ExportTests : IDisposable
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 		string longTable = new('T', 256); // > 255 chars
 
-		MemoryStream? ms = await data.GenericExcelExport(tableName: longTable, cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await data.GenericExcelExport(tableName: longTable, cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		ms!.Length.ShouldBe(0);
@@ -272,7 +273,7 @@ public sealed class ExportTests : IDisposable
 	{
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 
-		MemoryStream? ms = await data.GenericExcelExport(skipColumnNames: ["DateProperty"], cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await data.GenericExcelExport(skipColumnNames: ["DateProperty"], cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		using XLWorkbook wb = new(ms!);
@@ -291,7 +292,7 @@ public sealed class ExportTests : IDisposable
 	{
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 
-		MemoryStream? ms = await data.GenericExcelExport(createTable: true, tableStyle: style, cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await data.GenericExcelExport(createTable: true, tableStyle: style, cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		ms!.Length.ShouldBeGreaterThan(0);
@@ -304,7 +305,7 @@ public sealed class ExportTests : IDisposable
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 		using MemoryStream existingMs = new();
 
-		MemoryStream? result = await data.GenericExcelExport(existingMs, cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? result = await data.GenericExcelExport(existingMs, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 		result!.Length.ShouldBeGreaterThan(0);
@@ -325,7 +326,7 @@ public sealed class ExportTests : IDisposable
 	{
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 
-		MemoryStream? ms = await data.GenericExcelExport(sheetName: "   ", cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await data.GenericExcelExport(sheetName: "   ", cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		ms!.Length.ShouldBeGreaterThan(0);
@@ -339,7 +340,7 @@ public sealed class ExportTests : IDisposable
 	{
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 
-		MemoryStream? ms = await data.GenericExcelExport(createTable: true, tableName: "   ", cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await data.GenericExcelExport(createTable: true, tableName: "   ", cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		ms!.Length.ShouldBeGreaterThan(0);
@@ -355,7 +356,7 @@ public sealed class ExportTests : IDisposable
 	{
 		using DataTable dt = MakeDataTable(5);
 
-		MemoryStream? ms = await dt.GenericExcelExport(cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await dt.GenericExcelExport(cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		ms!.Length.ShouldBeGreaterThan(0);
@@ -368,7 +369,7 @@ public sealed class ExportTests : IDisposable
 		using DataTable dt = MakeDataTable();
 		string longSheet = new('S', 32);
 
-		MemoryStream? ms = await dt.GenericExcelExport(sheetName: longSheet, cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await dt.GenericExcelExport(sheetName: longSheet, cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		ms!.Length.ShouldBe(0);
@@ -381,7 +382,7 @@ public sealed class ExportTests : IDisposable
 		using DataTable dt = MakeDataTable();
 		string longTable = new('T', 256);
 
-		MemoryStream? ms = await dt.GenericExcelExport(tableName: longTable, cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await dt.GenericExcelExport(tableName: longTable, cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		ms!.Length.ShouldBe(0);
@@ -393,7 +394,7 @@ public sealed class ExportTests : IDisposable
 	{
 		using DataTable dt = MakeDataTable(2);
 
-		MemoryStream? ms = await dt.GenericExcelExport(skipColumnNames: ["Col2"], cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await dt.GenericExcelExport(skipColumnNames: ["Col2"], cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		using XLWorkbook wb = new(ms!);
@@ -418,7 +419,7 @@ public sealed class ExportTests : IDisposable
 	{
 		using DataTable dt = MakeDataTable(2);
 
-		MemoryStream? ms = await dt.GenericExcelExport(sheetName: "   ", cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await dt.GenericExcelExport(sheetName: "   ", cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		ms!.Length.ShouldBeGreaterThan(0);
@@ -432,7 +433,7 @@ public sealed class ExportTests : IDisposable
 	{
 		using DataTable dt = MakeDataTable(2);
 
-		MemoryStream? ms = await dt.GenericExcelExport(createTable: true, tableName: "   ", cancellationToken: TestContext.Current.CancellationToken);
+		MemoryStream? ms = await dt.GenericExcelExport(createTable: true, tableName: "   ", cancellationToken: Current.CancellationToken);
 
 		ms.ShouldNotBeNull();
 		ms!.Length.ShouldBeGreaterThan(0);
@@ -665,7 +666,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		List<TestData> data = fixture.CreateMany<TestData>(3).ToList();
 
-		data.ExcelExport(wb, ws, cancellationToken: TestContext.Current.CancellationToken);
+		data.ExcelExport(wb, ws, cancellationToken: Current.CancellationToken);
 
 		ws.Cell(1, 1).Value.ToString().ShouldBe("StringProperty");
 		ws.Cell(2, 1).Value.ToString().ShouldNotBeEmpty();
@@ -678,7 +679,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 
-		data.ExcelExport(wb, ws, cancellationToken: TestContext.Current.CancellationToken);
+		data.ExcelExport(wb, ws, cancellationToken: Current.CancellationToken);
 
 		// 3 properties = 3 columns
 		ws.LastColumnUsed()!.ColumnNumber().ShouldBe(3);
@@ -691,7 +692,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		List<TestData> data = fixture.CreateMany<TestData>(3).ToList();
 
-		data.ExcelExport(wb, ws, skipColumnNames: ["DateProperty"], cancellationToken: TestContext.Current.CancellationToken);
+		data.ExcelExport(wb, ws, skipColumnNames: ["DateProperty"], cancellationToken: Current.CancellationToken);
 
 		// DateProperty excluded: only StringProperty + IntProperty remain
 		ws.LastColumnUsed()!.ColumnNumber().ShouldBe(2);
@@ -706,7 +707,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 
-		data.ExcelExport(wb, ws, wrapText: true, cancellationToken: TestContext.Current.CancellationToken);
+		data.ExcelExport(wb, ws, wrapText: true, cancellationToken: Current.CancellationToken);
 
 		// Header row should have wrap text enabled
 		ws.Cell(1, 1).Style.Alignment.WrapText.ShouldBeTrue();
@@ -719,7 +720,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		List<TestData> data = fixture.CreateMany<TestData>(3).ToList();
 
-		data.ExcelExport(wb, ws, createTable: true, cancellationToken: TestContext.Current.CancellationToken);
+		data.ExcelExport(wb, ws, createTable: true, cancellationToken: Current.CancellationToken);
 
 		ws.Tables.Count().ShouldBe(1);
 	}
@@ -731,7 +732,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 
-		data.ExcelExport(wb, ws, cancellationToken: TestContext.Current.CancellationToken);
+		data.ExcelExport(wb, ws, cancellationToken: Current.CancellationToken);
 
 		ws.Column(1).Width.ShouldBeGreaterThan(0);
 	}
@@ -743,7 +744,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 
-		bool result = data.ExcelExport(wb, ws, tableName: "   ", cancellationToken: TestContext.Current.CancellationToken);
+		bool result = data.ExcelExport(wb, ws, tableName: "   ", cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeTrue();
 		ws.Cell(1, 1).Value.ToString().ShouldBe("StringProperty");
@@ -757,7 +758,7 @@ public sealed class ExportTests : IDisposable
 		List<TestData> data = fixture.CreateMany<TestData>(2).ToList();
 		string longTable = new('T', 256);
 
-		bool result = data.ExcelExport(wb, ws, tableName: longTable, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = data.ExcelExport(wb, ws, tableName: longTable, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeFalse();
 	}
@@ -770,7 +771,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		List<TestData?> data = [null, fixture.Create<TestData>()];
 
-		bool result = data.ExcelExport<TestData?>(wb, ws, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = data.ExcelExport<TestData?>(wb, ws, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeTrue();
 		// Row 2 should be the non-null item (null item was skipped)
@@ -790,7 +791,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		using DataTable dt = MakeDataTable(4);
 
-		dt.ExcelExport(wb, ws, cancellationToken: TestContext.Current.CancellationToken);
+		dt.ExcelExport(wb, ws, cancellationToken: Current.CancellationToken);
 
 		ws.Cell(1, 1).Value.ToString().ShouldBe("Col1");
 		ws.Cell(2, 1).Value.ToString().ShouldNotBeEmpty();
@@ -803,7 +804,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		using DataTable dt = MakeDataTable(2);
 
-		dt.ExcelExport(wb, ws, cancellationToken: TestContext.Current.CancellationToken);
+		dt.ExcelExport(wb, ws, cancellationToken: Current.CancellationToken);
 
 		ws.LastColumnUsed()!.ColumnNumber().ShouldBe(2);
 	}
@@ -815,7 +816,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		using DataTable dt = MakeDataTable(3);
 
-		dt.ExcelExport(wb, ws, skipColumnNames: ["Col2"], cancellationToken: TestContext.Current.CancellationToken);
+		dt.ExcelExport(wb, ws, skipColumnNames: ["Col2"], cancellationToken: Current.CancellationToken);
 
 		ws.LastColumnUsed()!.ColumnNumber().ShouldBe(1);
 		ws.Cell(1, 1).Value.ToString().ShouldBe("Col1");
@@ -828,7 +829,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		using DataTable dt = MakeDataTable(2);
 
-		dt.ExcelExport(wb, ws, wrapText: true, cancellationToken: TestContext.Current.CancellationToken);
+		dt.ExcelExport(wb, ws, wrapText: true, cancellationToken: Current.CancellationToken);
 
 		ws.Cell(1, 1).Style.Alignment.WrapText.ShouldBeTrue();
 	}
@@ -840,7 +841,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		using DataTable dt = MakeDataTable(3);
 
-		dt.ExcelExport(wb, ws, createTable: true, cancellationToken: TestContext.Current.CancellationToken);
+		dt.ExcelExport(wb, ws, createTable: true, cancellationToken: Current.CancellationToken);
 
 		ws.Tables.Count().ShouldBe(1);
 	}
@@ -852,7 +853,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		using DataTable dt = MakeDataTable(2);
 
-		dt.ExcelExport(wb, ws, createTable: true, tableStyle: ETableStyle.TableStyleMedium9, cancellationToken: TestContext.Current.CancellationToken);
+		dt.ExcelExport(wb, ws, createTable: true, tableStyle: ETableStyle.TableStyleMedium9, cancellationToken: Current.CancellationToken);
 
 		ws.Tables.Count().ShouldBe(1);
 	}
@@ -864,7 +865,7 @@ public sealed class ExportTests : IDisposable
 		IXLWorksheet ws = wb.AddWorksheet(TestSheetName);
 		using DataTable dt = MakeDataTable(2);
 
-		bool result = dt.ExcelExport(wb, ws, tableName: "   ", cancellationToken: TestContext.Current.CancellationToken);
+		bool result = dt.ExcelExport(wb, ws, tableName: "   ", cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeTrue();
 		ws.Cell(1, 1).Value.ToString().ShouldBe("Col1");
@@ -878,7 +879,7 @@ public sealed class ExportTests : IDisposable
 		using DataTable dt = MakeDataTable(2);
 		string longTable = new('T', 256);
 
-		bool result = dt.ExcelExport(wb, ws, tableName: longTable, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = dt.ExcelExport(wb, ws, tableName: longTable, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeFalse();
 	}

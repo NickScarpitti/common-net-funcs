@@ -2,6 +2,7 @@
 using System.Globalization;
 using AutoFixture;
 using CommonNetFuncs.Csv;
+using static Xunit.TestContext;
 
 namespace Csv.Tests;
 
@@ -24,7 +25,7 @@ public sealed class CsvExportHelpersTests
 		await using MemoryStream memoryStream = new();
 
 		// Act
-		await using MemoryStream result = await testData.ExportToCsv(memoryStream, cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await testData.ExportToCsv(memoryStream, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -32,7 +33,7 @@ public sealed class CsvExportHelpersTests
 
 		result.Position = 0;
 		using StreamReader reader = new(result);
-		string csvContent = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string csvContent = await reader.ReadToEndAsync(Current.CancellationToken);
 
 		// Verify header
 		csvContent.ShouldContain("Name,Age,BirthDate");
@@ -53,7 +54,7 @@ public sealed class CsvExportHelpersTests
 		IEnumerable<TestRecord> testData = fixture.CreateMany<TestRecord>(1);
 
 		// Act
-		await using MemoryStream result = await testData.ExportToCsv(cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await testData.ExportToCsv(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -78,7 +79,7 @@ public sealed class CsvExportHelpersTests
 		dataTable.Rows.Add(values);
 
 		// Act
-		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -86,7 +87,7 @@ public sealed class CsvExportHelpersTests
 
 		result.Position = 0;
 		using StreamReader reader = new(result);
-		string csvContent = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string csvContent = await reader.ReadToEndAsync(Current.CancellationToken);
 
 		// Verify content
 		string[] lines = csvContent.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
@@ -109,13 +110,13 @@ public sealed class CsvExportHelpersTests
 		dataTable.Rows.Add(row);
 
 		// Act
-		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Position = 0;
 		using StreamReader reader = new(result);
-		string csvContent = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string csvContent = await reader.ReadToEndAsync(Current.CancellationToken);
 
 		string[] lines = csvContent.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 		lines[1].ShouldBe(",Value2");
@@ -132,13 +133,13 @@ public sealed class CsvExportHelpersTests
 		dataTable.Rows.Add(valueWithComma);
 
 		// Act
-		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Position = 0;
 		using StreamReader reader = new(result);
-		string csvContent = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string csvContent = await reader.ReadToEndAsync(Current.CancellationToken);
 
 		string[] lines = csvContent.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 		lines[1].ShouldBe($"\"{valueWithComma}\"");
@@ -152,7 +153,7 @@ public sealed class CsvExportHelpersTests
 		await using MemoryStream providedStream = new();
 
 		// Act
-		await using MemoryStream result = await testData.ExportToCsv(providedStream, cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await testData.ExportToCsv(providedStream, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeSameAs(providedStream);
@@ -170,7 +171,7 @@ public sealed class CsvExportHelpersTests
 		await using MemoryStream providedStream = new();
 
 		// Act
-		await using MemoryStream result = await dataTable.ExportToCsv(providedStream, cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await dataTable.ExportToCsv(providedStream, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeSameAs(providedStream);
@@ -184,13 +185,13 @@ public sealed class CsvExportHelpersTests
 		IEnumerable<TestRecord> emptyData = [];
 
 		// Act
-		await using MemoryStream result = await emptyData.ExportToCsv(cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await emptyData.ExportToCsv(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Position = 0;
 		using StreamReader reader = new(result);
-		string csvContent = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string csvContent = await reader.ReadToEndAsync(Current.CancellationToken);
 
 		// Should contain header
 		csvContent.ShouldContain("Name,Age,BirthDate");
@@ -205,13 +206,13 @@ public sealed class CsvExportHelpersTests
 		dataTable.Columns.Add("Column2");
 
 		// Act
-		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Position = 0;
 		using StreamReader reader = new(result);
-		string csvContent = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string csvContent = await reader.ReadToEndAsync(Current.CancellationToken);
 
 		string[] lines = csvContent.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 		lines.Length.ShouldBe(1); // Header only
@@ -232,13 +233,13 @@ public sealed class CsvExportHelpersTests
 		}
 
 		// Act
-		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Position = 0;
 		using StreamReader reader = new(result);
-		string csvContent = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string csvContent = await reader.ReadToEndAsync(Current.CancellationToken);
 
 		string[] lines = csvContent.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 		lines.Length.ShouldBe(6); // Header + 5 data rows
@@ -261,13 +262,13 @@ public sealed class CsvExportHelpersTests
 		dataTable.Rows.Add("No comma", "Another, with comma");
 
 		// Act
-		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Position = 0;
 		using StreamReader reader = new(result);
-		string csvContent = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string csvContent = await reader.ReadToEndAsync(Current.CancellationToken);
 
 		string[] lines = csvContent.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 		lines[1].ShouldBe("\"Test, with comma\",No comma");
@@ -284,13 +285,13 @@ public sealed class CsvExportHelpersTests
 		dataTable.Rows.Add("Value2");
 
 		// Act
-		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Position = 0;
 		using StreamReader reader = new(result);
-		string csvContent = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string csvContent = await reader.ReadToEndAsync(Current.CancellationToken);
 
 		string[] lines = csvContent.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 		lines[0].ShouldBe("SingleColumn");
@@ -314,13 +315,13 @@ public sealed class CsvExportHelpersTests
 		dataTable.Rows.Add(row);
 
 		// Act
-		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await dataTable.ExportToCsv(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		result.Position = 0;
 		using StreamReader reader = new(result);
-		string csvContent = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string csvContent = await reader.ReadToEndAsync(Current.CancellationToken);
 
 		string[] lines = csvContent.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 		lines[1].ShouldBe(",,");
@@ -338,7 +339,7 @@ public sealed class CsvExportHelpersTests
 		];
 
 		// Act
-		await using MemoryStream result = await testData.ExportToCsv(cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await testData.ExportToCsv(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -346,7 +347,7 @@ public sealed class CsvExportHelpersTests
 
 		result.Position = 0;
 		using StreamReader reader = new(result);
-		string csvContent = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string csvContent = await reader.ReadToEndAsync(Current.CancellationToken);
 
 		// CsvHelper should handle quoting automatically
 		csvContent.ShouldNotBeNullOrEmpty();
@@ -360,7 +361,7 @@ public sealed class CsvExportHelpersTests
 		await using ThrowingStream throwingStream = new();
 
 		// Act
-		await using MemoryStream result = await testData.ExportToCsv(throwingStream, cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await testData.ExportToCsv(throwingStream, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		// The method should handle the exception and return the stream
@@ -385,7 +386,7 @@ public sealed class CsvExportHelpersTests
 		await using ThrowingStream throwingStream = new();
 
 		// Act
-		await using MemoryStream result = await dataTable.ExportToCsv(throwingStream, cancellationToken: TestContext.Current.CancellationToken);
+		await using MemoryStream result = await dataTable.ExportToCsv(throwingStream, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		// The method should handle the exception and return the stream

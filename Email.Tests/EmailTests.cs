@@ -1,9 +1,9 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using AutoFixture.Xunit3;
 using CommonNetFuncs.Email;
-using MailKit.Security;
 using MimeKit;
 using static CommonNetFuncs.Email.Email;
+using static Xunit.TestContext;
 
 namespace Email.Tests;
 
@@ -107,7 +107,7 @@ public sealed class EmailTests
 		};
 
 		// Act
-		bool result = await SendEmail(new SendEmailConfig() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent }, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(new SendEmailConfig() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent }, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -137,7 +137,7 @@ public sealed class EmailTests
 		};
 
 		// Act
-		bool result = await SendEmail(new SendEmailConfig() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent }, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(new SendEmailConfig() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent }, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -155,7 +155,7 @@ public sealed class EmailTests
 		};
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, true, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, true, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(1);
@@ -176,7 +176,7 @@ public sealed class EmailTests
 		};
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, false, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, false, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(2);
@@ -220,7 +220,7 @@ public sealed class EmailTests
 			EmailContent = emailContent,
 			ReadReceipt = true,
 			ReadReceiptEmail = "receipt@example.com"
-		}, TestContext.Current.CancellationToken);
+		}, Current.CancellationToken);
 
 		// Note: We can't actually verify the header here since the SMTP interaction
 		// is encapsulated, but the method should complete without throwing
@@ -252,7 +252,7 @@ public sealed class EmailTests
 		};
 
 		// Act
-		bool result = await SendEmail(new SendEmailConfig() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent }, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(new SendEmailConfig() { SmtpSettings = smtpSettings, EmailAddresses = emailAddresses, EmailContent = emailContent }, Current.CancellationToken);
 
 		// Note: Similar to above, we can't directly verify the content type
 		// but the method should complete without throwing
@@ -420,7 +420,7 @@ public sealed class EmailTests
 		};
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, false, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, false, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(3);
@@ -441,7 +441,7 @@ public sealed class EmailTests
 		};
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, true, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, true, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(1);
@@ -460,7 +460,7 @@ public sealed class EmailTests
 		};
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, false, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, false, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(2);

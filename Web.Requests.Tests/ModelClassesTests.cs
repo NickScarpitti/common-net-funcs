@@ -3,6 +3,7 @@ using CommonNetFuncs.Web.Requests;
 using CommonNetFuncs.Web.Requests.Rest;
 using MemoryPack;
 using MessagePack;
+using static Xunit.TestContext;
 
 namespace Web.Requests.Tests;
 
@@ -40,8 +41,8 @@ public sealed class ModelClassesTests
 		};
 
 		// Act
-		byte[] serialized = MessagePackSerializer.Serialize(original, cancellationToken: TestContext.Current.CancellationToken);
-		AsyncIntString? deserialized = MessagePackSerializer.Deserialize<AsyncIntString>(serialized, cancellationToken: TestContext.Current.CancellationToken);
+		byte[] serialized = MessagePackSerializer.Serialize(original, cancellationToken: Current.CancellationToken);
+		AsyncIntString? deserialized = MessagePackSerializer.Deserialize<AsyncIntString>(serialized, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		deserialized.ShouldNotBeNull();

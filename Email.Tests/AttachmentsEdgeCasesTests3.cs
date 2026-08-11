@@ -1,9 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using AutoFixture.Xunit3;
-using CommonNetFuncs.Email;
-using MailKit.Security;
-using MimeKit;
+﻿using CommonNetFuncs.Email;
 using static CommonNetFuncs.Email.Email;
+using static Xunit.TestContext;
 
 namespace Email.Tests;
 
@@ -37,7 +34,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert - Should fail after retries
 		result.ShouldBeFalse();
@@ -65,7 +62,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -93,7 +90,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -121,7 +118,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -178,7 +175,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -209,7 +206,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -237,7 +234,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -279,7 +276,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -310,7 +307,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -345,7 +342,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -381,7 +378,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -412,7 +409,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Should fail after all retry attempts
@@ -440,7 +437,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Should fail after all retry attempts
@@ -468,7 +465,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Should fail due to no server
@@ -496,7 +493,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Should fail due to no server
@@ -524,7 +521,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Should fail due to no server
@@ -552,7 +549,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Should fail due to no server but should attempt authenticated connection
@@ -580,7 +577,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -608,7 +605,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -661,7 +658,7 @@ public sealed class AttachmentsEdgeCasesTests3
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Should fail due to invalid SMTP server

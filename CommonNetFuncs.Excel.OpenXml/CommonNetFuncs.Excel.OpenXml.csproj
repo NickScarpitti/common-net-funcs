@@ -85,7 +85,6 @@
 		<PackageReference Include="System.Security.Cryptography.Xml" />
 		<PackageReference Include="SkiaSharp" PrivateAssets="all" />
 		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" PrivateAssets="all" />
-
 	</ItemGroup>
 
 	<ItemGroup>

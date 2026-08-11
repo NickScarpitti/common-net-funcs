@@ -29,6 +29,7 @@ public class MessagePackStreamingResult<T>(IAsyncEnumerable<T> data, MessagePack
 		ArgumentNullException.ThrowIfNull(context);
 
 		HttpResponse response = context.HttpContext.Response;
+		CancellationToken cancellationToken = context.HttpContext.RequestAborted;
 		response.ContentType = "application/x-msgpack";
 		response.StatusCode = _successStatusCode ?? StatusCodes.Status200OK;
 
@@ -36,7 +37,7 @@ public class MessagePackStreamingResult<T>(IAsyncEnumerable<T> data, MessagePack
 
 		try
 		{
-			await foreach (T item in _data.ConfigureAwait(false))
+			await foreach (T item in _data.WithCancellation(cancellationToken).ConfigureAwait(false))
 			{
 				hasData = true;
 
@@ -45,14 +46,19 @@ public class MessagePackStreamingResult<T>(IAsyncEnumerable<T> data, MessagePack
 				MessagePackSerializer.Serialize(bufferWriter, item, _options ?? MessagePackSerializerOptions.Standard);
 
 				// Write the serialized bytes to the response stream
-				await response.Body.WriteAsync(bufferWriter.WrittenMemory, context.HttpContext.RequestAborted).ConfigureAwait(false);
-				await response.Body.FlushAsync(context.HttpContext.RequestAborted).ConfigureAwait(false);
+				await response.Body.WriteAsync(bufferWriter.WrittenMemory, cancellationToken).ConfigureAwait(false);
+				await response.Body.FlushAsync(cancellationToken).ConfigureAwait(false);
 			}
 
 			if (!hasData)
 			{
 				response.StatusCode = _emptyStatusCode ?? StatusCodes.Status204NoContent;
 			}
+		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			// Client disconnected or request was aborted; not a server error.
+			response.StatusCode = StatusCodes.Status499ClientClosedRequest; // Non-standard status code for client closed request
 		}
 		catch (Exception)
 		{

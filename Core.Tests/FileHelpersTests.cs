@@ -1,6 +1,7 @@
 ﻿using System.IO.Pipelines;
 using System.Text;
 using CommonNetFuncs.Core;
+using static Xunit.TestContext;
 
 namespace Core.Tests;
 
@@ -33,7 +34,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		string fileName = Path.Combine(tempDir, "test.txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 		string duplicateName = fileName;
 
 		// Act
@@ -80,7 +81,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "test2.txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Act
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName);
@@ -144,7 +145,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		string fileName = Path.Combine(tempDir, $"hash_{algo}.txt");
 		const string content = "hash test content";
-		await File.WriteAllTextAsync(fileName, content, Encoding.UTF8, TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, content, Encoding.UTF8, Current.CancellationToken);
 
 		// Act
 		string fileHash = await fileName.GetHashFromFile(algo);
@@ -179,11 +180,11 @@ public sealed class FileHelpersTests : IDisposable
 		Directory.CreateDirectory(subDir);
 		string file1 = Path.Combine(tempDir, "a.txt");
 		string file2 = Path.Combine(subDir, "b.txt");
-		await File.WriteAllTextAsync(file1, "1", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(file2, "2", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(file1, "1", Current.CancellationToken);
+		await File.WriteAllTextAsync(file2, "2", Current.CancellationToken);
 
 		// Act
-		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: TestContext.Current.CancellationToken);
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		files.ShouldContain(file1);
@@ -197,8 +198,8 @@ public sealed class FileHelpersTests : IDisposable
 		string missingDir = Path.Combine(tempDir, "notfound");
 
 		// Act
-		IEnumerable<string> files1 = FileHelpers.GetAllFilesRecursive(missingDir, cancellationToken: TestContext.Current.CancellationToken);
-		IEnumerable<string> files2 = FileHelpers.GetAllFilesRecursive(null, cancellationToken: TestContext.Current.CancellationToken);
+		IEnumerable<string> files1 = FileHelpers.GetAllFilesRecursive(missingDir, cancellationToken: Current.CancellationToken);
+		IEnumerable<string> files2 = FileHelpers.GetAllFilesRecursive(null, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		files1.ShouldBeEmpty();
@@ -214,12 +215,12 @@ public sealed class FileHelpersTests : IDisposable
 		string file1 = Path.Combine(tempDir, "a.txt");
 		string file2 = Path.Combine(subDir, "b.txt");
 		string file3 = Path.Combine(subDir, "c.doc");
-		await File.WriteAllTextAsync(file1, "1", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(file2, "2", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(file3, "3", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(file1, "1", Current.CancellationToken);
+		await File.WriteAllTextAsync(file2, "2", Current.CancellationToken);
+		await File.WriteAllTextAsync(file3, "3", Current.CancellationToken);
 
 		// Act
-		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, "*.txt", TestContext.Current.CancellationToken);
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, "*.txt", Current.CancellationToken);
 
 		// Assert
 		files.ShouldContain(file1);
@@ -233,7 +234,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "test (3).txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", cancellationToken: TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", cancellationToken: Current.CancellationToken);
 
 		// Act
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false);
@@ -249,7 +250,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "test (1).txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", cancellationToken: TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", cancellationToken: Current.CancellationToken);
 
 		// Act
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName);
@@ -267,7 +268,7 @@ public sealed class FileHelpersTests : IDisposable
 		// This is tricky to simulate directly, so we can use a file name that matches the incrementing pattern but doesn't actually change after replacement.
 		const string fileName = "test (0).txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Act
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName);
@@ -283,7 +284,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange - Test the hasIterator branch with proper directory path
 		string fileName = Path.Combine(tempDir, "file (0).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act
 		string safeName = fileName.GetSafeSaveName();
@@ -299,7 +300,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange - Create a file with malformed pattern that could cause issues
 		string fileName = Path.Combine(tempDir, "test(broken).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act - Should not hang, should complete quickly
 		string safeName = fileName.GetSafeSaveName();
@@ -317,7 +318,7 @@ public sealed class FileHelpersTests : IDisposable
 		for (int i = 0; i < 5; i++)
 		{
 			string filePath = Path.Combine(tempDir, $"{baseName} ({i}).txt");
-			await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+			await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 		}
 
 		// Act - Should find next available number without infinite loop
@@ -332,7 +333,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange - File with iterator at the end
 		string fileName = Path.Combine(tempDir, "report (99).pdf");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act - Set startFromZero = false to continue from existing number
 		string safeName = fileName.GetSafeSaveName(startFromZero: false);
@@ -347,7 +348,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange - Create a file and test with logging enabled to cover the infinite loop protection logging branch
 		string fileName = Path.Combine(tempDir, "LogTest.txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act - With suppressLogging = false to cover the logging branch in infinite loop protection
 		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
@@ -364,7 +365,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange - Create file and test with logging to cover infinite loop protection logging
 		const string fileName = "test_file.dat";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Act - With suppressLogging = false to ensure infinite loop protection logging is covered
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
@@ -382,7 +383,7 @@ public sealed class FileHelpersTests : IDisposable
 		for (int i = 0; i < 100; i++)
 		{
 			string filePath = Path.Combine(tempDir, $"{baseName} ({i}).log");
-			await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+			await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 		}
 
 		// Act - Should find the next available number and not loop infinitely
@@ -402,7 +403,7 @@ public sealed class FileHelpersTests : IDisposable
 		for (int i = 0; i < 50; i++)
 		{
 			string filePath = Path.Combine(tempDir, $"{baseName} ({i}).dat");
-			await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+			await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 		}
 
 		// Act - Should handle many existing files without infinite loop
@@ -418,7 +419,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange - File with very long name to test edge case
 		string longName = new('a', 200);
 		string fileName = Path.Combine(tempDir, $"{longName}.txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act - Should handle long filenames without infinite loop
 		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
@@ -435,7 +436,7 @@ public sealed class FileHelpersTests : IDisposable
 		string longName = new('b', 150);
 		string fileName = $"{longName}.log";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Act
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
@@ -450,7 +451,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange - File with pattern that won't match the numeric iterator pattern
 		string fileName = Path.Combine(tempDir, "file (abc).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act - Should not loop infinitely even though pattern doesn't match [0-9]+
 		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
@@ -467,7 +468,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "document (xyz).pdf";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Act
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
@@ -481,7 +482,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange - File with multiple parentheses groups - regex matches last numeric group before extension
 		string fileName = Path.Combine(tempDir, "file (old) (1).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act - Use startFromZero=false to continue from existing number
 		string safeName = fileName.GetSafeSaveName(startFromZero: false, suppressLogging: false);
@@ -497,7 +498,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange - The regex matches the last numeric group before extension
 		const string fileName = "report (2023) (5).xlsx";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Act - Use startFromZero=false to continue from existing number
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false, suppressLogging: false);
@@ -527,7 +528,7 @@ public sealed class FileHelpersTests : IDisposable
 			successValue,
 			"TooLarge",
 			null,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeTrue();
@@ -537,7 +538,7 @@ public sealed class FileHelpersTests : IDisposable
 
 		outputStream.Position = 0;
 		using StreamReader reader = new(outputStream);
-		string actualData = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string actualData = await reader.ReadToEndAsync(Current.CancellationToken);
 		actualData.ShouldBe(testData);
 	}
 
@@ -560,7 +561,7 @@ public sealed class FileHelpersTests : IDisposable
 			"Success",
 			tooLargeValue,
 			null,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeFalse();
@@ -583,7 +584,7 @@ public sealed class FileHelpersTests : IDisposable
 			successValue,
 			0,
 			null,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeTrue();
@@ -613,14 +614,14 @@ public sealed class FileHelpersTests : IDisposable
 			"OK",
 			"TooLarge",
 			null,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeTrue();
 		result.ShouldBe("OK");
 		outputStream.Position = 0;
 		using StreamReader reader = new(outputStream);
-		string actualData = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string actualData = await reader.ReadToEndAsync(Current.CancellationToken);
 		actualData.ShouldBe(part1 + part2 + part3);
 	}
 
@@ -645,7 +646,7 @@ public sealed class FileHelpersTests : IDisposable
 			"Success",
 			"TooLarge",
 			ErrorHandler,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeFalse();
@@ -667,7 +668,7 @@ public sealed class FileHelpersTests : IDisposable
 				"Success",
 				"TooLarge",
 				null,
-				TestContext.Current.CancellationToken));
+				Current.CancellationToken));
 
 		exception.Message.ShouldBe("Error reading file from pipe");
 		exception.InnerException.ShouldNotBeNull();
@@ -715,7 +716,7 @@ public sealed class FileHelpersTests : IDisposable
 			null,
 			null,
 			null,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeTrue();
@@ -742,7 +743,7 @@ public sealed class FileHelpersTests : IDisposable
 			outputStream,
 			successValue,
 			null,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeTrue();
@@ -752,7 +753,7 @@ public sealed class FileHelpersTests : IDisposable
 
 		outputStream.Position = 0;
 		using StreamReader reader = new(outputStream);
-		string actualData = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string actualData = await reader.ReadToEndAsync(Current.CancellationToken);
 		actualData.ShouldBe(testData);
 	}
 
@@ -772,7 +773,7 @@ public sealed class FileHelpersTests : IDisposable
 			outputStream,
 			successValue,
 			null,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeTrue();
@@ -793,7 +794,7 @@ public sealed class FileHelpersTests : IDisposable
 			outputStream,
 			successValue,
 			null,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeTrue();
@@ -820,14 +821,14 @@ public sealed class FileHelpersTests : IDisposable
 			outputStream,
 			"Complete",
 			null,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeTrue();
 		result.ShouldBe("Complete");
 		outputStream.Position = 0;
 		using StreamReader reader = new(outputStream);
-		string actualData = await reader.ReadToEndAsync(TestContext.Current.CancellationToken);
+		string actualData = await reader.ReadToEndAsync(Current.CancellationToken);
 		actualData.ShouldBe(part1 + part2 + part3);
 	}
 
@@ -850,7 +851,7 @@ public sealed class FileHelpersTests : IDisposable
 			outputStream,
 			"Success",
 			ErrorHandler,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeFalse();
@@ -869,7 +870,7 @@ public sealed class FileHelpersTests : IDisposable
 				outputStream,
 				"Success",
 				null,
-				TestContext.Current.CancellationToken));
+				Current.CancellationToken));
 
 		exception.Message.ShouldBe("Error reading file from pipe");
 		exception.InnerException.ShouldNotBeNull();
@@ -911,7 +912,7 @@ public sealed class FileHelpersTests : IDisposable
 			outputStream,
 			null,
 			null,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeTrue();
@@ -931,7 +932,7 @@ public sealed class FileHelpersTests : IDisposable
 			outputStream,
 			null,
 			null,
-			TestContext.Current.CancellationToken);
+			Current.CancellationToken);
 
 		// Assert
 		success.ShouldBeTrue();
@@ -995,7 +996,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		string fileName = Path.Combine(tempDir, "logging_test.txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act - suppressLogging=false (default)
 		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
@@ -1067,7 +1068,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "logging_test2.txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Act - suppressLogging=false (default)
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
@@ -1096,7 +1097,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "loop_test (0).txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Act - suppressLogging=false to hit logging in loop break
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: false);
@@ -1216,7 +1217,7 @@ public sealed class FileHelpersTests : IDisposable
 		// The actual exception handling is tested indirectly
 
 		// Act
-		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: TestContext.Current.CancellationToken);
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		files.ShouldContain(accessibleFile);
@@ -1256,10 +1257,10 @@ public sealed class FileHelpersTests : IDisposable
 
 		// Only add files to one directory
 		string file1 = Path.Combine(dirWithFiles, "file1.txt");
-		await File.WriteAllTextAsync(file1, "content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(file1, "content", Current.CancellationToken);
 
 		// Act
-		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: TestContext.Current.CancellationToken);
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: Current.CancellationToken);
 		List<string> fileList = files.ToList();
 
 		// Assert - Should only find files in dirWithFiles, not count empty directories
@@ -1286,12 +1287,12 @@ public sealed class FileHelpersTests : IDisposable
 		string file2 = Path.Combine(level2WithFile, "file2.txt");
 		string file3 = Path.Combine(level3, "file3.txt");
 
-		await File.WriteAllTextAsync(file1, "1", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(file2, "2", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(file3, "3", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(file1, "1", Current.CancellationToken);
+		await File.WriteAllTextAsync(file2, "2", Current.CancellationToken);
+		await File.WriteAllTextAsync(file3, "3", Current.CancellationToken);
 
 		// Act
-		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: TestContext.Current.CancellationToken);
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: Current.CancellationToken);
 		List<string> fileList = files.ToList();
 
 		// Assert - Should find all files regardless of nesting and empty sibling directories
@@ -1319,11 +1320,11 @@ public sealed class FileHelpersTests : IDisposable
 		string txtFile = Path.Combine(dirWithFiles, "document.txt");
 		string docFile = Path.Combine(dirWithFiles, "document.doc");
 
-		await File.WriteAllTextAsync(txtFile, "text", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(docFile, "doc", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(txtFile, "text", Current.CancellationToken);
+		await File.WriteAllTextAsync(docFile, "doc", Current.CancellationToken);
 
 		// Act - Search only for .txt files
-		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, "*.txt", TestContext.Current.CancellationToken);
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, "*.txt", Current.CancellationToken);
 		List<string> fileList = files.ToList();
 
 		// Assert - Should only find .txt file, ignoring empty directories
@@ -1345,7 +1346,7 @@ public sealed class FileHelpersTests : IDisposable
 		Directory.CreateDirectory(empty3);
 
 		// Act
-		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: TestContext.Current.CancellationToken);
+		IEnumerable<string> files = FileHelpers.GetAllFilesRecursive(tempDir, cancellationToken: Current.CancellationToken);
 		List<string> fileList = files.ToList();
 
 		// Assert - Should return empty list since no files exist
@@ -1357,7 +1358,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		string fileName = Path.Combine(tempDir, "test (5).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act - startFromZero=true (default) should start incrementing from 0
 		string safeName = fileName.GetSafeSaveName(startFromZero: true);
@@ -1372,7 +1373,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		string fileName = Path.Combine(tempDir, "test_no_iterator.txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act - startFromZero=false but no iterator present, so should start from 0
 		string safeName = fileName.GetSafeSaveName(startFromZero: false);
@@ -1387,7 +1388,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange - filename has parentheses but not a valid number
 		string fileName = Path.Combine(tempDir, "test (abc).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act - startFromZero=false but iterator isn't a valid int, so should start from 0
 		string safeName = fileName.GetSafeSaveName(startFromZero: false);
@@ -1403,7 +1404,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "test_path (10).txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Act - startFromZero=true (default)
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: true);
@@ -1419,7 +1420,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "no_iter_test.txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Act - startFromZero=false but no iterator, so starts from 0
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false);
@@ -1435,7 +1436,7 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "test (xyz).txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Act - startFromZero=false but invalid iterator
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false);
@@ -1450,7 +1451,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		string fileName = Path.Combine(tempDir, "test_with_iterator (5).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Act - suppressLogging=false (default)
 		string safeName = fileName.GetSafeSaveName(suppressLogging: false);
@@ -1475,7 +1476,7 @@ public sealed class FileHelpersTests : IDisposable
 				"Success",
 				"TooLarge",
 				null,
-				TestContext.Current.CancellationToken));
+				Current.CancellationToken));
 
 		// The actual exception type should be preserved
 		exception.ShouldNotBeNull();
@@ -1493,7 +1494,7 @@ public sealed class FileHelpersTests : IDisposable
 				outputStream,
 				"Success",
 				null,
-				TestContext.Current.CancellationToken));
+				Current.CancellationToken));
 
 		// The actual exception type should be preserved
 		exception.ShouldNotBeNull();
@@ -1504,11 +1505,11 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange - file with iterator pattern already exists
 		string fileName = Path.Combine(tempDir, "file_with_iter (2).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		// Create another file with same pattern to force increment
 		string fileName2 = Path.Combine(tempDir, "file_with_iter (0).txt");
-		await File.WriteAllTextAsync(fileName2, "data2", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName2, "data2", Current.CancellationToken);
 
 		// Act - try to save with the original name that has iterator
 		string safeName = fileName.GetSafeSaveName();
@@ -1525,9 +1526,9 @@ public sealed class FileHelpersTests : IDisposable
 		string file1 = Path.Combine(tempDir, "iter_test (5).txt");
 		string file2 = Path.Combine(tempDir, "iter_test (0).txt");
 		string file3 = Path.Combine(tempDir, "iter_test (1).txt");
-		await File.WriteAllTextAsync(file1, "data1", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(file2, "data2", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(file3, "data3", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(file1, "data1", Current.CancellationToken);
+		await File.WriteAllTextAsync(file2, "data2", Current.CancellationToken);
+		await File.WriteAllTextAsync(file3, "data3", Current.CancellationToken);
 
 		// Act - try to save with iterator pattern
 		string safeName = file1.GetSafeSaveName();
@@ -1543,11 +1544,11 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "path_iter_test (3).txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		const string fileName2 = "path_iter_test (0).txt";
 		string filePath2 = Path.Combine(tempDir, fileName2);
-		await File.WriteAllTextAsync(filePath2, "data2", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath2, "data2", Current.CancellationToken);
 
 		// Act
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName);
@@ -1563,11 +1564,11 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "suppress_iter (7).txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		const string fileName2 = "suppress_iter (0).txt";
 		string filePath2 = Path.Combine(tempDir, fileName2);
-		await File.WriteAllTextAsync(filePath2, "data2", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath2, "data2", Current.CancellationToken);
 
 		// Act - with suppressLogging=true
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, suppressLogging: true);
@@ -1582,10 +1583,10 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange
 		string fileName = Path.Combine(tempDir, "suppress_str_iter (9).txt");
-		await File.WriteAllTextAsync(fileName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "data", Current.CancellationToken);
 
 		string fileName2 = Path.Combine(tempDir, "suppress_str_iter (0).txt");
-		await File.WriteAllTextAsync(fileName2, "data2", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName2, "data2", Current.CancellationToken);
 
 		// Act - with suppressLogging=true
 		string safeName = fileName.GetSafeSaveName(suppressLogging: true);
@@ -1602,9 +1603,9 @@ public sealed class FileHelpersTests : IDisposable
 		string baseFile = Path.Combine(tempDir, "increment_test.txt");
 		string file0 = Path.Combine(tempDir, "increment_test (0).txt");
 		string file1 = Path.Combine(tempDir, "increment_test (1).txt");
-		await File.WriteAllTextAsync(baseFile, "base", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(file0, "data0", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(file1, "data1", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(baseFile, "base", Current.CancellationToken);
+		await File.WriteAllTextAsync(file0, "data0", Current.CancellationToken);
+		await File.WriteAllTextAsync(file1, "data1", Current.CancellationToken);
 
 		// Act - pass the base file (without iterator)
 		string safeName = baseFile.GetSafeSaveName();
@@ -1620,9 +1621,9 @@ public sealed class FileHelpersTests : IDisposable
 		const string file0 = "path_gap (0).txt";
 		const string file1 = "path_gap (1).txt";
 		const string file2 = "path_gap (2).txt";
-		await File.WriteAllTextAsync(Path.Combine(tempDir, file0), "data0", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(Path.Combine(tempDir, file1), "data1", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(Path.Combine(tempDir, file2), "data2", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(Path.Combine(tempDir, file0), "data0", Current.CancellationToken);
+		await File.WriteAllTextAsync(Path.Combine(tempDir, file1), "data1", Current.CancellationToken);
+		await File.WriteAllTextAsync(Path.Combine(tempDir, file2), "data2", Current.CancellationToken);
 
 		// Act
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, file0);
@@ -1664,7 +1665,7 @@ public sealed class FileHelpersTests : IDisposable
 		string fileName = Path.Combine(tempDir, "test:file (3).txt");
 		// After cleaning, colon becomes dot, so "test.file (3).txt"
 		string cleanedName = Path.Combine(tempDir, "test.file (3).txt");
-		await File.WriteAllTextAsync(cleanedName, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(cleanedName, "data", Current.CancellationToken);
 
 		// Act
 		string safeName = fileName.GetSafeSaveName(createPathIfMissing: true);
@@ -1680,13 +1681,13 @@ public sealed class FileHelpersTests : IDisposable
 		// Arrange
 		const string fileName = "start_from (15).txt";
 		string filePath = Path.Combine(tempDir, fileName);
-		await File.WriteAllTextAsync(filePath, "data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(filePath, "data", Current.CancellationToken);
 
 		// Also create (15), (16) to force increment
 		const string file15 = "start_from (15).txt";
 		const string file16 = "start_from (16).txt";
-		await File.WriteAllTextAsync(Path.Combine(tempDir, file15), "d15", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(Path.Combine(tempDir, file16), "d16", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(Path.Combine(tempDir, file15), "d15", Current.CancellationToken);
+		await File.WriteAllTextAsync(Path.Combine(tempDir, file16), "d16", Current.CancellationToken);
 
 		// Act - startFromZero=false should start from the number in the filename
 		string safeName = FileHelpers.GetSafeSaveName(tempDir, fileName, startFromZero: false);
@@ -1700,13 +1701,13 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange - test file without iterator
 		string baseFile = Path.Combine(tempDir, "string_start.txt");
-		await File.WriteAllTextAsync(baseFile, "base", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(baseFile, "base", Current.CancellationToken);
 
 		// Create files with iterators
 		string file0 = Path.Combine(tempDir, "string_start (0).txt");
 		string file1 = Path.Combine(tempDir, "string_start (1).txt");
-		await File.WriteAllTextAsync(file0, "d0", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(file1, "d1", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(file0, "d0", Current.CancellationToken);
+		await File.WriteAllTextAsync(file1, "d1", Current.CancellationToken);
 
 		// Act - startFromZero=true (default) should start from 0 and find (2)
 		string safeName = baseFile.GetSafeSaveName(startFromZero: true);
@@ -1733,7 +1734,7 @@ public sealed class FileHelpersTests : IDisposable
 	{
 		// Arrange - Create a file then try to get hash while it's locked
 		string fileName = Path.Combine(tempDir, "locked_file.txt");
-		await File.WriteAllTextAsync(fileName, "content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(fileName, "content", Current.CancellationToken);
 
 		// Act - Open file exclusively to lock it, then try to get hash
 		await using FileStream lockStream = new(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None);

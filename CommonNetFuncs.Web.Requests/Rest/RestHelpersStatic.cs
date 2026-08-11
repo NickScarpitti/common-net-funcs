@@ -10,7 +10,6 @@ using MemoryPack;
 using MemoryPack.Streaming;
 using MessagePack;
 using Newtonsoft.Json;
-
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.ExceptionLocation;

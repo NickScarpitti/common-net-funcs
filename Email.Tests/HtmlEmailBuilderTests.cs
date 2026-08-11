@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using CommonNetFuncs.Email;
 using static CommonNetFuncs.Email.HtmlEmailBuilder;
+using static Xunit.TestContext;
 
 namespace Email.Tests;
 
@@ -88,7 +89,7 @@ public sealed class HtmlEmailBuilderTests
 		table.Rows.Add("Jane", "25");
 
 		// Act
-		string result = table.CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken);
+		string result = table.CreateHtmlTable(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldContain("<table>");
@@ -114,7 +115,7 @@ public sealed class HtmlEmailBuilderTests
 		table.Rows.Add("Jane", "25");
 
 		// Act
-		string result = BuildHtmlEmail(body, table, footer, TestContext.Current.CancellationToken);
+		string result = BuildHtmlEmail(body, table, footer, Current.CancellationToken);
 
 		// Assert
 		result.ShouldContain("<table>");
@@ -142,7 +143,7 @@ public sealed class HtmlEmailBuilderTests
 		];
 
 		// Act
-		string result = tableData.CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken);
+		string result = tableData.CreateHtmlTable(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldContain("<table>");
@@ -166,7 +167,7 @@ public sealed class HtmlEmailBuilderTests
 		const string customCss = "<style>table { color: red; }</style>";
 
 		// Act
-		string result = tableData.CreateHtmlTable(customCss: customCss, cancellationToken: TestContext.Current.CancellationToken);
+		string result = tableData.CreateHtmlTable(customCss: customCss, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldContain(customCss);
@@ -183,7 +184,7 @@ public sealed class HtmlEmailBuilderTests
 		};
 
 		// Act
-		string result = tableData.CreateHtmlTable(applyTableCss: false, cancellationToken: TestContext.Current.CancellationToken);
+		string result = tableData.CreateHtmlTable(applyTableCss: false, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotContain("<style>");
@@ -202,7 +203,7 @@ public sealed class HtmlEmailBuilderTests
 		};
 
 		// Act
-		string result = BuildHtmlEmail(body, tableData, footer, TestContext.Current.CancellationToken);
+		string result = BuildHtmlEmail(body, tableData, footer, Current.CancellationToken);
 
 		// Assert
 		result.ShouldContain("<br><br>");
@@ -219,8 +220,8 @@ public sealed class HtmlEmailBuilderTests
 		List<List<string>>? emptyList = null;
 
 		// Act
-		string resultFromTable = emptyTable.CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken);
-		string resultFromList = emptyList.CreateHtmlTable(cancellationToken: TestContext.Current.CancellationToken);
+		string resultFromTable = emptyTable.CreateHtmlTable(cancellationToken: Current.CancellationToken);
+		string resultFromList = emptyList.CreateHtmlTable(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		resultFromTable.ShouldBe(string.Empty);

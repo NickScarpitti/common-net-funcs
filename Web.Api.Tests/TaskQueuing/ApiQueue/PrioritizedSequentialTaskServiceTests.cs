@@ -2,6 +2,7 @@
 using CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 using Moq;
+using static Xunit.TestContext;
 
 namespace Web.Api.Tests.TaskQueuing.ApiQueue;
 
@@ -17,7 +18,7 @@ public class PrioritizedSequentialTaskServiceTests
 
 		PrioritizedSequentialTaskService service = new(processorMock.Object);
 
-		object? result = await service.ExecuteAsync(_ => Task.FromResult<int?>(priority), priority, priorityLevel, cancellationToken: TestContext.Current.CancellationToken);
+		object? result = await service.ExecuteAsync(_ => Task.FromResult<int?>(priority), priority, priorityLevel, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBe(priority);
 		processorMock.Verify(x => x.EnqueueWithPriorityAsync(It.IsAny<Func<CancellationToken, Task<int?>>>(), priority, priorityLevel, null, It.IsAny<CancellationToken>()), Moq.Times.Once);

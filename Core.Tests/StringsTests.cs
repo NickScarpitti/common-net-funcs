@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
+using static Xunit.TestContext;
 
 namespace Core.Tests;
 
@@ -304,7 +305,7 @@ public sealed class StringsTests
 	public void ReplaceInvariant_ReplacesText(string? input, string oldValue, string newValue, string? expected)
 	{
 		// Act
-		string? result = input.ReplaceInvariant(oldValue, newValue, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ReplaceInvariant(oldValue, newValue, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(expected);
@@ -338,11 +339,11 @@ public sealed class StringsTests
 		const string input = "THE QUICK BROWN FOX";
 
 		// Act & Assert
-		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: TestContext.Current.CancellationToken).ShouldBe("The Quick Brown Fox");
+		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: Current.CancellationToken).ShouldBe("The Quick Brown Fox");
 
-		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.IgnoreUppercase, cancellationToken: TestContext.Current.CancellationToken).ShouldBe("THE QUICK BROWN FOX");
+		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.IgnoreUppercase, cancellationToken: Current.CancellationToken).ShouldBe("THE QUICK BROWN FOX");
 
-		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 4, cancellationToken: TestContext.Current.CancellationToken).ShouldBe("THE Quick Brown FOX");
+		input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 4, cancellationToken: Current.CancellationToken).ShouldBe("THE Quick Brown FOX");
 	}
 
 	[Theory]
@@ -352,7 +353,7 @@ public sealed class StringsTests
 	public void ToTitleCase_ReturnsInputForNullOrWhitespace(string? input)
 	{
 		// Act
-		string? result = input.ToTitleCase(cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ToTitleCase(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(input);
@@ -533,7 +534,7 @@ public sealed class StringsTests
 	public void SplitLines_CountsCorrectly(string? input, int expectedLineCount)
 	{
 		// Act
-		IEnumerable<string> lines = input.SplitLines(TestContext.Current.CancellationToken);
+		IEnumerable<string> lines = input.SplitLines(Current.CancellationToken);
 
 		// Assert
 		lines.Count().ShouldBe(expectedLineCount);
@@ -777,7 +778,7 @@ public sealed class StringsTests
 		const string input = "Hello World (test) * /";
 
 		// Act
-		string? result = input.UrlEncodeReadable(cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.UrlEncodeReadable(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe("Hello World (test) * /");
@@ -1165,7 +1166,7 @@ public sealed class StringsTests
 	public void ReplaceInvariant_Single_Works(string? s, string oldValue, string newValue, bool replaceAll, string? expected)
 	{
 		// Act
-		string? result = s.ReplaceInvariant(oldValue, newValue, replaceAll, TestContext.Current.CancellationToken);
+		string? result = s.ReplaceInvariant(oldValue, newValue, replaceAll, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(expected);
@@ -1182,7 +1183,7 @@ public sealed class StringsTests
 	public void ReplaceInvariant_Multiple_Works(string? s, string[] oldValues, string newValue, bool replaceAll, string? expected)
 	{
 		// Act
-		string? result = s.ReplaceInvariant(oldValues, newValue, replaceAll, TestContext.Current.CancellationToken);
+		string? result = s.ReplaceInvariant(oldValues, newValue, replaceAll, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(expected);
@@ -2925,7 +2926,7 @@ public sealed class StringsTests
 		const string input = "hello-world...test";
 
 		// Act
-		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe("Hello-World...Test");
@@ -2938,7 +2939,7 @@ public sealed class StringsTests
 		const string input = "  hello   world  ";
 
 		// Act
-		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldContain("Hello");
@@ -2952,7 +2953,7 @@ public sealed class StringsTests
 		const string input = "THE quick BROWN fox";
 
 		// Act
-		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 5, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 5, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe("THE Quick Brown Fox");
@@ -2965,7 +2966,7 @@ public sealed class StringsTests
 		const string input = "hELLo WoRLD";
 
 		// Act
-		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertAllUppercase, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe("Hello World");
@@ -2979,7 +2980,7 @@ public sealed class StringsTests
 		string[] oldValues = ["missing", "notfound"];
 
 		// Act
-		string? result = input.ReplaceInvariant(oldValues, "X", cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ReplaceInvariant(oldValues, "X", cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(input);
@@ -2993,7 +2994,7 @@ public sealed class StringsTests
 		string[] oldValues = ["hello"];
 
 		// Act
-		string? result = input.ReplaceInvariant(oldValues, "X", replaceAllInstances: false, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ReplaceInvariant(oldValues, "X", replaceAllInstances: false, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe("X world hello");
@@ -3127,7 +3128,7 @@ public sealed class StringsTests
 		const string input = "THE A FOX";
 
 		// Act
-		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 3, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ToTitleCase(uppercaseHandling: TitleCaseUppercaseWordHandling.ConvertByLength, minLengthToConvert: 3, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe("The A Fox");
@@ -3140,7 +3141,7 @@ public sealed class StringsTests
 		const string input = "hello-world_test";
 
 		// Act
-		string? result = input.ToTitleCase(cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ToTitleCase(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe("Hello-World_Test");
@@ -3208,7 +3209,7 @@ public sealed class StringsTests
 		const string input = "cat cat cat";
 
 		// Act
-		string? result = input.ReplaceInvariant("cat", "dog", replaceAllInstances: false, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ReplaceInvariant("cat", "dog", replaceAllInstances: false, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe("dog cat cat");
@@ -3222,7 +3223,7 @@ public sealed class StringsTests
 		string[] oldValues = ["", "world"];
 
 		// Act
-		string? result = input.ReplaceInvariant(oldValues, "REPLACED", cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.ReplaceInvariant(oldValues, "REPLACED", cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe("hello REPLACED test");
@@ -3410,7 +3411,7 @@ public sealed class StringsTests
 		List<KeyValuePair<string, string>> customSequences = [new("%20", "_")];
 
 		// Act
-		string? result = input.UrlEncodeReadable(customSequences, appendDefaultEscapeSequences: false, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.UrlEncodeReadable(customSequences, appendDefaultEscapeSequences: false, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -3424,7 +3425,7 @@ public sealed class StringsTests
 		List<KeyValuePair<string, string>> customSequences = [new("%21", "!")];
 
 		// Act
-		string? result = input.UrlEncodeReadable(customSequences, appendDefaultEscapeSequences: true, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = input.UrlEncodeReadable(customSequences, appendDefaultEscapeSequences: true, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();

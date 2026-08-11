@@ -1,14 +1,11 @@
-﻿using System.Buffers;
-using AutoFixture;
-using CommonNetFuncs.Core;
+﻿using CommonNetFuncs.Core;
 using static CommonNetFuncs.Core.Random;
+using static Xunit.TestContext;
 
 namespace Core.Tests;
 
 public sealed class StreamsTests
 {
-	private readonly Fixture fixture = new();
-
 	[Theory]
 	[InlineData(0)]
 	[InlineData(1)]
@@ -23,7 +20,7 @@ public sealed class StreamsTests
 
 		// Act
 
-		byte[] result = await stream.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
+		byte[] result = await stream.ReadStreamAsync(cancellationToken: Current.CancellationToken);
 
 		// Assert
 
@@ -43,7 +40,7 @@ public sealed class StreamsTests
 
 		// Act
 
-		byte[] result = await stream.ReadStreamAsync(bufferSize, TestContext.Current.CancellationToken);
+		byte[] result = await stream.ReadStreamAsync(bufferSize, Current.CancellationToken);
 
 		// Assert
 
@@ -59,7 +56,7 @@ public sealed class StreamsTests
 
 		// Act
 
-		byte[] result = await stream.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
+		byte[] result = await stream.ReadStreamAsync(cancellationToken: Current.CancellationToken);
 
 		// Assert
 
@@ -76,7 +73,7 @@ public sealed class StreamsTests
 
 		// Act
 
-		byte[] result = await stream.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
+		byte[] result = await stream.ReadStreamAsync(cancellationToken: Current.CancellationToken);
 
 		// Assert
 
@@ -119,7 +116,7 @@ public sealed class StreamsTests
 
 		// Act
 
-		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
+		await target.WriteStreamToStream(source, Current.CancellationToken);
 
 		// Assert
 
@@ -138,7 +135,7 @@ public sealed class StreamsTests
 
 		// Act
 
-		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
+		await target.WriteStreamToStream(source, Current.CancellationToken);
 
 		// Assert
 
@@ -161,7 +158,7 @@ public sealed class StreamsTests
 
 		// Act
 
-		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
+		await target.WriteStreamToStream(source, Current.CancellationToken);
 
 		// Assert
 
@@ -176,12 +173,12 @@ public sealed class StreamsTests
 
 		await using FileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
 		await using MemoryStream target = new();
-		byte[] data = await source.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
+		byte[] data = await source.ReadStreamAsync(cancellationToken: Current.CancellationToken);
 		source.Position = 0;
 
 		// Act
 
-		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
+		await target.WriteStreamToStream(source, Current.CancellationToken);
 
 		// Assert
 
@@ -241,12 +238,12 @@ public sealed class StreamsTests
 
 		await using FileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
 		await using MemoryStream target = new();
-		byte[] data = await source.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
+		byte[] data = await source.ReadStreamAsync(cancellationToken: Current.CancellationToken);
 		source.Position = 0;
 
 		// Act
 
-		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
+		await target.WriteStreamToStream(source, Current.CancellationToken);
 
 		// Assert
 
@@ -261,7 +258,7 @@ public sealed class StreamsTests
 
 		await using FileStream source = new("TestData/test.png", FileMode.Open, FileAccess.Read, FileShare.Read);
 		await using MemoryStream target = new();
-		byte[] data = await source.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken);
+		byte[] data = await source.ReadStreamAsync(cancellationToken: Current.CancellationToken);
 		source.Position = 0;
 
 		// Move source position to end
@@ -270,7 +267,7 @@ public sealed class StreamsTests
 
 		// Act
 
-		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
+		await target.WriteStreamToStream(source, Current.CancellationToken);
 
 		// Assert
 
@@ -293,8 +290,8 @@ public sealed class StreamsTests
 
 		string tempSource = Path.GetTempFileName();
 		string tempTarget = Path.GetTempFileName();
-		await File.WriteAllBytesAsync(tempSource, new byte[] { 1, 2, 3, 4 }, TestContext.Current.CancellationToken);
-		await File.WriteAllBytesAsync(tempTarget, Array.Empty<byte>(), TestContext.Current.CancellationToken);
+		await File.WriteAllBytesAsync(tempSource, new byte[] { 1, 2, 3, 4 }, Current.CancellationToken);
+		await File.WriteAllBytesAsync(tempTarget, Array.Empty<byte>(), Current.CancellationToken);
 
 		Stream source = new ControllableFileStream(tempSource, FileMode.Open, FileAccess.Read, FileShare.None, sourceCanSeek, sourceCanRead);
 
@@ -354,8 +351,8 @@ public sealed class StreamsTests
 		string tempSource = Path.GetTempFileName();
 		string tempTarget = Path.GetTempFileName();
 		byte[] data = { 10, 20, 30, 40 };
-		await File.WriteAllBytesAsync(tempSource, data, TestContext.Current.CancellationToken);
-		await File.WriteAllBytesAsync(tempTarget, Array.Empty<byte>(), TestContext.Current.CancellationToken);
+		await File.WriteAllBytesAsync(tempSource, data, Current.CancellationToken);
+		await File.WriteAllBytesAsync(tempTarget, Array.Empty<byte>(), Current.CancellationToken);
 
 		await using FileStream source = new(tempSource, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
 		await using FileStream target = new(tempTarget, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
@@ -363,12 +360,12 @@ public sealed class StreamsTests
 		source.Position = source.Length; // Move to end
 
 		// Act
-		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
+		await target.WriteStreamToStream(source, Current.CancellationToken);
 
 		// Assert
 		source.Position.ShouldBe(0);
 		target.Position.ShouldBe(0);
-		(await target.ReadStreamAsync(cancellationToken: TestContext.Current.CancellationToken)).ShouldBe(data);
+		(await target.ReadStreamAsync(cancellationToken: Current.CancellationToken)).ShouldBe(data);
 
 		source.Close();
 		target.Close();
@@ -390,7 +387,7 @@ public sealed class StreamsTests
 		source.Position = source.Length;
 
 		// Act
-		await target.WriteStreamToStream(source, TestContext.Current.CancellationToken);
+		await target.WriteStreamToStream(source, Current.CancellationToken);
 
 		// Assert
 		source.Position.ShouldBe(0);

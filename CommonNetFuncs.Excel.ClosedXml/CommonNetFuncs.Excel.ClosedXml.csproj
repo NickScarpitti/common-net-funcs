@@ -84,7 +84,6 @@
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
 		<PackageReference Include="SkiaSharp" PrivateAssets="all" />
 		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" PrivateAssets="all" />
-
 	</ItemGroup>
 
 	<ItemGroup>

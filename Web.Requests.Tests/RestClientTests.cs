@@ -3,6 +3,7 @@ using System.Text;
 using CommonNetFuncs.Web.Requests.Rest;
 using CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper;
 using FakeItEasy;
+using static Xunit.TestContext;
 
 namespace Web.Requests.Tests;
 
@@ -13,6 +14,7 @@ public sealed class RestClientTests
 	{
 		// Arrange, Act & Assert
 
+
 		Should.Throw<ArgumentNullException>(() => new RestClient(null!)).ParamName.ShouldBe("httpClient");
 	}
 
@@ -21,16 +23,20 @@ public sealed class RestClientTests
 	{
 		// Arrange
 
+
 		using HttpClient httpClient = new();
 
 		// Act
+
 
 		RestClient restClient = new(httpClient);
 
 		// Assert
 
+
 		restClient.ShouldNotBeNull();
 		restClient.BaseAddress.ShouldBeNull(); // Default HttpClient has no base address
+
 
 	}
 
@@ -39,14 +45,17 @@ public sealed class RestClientTests
 	{
 		// Arrange
 
+
 		Uri baseAddress = new("https://api.example.com");
 		using HttpClient httpClient = new() { BaseAddress = baseAddress };
 
 		// Act
 
+
 		RestClient restClient = new(httpClient);
 
 		// Assert
+
 
 		restClient.BaseAddress.ShouldBe(baseAddress);
 	}
@@ -55,6 +64,7 @@ public sealed class RestClientTests
 	public async Task RestClient_RestObjectRequest_CallsExtensionMethod()
 	{
 		// Arrange
+
 
 		FakeHttpMessageHandler handler = new() { Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"value\":42}", Encoding.UTF8, "application/json") } };
 
@@ -69,9 +79,11 @@ public sealed class RestClientTests
 
 		// Act
 
-		RestObject<TestModel> result = await restClient.RestObjectRequest<TestModel, object>(options, TestContext.Current.CancellationToken);
+
+		RestObject<TestModel> result = await restClient.RestObjectRequest<TestModel, object>(options, Current.CancellationToken);
 
 		// Assert
+
 
 		result.ShouldNotBeNull();
 		result.Response.ShouldNotBeNull();
@@ -82,6 +94,7 @@ public sealed class RestClientTests
 	public async Task RestClient_RestObjectRequest_HandlesError()
 	{
 		// Arrange
+
 
 		FakeHttpMessageHandler handler = new()
 		{
@@ -95,9 +108,11 @@ public sealed class RestClientTests
 
 		// Act
 
-		RestObject<TestModel> result = await restClient.RestObjectRequest<TestModel, object>(options, TestContext.Current.CancellationToken);
+
+		RestObject<TestModel> result = await restClient.RestObjectRequest<TestModel, object>(options, Current.CancellationToken);
 
 		// Assert
+
 
 		result.ShouldNotBeNull();
 		result.Response.ShouldNotBeNull();
@@ -109,6 +124,7 @@ public sealed class RestClientTests
 	{
 		// Arrange
 
+
 		const string jsonArray = "[{\"value\":1},{\"value\":2},{\"value\":3}]";
 		FakeHttpMessageHandler handler = new() { Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(jsonArray, Encoding.UTF8, "application/json") } };
 
@@ -119,9 +135,11 @@ public sealed class RestClientTests
 
 		// Act
 
-		StreamingRestObject<TestModel> result = await restClient.StreamingRestObjectRequest<TestModel, object>(options, TestContext.Current.CancellationToken);
+
+		StreamingRestObject<TestModel> result = await restClient.StreamingRestObjectRequest<TestModel, object>(options, Current.CancellationToken);
 
 		// Assert
+
 
 		result.ShouldNotBeNull();
 		result.Response.ShouldNotBeNull();
@@ -129,6 +147,7 @@ public sealed class RestClientTests
 		result.Result.ShouldNotBeNull();
 
 		// Enumerate the results
+
 
 		List<TestModel?> items = new();
 		await foreach (TestModel? item in result.Result!)
@@ -146,6 +165,7 @@ public sealed class RestClientTests
 	{
 		// Arrange
 
+
 		FakeHttpMessageHandler handler = new() { Response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("[]", Encoding.UTF8, "application/json") } };
 
 		using HttpClient httpClient = new(handler) { BaseAddress = new Uri("https://api.test.com") };
@@ -155,14 +175,17 @@ public sealed class RestClientTests
 
 		// Act
 
-		StreamingRestObject<TestModel> result = await restClient.StreamingRestObjectRequest<TestModel, object>(options, TestContext.Current.CancellationToken);
+
+		StreamingRestObject<TestModel> result = await restClient.StreamingRestObjectRequest<TestModel, object>(options, Current.CancellationToken);
 
 		// Assert
+
 
 		result.ShouldNotBeNull();
 		result.Result.ShouldNotBeNull();
 
 		// Enumerate the results
+
 
 		List<TestModel?> items = new();
 		await foreach (TestModel? item in result.Result!) { items.Add(item); }
@@ -171,9 +194,11 @@ public sealed class RestClientTests
 
 	private class TestModel
 	{
+
 #pragma warning disable S3459 // Unassigned members should be removed
 #pragma warning disable S1144 // Unused private types or members should be removed
 		public int Value { get; set; }
+
 #pragma warning restore S1144 // Unused private types or members should be removed
 #pragma warning restore S3459 // Unassigned members should be removed
 	}
@@ -186,6 +211,7 @@ public sealed class RestClientFactoryTests
 	{
 		// Arrange, Act & Assert
 
+
 		Should.Throw<ArgumentNullException>(() => new RestClientFactory(null!)).ParamName.ShouldBe("httpClientFactory");
 	}
 
@@ -194,13 +220,16 @@ public sealed class RestClientFactoryTests
 	{
 		// Arrange
 
+
 		IHttpClientFactory factory = A.Fake<IHttpClientFactory>();
 
 		// Act
 
+
 		RestClientFactory restClientFactory = new(factory);
 
 		// Assert
+
 
 		restClientFactory.ShouldNotBeNull();
 	}
@@ -210,6 +239,7 @@ public sealed class RestClientFactoryTests
 	{
 		// Arrange
 
+
 		using HttpClient httpClient = new();
 		IHttpClientFactory factory = A.Fake<IHttpClientFactory>();
 		A.CallTo(() => factory.CreateClient("TestApi")).Returns(httpClient);
@@ -218,9 +248,11 @@ public sealed class RestClientFactoryTests
 
 		// Act
 
+
 		IRestClient restClient = restClientFactory.CreateClient("TestApi");
 
 		// Assert
+
 
 		restClient.ShouldNotBeNull();
 		restClient.ShouldBeOfType<RestClient>();
@@ -232,6 +264,7 @@ public sealed class RestClientFactoryTests
 	{
 		// Arrange
 
+
 		using HttpClient httpClient = new();
 		IHttpClientFactory factory = A.Fake<IHttpClientFactory>();
 		A.CallTo(() => factory.CreateClient(A<string>._)).Returns(httpClient);
@@ -240,10 +273,12 @@ public sealed class RestClientFactoryTests
 
 		// Act
 
+
 		IRestClient restClient1 = restClientFactory.CreateClient("Api1");
 		IRestClient restClient2 = restClientFactory.CreateClient("Api2");
 
 		// Assert
+
 
 		restClient1.ShouldNotBeNull();
 		restClient2.ShouldNotBeNull();
@@ -256,6 +291,7 @@ public sealed class RestClientFactoryTests
 	{
 		// Arrange
 
+
 		IHttpClientFactory factory = A.Fake<IHttpClientFactory>();
 		A.CallTo(() => factory.CreateClient(A<string>._)).ReturnsLazily(() => new HttpClient());
 
@@ -263,14 +299,17 @@ public sealed class RestClientFactoryTests
 
 		// Act
 
+
 		IRestClient restClient1 = restClientFactory.CreateClient("TestApi");
 		IRestClient restClient2 = restClientFactory.CreateClient("TestApi");
 
 		// Assert
 
+
 		restClient1.ShouldNotBeNull();
 		restClient2.ShouldNotBeNull();
 		restClient1.ShouldNotBe(restClient2); // Different instances
+
 
 	}
 
@@ -278,6 +317,7 @@ public sealed class RestClientFactoryTests
 	public void RestClientFactory_CreateClient_PropagatesBaseAddress()
 	{
 		// Arrange
+
 
 		Uri baseAddress = new("https://api.example.com");
 		using HttpClient httpClient = new() { BaseAddress = baseAddress };
@@ -289,9 +329,11 @@ public sealed class RestClientFactoryTests
 
 		// Act
 
+
 		IRestClient restClient = restClientFactory.CreateClient("TestApi");
 
 		// Assert
+
 
 		restClient.BaseAddress.ShouldBe(baseAddress);
 	}

@@ -2,6 +2,7 @@
 using System.Threading.Channels;
 using CommonNetFuncs.Web.Api.TaskQueuing;
 using CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
+using static Xunit.TestContext;
 
 namespace Web.Api.Tests.TaskQueuing.EndpointQueue;
 
@@ -20,7 +21,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act
 
-		int? result = await service.ExecuteAsync("key", _ => Task.FromResult(77), options, TestContext.Current.CancellationToken);
+		int? result = await service.ExecuteAsync("key", _ => Task.FromResult(77), options, Current.CancellationToken);
 
 		// Assert
 
@@ -38,7 +39,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act
 
-		int? result = await service.ExecuteAsync("key", _ => Task.FromResult(88), options, TestContext.Current.CancellationToken);
+		int? result = await service.ExecuteAsync("key", _ => Task.FromResult(88), options, Current.CancellationToken);
 
 		// Assert
 
@@ -107,13 +108,13 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act
 
-		int? result1 = await service.ExecuteAsync(key, _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
-		int? result2 = await service.ExecuteAsync(key, _ => Task.FromResult(2), options, TestContext.Current.CancellationToken);
-		int? result3 = await service.ExecuteAsync(key, _ => Task.FromResult(3), options, TestContext.Current.CancellationToken);
+		int? result1 = await service.ExecuteAsync(key, _ => Task.FromResult(1), options, Current.CancellationToken);
+		int? result2 = await service.ExecuteAsync(key, _ => Task.FromResult(2), options, Current.CancellationToken);
+		int? result3 = await service.ExecuteAsync(key, _ => Task.FromResult(3), options, Current.CancellationToken);
 
 		// Give async stats tracking a moment to complete
 
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Assert
 
@@ -138,12 +139,12 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act
 
-		int? result1 = await service.ExecuteAsync(key, _ => Task.FromResult(10), options, TestContext.Current.CancellationToken);
-		int? result2 = await service.ExecuteAsync(key, _ => Task.FromResult(20), options, TestContext.Current.CancellationToken);
+		int? result1 = await service.ExecuteAsync(key, _ => Task.FromResult(10), options, Current.CancellationToken);
+		int? result2 = await service.ExecuteAsync(key, _ => Task.FromResult(20), options, Current.CancellationToken);
 
 		// Give async stats tracking a moment to complete
 
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Assert
 
@@ -166,9 +167,9 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act
 
-		int? result1 = await service.ExecuteAsync("endpoint1", _ => Task.FromResult(100), options, TestContext.Current.CancellationToken);
-		int? result2 = await service.ExecuteAsync("endpoint2", _ => Task.FromResult(200), options, TestContext.Current.CancellationToken);
-		int? result3 = await service.ExecuteAsync("endpoint3", _ => Task.FromResult(300), options, TestContext.Current.CancellationToken);
+		int? result1 = await service.ExecuteAsync("endpoint1", _ => Task.FromResult(100), options, Current.CancellationToken);
+		int? result2 = await service.ExecuteAsync("endpoint2", _ => Task.FromResult(200), options, Current.CancellationToken);
+		int? result3 = await service.ExecuteAsync("endpoint3", _ => Task.FromResult(300), options, Current.CancellationToken);
 
 		// Assert
 
@@ -239,24 +240,24 @@ public class EndpointQueueServiceTests : IDisposable
 
 		Task<int> task1 = service.ExecuteAsync(key, async _ =>
 		{
-			await Task.Delay(10, TestContext.Current.CancellationToken);
+			await Task.Delay(10, Current.CancellationToken);
 			lock (lockObj) { executionOrder.Add(1); }
 			return 1;
-		}, options, TestContext.Current.CancellationToken);
+		}, options, Current.CancellationToken);
 
 		Task<int> task2 = service.ExecuteAsync(key, async _ =>
 		{
-			await Task.Delay(10, TestContext.Current.CancellationToken);
+			await Task.Delay(10, Current.CancellationToken);
 			lock (lockObj) { executionOrder.Add(2); }
 			return 2;
-		}, options, TestContext.Current.CancellationToken);
+		}, options, Current.CancellationToken);
 
 		Task<int> task3 = service.ExecuteAsync(key, async _ =>
 		{
-			await Task.Delay(10, TestContext.Current.CancellationToken);
+			await Task.Delay(10, Current.CancellationToken);
 			lock (lockObj) { executionOrder.Add(3); }
 			return 3;
-		}, options, TestContext.Current.CancellationToken);
+		}, options, Current.CancellationToken);
 
 		// Assert
 
@@ -282,11 +283,11 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act & Assert
 
-		await Should.ThrowAsync<InvalidOperationException>(async () => await service.ExecuteAsync<int>(key, _ => throw new InvalidOperationException("Test exception"), options, TestContext.Current.CancellationToken));
+		await Should.ThrowAsync<InvalidOperationException>(async () => await service.ExecuteAsync<int>(key, _ => throw new InvalidOperationException("Test exception"), options, Current.CancellationToken));
 
 		// Give async stats tracking a moment to complete
 
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Verify stats were updated
 
@@ -306,15 +307,15 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act - Create queue with bounded options first
 
-		int? result1 = await service.ExecuteAsync("mixed-key", _ => Task.FromResult(1), boundedOptions, TestContext.Current.CancellationToken);
+		int? result1 = await service.ExecuteAsync("mixed-key", _ => Task.FromResult(1), boundedOptions, Current.CancellationToken);
 
 		// Try to use the same key with unbounded options (should reuse existing queue)
 
-		int? result2 = await service.ExecuteAsync("mixed-key", _ => Task.FromResult(2), unboundedOptions, TestContext.Current.CancellationToken);
+		int? result2 = await service.ExecuteAsync("mixed-key", _ => Task.FromResult(2), unboundedOptions, Current.CancellationToken);
 
 		// Give async stats tracking a moment to complete
 
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Assert
 
@@ -336,7 +337,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act
 
-		string? result = await service.ExecuteAsync("null-test", _ => Task.FromResult<string?>(null), options, TestContext.Current.CancellationToken);
+		string? result = await service.ExecuteAsync("null-test", _ => Task.FromResult<string?>(null), options, Current.CancellationToken);
 
 		// Assert
 
@@ -361,7 +362,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act
 
-		TestData? result = await service.ExecuteAsync("complex-test", _ => Task.FromResult(testData), options, TestContext.Current.CancellationToken);
+		TestData? result = await service.ExecuteAsync("complex-test", _ => Task.FromResult(testData), options, Current.CancellationToken);
 
 		// Assert
 
@@ -384,12 +385,12 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act
 
-		int? result1 = await service1.ExecuteAsync("shared-key", _ => Task.FromResult(100), options, TestContext.Current.CancellationToken);
-		int? result2 = await service2.ExecuteAsync("shared-key", _ => Task.FromResult(200), options, TestContext.Current.CancellationToken);
+		int? result1 = await service1.ExecuteAsync("shared-key", _ => Task.FromResult(100), options, Current.CancellationToken);
+		int? result2 = await service2.ExecuteAsync("shared-key", _ => Task.FromResult(200), options, Current.CancellationToken);
 
 		// Give async stats tracking a moment to complete
 
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Assert
 
@@ -415,9 +416,9 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Create multiple queues
 
-		_ = await service.ExecuteAsync("queue1", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
-		_ = await service.ExecuteAsync("queue2", _ => Task.FromResult(2), options, TestContext.Current.CancellationToken);
-		_ = await service.ExecuteAsync("queue3", _ => Task.FromResult(3), options, TestContext.Current.CancellationToken);
+		_ = await service.ExecuteAsync("queue1", _ => Task.FromResult(1), options, Current.CancellationToken);
+		_ = await service.ExecuteAsync("queue2", _ => Task.FromResult(2), options, Current.CancellationToken);
+		_ = await service.ExecuteAsync("queue3", _ => Task.FromResult(3), options, Current.CancellationToken);
 
 		Dictionary<string, QueueStats> statsBeforeDispose = await service.GetAllQueueStatsAsync();
 		statsBeforeDispose.Count.ShouldBe(3);
@@ -439,7 +440,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		BoundedChannelOptions options = new(10);
 		EndpointQueueService service = new();
-		_ = await service.ExecuteAsync("test", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
+		_ = await service.ExecuteAsync("test", _ => Task.FromResult(1), options, Current.CancellationToken);
 
 		// Act & Assert
 
@@ -461,18 +462,18 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Create multiple queues with different activity
 
-		_ = await service.ExecuteAsync("endpoint-a", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
-		_ = await service.ExecuteAsync("endpoint-a", _ => Task.FromResult(2), options, TestContext.Current.CancellationToken);
+		_ = await service.ExecuteAsync("endpoint-a", _ => Task.FromResult(1), options, Current.CancellationToken);
+		_ = await service.ExecuteAsync("endpoint-a", _ => Task.FromResult(2), options, Current.CancellationToken);
 
-		_ = await service.ExecuteAsync("endpoint-b", _ => Task.FromResult(10), options, TestContext.Current.CancellationToken);
+		_ = await service.ExecuteAsync("endpoint-b", _ => Task.FromResult(10), options, Current.CancellationToken);
 
-		_ = await service.ExecuteAsync("endpoint-c", _ => Task.FromResult(100), options, TestContext.Current.CancellationToken);
-		_ = await service.ExecuteAsync("endpoint-c", _ => Task.FromResult(200), options, TestContext.Current.CancellationToken);
-		_ = await service.ExecuteAsync("endpoint-c", _ => Task.FromResult(300), options, TestContext.Current.CancellationToken);
+		_ = await service.ExecuteAsync("endpoint-c", _ => Task.FromResult(100), options, Current.CancellationToken);
+		_ = await service.ExecuteAsync("endpoint-c", _ => Task.FromResult(200), options, Current.CancellationToken);
+		_ = await service.ExecuteAsync("endpoint-c", _ => Task.FromResult(300), options, Current.CancellationToken);
 
 		// Give async stats tracking a moment to complete
 
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Act
 
@@ -503,9 +504,9 @@ public class EndpointQueueServiceTests : IDisposable
 			int captured = i;
 			tasks[i] = Task.Run(async () =>
 			{
-				int? result = await service.ExecuteAsync($"endpoint-{captured}", _ => Task.FromResult(captured * 10), options, TestContext.Current.CancellationToken);
+				int? result = await service.ExecuteAsync($"endpoint-{captured}", _ => Task.FromResult(captured * 10), options, Current.CancellationToken);
 				result.ShouldBe(captured * 10);
-			}, TestContext.Current.CancellationToken);
+			}, Current.CancellationToken);
 		}
 
 		await Task.WhenAll(tasks);
@@ -529,11 +530,11 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act
 
-		_ = await service.ExecuteAsync(key, _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
+		_ = await service.ExecuteAsync(key, _ => Task.FromResult(1), options, Current.CancellationToken);
 
 		// Wait a bit to ensure processing completes
 
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Assert
 
@@ -553,7 +554,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Create a queue by executing a task
 
-		_ = await service.ExecuteAsync("test-queue", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
+		_ = await service.ExecuteAsync("test-queue", _ => Task.FromResult(1), options, Current.CancellationToken);
 
 		// Get the cleanup method using reflection
 
@@ -582,8 +583,8 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Create a queue
 
-		_ = await service.ExecuteAsync("old-queue", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
-		await Task.Delay(100, TestContext.Current.CancellationToken); // Ensure processing completes
+		_ = await service.ExecuteAsync("old-queue", _ => Task.FromResult(1), options, Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken); // Ensure processing completes
 
 		// Get the private queues dictionary using reflection
 
@@ -684,15 +685,15 @@ public class EndpointQueueServiceTests : IDisposable
 		BoundedChannelOptions options = new(10);
 
 		// Create and execute a task
-		await service.ExecuteAsync("short-lived-queue", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
-		await Task.Delay(150, TestContext.Current.CancellationToken);
+		await service.ExecuteAsync("short-lived-queue", _ => Task.FromResult(1), options, Current.CancellationToken);
+		await Task.Delay(150, Current.CancellationToken);
 
 		// Verify queue exists
 		Dictionary<string, QueueStats> statsBefore = await service.GetAllQueueStatsAsync();
 		statsBefore.Count.ShouldBe(1);
 
 		// Wait for cutoff time to pass
-		await Task.Delay(1000, TestContext.Current.CancellationToken); // Wait 1 second (> 0.6 seconds cutoff)
+		await Task.Delay(1000, Current.CancellationToken); // Wait 1 second (> 0.6 seconds cutoff)
 
 		// Get cleanup method via reflection
 		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService).GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -700,7 +701,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act - Invoke cleanup
 		cleanupMethod.Invoke(service, [null]);
-		await Task.Delay(100, TestContext.Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
 
 		// Assert - Queue should be removed because it's older than cutoff
 		Dictionary<string, QueueStats> statsAfter = await service.GetAllQueueStatsAsync();
@@ -720,16 +721,16 @@ public class EndpointQueueServiceTests : IDisposable
 		BoundedChannelOptions options = new(10);
 
 		// Create multiple queues
-		await service.ExecuteAsync("old-queue-1", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
-		await service.ExecuteAsync("old-queue-2", _ => Task.FromResult(2), options, TestContext.Current.CancellationToken);
-		await service.ExecuteAsync("old-queue-3", _ => Task.FromResult(3), options, TestContext.Current.CancellationToken);
-		await Task.Delay(200, TestContext.Current.CancellationToken);
+		await service.ExecuteAsync("old-queue-1", _ => Task.FromResult(1), options, Current.CancellationToken);
+		await service.ExecuteAsync("old-queue-2", _ => Task.FromResult(2), options, Current.CancellationToken);
+		await service.ExecuteAsync("old-queue-3", _ => Task.FromResult(3), options, Current.CancellationToken);
+		await Task.Delay(200, Current.CancellationToken);
 
 		Dictionary<string, QueueStats> statsBefore = await service.GetAllQueueStatsAsync();
 		statsBefore.Count.ShouldBe(3);
 
 		// Wait for cutoff
-		await Task.Delay(1500, TestContext.Current.CancellationToken);
+		await Task.Delay(1500, Current.CancellationToken);
 
 		// Get cleanup method
 		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService)
@@ -738,7 +739,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act - Invoke cleanup
 		cleanupMethod.Invoke(service, [null]);
-		await Task.Delay(100, TestContext.Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
 
 		// Assert - All queues should be removed
 		Dictionary<string, QueueStats> statsAfter = await service.GetAllQueueStatsAsync();
@@ -758,11 +759,11 @@ public class EndpointQueueServiceTests : IDisposable
 		BoundedChannelOptions options = new(10);
 
 		// Create a queue
-		await service.ExecuteAsync("queue-to-remove", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
-		await Task.Delay(150, TestContext.Current.CancellationToken);
+		await service.ExecuteAsync("queue-to-remove", _ => Task.FromResult(1), options, Current.CancellationToken);
+		await Task.Delay(150, Current.CancellationToken);
 
 		// Wait for cutoff
-		await Task.Delay(1000, TestContext.Current.CancellationToken);
+		await Task.Delay(1000, Current.CancellationToken);
 
 		// Get cleanup method
 		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService)
@@ -770,7 +771,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act - Invoke cleanup (logger will be called internally)
 		cleanupMethod!.Invoke(service, [null]);
-		await Task.Delay(100, TestContext.Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
 
 		// Assert - Queue should be removed (logger.Info was called but we can't verify it)
 		Dictionary<string, QueueStats> stats = await service.GetAllQueueStatsAsync();
@@ -790,10 +791,10 @@ public class EndpointQueueServiceTests : IDisposable
 		BoundedChannelOptions options = new(10);
 
 		// Create multiple queues
-		await service.ExecuteAsync("queue-A", _ => Task.FromResult(1), options, TestContext.Current.CancellationToken);
-		await service.ExecuteAsync("queue-B", _ => Task.FromResult(2), options, TestContext.Current.CancellationToken);
-		await service.ExecuteAsync("queue-C", _ => Task.FromResult(3), options, TestContext.Current.CancellationToken);
-		await Task.Delay(150, TestContext.Current.CancellationToken);
+		await service.ExecuteAsync("queue-A", _ => Task.FromResult(1), options, Current.CancellationToken);
+		await service.ExecuteAsync("queue-B", _ => Task.FromResult(2), options, Current.CancellationToken);
+		await service.ExecuteAsync("queue-C", _ => Task.FromResult(3), options, Current.CancellationToken);
+		await Task.Delay(150, Current.CancellationToken);
 
 		// Get the cleanup method via reflection
 		System.Reflection.MethodInfo? cleanupMethod = typeof(EndpointQueueService).GetMethod("CleanupUnusedQueues", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -801,7 +802,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Act - Invoke cleanup (queues are recent so won't be removed)
 		cleanupMethod.Invoke(service, [null]);
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Assert - All queues should still exist
 		Dictionary<string, QueueStats> stats = await service.GetAllQueueStatsAsync();
@@ -826,7 +827,7 @@ public class EndpointQueueServiceTests : IDisposable
 
 		// Service should work normally
 		BoundedChannelOptions options = new(10);
-		int? result = await service.ExecuteAsync("test", _ => Task.FromResult(42), options, TestContext.Current.CancellationToken);
+		int? result = await service.ExecuteAsync("test", _ => Task.FromResult(42), options, Current.CancellationToken);
 		result.ShouldBe(42);
 	}
 

@@ -1,5 +1,6 @@
 ﻿using System.Threading.Channels;
 using CommonNetFuncs.Web.Api.TaskQueuing;
+using static Xunit.TestContext;
 
 namespace Web.Api.Tests.TaskQueuing.EndpointQueue;
 
@@ -81,7 +82,7 @@ public class EndpointQueueTests : IDisposable
 		const int expectedResult = 42;
 
 		// Act
-		int? result = await queue.EnqueueAsync(_ => Task.FromResult(expectedResult), TestContext.Current.CancellationToken);
+		int? result = await queue.EnqueueAsync(_ => Task.FromResult(expectedResult), Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(expectedResult);
@@ -97,7 +98,7 @@ public class EndpointQueueTests : IDisposable
 		const int expectedResult = 99;
 
 		// Act
-		int? result = await queue.EnqueueAsync(_ => Task.FromResult(expectedResult), TestContext.Current.CancellationToken);
+		int? result = await queue.EnqueueAsync(_ => Task.FromResult(expectedResult), Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(expectedResult);
@@ -112,8 +113,8 @@ public class EndpointQueueTests : IDisposable
 		_queuesToDispose.Add(queue);
 
 		// Act
-		await queue.EnqueueAsync(_ => Task.FromResult(1), TestContext.Current.CancellationToken);
-		await queue.EnqueueAsync(_ => Task.FromResult(2), TestContext.Current.CancellationToken);
+		await queue.EnqueueAsync(_ => Task.FromResult(1), Current.CancellationToken);
+		await queue.EnqueueAsync(_ => Task.FromResult(2), Current.CancellationToken);
 
 		// Assert
 		QueueStats stats = queue.Stats;
@@ -129,11 +130,11 @@ public class EndpointQueueTests : IDisposable
 		_queuesToDispose.Add(queue);
 
 		// Act
-		await queue.EnqueueAsync(_ => Task.FromResult(1), TestContext.Current.CancellationToken);
-		await queue.EnqueueAsync(_ => Task.FromResult(2), TestContext.Current.CancellationToken);
+		await queue.EnqueueAsync(_ => Task.FromResult(1), Current.CancellationToken);
+		await queue.EnqueueAsync(_ => Task.FromResult(2), Current.CancellationToken);
 
 		// Wait a bit for processing
-		await Task.Delay(100, TestContext.Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
 
 		// Assert
 		QueueStats stats = queue.Stats;
@@ -150,10 +151,10 @@ public class EndpointQueueTests : IDisposable
 		DateTime startTime = DateTime.UtcNow;
 
 		// Act
-		await queue.EnqueueAsync(_ => Task.FromResult(1), TestContext.Current.CancellationToken);
+		await queue.EnqueueAsync(_ => Task.FromResult(1), Current.CancellationToken);
 
 		// Wait a bit for processing
-		await Task.Delay(100, TestContext.Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
 
 		// Assert
 		QueueStats stats = queue.Stats;
@@ -172,18 +173,18 @@ public class EndpointQueueTests : IDisposable
 		// Act
 		await queue.EnqueueAsync(async _ =>
 		{
-			await Task.Delay(10, TestContext.Current.CancellationToken);
+			await Task.Delay(10, Current.CancellationToken);
 			return 1;
-		}, TestContext.Current.CancellationToken);
+		}, Current.CancellationToken);
 
 		await queue.EnqueueAsync(async _ =>
 		{
-			await Task.Delay(10, TestContext.Current.CancellationToken);
+			await Task.Delay(10, Current.CancellationToken);
 			return 2;
-		}, TestContext.Current.CancellationToken);
+		}, Current.CancellationToken);
 
 		// Wait for processing
-		await Task.Delay(100, TestContext.Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
 
 		// Assert
 		QueueStats stats = queue.Stats;
@@ -200,10 +201,10 @@ public class EndpointQueueTests : IDisposable
 		_queuesToDispose.Add(queue);
 
 		// Act & Assert
-		await Should.ThrowAsync<InvalidOperationException>(async () => await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Test exception"), TestContext.Current.CancellationToken));
+		await Should.ThrowAsync<InvalidOperationException>(async () => await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Test exception"), Current.CancellationToken));
 
 		// Wait a bit for stats to update
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		QueueStats stats = queue.Stats;
 		stats.FailedTasks.ShouldBe(1);
@@ -222,24 +223,24 @@ public class EndpointQueueTests : IDisposable
 		// Act
 		Task<int?> task1 = queue.EnqueueAsync<int?>(async _ =>
 		{
-			await Task.Delay(10, TestContext.Current.CancellationToken);
+			await Task.Delay(10, Current.CancellationToken);
 			lock (lockObj) { executionOrder.Add(1); }
 			return 1;
-		}, TestContext.Current.CancellationToken);
+		}, Current.CancellationToken);
 
 		Task<int?> task2 = queue.EnqueueAsync<int?>(async _ =>
 		{
-			await Task.Delay(10, TestContext.Current.CancellationToken);
+			await Task.Delay(10, Current.CancellationToken);
 			lock (lockObj) { executionOrder.Add(2); }
 			return 2;
-		}, TestContext.Current.CancellationToken);
+		}, Current.CancellationToken);
 
 		Task<int?> task3 = queue.EnqueueAsync<int?>(async _ =>
 		{
-			await Task.Delay(10, TestContext.Current.CancellationToken);
+			await Task.Delay(10, Current.CancellationToken);
 			lock (lockObj) { executionOrder.Add(3); }
 			return 3;
-		}, TestContext.Current.CancellationToken);
+		}, Current.CancellationToken);
 
 		// Assert
 		int? result1 = await task1;
@@ -296,11 +297,11 @@ public class EndpointQueueTests : IDisposable
 		// Act - Queue more tasks than the window size
 		for (int i = 0; i < 15; i++)
 		{
-			await queue.EnqueueAsync(_ => Task.FromResult(i), TestContext.Current.CancellationToken);
+			await queue.EnqueueAsync(_ => Task.FromResult(i), Current.CancellationToken);
 		}
 
 		// Wait for processing
-		await Task.Delay(100, TestContext.Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
 
 		// Assert - Stats should still work correctly
 		QueueStats stats = queue.Stats;
@@ -319,9 +320,9 @@ public class EndpointQueueTests : IDisposable
 		// Act
 		string? result = await queue.EnqueueAsync(async _ =>
 		{
-			await Task.Delay(10, TestContext.Current.CancellationToken);
+			await Task.Delay(10, Current.CancellationToken);
 			return "async result";
-		}, TestContext.Current.CancellationToken);
+		}, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe("async result");
@@ -336,7 +337,7 @@ public class EndpointQueueTests : IDisposable
 		_queuesToDispose.Add(queue);
 
 		// Act
-		string? result = await queue.EnqueueAsync(_ => Task.FromResult<string?>(null), TestContext.Current.CancellationToken);
+		string? result = await queue.EnqueueAsync(_ => Task.FromResult<string?>(null), Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -379,11 +380,11 @@ public class EndpointQueueTests : IDisposable
 		CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue.EndpointQueue queue = new("test", options);
 
 		// Act
-		await queue.EnqueueAsync(_ => Task.FromResult(1), TestContext.Current.CancellationToken);
-		await queue.EnqueueAsync(_ => Task.FromResult(2), TestContext.Current.CancellationToken);
+		await queue.EnqueueAsync(_ => Task.FromResult(1), Current.CancellationToken);
+		await queue.EnqueueAsync(_ => Task.FromResult(2), Current.CancellationToken);
 
 		// Wait for completion
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Dispose after tasks are done
 		queue.Dispose();
@@ -414,12 +415,12 @@ public class EndpointQueueTests : IDisposable
 		// Act - Queue a longer running task
 		int? result = await queue.EnqueueAsync(async _ =>
 		{
-			await Task.Delay(100, TestContext.Current.CancellationToken);
+			await Task.Delay(100, Current.CancellationToken);
 			return 42;
-		}, TestContext.Current.CancellationToken);
+		}, Current.CancellationToken);
 
 		// Wait for stats to update
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(42);
@@ -439,13 +440,13 @@ public class EndpointQueueTests : IDisposable
 		// Act
 		Task<bool?> task = queue.EnqueueAsync<bool?>(async _ =>
 		{
-			await Task.Delay(50, TestContext.Current.CancellationToken);
+			await Task.Delay(50, Current.CancellationToken);
 			taskExecuted = true;
 			return true;
-		}, TestContext.Current.CancellationToken);
+		}, Current.CancellationToken);
 
 		// Small delay to ensure task is being processed
-		await Task.Delay(10, TestContext.Current.CancellationToken);
+		await Task.Delay(10, Current.CancellationToken);
 
 		queue.Dispose();
 		await task;
@@ -478,14 +479,14 @@ public class EndpointQueueTests : IDisposable
 		_queuesToDispose.Add(queue);
 
 		// Act
-		await Should.ThrowAsync<InvalidOperationException>(async () => await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Error 1"), TestContext.Current.CancellationToken));
+		await Should.ThrowAsync<InvalidOperationException>(async () => await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Error 1"), Current.CancellationToken));
 
-		await Should.ThrowAsync<ArgumentException>(async () => await queue.EnqueueAsync<int>(_ => throw new ArgumentException("Error 2"), TestContext.Current.CancellationToken));
+		await Should.ThrowAsync<ArgumentException>(async () => await queue.EnqueueAsync<int>(_ => throw new ArgumentException("Error 2"), Current.CancellationToken));
 
-		await Should.ThrowAsync<NotImplementedException>(async () => await queue.EnqueueAsync<int>(_ => throw new NotImplementedException("Error 3"), TestContext.Current.CancellationToken));
+		await Should.ThrowAsync<NotImplementedException>(async () => await queue.EnqueueAsync<int>(_ => throw new NotImplementedException("Error 3"), Current.CancellationToken));
 
 		// Wait for stats to update
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Assert
 		QueueStats stats = queue.Stats;
@@ -501,14 +502,14 @@ public class EndpointQueueTests : IDisposable
 		_queuesToDispose.Add(queue);
 
 		// Act
-		await queue.EnqueueAsync(_ => Task.FromResult(1), TestContext.Current.CancellationToken);
+		await queue.EnqueueAsync(_ => Task.FromResult(1), Current.CancellationToken);
 
-		await Should.ThrowAsync<InvalidOperationException>(async () => await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Error"), TestContext.Current.CancellationToken));
+		await Should.ThrowAsync<InvalidOperationException>(async () => await queue.EnqueueAsync<int>(_ => throw new InvalidOperationException("Error"), Current.CancellationToken));
 
-		await queue.EnqueueAsync(_ => Task.FromResult(2), TestContext.Current.CancellationToken);
+		await queue.EnqueueAsync(_ => Task.FromResult(2), Current.CancellationToken);
 
 		// Wait for stats to update
-		await Task.Delay(50, TestContext.Current.CancellationToken);
+		await Task.Delay(50, Current.CancellationToken);
 
 		// Assert
 		QueueStats stats = queue.Stats;
@@ -531,7 +532,7 @@ public class EndpointQueueTests : IDisposable
 			Id = 123,
 			Name = "Test",
 			Values = new List<int> { 1, 2, 3 }
-		}), TestContext.Current.CancellationToken);
+		}), Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -552,13 +553,13 @@ public class EndpointQueueTests : IDisposable
 		List<Task> tasks = new();
 		for (int i = 0; i < 50; i++)
 		{
-			tasks.Add(Task.Run(async () => await queue.EnqueueAsync(_ => Task.FromResult(1), TestContext.Current.CancellationToken), TestContext.Current.CancellationToken));
+			tasks.Add(Task.Run(async () => await queue.EnqueueAsync(_ => Task.FromResult(1), Current.CancellationToken), Current.CancellationToken));
 		}
 
 		await Task.WhenAll(tasks);
 
 		// Wait for processing
-		await Task.Delay(200, TestContext.Current.CancellationToken);
+		await Task.Delay(200, Current.CancellationToken);
 
 		// Assert - Stats should be accurate
 		QueueStats stats = queue.Stats;

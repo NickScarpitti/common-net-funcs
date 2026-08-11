@@ -5,6 +5,7 @@ using CommonNetFuncs.Excel.ClosedXml;
 using CommonNetFuncs.Excel.Common;
 using NPOI.SS.UserModel;
 using NSubstitute;
+using static Xunit.TestContext;
 
 namespace Excel.ClosedXml.Tests;
 
@@ -554,7 +555,7 @@ public sealed class CommonTests : IDisposable
 		wb.SaveAs(ms);
 		ms.Position = 0;
 
-		DataTable dt = ms.ReadExcelFileToDataTable(hasHeaders: true, cancellationToken: TestContext.Current.CancellationToken);
+		DataTable dt = ms.ReadExcelFileToDataTable(hasHeaders: true, cancellationToken: Current.CancellationToken);
 		dt.Columns.Count.ShouldBe(2);
 		dt.Columns[0].ColumnName.ShouldBe("Name");
 		dt.Columns[1].ColumnName.ShouldBe("Age");
@@ -577,7 +578,7 @@ public sealed class CommonTests : IDisposable
 		wb.SaveAs(ms);
 		ms.Position = 0;
 
-		DataTable dt = ms.ReadExcelFileToDataTable(hasHeaders: false, cancellationToken: TestContext.Current.CancellationToken);
+		DataTable dt = ms.ReadExcelFileToDataTable(hasHeaders: false, cancellationToken: Current.CancellationToken);
 		dt.Columns[0].ColumnName.ShouldBe("Column0");
 		dt.Columns[1].ColumnName.ShouldBe("Column1");
 		dt.Rows.Count.ShouldBe(2);
@@ -598,7 +599,7 @@ public sealed class CommonTests : IDisposable
 		wb.SaveAs(ms);
 		ms.Position = 0;
 
-		DataTable dt = ms.ReadExcelFileToDataTable(hasHeaders: true, sheetName: "Second", cancellationToken: TestContext.Current.CancellationToken);
+		DataTable dt = ms.ReadExcelFileToDataTable(hasHeaders: true, sheetName: "Second", cancellationToken: Current.CancellationToken);
 		dt.Columns[0].ColumnName.ShouldBe("H2");
 		dt.Rows[0][0].ToString().ShouldBe("D2");
 	}
@@ -619,7 +620,7 @@ public sealed class CommonTests : IDisposable
 		wb.SaveAs(ms);
 		ms.Position = 0;
 
-		DataTable dt = ms.ReadExcelFileToDataTable(hasHeaders: true, startCellReference: "B2", endCellReference: "C4", cancellationToken: TestContext.Current.CancellationToken);
+		DataTable dt = ms.ReadExcelFileToDataTable(hasHeaders: true, startCellReference: "B2", endCellReference: "C4", cancellationToken: Current.CancellationToken);
 		dt.Columns.Count.ShouldBe(2);
 		dt.Columns[0].ColumnName.ShouldBe("ColB");
 		dt.Rows.Count.ShouldBe(2);
@@ -667,7 +668,7 @@ public sealed class CommonTests : IDisposable
 		wb.SaveAs(ms);
 		ms.Position = 0;
 
-		DataTable dt = ms.ReadExcelFileToDataTable(hasHeaders: true, cancellationToken: TestContext.Current.CancellationToken);
+		DataTable dt = ms.ReadExcelFileToDataTable(hasHeaders: true, cancellationToken: Current.CancellationToken);
 		dt.Columns.Count.ShouldBe(2);
 		dt.Rows.Count.ShouldBe(1); // only Alice, whitespace row triggers break
 	}
@@ -717,7 +718,7 @@ public sealed class CommonTests : IDisposable
 		wb.SaveAs(ms);
 		ms.Position = 0;
 
-		DataTable dt = ms.ReadExcelTableToDataTable("MyTable", cancellationToken: TestContext.Current.CancellationToken);
+		DataTable dt = ms.ReadExcelTableToDataTable("MyTable", cancellationToken: Current.CancellationToken);
 		dt.Columns.Count.ShouldBe(2);
 		dt.Columns[0].ColumnName.ShouldBe("Col1");
 		dt.Rows.Count.ShouldBe(2);
@@ -738,7 +739,7 @@ public sealed class CommonTests : IDisposable
 		wb.SaveAs(ms);
 		ms.Position = 0;
 
-		DataTable dt = ms.ReadExcelTableToDataTable(cancellationToken: TestContext.Current.CancellationToken);
+		DataTable dt = ms.ReadExcelTableToDataTable(cancellationToken: Current.CancellationToken);
 		dt.Columns.Count.ShouldBe(1);
 		dt.Rows.Count.ShouldBe(1);
 	}
@@ -756,7 +757,7 @@ public sealed class CommonTests : IDisposable
 		wb.SaveAs(ms);
 		ms.Position = 0;
 
-		DataTable dt = ms.ReadExcelTableToDataTable("NoSuchTable", cancellationToken: TestContext.Current.CancellationToken);
+		DataTable dt = ms.ReadExcelTableToDataTable("NoSuchTable", cancellationToken: Current.CancellationToken);
 		dt.ShouldNotBeNull();
 		dt.Rows.Count.ShouldBe(1); // falls back to first table
 	}
@@ -1091,7 +1092,7 @@ public sealed class CommonTests : IDisposable
 		using XLWorkbook wb = new();
 		wb.AddWorksheet("Sheet1").Cell(1, 1).Value = "Test";
 
-		await ms.WriteFileToMemoryStreamAsync(wb, TestContext.Current.CancellationToken);
+		await ms.WriteFileToMemoryStreamAsync(wb, Current.CancellationToken);
 
 		ms.Length.ShouldBeGreaterThan(0);
 		ms.Position.ShouldBe(0);
@@ -1104,7 +1105,7 @@ public sealed class CommonTests : IDisposable
 		using XLWorkbook wb = new();
 		IXLWorksheet ws = wb.AddWorksheet("Data");
 		ws.Cell(1, 1).Value = "Hello";
-		await ms.WriteFileToMemoryStreamAsync(wb, TestContext.Current.CancellationToken);
+		await ms.WriteFileToMemoryStreamAsync(wb, Current.CancellationToken);
 
 		// Re-read and verify
 		using XLWorkbook wb2 = new(ms);

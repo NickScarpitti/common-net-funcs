@@ -1,9 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-using AutoFixture.Xunit3;
+﻿using AutoFixture.Xunit3;
 using CommonNetFuncs.Email;
-using MailKit.Security;
-using MimeKit;
 using static CommonNetFuncs.Email.Email;
+using static Xunit.TestContext;
 
 namespace Email.Tests;
 
@@ -108,7 +106,7 @@ public sealed class EmailConfigBytesTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -137,7 +135,7 @@ public sealed class EmailConfigBytesTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		// Should fail because SMTP server is invalid, but should not throw
@@ -171,7 +169,7 @@ public sealed class EmailConfigBytesTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		// Should fail because SMTP server is invalid, but should not throw
@@ -200,7 +198,7 @@ public sealed class EmailConfigBytesTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(false);
@@ -225,7 +223,7 @@ public sealed class EmailConfigBytesTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBe(false);
@@ -248,7 +246,7 @@ public sealed class EmailConfigBytesTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();

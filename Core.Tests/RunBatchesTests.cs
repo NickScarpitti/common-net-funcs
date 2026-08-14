@@ -1,6 +1,7 @@
 ﻿using AutoFixture;
 using CommonNetFuncs.Core;
 using static CommonNetFuncs.Core.Random;
+using static Xunit.TestContext;
 
 namespace Core.Tests;
 
@@ -31,7 +32,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -59,7 +60,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -90,7 +91,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -121,7 +122,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, breakOnFail, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, breakOnFail, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -148,7 +149,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = items.RunBatchedProcess(BatchProcessor, 30, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = items.RunBatchedProcess(BatchProcessor, 30, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -179,7 +180,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = items.RunBatchedProcess(BatchProcessor, 30, breakOnFail, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = items.RunBatchedProcess(BatchProcessor, 30, breakOnFail, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -208,7 +209,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -239,7 +240,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, batchSize, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -267,7 +268,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -294,7 +295,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -382,7 +383,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, logProgress: false, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = await items.RunBatchedProcessAsync(BatchProcessor, 30, logProgress: false, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -485,7 +486,7 @@ public sealed class RunBatchesTests
 		}
 
 		// Act
-		bool result = items.RunBatchedProcess(BatchProcessor, 30, logProgress: false, cancellationToken: TestContext.Current.CancellationToken);
+		bool result = items.RunBatchedProcess(BatchProcessor, 30, logProgress: false, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();

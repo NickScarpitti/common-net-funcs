@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text;
 using CommonNetFuncs.Web.Requests.Rest;
+using static Xunit.TestContext;
 
 namespace Web.Requests.Tests;
 
@@ -10,11 +11,13 @@ public sealed class RestHelpersCommonTests
 	{
 		public HttpResponseMessage? Response { get; set; }
 
+
 #pragma warning disable S3459 // Unassigned members should be removed
 #pragma warning disable S1144 // Unused private types or members should be removed
 		public Exception? ThrowOnSend { get; set; }
 #pragma warning restore S1144 // Unused private types or members should be removed
 #pragma warning restore S3459 // Unassigned members should be removed
+
 
 		protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
 		{
@@ -40,7 +43,7 @@ public sealed class RestHelpersCommonTests
 			Content = new StringContent("\"result\"", Encoding.UTF8, "application/json")
 		};
 
-		string? result = await restHelpers.RestRequest<string, string>(options, TestContext.Current.CancellationToken);
+		string? result = await restHelpers.RestRequest<string, string>(options, Current.CancellationToken);
 
 		result.ShouldBe("result");
 	}
@@ -67,7 +70,7 @@ public sealed class RestHelpersCommonTests
 		};
 
 		List<string?> results = new();
-		await foreach (StringWrapper? item in restHelpers.StreamingRestRequest<StringWrapper, string>(options, TestContext.Current.CancellationToken))
+		await foreach (StringWrapper? item in restHelpers.StreamingRestRequest<StringWrapper, string>(options, Current.CancellationToken))
 		{
 			results.Add(item?.Value);
 		}
@@ -87,7 +90,7 @@ public sealed class RestHelpersCommonTests
 			Content = new StringContent("\"foo\"", Encoding.UTF8, "application/json")
 		};
 
-		RestObject<string> result = await restHelpers.RestRequestObject<string, string>(options, TestContext.Current.CancellationToken);
+		RestObject<string> result = await restHelpers.RestRequestObject<string, string>(options, Current.CancellationToken);
 
 		result.Result.ShouldBe("foo");
 		result.Response.ShouldNotBeNull();
@@ -106,7 +109,7 @@ public sealed class RestHelpersCommonTests
 			Content = new StringContent("[\"x\",\"y\"]", Encoding.UTF8, "application/json")
 		};
 
-		StreamingRestObject<string> result = await restHelpers.StreamingRestRequestObject<string, string>(options, TestContext.Current.CancellationToken);
+		StreamingRestObject<string> result = await restHelpers.StreamingRestRequestObject<string, string>(options, Current.CancellationToken);
 
 		List<string?> items = new();
 		await foreach (string? item in result.Result!)
@@ -117,6 +120,7 @@ public sealed class RestHelpersCommonTests
 	}
 
 	#region RestHelpersCommonFactory Tests
+
 
 	[Fact]
 	public async Task RestHelpersCommonFactory_RestRequest_WithDefaultClient()
@@ -131,7 +135,7 @@ public sealed class RestHelpersCommonTests
 			Content = new StringContent("\"factory-result\"", Encoding.UTF8, "application/json")
 		};
 
-		string? result = await restHelpers.RestRequest<string, string>(options, TestContext.Current.CancellationToken);
+		string? result = await restHelpers.RestRequest<string, string>(options, Current.CancellationToken);
 
 		result.ShouldBe("factory-result");
 	}
@@ -149,7 +153,7 @@ public sealed class RestHelpersCommonTests
 			Content = new StringContent("\"named-result\"", Encoding.UTF8, "application/json")
 		};
 
-		string? result = await restHelpers.RestRequest<string, string>(options, TestContext.Current.CancellationToken);
+		string? result = await restHelpers.RestRequest<string, string>(options, Current.CancellationToken);
 
 		result.ShouldBe("named-result");
 		factory.LastRequestedClientName.ShouldBe("named-client");
@@ -172,7 +176,7 @@ public sealed class RestHelpersCommonTests
 		};
 
 		List<string?> results = new();
-		await foreach (StringWrapper? item in restHelpers.StreamingRestRequest<StringWrapper, string>(options, TestContext.Current.CancellationToken))
+		await foreach (StringWrapper? item in restHelpers.StreamingRestRequest<StringWrapper, string>(options, Current.CancellationToken))
 		{
 			results.Add(item?.Value);
 		}
@@ -192,7 +196,7 @@ public sealed class RestHelpersCommonTests
 			Content = new StringContent("\"factory-object\"", Encoding.UTF8, "application/json")
 		};
 
-		RestObject<string> result = await restHelpers.RestRequestObject<string, string>(options, TestContext.Current.CancellationToken);
+		RestObject<string> result = await restHelpers.RestRequestObject<string, string>(options, Current.CancellationToken);
 
 		result.Result.ShouldBe("factory-object");
 		result.Response.ShouldNotBeNull();
@@ -211,7 +215,7 @@ public sealed class RestHelpersCommonTests
 			Content = new StringContent("[\"factory-x\",\"factory-y\"]", Encoding.UTF8, "application/json")
 		};
 
-		StreamingRestObject<string> result = await restHelpers.StreamingRestRequestObject<string, string>(options, TestContext.Current.CancellationToken);
+		StreamingRestObject<string> result = await restHelpers.StreamingRestRequestObject<string, string>(options, Current.CancellationToken);
 
 		List<string?> items = new();
 		await foreach (string? item in result.Result!)
@@ -229,12 +233,15 @@ public sealed class RestHelpersCommonTests
 		RestHelpersCommonFactory restHelpers = new(factory);
 
 		// Verify client is accessible before dispose
+
 		restHelpers.client.ShouldNotBeNull();
 
 		// Dispose
+
 		restHelpers.Dispose();
 
 		// Verify dispose was called (attempting to send request should throw)
+
 		Should.Throw<ObjectDisposedException>(() => restHelpers.client.Send(new HttpRequestMessage(HttpMethod.Get, "http://test")));
 	}
 
@@ -246,6 +253,7 @@ public sealed class RestHelpersCommonTests
 		RestHelpersCommonFactory restHelpers = new(factory);
 
 		// Should not throw when called multiple times
+
 		Should.NotThrow(() =>
 		{
 			restHelpers.Dispose();
@@ -261,6 +269,7 @@ public sealed class RestHelpersCommonTests
 		FakeHttpClientFactory factory = new(handler, null);
 
 		// Create in separate scope to allow GC
+
 		WeakReference CreateAndForget()
 		{
 			RestHelpersCommonFactory restHelpers = new(factory);
@@ -270,6 +279,7 @@ public sealed class RestHelpersCommonTests
 		WeakReference weakRef = CreateAndForget();
 
 		// Force garbage collection to trigger finalizer
+
 #pragma warning disable S1215 // Refactor the code to remove this use of 'GC.Collect'
 		GC.Collect();
 		GC.WaitForPendingFinalizers();
@@ -277,10 +287,12 @@ public sealed class RestHelpersCommonTests
 #pragma warning restore S1215 // Refactor the code to remove this use of 'GC.Collect'
 
 		// Object should be collected
+
 		weakRef.IsAlive.ShouldBeFalse();
 	}
 
 	#endregion
+
 
 	private sealed class FakeHttpClientFactory(FakeHttpMessageHandler handler, string? expectedName) : IHttpClientFactory
 	{

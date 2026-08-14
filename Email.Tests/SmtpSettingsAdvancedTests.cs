@@ -1,9 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-using AutoFixture.Xunit3;
-using CommonNetFuncs.Email;
+﻿using CommonNetFuncs.Email;
 using MailKit.Security;
-using MimeKit;
 using static CommonNetFuncs.Email.Email;
+using static Xunit.TestContext;
 
 namespace Email.Tests;
 
@@ -136,7 +134,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -165,7 +163,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -195,7 +193,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -224,7 +222,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -254,7 +252,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -283,7 +281,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -312,7 +310,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -341,7 +339,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -370,7 +368,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -399,7 +397,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -428,7 +426,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -457,7 +455,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server
@@ -493,7 +491,7 @@ public sealed class SmtpSettingsAdvancedTests
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to no server

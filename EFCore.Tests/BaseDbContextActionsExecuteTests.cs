@@ -3,6 +3,7 @@ using CommonNetFuncs.EFCore;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using static Xunit.TestContext;
 
 namespace EFCore.Tests;
 
@@ -69,15 +70,15 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		const string newName = "UpdatedName";
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -85,7 +86,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(cancellationToken: TestContext.Current.CancellationToken);
+			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(cancellationToken: Current.CancellationToken);
 			updatedEntities.ShouldAllBe(e => e.Name == newName);
 		}
 	}
@@ -99,16 +100,16 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 			targetId = entities[0].Id;
 		}
 
 		const string newName = "UpdatedName";
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.UpdateMany(whereExpression: x => x.Id == targetId, updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.UpdateMany(whereExpression: x => x.Id == targetId, updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -116,12 +117,12 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			TestEntity? updatedEntity = await context.TestEntities.FindAsync(new object?[] { targetId }, TestContext.Current.CancellationToken);
+			TestEntity? updatedEntity = await context.TestEntities.FindAsync(new object?[] { targetId }, Current.CancellationToken);
 			updatedEntity.ShouldNotBeNull();
 			updatedEntity!.Name.ShouldBe(newName);
 
 			// Verify others weren't updated
-			List<TestEntity> otherEntities = await context.TestEntities.Where(x => x.Id != targetId).ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> otherEntities = await context.TestEntities.Where(x => x.Id != targetId).ToListAsync(Current.CancellationToken);
 			otherEntities.ShouldAllBe(e => e.Name != newName);
 		}
 	}
@@ -134,17 +135,17 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		const string newName = "NewName";
 		DateTime newDate = DateTime.UtcNow;
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, newName)
-			.SetProperty(x => x.CreatedDate, newDate), cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, newName)
+			.SetProperty(x => x.CreatedDate, newDate), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -152,7 +153,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			updatedEntities.ShouldAllBe(e => e.Name == newName);
 			updatedEntities.ShouldAllBe(e => e.CreatedDate == newDate);
 		}
@@ -169,14 +170,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 			List<TestEntity> entities = fixture.CreateMany<TestEntity>(entityCount).ToList();
 			using IServiceScope scope = serviceProvider.CreateScope();
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.UpdateMany(whereExpression: x => x.Id == targetId, updateSetters: s => s.SetProperty(x => x.Name, "NewName"), cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.UpdateMany(whereExpression: x => x.Id == targetId, updateSetters: s => s.SetProperty(x => x.Name, "NewName"), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -191,15 +192,15 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 		TimeSpan timeout = TimeSpan.FromSeconds(30);
 
 		// Act
-		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, "NewName"), queryTimeout: timeout, cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, "NewName"), queryTimeout: timeout, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -214,16 +215,16 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
 		// Act
-		int? result = await testContext.UpdateMany(
+		int? result = await testDbContext.UpdateMany(
 			whereExpression: _ => true,
 			updateSetters: s => s.SetProperty(x => x.Name, "NewName"),
 			cancellationToken: cts.Token);
@@ -245,14 +246,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.UpdateMany(whereExpression: x => x.Name == "EvenName", updateSetters: s => s.SetProperty(x => x.Name, "UpdatedEvenName"), cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.UpdateMany(whereExpression: x => x.Name == "EvenName", updateSetters: s => s.SetProperty(x => x.Name, "UpdatedEvenName"), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -260,10 +261,10 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> updatedEntities = await context.TestEntities.Where(x => x.Name == "UpdatedEvenName").ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> updatedEntities = await context.TestEntities.Where(x => x.Name == "UpdatedEvenName").ToListAsync(Current.CancellationToken);
 			updatedEntities.Count.ShouldBe(5);
 
-			List<TestEntity> notUpdatedEntities = await context.TestEntities.Where(x => x.Name == "OddName").ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> notUpdatedEntities = await context.TestEntities.Where(x => x.Name == "OddName").ToListAsync(Current.CancellationToken);
 			notUpdatedEntities.Count.ShouldBe(5);
 		}
 	}
@@ -280,14 +281,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, x => x.Name + "_Updated"), cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, x => x.Name + "_Updated"), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -295,7 +296,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			updatedEntities.ShouldAllBe(e => e.Name.EndsWith("_Updated"));
 		}
 	}
@@ -313,15 +314,15 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		DateTime newDate = DateTime.UtcNow;
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.CreatedDate, newDate), cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.CreatedDate, newDate), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -329,7 +330,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			updatedEntities.ShouldAllBe(e => e.CreatedDate == newDate);
 		}
 	}
@@ -342,15 +343,15 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		const string newName = "BulkUpdatedName";
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -358,7 +359,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			int updatedCount = await context.TestEntities.CountAsync(x => x.Name == newName, TestContext.Current.CancellationToken);
+			int updatedCount = await context.TestEntities.CountAsync(x => x.Name == newName, Current.CancellationToken);
 			updatedCount.ShouldBe(100);
 		}
 	}
@@ -378,15 +379,15 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		DateTime newDate = DateTime.UtcNow.AddDays(1);
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act - Only update CreatedDate, not Name
-		int? result = await testContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.CreatedDate, newDate), cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.UpdateMany(whereExpression: _ => true, updateSetters: s => s.SetProperty(x => x.CreatedDate, newDate), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -394,7 +395,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			updatedEntities.ShouldAllBe(e => e.CreatedDate == newDate);
 			updatedEntities.ShouldAllBe(e => e.Name == originalName); // Name should remain unchanged
 		}
@@ -409,16 +410,16 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 			targetIds = [entities[0].Id, entities[2].Id, entities[4].Id];
 		}
 
 		const string newName = "SelectedUpdate";
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.UpdateMany(whereExpression: x => targetIds.Contains(x.Id), updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.UpdateMany(whereExpression: x => targetIds.Contains(x.Id), updateSetters: s => s.SetProperty(x => x.Name, newName), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -426,7 +427,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> updatedEntities = await context.TestEntities.Where(x => targetIds.Contains(x.Id)).ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> updatedEntities = await context.TestEntities.Where(x => targetIds.Contains(x.Id)).ToListAsync(Current.CancellationToken);
 			updatedEntities.ShouldAllBe(e => e.Name == newName);
 			updatedEntities.Count.ShouldBe(3);
 		}
@@ -440,15 +441,15 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 		using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
 
 		// Act
-		int? result = await testContext.UpdateMany(
+		int? result = await testDbContext.UpdateMany(
 			whereExpression: _ => true,
 			updateSetters: s => s.SetProperty(x => x.Name, "AllParamsTest"),
 			queryTimeout: TimeSpan.FromSeconds(30),
@@ -460,7 +461,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> updatedEntities = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			updatedEntities.ShouldAllBe(e => e.Name == "AllParamsTest");
 		}
 	}
@@ -481,23 +482,23 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 			List<TestEntity> entities = fixture.CreateMany<TestEntity>(initialCount).ToList();
 			using IServiceScope scope = serviceProvider.CreateScope();
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
 		int? result = targetId == 0
-			? await testContext.DeleteMany(x => x.Id > 0, cancellationToken: TestContext.Current.CancellationToken)
-			: await testContext.DeleteMany(x => x.Id == targetId, cancellationToken: TestContext.Current.CancellationToken);
+			? await testDbContext.DeleteMany(x => x.Id > 0, cancellationToken: Current.CancellationToken)
+			: await testDbContext.DeleteMany(x => x.Id == targetId, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			int remainingCount = await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
+			int remainingCount = await context.TestEntities.CountAsync(Current.CancellationToken);
 
 			if (targetId == 0 && initialCount > 0)
 			{
@@ -526,14 +527,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.DeleteMany(x => x.Name == "ToDelete", cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.DeleteMany(x => x.Name == "ToDelete", cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -541,10 +542,10 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			int remainingCount = await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
+			int remainingCount = await context.TestEntities.CountAsync(Current.CancellationToken);
 			remainingCount.ShouldBe(5);
 
-			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> remaining = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			remaining.ShouldAllBe(e => e.Name == "ToKeep");
 		}
 	}
@@ -565,14 +566,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act - Delete entities with EvenName AND CreatedDate before cutoff
-		int? result = await testContext.DeleteMany(x => x.Name == "EvenName" && x.CreatedDate < cutoffDate, cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.DeleteMany(x => x.Name == "EvenName" && x.CreatedDate < cutoffDate, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -580,10 +581,10 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			int deletedCount = 15 - await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
+			int deletedCount = 15 - await context.TestEntities.CountAsync(Current.CancellationToken);
 			deletedCount.ShouldBe(result.Value);
 
-			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> remaining = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			remaining.ShouldNotContain(e => e.Name == "EvenName" && e.CreatedDate < cutoffDate);
 		}
 	}
@@ -598,15 +599,15 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 			idsToDelete = [entities[0].Id, entities[2].Id, entities[5].Id];
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.DeleteMany(x => idsToDelete.Contains(x.Id), cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.DeleteMany(x => idsToDelete.Contains(x.Id), cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -614,10 +615,10 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			int remainingCount = await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
+			int remainingCount = await context.TestEntities.CountAsync(Current.CancellationToken);
 			remainingCount.ShouldBe(7);
 
-			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> remaining = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			remaining.ShouldNotContain(e => idsToDelete.Contains(e.Id));
 		}
 	}
@@ -641,18 +642,18 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
 		int? result = method switch
 		{
-			"Contains" => await testContext.DeleteMany(x => x.Name.Contains(matchPattern), cancellationToken: TestContext.Current.CancellationToken),
-			"StartsWith" => await testContext.DeleteMany(x => x.Name.StartsWith(matchPattern), cancellationToken: TestContext.Current.CancellationToken),
-			"EndsWith" => await testContext.DeleteMany(x => x.Name.EndsWith(matchPattern), cancellationToken: TestContext.Current.CancellationToken),
+			"Contains" => await testDbContext.DeleteMany(x => x.Name.Contains(matchPattern), cancellationToken: Current.CancellationToken),
+			"StartsWith" => await testDbContext.DeleteMany(x => x.Name.StartsWith(matchPattern), cancellationToken: Current.CancellationToken),
+			"EndsWith" => await testDbContext.DeleteMany(x => x.Name.EndsWith(matchPattern), cancellationToken: Current.CancellationToken),
 			_ => throw new ArgumentException($"Unknown method: {method}")
 		};
 
@@ -662,10 +663,10 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			int remainingCount = await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
+			int remainingCount = await context.TestEntities.CountAsync(Current.CancellationToken);
 			remainingCount.ShouldBe(expectedRemaining);
 
-			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> remaining = await context.TestEntities.ToListAsync(Current.CancellationToken);
 
 			// Verify remaining entities match the keep pattern
 			bool allMatch = method switch
@@ -694,15 +695,15 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
 		DateTime cutoffDate = now.AddDays(-3);
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.DeleteMany(x => x.CreatedDate < cutoffDate, cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.DeleteMany(x => x.CreatedDate < cutoffDate, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -710,7 +711,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> remaining = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			remaining.ShouldAllBe(e => e.CreatedDate >= cutoffDate);
 			remaining.Count.ShouldBe(6 - result.Value);
 		}
@@ -729,14 +730,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.DeleteMany(x => x.Name == "Group1" || x.Name == "Group3", cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.DeleteMany(x => x.Name == "Group1" || x.Name == "Group3", cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -744,7 +745,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> remaining = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			remaining.Count.ShouldBe(4);
 			remaining.ShouldAllBe(e => e.Name == "Group2");
 		}
@@ -763,14 +764,14 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.DeleteMany(x => x.Name != "Keep", cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.DeleteMany(x => x.Name != "Keep", cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -778,7 +779,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> remaining = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			remaining.Count.ShouldBe(4);
 			remaining.ShouldAllBe(e => e.Name == "Keep");
 		}
@@ -802,16 +803,16 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
 		int? result = targetName == "None"
-			? await testContext.DeleteMany(_ => false, cancellationToken: TestContext.Current.CancellationToken)
-			: await testContext.DeleteMany(x => x.Name == targetName, cancellationToken: TestContext.Current.CancellationToken);
+			? await testDbContext.DeleteMany(_ => false, cancellationToken: Current.CancellationToken)
+			: await testDbContext.DeleteMany(x => x.Name == targetName, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -819,7 +820,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			int remainingCount = await context.TestEntities.CountAsync(TestContext.Current.CancellationToken);
+			int remainingCount = await context.TestEntities.CountAsync(Current.CancellationToken);
 			remainingCount.ShouldBe(expectedRemaining);
 		}
 	}
@@ -832,11 +833,11 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
@@ -844,7 +845,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		// The operation may complete before cancellation or throw, or return null
 		try
 		{
-			int? result = await testContext.DeleteMany(x => x.Id > 0, cancellationToken: TestContext.Current.CancellationToken);
+			int? result = await testDbContext.DeleteMany(x => x.Id > 0, cancellationToken: Current.CancellationToken);
 			// If it completes, result could be null, 0, or the count
 			result.ShouldBeOneOf(null, 0, 5);
 		}
@@ -864,17 +865,17 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 			idsToCheck = entities.Select(e => e.Id).Order().ToArray();
 		}
 
 		int minId = idsToCheck[5];
 		int maxId = idsToCheck[14];
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		int? result = await testContext.DeleteMany(x => x.Id >= minId && x.Id <= maxId, cancellationToken: TestContext.Current.CancellationToken);
+		int? result = await testDbContext.DeleteMany(x => x.Id >= minId && x.Id <= maxId, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -882,7 +883,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> remaining = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			remaining.Count.ShouldBe(10);
 			remaining.ShouldAllBe(e => e.Id < minId || e.Id > maxId);
 		}
@@ -901,15 +902,15 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			await context.TestEntities.AddRangeAsync(entities, TestContext.Current.CancellationToken);
-			await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+			await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
+			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act - Delete in multiple batches
-		int? result1 = await testContext.DeleteMany(x => x.Name == "Batch1", cancellationToken: TestContext.Current.CancellationToken);
-		int? result2 = await testContext.DeleteMany(x => x.Name == "Batch2", cancellationToken: TestContext.Current.CancellationToken);
+		int? result1 = await testDbContext.DeleteMany(x => x.Name == "Batch1", cancellationToken: Current.CancellationToken);
+		int? result2 = await testDbContext.DeleteMany(x => x.Name == "Batch2", cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result1.ShouldNotBeNull();
@@ -920,7 +921,7 @@ public sealed class BaseDbContextActionsExecuteTests : IDisposable
 		using (IServiceScope scope = serviceProvider.CreateScope())
 		{
 			TestDbContext context = scope.ServiceProvider.GetRequiredService<TestDbContext>();
-			List<TestEntity> remaining = await context.TestEntities.ToListAsync(TestContext.Current.CancellationToken);
+			List<TestEntity> remaining = await context.TestEntities.ToListAsync(Current.CancellationToken);
 			remaining.Count.ShouldBe(5);
 			remaining.ShouldAllBe(e => e.Name == "Batch3");
 		}

@@ -8,6 +8,7 @@ using FastExpressionCompiler;
 using static System.Convert;
 using static CommonNetFuncs.Core.ReflectionCaches;
 using CommonNetFuncs.Core.Internal;
+using System.Runtime.CompilerServices;
 
 namespace CommonNetFuncs.Core;
 
@@ -19,6 +20,7 @@ public static partial class Collections
 	/// <typeparam name="T">Object type.</typeparam>
 	/// <param name="collection">Collection being checked for having elements.</param>
 	/// <returns><see langword="true"/> if <paramref name="collection"/> has any objects in it.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool AnyFast<T>([NotNullWhen(true)] this ICollection<T>? collection)
 	{
 		return collection?.Count > 0;
@@ -30,6 +32,7 @@ public static partial class Collections
 	/// <typeparam name="T">Object type.</typeparam>
 	/// <param name="list">Collection being checked for having elements.</param>
 	/// <returns><see langword="true"/> if <paramref name="list"/> has any objects in it.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool AnyFast<T>([NotNullWhen(true)] this IList<T>? list)
 	{
 		return list?.Count > 0;
@@ -41,6 +44,7 @@ public static partial class Collections
 	/// <typeparam name="T">Object type.</typeparam>
 	/// <param name="bag">Collection being checked for having elements.</param>
 	/// <returns><see langword="true"/> if <paramref name="bag"/> has any objects in it.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool AnyFast<T>([NotNullWhen(true)] this ConcurrentBag<T>? bag)
 	{
 		return bag?.IsEmpty == false;
@@ -52,6 +56,7 @@ public static partial class Collections
 	/// <typeparam name="T">Object type.</typeparam>
 	/// <param name="array">Collection being checked for having elements.</param>
 	/// <returns><see langword="true"/> if <paramref name="array"/> has any objects in it.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool AnyFast<T>([NotNullWhen(true)] this T[]? array)
 	{
 		return array?.Length > 0;
@@ -64,6 +69,7 @@ public static partial class Collections
 	/// <typeparam name="T">Dictionary value type.</typeparam>
 	/// <param name="dict">Collection being checked for having elements.</param>
 	/// <returns><see langword="true"/> if <paramref name="dict"/> has any objects in it.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool AnyFast<TKey, T>([NotNullWhen(true)] this IDictionary<TKey, T>? dict) where TKey : notnull
 	{
 		return dict?.Count > 0;
@@ -76,6 +82,7 @@ public static partial class Collections
 	/// <typeparam name="T">Dictionary value type.</typeparam>
 	/// <param name="dict">Collection being checked for having elements.</param>
 	/// <returns><see langword="true"/> if <paramref name="dict"/> has any objects in it.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool AnyFast<TKey, T>([NotNullWhen(true)] this ConcurrentDictionary<TKey, T>? dict) where TKey : notnull
 	{
 		return dict?.IsEmpty == false;
@@ -86,6 +93,7 @@ public static partial class Collections
 	/// </summary>
 	/// <param name="dict">Dictionary to add item to.</param>
 	/// <param name="keyValuePair">Key value pair to add to <paramref name="dict"/>.</param>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static void AddDictionaryItem<K, V>(this IDictionary<K, V> dict, KeyValuePair<K, V> keyValuePair) where K : notnull
 	{
 		dict.TryAdd(keyValuePair.Key, keyValuePair.Value);
@@ -303,6 +311,7 @@ public static partial class Collections
 	/// </summary>
 	/// <param name="items">Enumerable of strings to select from.</param>
 	/// <returns>An <see cref="IEnumerable{T}"/> containing all string values from <paramref name="items"/> that are not null, empty, or only whitespace.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	[return: NotNullIfNotNull(nameof(items))]
 	public static IEnumerable<string>? SelectNonEmpty(this IEnumerable<string?>? items)
 	{
@@ -314,6 +323,7 @@ public static partial class Collections
 	/// </summary>
 	/// <param name="items">Enumerable of objects to select from.</param>
 	/// <returns>An <see cref="IEnumerable{T}"/> containing all object values from <paramref name="items"/> that are not <see langword="null"/>.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	[return: NotNullIfNotNull(nameof(items))]
 	public static IEnumerable<T>? SelectNonNull<T>(this IEnumerable<T?>? items)
 	{
@@ -327,6 +337,7 @@ public static partial class Collections
 	/// <typeparam name="T">Type to use in list.</typeparam>
 	/// <param name="obj">Object to turn into a single item list.</param>
 	/// <returns>A <see cref="List{T}"/> containing the single item or an empty <see cref="List{T}"> if the item is <see langword="null"/>.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static List<T> SingleToList<T>(this T? obj)
 	{
 		return obj != null! ? [obj!] : [];
@@ -339,6 +350,7 @@ public static partial class Collections
 	/// <param name="s">Object to turn into a single item list.</param>
 	/// <param name="allowEmptyValues">Optional: If <see langword="true"/>, allows empty strings in the list, otherwise they are excluded. Default is <see langword="false"/>.</param>
 	/// <returns>A <see cref="List{T}"/> containing the single item or an empty <see cref="List{T}"> if the item is <see langword="null"/>.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static List<string> SingleToList(this string? s, bool allowEmptyValues = false)
 	{
 		return !allowEmptyValues ? (!s.IsNullOrWhiteSpace()) ? [s] : [] : s != null ? [s] : [];

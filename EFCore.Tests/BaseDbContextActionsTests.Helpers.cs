@@ -193,17 +193,17 @@ public sealed partial class BaseDbContextActionsTests
 	public void ServiceProvider_SetAndGet_ShouldWork()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 		ServiceCollection newServices = new();
 		newServices.AddDbContextPool<TestDbContext>(options =>
 			options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
 		IServiceProvider newServiceProvider = newServices.BuildServiceProvider();
 
 		// Act
-		testContext.ServiceProvider = newServiceProvider;
+		testDbContext.ServiceProvider = newServiceProvider;
 
 		// Assert
-		testContext.ServiceProvider.ShouldBe(newServiceProvider);
+		testDbContext.ServiceProvider.ShouldBe(newServiceProvider);
 	}
 
 	#endregion
@@ -221,10 +221,10 @@ public sealed partial class BaseDbContextActionsTests
 			await sqliteContext.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 			await sqliteContext.SaveChangesAsync(Current.CancellationToken);
 
-			BaseDbContextActions<TestEntity, TestDbContext> testContext = new(sqliteProvider);
+			BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(sqliteProvider);
 
 			// Act
-			int? result = await testContext.UpdateMany(
+			int? result = await testDbContext.UpdateMany(
 				x => x.Id > 0,
 				s => s.SetProperty(e => e.Name, _ => "Updated"),
 				queryTimeout: TimeSpan.FromSeconds(30),
@@ -269,10 +269,10 @@ public sealed partial class BaseDbContextActionsTests
 		}
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act - GetAllFull uses ExecuteWithCircularRefHandling internally
-		List<TestEntity>? result = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
+		List<TestEntity>? result = await testDbContext.GetAllFull(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -300,11 +300,11 @@ public sealed partial class BaseDbContextActionsTests
 		}
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act - GetAllFullStreaming uses ExecuteStreamingWithCircularRefHandling internally
 		List<TestEntity> streamedResults = [];
-		await foreach (TestEntity item in testContext.GetAllFullStreaming(cancellationToken: Current.CancellationToken)!)
+		await foreach (TestEntity item in testDbContext.GetAllFullStreaming(cancellationToken: Current.CancellationToken)!)
 		{
 			streamedResults.Add(item);
 		}
@@ -328,12 +328,12 @@ public sealed partial class BaseDbContextActionsTests
 		}
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act - Call GetAllFull multiple times to verify caching behavior
-		List<TestEntity>? firstResult = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
-		List<TestEntity>? secondResult = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
-		List<TestEntity>? thirdResult = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
+		List<TestEntity>? firstResult = await testDbContext.GetAllFull(cancellationToken: Current.CancellationToken);
+		List<TestEntity>? secondResult = await testDbContext.GetAllFull(cancellationToken: Current.CancellationToken);
+		List<TestEntity>? thirdResult = await testDbContext.GetAllFull(cancellationToken: Current.CancellationToken);
 
 		// Assert - All calls should succeed without errors
 		firstResult.ShouldNotBeNull();
@@ -361,17 +361,17 @@ public sealed partial class BaseDbContextActionsTests
 		}
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act - Call GetAllFullStreaming multiple times to verify caching behavior
 		List<TestEntity> firstResults = [];
-		await foreach (TestEntity item in testContext.GetAllFullStreaming(cancellationToken: Current.CancellationToken)!)
+		await foreach (TestEntity item in testDbContext.GetAllFullStreaming(cancellationToken: Current.CancellationToken)!)
 		{
 			firstResults.Add(item);
 		}
 
 		List<TestEntity> secondResults = [];
-		await foreach (TestEntity item in testContext.GetAllFullStreaming(cancellationToken: Current.CancellationToken)!)
+		await foreach (TestEntity item in testDbContext.GetAllFullStreaming(cancellationToken: Current.CancellationToken)!)
 		{
 			secondResults.Add(item);
 		}
@@ -397,7 +397,7 @@ public sealed partial class BaseDbContextActionsTests
 		}
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Get reference to the static circularReferencingEntities dictionary via reflection
 		FieldInfo? field = typeof(BaseDbContextActions<TestEntity, TestDbContext>)
@@ -411,7 +411,7 @@ public sealed partial class BaseDbContextActionsTests
 		bool _ = dictionary.ContainsKey(typeof(TestEntity));
 
 		// Act - Call GetAllFull which may add the entity type to the dictionary
-		List<TestEntity>? result = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
+		List<TestEntity>? result = await testDbContext.GetAllFull(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -425,7 +425,7 @@ public sealed partial class BaseDbContextActionsTests
 		if (finallyInDictionary)
 		{
 			// Call again - should use cached knowledge
-			List<TestEntity>? secondResult = await testContext.GetAllFull(cancellationToken: Current.CancellationToken);
+			List<TestEntity>? secondResult = await testDbContext.GetAllFull(cancellationToken: Current.CancellationToken);
 			secondResult.ShouldNotBeNull();
 			secondResult.Count.ShouldBeGreaterThanOrEqualTo(2);
 		}

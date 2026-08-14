@@ -89,10 +89,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyTracked(entities);
+		bool result = await testDbContext.DeleteManyTracked(entities);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -112,10 +112,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 	{
 		// Arrange
 		List<TestEntity> entities = [];
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyTracked(entities);
+		bool result = await testDbContext.DeleteManyTracked(entities);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -133,10 +133,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyTracked([entity]);
+		bool result = await testDbContext.DeleteManyTracked([entity]);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -160,10 +160,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyTracked(entities);
+		bool result = await testDbContext.DeleteManyTracked(entities);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -189,10 +189,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyTracked([entity], removeNavigationProps: true);
+		bool result = await testDbContext.DeleteManyTracked([entity], removeNavigationProps: true);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -211,10 +211,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		TestEntity entity = fixture.Create<TestEntity>();
 		// Entity is created but not added to database
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyTracked([entity]);
+		bool result = await testDbContext.DeleteManyTracked([entity]);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -234,10 +234,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyTracked([existingEntity, nonExistingEntity]);
+		bool result = await testDbContext.DeleteManyTracked([existingEntity, nonExistingEntity]);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -267,11 +267,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result1 = await testContext.DeleteManyTracked(firstBatch);
-		bool result2 = await testContext.DeleteManyTracked(secondBatch);
+		bool result1 = await testDbContext.DeleteManyTracked(firstBatch);
+		bool result2 = await testDbContext.DeleteManyTracked(secondBatch);
 
 		// Assert
 		result1.ShouldBeTrue();
@@ -304,10 +304,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			keys = entities.ConvertAll(e => (object)e.Id);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyByKeys(keys);
+		bool result = await testDbContext.DeleteManyByKeys(keys);
 
 		// Assert
 		// Note: This method is documented as "Does not work with PostgreSQL, not testable"
@@ -320,10 +320,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 	{
 		// Arrange
 		List<object> keys = [];
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyByKeys(keys);
+		bool result = await testDbContext.DeleteManyByKeys(keys);
 
 		// Assert
 		// DeleteManyByKeys returns true even for empty lists
@@ -342,10 +342,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyByKeys([entity.Id]);
+		bool result = await testDbContext.DeleteManyByKeys([entity.Id]);
 
 		// Assert
 		// Method behavior may vary by provider
@@ -357,10 +357,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 	{
 		// Arrange
 		List<object> keys = [999, 1000, 1001];
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyByKeys(keys);
+		bool result = await testDbContext.DeleteManyByKeys(keys);
 
 		// Assert
 		// DeleteManyByKeys returns true even for non-existent keys
@@ -380,10 +380,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		}
 
 		List<object> keys = [entity.Id, 999, 1000];
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyByKeys(keys);
+		bool result = await testDbContext.DeleteManyByKeys(keys);
 
 		// Assert
 		// Method behavior may vary - either succeeds or fails gracefully
@@ -408,11 +408,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 
 		// Act
-		TestEntityWithFilter? activeResult = await testContext.GetByKey(1, cancellationToken: Current.CancellationToken);
-		TestEntityWithFilter? inactiveResult = await testContext.GetByKey(2, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? activeResult = await testDbContext.GetByKey(1, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? inactiveResult = await testDbContext.GetByKey(2, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		activeResult.ShouldNotBeNull();
@@ -434,12 +434,12 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntityWithFilter? activeResult = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
-		TestEntityWithFilter? inactiveResult = await testContext.GetByKey(2, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? activeResult = await testDbContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? inactiveResult = await testDbContext.GetByKey(2, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		activeResult.ShouldNotBeNull();
@@ -461,11 +461,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = ["IsActiveFilter"] };
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? result = await testDbContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		// Note: EF Core's IgnoreQueryFilters() disables all filters, not specific ones
@@ -488,11 +488,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithCompoundKeyAndFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithCompoundKeyAndFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 
 		// Act
-		TestEntityWithCompoundKeyAndFilter? activeResult = await testContext.GetByKey(new object[] { 1, 1 }, cancellationToken: Current.CancellationToken);
-		TestEntityWithCompoundKeyAndFilter? inactiveResult = await testContext.GetByKey(new object[] { 1, 2 }, cancellationToken: Current.CancellationToken);
+		TestEntityWithCompoundKeyAndFilter? activeResult = await testDbContext.GetByKey(new object[] { 1, 1 }, cancellationToken: Current.CancellationToken);
+		TestEntityWithCompoundKeyAndFilter? inactiveResult = await testDbContext.GetByKey(new object[] { 1, 2 }, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		activeResult.ShouldNotBeNull();
@@ -515,12 +515,12 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithCompoundKeyAndFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithCompoundKeyAndFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntityWithCompoundKeyAndFilter? activeResult = await testContext.GetByKey(new object[] { 1, 1 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
-		TestEntityWithCompoundKeyAndFilter? inactiveResult = await testContext.GetByKey(new object[] { 1, 2 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithCompoundKeyAndFilter? activeResult = await testDbContext.GetByKey(new object[] { 1, 1 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithCompoundKeyAndFilter? inactiveResult = await testDbContext.GetByKey(new object[] { 1, 2 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		activeResult.ShouldNotBeNull();
@@ -544,10 +544,10 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: null, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? result = await testDbContext.GetByKey(1, globalFilterOptions: null, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull(); // Filter should still apply with null options
@@ -566,11 +566,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = [] };
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? result = await testDbContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull(); // Filter should still apply with empty array
@@ -589,11 +589,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = false };
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? result = await testDbContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull(); // Filter should still apply
@@ -603,11 +603,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 	public async Task GetByKey_WithNonExistentKey_AndDisableAllFilters_ShouldReturnNull()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(999, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? result = await testDbContext.GetByKey(999, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -617,11 +617,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 	public async Task GetByKey_CompoundKey_WithNonExistentKey_AndDisableAllFilters_ShouldReturnNull()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntityWithCompoundKeyAndFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithCompoundKeyAndFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntityWithCompoundKeyAndFilter? result = await testContext.GetByKey(new object[] { 999, 999 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithCompoundKeyAndFilter? result = await testDbContext.GetByKey(new object[] { 999, 999 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -640,11 +640,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, queryTimeout: TimeSpan.FromSeconds(30), globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? result = await testDbContext.GetByKey(1, queryTimeout: TimeSpan.FromSeconds(30), globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldNotBeNull();
@@ -655,13 +655,13 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 	public async Task GetByKey_WithCancellationToken_AndGlobalFilterOptions_ShouldRespectCancellation()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 		using CancellationTokenSource cts = new();
 		await cts.CancelAsync();
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: cts.Token);
+		TestEntityWithFilter? result = await testDbContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: cts.Token);
 
 		// Assert
 		result.ShouldBeNull();
@@ -680,7 +680,7 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new()
 		{
 			DisableAllFilters = false, // This should be ignored
@@ -688,7 +688,7 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 		};
 
 		// Act
-		TestEntityWithFilter? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? result = await testDbContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		// FilterNamesToDisable takes priority, so filters should be disabled
@@ -714,11 +714,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 
 		// Act
-		TestEntityWithFilter? activeResult = await testContext.GetByKeyFull(1, cancellationToken: Current.CancellationToken);
-		TestEntityWithFilter? inactiveResult = await testContext.GetByKeyFull(2, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? activeResult = await testDbContext.GetByKeyFull(1, cancellationToken: Current.CancellationToken);
+		TestEntityWithFilter? inactiveResult = await testDbContext.GetByKeyFull(2, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		activeResult.ShouldNotBeNull();
@@ -744,11 +744,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 
 		// Act
-		bool activeResult = await testContext.DeleteByKey(1);
-		bool inactiveResult = await testContext.DeleteByKey(2);
+		bool activeResult = await testDbContext.DeleteByKey(1);
+		bool inactiveResult = await testDbContext.DeleteByKey(2);
 
 		// Assert
 		activeResult.ShouldBeTrue(); // Active entity should be found and deleted
@@ -768,11 +768,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		bool result = await testContext.DeleteByKey(1, globalFilterOptions: filterOptions);
+		bool result = await testDbContext.DeleteByKey(1, globalFilterOptions: filterOptions);
 
 		// Assert
 		result.ShouldBeTrue(); // Should find and delete inactive entity with filters disabled
@@ -791,11 +791,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntityWithFilter, TestDbContextWithFilters> testDbContext = new(serviceProvider);
 		GlobalFilterOptions filterOptions = new() { FilterNamesToDisable = ["IsActiveFilter"] };
 
 		// Act
-		bool result = await testContext.DeleteByKey(1, globalFilterOptions: filterOptions);
+		bool result = await testDbContext.DeleteByKey(1, globalFilterOptions: filterOptions);
 
 		// Assert
 		result.ShouldBeTrue(); // Should find and delete inactive entity with specified filter disabled
@@ -830,11 +830,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityCompoundKeyForGetSingleKey, TestDbContextForGetSingleKey> testContext = new(provider);
+		BaseDbContextActions<TestEntityCompoundKeyForGetSingleKey, TestDbContextForGetSingleKey> testDbContext = new(provider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		TestEntityCompoundKeyForGetSingleKey? result = await testContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityCompoundKeyForGetSingleKey? result = await testDbContext.GetByKey(1, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert - Should return null gracefully when single key is provided for compound key entity
 		result.ShouldBeNull();
@@ -863,11 +863,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityCompoundKeyForGetWrongCount, TestDbContextForGetWrongCount> testContext = new(provider);
+		BaseDbContextActions<TestEntityCompoundKeyForGetWrongCount, TestDbContextForGetWrongCount> testDbContext = new(provider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act - providing only 1 key when 2 are needed
-		TestEntityCompoundKeyForGetWrongCount? result = await testContext.GetByKey(new object[] { 1 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
+		TestEntityCompoundKeyForGetWrongCount? result = await testDbContext.GetByKey(new object[] { 1 }, globalFilterOptions: filterOptions, cancellationToken: Current.CancellationToken);
 
 		// Assert - Should return null gracefully when wrong key count is provided
 		result.ShouldBeNull();
@@ -896,11 +896,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityCompoundKeyForDeleteSingleKey, TestDbContextForDeleteSingleKey> testContext = new(provider);
+		BaseDbContextActions<TestEntityCompoundKeyForDeleteSingleKey, TestDbContextForDeleteSingleKey> testDbContext = new(provider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act
-		bool result = await testContext.DeleteByKey(1, globalFilterOptions: filterOptions);
+		bool result = await testDbContext.DeleteByKey(1, globalFilterOptions: filterOptions);
 
 		// Assert - Should return false gracefully when single key is provided for compound key entity
 		result.ShouldBeFalse();
@@ -929,11 +929,11 @@ public sealed class BaseDbContextActionsRelationalTests : IDisposable
 			await context.SaveChangesAsync(Current.CancellationToken);
 		}
 
-		BaseDbContextActions<TestEntityCompoundKeyForDeleteWrongCount, TestDbContextForDeleteWrongCount> testContext = new(provider);
+		BaseDbContextActions<TestEntityCompoundKeyForDeleteWrongCount, TestDbContextForDeleteWrongCount> testDbContext = new(provider);
 		GlobalFilterOptions filterOptions = new() { DisableAllFilters = true };
 
 		// Act - providing only 1 key when 2 are needed
-		bool result = await testContext.DeleteByKey(new object[] { 1 }, globalFilterOptions: filterOptions);
+		bool result = await testDbContext.DeleteByKey(new object[] { 1 }, globalFilterOptions: filterOptions);
 
 		// Assert - Should return false gracefully when wrong key count is provided
 		result.ShouldBeFalse();

@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using CommonNetFuncs.Core.Internal;
+using static Xunit.TestContext;
 
 namespace Core.Tests.Internal;
 
@@ -285,7 +286,7 @@ public sealed class HashCompatTests
 	public async Task Md5HashDataAsync_ReturnsExpectedHash()
 	{
 		using MemoryStream stream = new("hello world"u8.ToArray());
-		byte[] hash = await HashCompat.Md5HashDataAsync(stream, TestContext.Current.CancellationToken);
+		byte[] hash = await HashCompat.Md5HashDataAsync(stream, Current.CancellationToken);
 		HashCompat.ToHexStringLower(hash).ShouldBe("5eb63bbbe01eeed093cb22bb8f5acdc3");
 	}
 
@@ -294,7 +295,7 @@ public sealed class HashCompatTests
 	{
 		using System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create();
 		using MemoryStream stream = new("hello world"u8.ToArray());
-		byte[] hash = await HashCompat.ComputeHashAsync(sha256, stream, TestContext.Current.CancellationToken);
+		byte[] hash = await HashCompat.ComputeHashAsync(sha256, stream, Current.CancellationToken);
 		HashCompat.ToHexStringLower(hash).ShouldBe("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
 	}
 }
@@ -403,7 +404,7 @@ public sealed class HashAlgorithmExtensionsTests
 	{
 		using System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create();
 		using MemoryStream stream = new("hello world"u8.ToArray());
-		byte[] hash = await md5.ComputeHashAsync(stream, TestContext.Current.CancellationToken);
+		byte[] hash = await md5.ComputeHashAsync(stream, Current.CancellationToken);
 		HashCompat.ToHexStringLower(hash).ShouldBe("5eb63bbbe01eeed093cb22bb8f5acdc3");
 	}
 
@@ -415,7 +416,7 @@ public sealed class HashAlgorithmExtensionsTests
 	{
 		using System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create();
 		using MemoryStream stream = new("hello world"u8.ToArray());
-		byte[] hash = await HashAlgorithmExtensions.ComputeHashAsync(md5, stream, TestContext.Current.CancellationToken);
+		byte[] hash = await HashAlgorithmExtensions.ComputeHashAsync(md5, stream, Current.CancellationToken);
 		HashCompat.ToHexStringLower(hash).ShouldBe("5eb63bbbe01eeed093cb22bb8f5acdc3");
 	}
 #endif

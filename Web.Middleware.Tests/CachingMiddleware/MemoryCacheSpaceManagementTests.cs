@@ -80,21 +80,21 @@ public sealed class MemoryCacheSpaceManagementTests
 		// Arrange - Add entries until cache is nearly full using the middleware
 		for (int i = 0; i < 3; i++)
 		{
-			HttpContext testContext = new DefaultHttpContext
+			HttpContext testHttpContext = new DefaultHttpContext
 			{
 				Request = { Method = "GET", Path = $"/api/test{i}" },
 				Response = { StatusCode = StatusCodes.Status200OK, Body = new MemoryStream() }
 			};
 
 			Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
-			testContext.Request.Query = new QueryCollection(queryDict);
+			testHttpContext.Request.Query = new QueryCollection(queryDict);
 
 			byte[] data = new byte[200];
 			RequestDelegate testNext = A.Fake<RequestDelegate>();
 			A.CallTo(() => testNext(A<HttpContext>._)).Invokes((HttpContext ctx) => ctx.Response.Body.Write(data, 0, data.Length));
 
 			MemoryCacheMiddleware middleware = new(testNext, cache, options, metrics, tracker);
-			await middleware.InvokeAsync(testContext);
+			await middleware.InvokeAsync(testHttpContext);
 
 			// Small delay to ensure different creation times
 			await Task.Delay(10);
@@ -129,21 +129,21 @@ public sealed class MemoryCacheSpaceManagementTests
 		// Arrange - Fill cache using middleware
 		for (int i = 0; i < 5; i++)
 		{
-			HttpContext testContext = new DefaultHttpContext
+			HttpContext testHttpContext = new DefaultHttpContext
 			{
 				Request = { Method = "GET", Path = $"/api/test{i}" },
 				Response = { StatusCode = StatusCodes.Status200OK, Body = new MemoryStream() }
 			};
 
 			Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
-			testContext.Request.Query = new QueryCollection(queryDict);
+			testHttpContext.Request.Query = new QueryCollection(queryDict);
 
 			byte[] data = new byte[150];
 			RequestDelegate testNext = A.Fake<RequestDelegate>();
 			A.CallTo(() => testNext(A<HttpContext>._)).Invokes((HttpContext ctx) => ctx.Response.Body.Write(data, 0, data.Length));
 
 			MemoryCacheMiddleware middleware = new(testNext, cache, options, metrics, tracker);
-			await middleware.InvokeAsync(testContext);
+			await middleware.InvokeAsync(testHttpContext);
 			await Task.Delay(5);
 		}
 
@@ -174,22 +174,22 @@ public sealed class MemoryCacheSpaceManagementTests
 		const string tag1 = "tag1";
 		for (int i = 0; i < 3; i++)
 		{
-			HttpContext testContext = new DefaultHttpContext
+			HttpContext testHttpContext = new DefaultHttpContext
 			{
 				Request = { Method = "GET", Path = $"/api/test{i}" },
 				Response = { StatusCode = StatusCodes.Status200OK, Body = new MemoryStream() }
 			};
 
 			Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
-			testContext.Request.Query = new QueryCollection(queryDict);
-			testContext.Request.Headers[options.CacheTagHeader] = tag1;
+			testHttpContext.Request.Query = new QueryCollection(queryDict);
+			testHttpContext.Request.Headers[options.CacheTagHeader] = tag1;
 
 			byte[] data = new byte[200];
 			RequestDelegate testNext = A.Fake<RequestDelegate>();
 			A.CallTo(() => testNext(A<HttpContext>._)).Invokes((HttpContext ctx) => ctx.Response.Body.Write(data, 0, data.Length));
 
 			MemoryCacheMiddleware middleware = new(testNext, cache, options, metrics, tracker);
-			await middleware.InvokeAsync(testContext);
+			await middleware.InvokeAsync(testHttpContext);
 			await Task.Delay(10);
 		}
 
@@ -226,21 +226,21 @@ public sealed class MemoryCacheSpaceManagementTests
 		CacheOptions smallOptions = new() { MaxCacheSizeInBytes = 50, SuppressLogs = true };
 
 		// Add a small entry first using middleware
-		HttpContext testContext = new DefaultHttpContext
+		HttpContext testHttpContext = new DefaultHttpContext
 		{
 			Request = { Method = "GET", Path = "/api/small" },
 			Response = { StatusCode = StatusCodes.Status200OK, Body = new MemoryStream() }
 		};
 
 		Dictionary<string, StringValues> queryDict = new() { { smallOptions.UseCacheQueryParam, "true" } };
-		testContext.Request.Query = new QueryCollection(queryDict);
+		testHttpContext.Request.Query = new QueryCollection(queryDict);
 
 		byte[] smallData = new byte[20];
 		RequestDelegate testNext = A.Fake<RequestDelegate>();
 		A.CallTo(() => testNext(A<HttpContext>._)).Invokes((HttpContext ctx) => ctx.Response.Body.Write(smallData, 0, smallData.Length));
 
 		MemoryCacheMiddleware smallMiddleware = new(testNext, cache, smallOptions, metrics, tracker);
-		await smallMiddleware.InvokeAsync(testContext);
+		await smallMiddleware.InvokeAsync(testHttpContext);
 
 		// Try to add data that will fit after evicting existing entry
 		Dictionary<string, StringValues> queryDict2 = new() { { smallOptions.UseCacheQueryParam, "true" } };

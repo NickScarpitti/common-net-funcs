@@ -1,9 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-using AutoFixture.Xunit3;
+﻿using AutoFixture.Xunit3;
 using CommonNetFuncs.Email;
-using MailKit.Security;
 using MimeKit;
 using static CommonNetFuncs.Email.Email;
+using static Xunit.TestContext;
 
 namespace Email.Tests;
 
@@ -18,7 +17,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		BodyBuilder bodyBuilder = new();
 
 		// Act
-		await AddAttachments(null, bodyBuilder, false, TestContext.Current.CancellationToken);
+		await AddAttachments(null, bodyBuilder, false, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(0);
@@ -32,7 +31,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		IMailAttachment[] attachments = Array.Empty<IMailAttachment>();
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, false, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, false, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(0);
@@ -49,7 +48,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, false, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, false, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(1);
@@ -69,7 +68,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, false, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, false, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(3);
@@ -91,7 +90,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, false, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, false, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(2);
@@ -111,7 +110,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, true, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, true, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(1);
@@ -130,7 +129,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, true, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, true, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(1);
@@ -149,7 +148,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		await AddAttachments(attachments, bodyBuilder, true, TestContext.Current.CancellationToken);
+		await AddAttachments(attachments, bodyBuilder, true, Current.CancellationToken);
 
 		// Assert
 		bodyBuilder.Attachments.Count.ShouldBe(1);
@@ -214,7 +213,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -247,7 +246,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -276,7 +275,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -305,7 +304,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -333,7 +332,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -362,7 +361,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -387,7 +386,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -419,7 +418,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -444,7 +443,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -495,7 +494,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -521,7 +520,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -544,7 +543,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -567,7 +566,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -589,7 +588,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -611,7 +610,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -633,7 +632,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse(); // Will fail due to invalid SMTP server
@@ -661,7 +660,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		};
 
 		// Act
-		bool result = await SendEmail(config, TestContext.Current.CancellationToken);
+		bool result = await SendEmail(config, Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeFalse();

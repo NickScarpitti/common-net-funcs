@@ -16,11 +16,11 @@ public sealed partial class BaseDbContextActionsTests
 	{
 		// Arrange
 		TestEntity entity = fixture.Create<TestEntity>();
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		await testContext.Create(entity);
-		await testContext.SaveChanges();
+		await testDbContext.Create(entity);
+		await testDbContext.SaveChanges();
 
 		// Assert
 		TestEntity? savedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id, Current.CancellationToken }, Current.CancellationToken);
@@ -32,10 +32,10 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task CreateMany_ShouldAddEntities()
 	{
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
-		await testContext.CreateMany(entities);
-		await testContext.SaveChanges();
+		await testDbContext.CreateMany(entities);
+		await testDbContext.SaveChanges();
 
 		foreach (TestEntity entity in entities)
 		{
@@ -46,19 +46,19 @@ public sealed partial class BaseDbContextActionsTests
 	[Fact]
 	public async Task Create_WithNullEntity_ShouldThrow()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
-		await Should.ThrowAsync<ArgumentNullException>(async () => await testContext.Create(null!));
+		await Should.ThrowAsync<ArgumentNullException>(async () => await testDbContext.Create(null!));
 	}
 
 	[Fact]
 	public async Task Create_WithRemoveNavigationProps_ShouldNotThrow()
 	{
 		TestEntity entity = fixture.Create<TestEntity>();
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
-		await testContext.Create(entity, removeNavigationProps: true);
-		await testContext.SaveChanges();
+		await testDbContext.Create(entity, removeNavigationProps: true);
+		await testDbContext.SaveChanges();
 
 		TestEntity? savedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id }, Current.CancellationToken);
 		savedEntity.ShouldNotBeNull();
@@ -71,11 +71,11 @@ public sealed partial class BaseDbContextActionsTests
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
 		entities.ForEach(e => e.Details = new List<TestEntityDetail> { new() { Description = "test" } });
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		await testContext.CreateMany(entities, removeNavigationProps: true);
-		await testContext.SaveChanges();
+		await testDbContext.CreateMany(entities, removeNavigationProps: true);
+		await testDbContext.SaveChanges();
 
 		// Assert
 		foreach (TestEntity entity in entities)
@@ -90,11 +90,11 @@ public sealed partial class BaseDbContextActionsTests
 	{
 		// Arrange
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(3).ToList();
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		await testContext.CreateMany(entities);
-		bool saved = await testContext.SaveChanges();
+		await testDbContext.CreateMany(entities);
+		bool saved = await testDbContext.SaveChanges();
 
 		// Assert
 		saved.ShouldBeTrue();
@@ -105,11 +105,11 @@ public sealed partial class BaseDbContextActionsTests
 	{
 		// Arrange
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		await testContext.CreateMany(entities, removeNavigationProps: true);
-		bool saved = await testContext.SaveChanges();
+		await testDbContext.CreateMany(entities, removeNavigationProps: true);
+		bool saved = await testDbContext.SaveChanges();
 
 		// Assert
 		saved.ShouldBeTrue();
@@ -130,11 +130,11 @@ public sealed partial class BaseDbContextActionsTests
 		string updatedName = fixture.Create<string>();
 		entity.Name = updatedName;
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		testContext.Update(entity);
-		await testContext.SaveChanges();
+		testDbContext.Update(entity);
+		await testDbContext.SaveChanges();
 
 		// Assert
 		TestEntity? savedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id, Current.CancellationToken }, Current.CancellationToken);
@@ -155,10 +155,10 @@ public sealed partial class BaseDbContextActionsTests
 			entity.Name = updatedName;
 		}
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
-		bool result = testContext.UpdateMany(entities, false, Current.CancellationToken);
-		await testContext.SaveChanges();
+		bool result = testDbContext.UpdateMany(entities, false, Current.CancellationToken);
+		await testDbContext.SaveChanges();
 
 		result.ShouldBeTrue();
 		foreach (TestEntity entity in entities)
@@ -170,12 +170,12 @@ public sealed partial class BaseDbContextActionsTests
 	[Fact]
 	public void UpdateMany_WhenException_ShouldReturnFalse()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Simulate exception by passing null (will throw in RemoveNavigationProperties)
 		List<TestEntity> entities = new() { null! };
 
-		bool result = testContext.UpdateMany(entities, true, Current.CancellationToken);
+		bool result = testDbContext.UpdateMany(entities, true, Current.CancellationToken);
 
 		result.ShouldBeFalse();
 	}
@@ -192,11 +192,11 @@ public sealed partial class BaseDbContextActionsTests
 		entity.Name = updatedName;
 		entity.Details = new List<TestEntityDetail> { new() { Description = "test" } };
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		testContext.Update(entity, removeNavigationProps: true);
-		await testContext.SaveChanges();
+		testDbContext.Update(entity, removeNavigationProps: true);
+		await testDbContext.SaveChanges();
 
 		// Assert
 		TestEntity? savedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id, Current.CancellationToken }, Current.CancellationToken);
@@ -219,10 +219,10 @@ public sealed partial class BaseDbContextActionsTests
 			e.Details = new List<TestEntityDetail> { new() { Description = "test" } };
 		});
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = testContext.UpdateMany(entities, removeNavigationProps: true, cancellationToken: Current.CancellationToken);
+		bool result = testDbContext.UpdateMany(entities, removeNavigationProps: true, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -239,10 +239,10 @@ public sealed partial class BaseDbContextActionsTests
 			await sqliteContext.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 			await sqliteContext.SaveChangesAsync(Current.CancellationToken);
 
-			BaseDbContextActions<TestEntity, TestDbContext> testContext = new(sqliteProvider);
+			BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(sqliteProvider);
 
 			// Act
-			int? result = await testContext.UpdateMany(
+			int? result = await testDbContext.UpdateMany(
 				x => x.Id > 0,
 				s => s.SetProperty(e => e.Name, _ => "Updated"),
 				globalFilterOptions: new GlobalFilterOptions { DisableAllFilters = true },
@@ -270,11 +270,11 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteByKey(entity.Id);
-		await testContext.SaveChanges();
+		bool result = await testDbContext.DeleteByKey(entity.Id);
+		await testDbContext.SaveChanges();
 
 		// Assert
 		result.ShouldBeTrue();
@@ -289,11 +289,11 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
-		bool result = testContext.DeleteMany(entities);
+		bool result = testDbContext.DeleteMany(entities);
 
-		await testContext.SaveChanges();
+		await testDbContext.SaveChanges();
 
 		result.ShouldBeTrue();
 		foreach (TestEntity entity in entities)
@@ -305,9 +305,9 @@ public sealed partial class BaseDbContextActionsTests
 	[Fact]
 	public async Task DeleteByKey_WithInvalidKey_ShouldReturnFalse()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
-		bool result = await testContext.DeleteByKey(-1);
+		bool result = await testDbContext.DeleteByKey(-1);
 
 		result.ShouldBeFalse();
 	}
@@ -315,23 +315,23 @@ public sealed partial class BaseDbContextActionsTests
 	[Fact]
 	public void DeleteByObject_WhenException_ShouldNotThrow()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Simulate exception by passing null (will throw in RemoveNavigationProperties)
 		TestEntity entity = null!;
 
-		Should.NotThrow(() => testContext.DeleteByObject(entity, true));
+		Should.NotThrow(() => testDbContext.DeleteByObject(entity, true));
 	}
 
 	[Fact]
 	public void DeleteMany_WhenException_ShouldReturnFalse()
 	{
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Simulate exception by passing null (will throw in RemoveNavigationProperties)
 		List<TestEntity> entities = new() { null! };
 
-		bool result = testContext.DeleteMany(entities, true);
+		bool result = testDbContext.DeleteMany(entities, true);
 
 		result.ShouldBeFalse();
 	}
@@ -344,11 +344,11 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		testContext.DeleteByObject(entity);
-		await testContext.SaveChanges();
+		testDbContext.DeleteByObject(entity);
+		await testDbContext.SaveChanges();
 
 		// Assert
 		TestEntity? deletedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id, Current.CancellationToken }, Current.CancellationToken);
@@ -364,11 +364,11 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		testContext.DeleteByObject(entity, removeNavigationProps: true);
-		await testContext.SaveChanges();
+		testDbContext.DeleteByObject(entity, removeNavigationProps: true);
+		await testDbContext.SaveChanges();
 
 		// Assert
 		TestEntity? deletedEntity = await context.TestEntities.FindAsync(new object?[] { entity.Id, Current.CancellationToken }, Current.CancellationToken);
@@ -385,10 +385,10 @@ public sealed partial class BaseDbContextActionsTests
 		context.TestEntities.AddRange(entities);
 		context.SaveChanges();
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = testContext.DeleteMany(entities, removeNavigationProps: true);
+		bool result = testDbContext.DeleteMany(entities, removeNavigationProps: true);
 
 		// Assert
 		result.ShouldBeTrue();
@@ -402,11 +402,11 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(testEntity, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		testContext.DeleteByObject(testEntity, globalFilterOptions: new GlobalFilterOptions { DisableAllFilters = true });
-		await testContext.SaveChanges();
+		testDbContext.DeleteByObject(testEntity, globalFilterOptions: new GlobalFilterOptions { DisableAllFilters = true });
+		await testDbContext.SaveChanges();
 
 		// Assert
 		TestEntity? deleted = await context.TestEntities.FindAsync(new object?[] { testEntity.Id }, Current.CancellationToken);
@@ -421,11 +421,11 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(testEntity, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		testContext.DeleteByObject(testEntity, globalFilterOptions: new GlobalFilterOptions { FilterNamesToDisable = ["Filter1"] });
-		await testContext.SaveChanges();
+		testDbContext.DeleteByObject(testEntity, globalFilterOptions: new GlobalFilterOptions { FilterNamesToDisable = ["Filter1"] });
+		await testDbContext.SaveChanges();
 
 		// Assert
 		TestEntity? deleted = await context.TestEntities.FindAsync(new object?[] { testEntity.Id }, Current.CancellationToken);
@@ -440,10 +440,10 @@ public sealed partial class BaseDbContextActionsTests
 		context.TestEntities.AddRange(entities);
 		context.SaveChanges();
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = testContext.DeleteMany(entities, globalFilterOptions: new GlobalFilterOptions { DisableAllFilters = true });
+		bool result = testDbContext.DeleteMany(entities, globalFilterOptions: new GlobalFilterOptions { DisableAllFilters = true });
 
 		// Assert
 		result.ShouldBeTrue();
@@ -460,10 +460,10 @@ public sealed partial class BaseDbContextActionsTests
 			await sqliteContext.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 			await sqliteContext.SaveChangesAsync(Current.CancellationToken);
 
-			BaseDbContextActions<TestEntity, TestDbContext> testContext = new(sqliteProvider);
+			BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(sqliteProvider);
 
 			// Act
-			int? result = await testContext.DeleteMany(
+			int? result = await testDbContext.DeleteMany(
 				x => x.Id > 0,
 				globalFilterOptions: new GlobalFilterOptions { FilterNamesToDisable = ["Filter1"] },
 				cancellationToken: Current.CancellationToken);
@@ -489,12 +489,12 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act & Assert - This will likely throw or return false with in-memory DB
 		try
 		{
-			bool result = await testContext.DeleteManyTracked(entities, globalFilterOptions: new GlobalFilterOptions { DisableAllFilters = true });
+			bool result = await testDbContext.DeleteManyTracked(entities, globalFilterOptions: new GlobalFilterOptions { DisableAllFilters = true });
 			// If it doesn't throw, that's fine too
 			result.ShouldBeTrue();
 		}
@@ -516,13 +516,13 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 		List<object> keys = entities.ConvertAll(e => (object)e.Id);
 
 		// Act & Assert
 		try
 		{
-			bool result = await testContext.DeleteManyByKeys(keys, new GlobalFilterOptions { FilterNamesToDisable = ["Filter1"] });
+			bool result = await testDbContext.DeleteManyByKeys(keys, new GlobalFilterOptions { FilterNamesToDisable = ["Filter1"] });
 			// Method may work or fail depending on database provider
 			result.ShouldBeOfType<bool>();
 		}
@@ -541,11 +541,11 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddAsync(entity, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		testContext.DeleteByObject(entity, removeNavigationProps: true);
-		bool saved = await testContext.SaveChanges();
+		testDbContext.DeleteByObject(entity, removeNavigationProps: true);
+		bool saved = await testDbContext.SaveChanges();
 
 		// Assert
 		saved.ShouldBeTrue();
@@ -559,11 +559,11 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = testContext.DeleteMany(entities);
-		bool saved = await testContext.SaveChanges();
+		bool result = testDbContext.DeleteMany(entities);
+		bool saved = await testDbContext.SaveChanges();
 
 		// Assert
 		result.ShouldBeTrue();
@@ -578,11 +578,11 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = testContext.DeleteMany(entities, removeNavigationProps: true);
-		bool saved = await testContext.SaveChanges();
+		bool result = testDbContext.DeleteMany(entities, removeNavigationProps: true);
+		bool saved = await testDbContext.SaveChanges();
 
 		// Assert
 		result.ShouldBeTrue();
@@ -597,10 +597,10 @@ public sealed partial class BaseDbContextActionsTests
 	public async Task SaveChanges_WithNoChanges_ShouldReturnFalse()
 	{
 		// Arrange
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.SaveChanges();
+		bool result = await testDbContext.SaveChanges();
 
 		// Assert
 		result.ShouldBeFalse();
@@ -616,10 +616,10 @@ public sealed partial class BaseDbContextActionsTests
 		services.AddSingleton<DbContext, TestDbContext>(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(provider);
 
 		// Act
-		bool result = await testContext.SaveChanges();
+		bool result = await testDbContext.SaveChanges();
 
 		// Assert
 		result.ShouldBeFalse();
@@ -632,19 +632,19 @@ public sealed partial class BaseDbContextActionsTests
 		(IServiceProvider sqliteProvider, TestDbContext _, IDisposable scope) = CreateSqliteServiceProvider();
 		try
 		{
-			BaseDbContextActions<TestEntity, TestDbContext> testContext = new(sqliteProvider);
+			BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(sqliteProvider);
 
 			// Create an entity with a duplicate key to trigger DbUpdateException
 			TestEntity entity1 = new() { Id = 1, Name = "Test1" };
 			TestEntity entity2 = new() { Id = 1, Name = "Test2" }; // Duplicate key
 
-			await testContext.Create(entity1);
-			await testContext.SaveChanges();
+			await testDbContext.Create(entity1);
+			await testDbContext.SaveChanges();
 
-			await testContext.Create(entity2);
+			await testDbContext.Create(entity2);
 
 			// Act - This should fail with DbUpdateException
-			bool result = await testContext.SaveChanges();
+			bool result = await testDbContext.SaveChanges();
 
 			// Assert
 			result.ShouldBeFalse();
@@ -671,12 +671,12 @@ public sealed partial class BaseDbContextActionsTests
 			await sqliteContext.SaveChangesAsync(Current.CancellationToken);
 			int entityId = entity.Id;
 
-			BaseDbContextActions<TestEntity, TestDbContext> testContext = new(sqliteProvider);
+			BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(sqliteProvider);
 
 			// Act & Assert - Just verify the operation doesn't throw
 			// Note: IgnoreQueryFilters from Z.EntityFramework.Plus may not work with SQLite in-memory
 			// so we can't reliably assert the actual deletion behavior
-			await Should.NotThrowAsync(async () => await testContext.DeleteByKey(entityId, new GlobalFilterOptions { DisableAllFilters = true }));
+			await Should.NotThrowAsync(async () => await testDbContext.DeleteByKey(entityId, new GlobalFilterOptions { DisableAllFilters = true }));
 		}
 		finally
 		{
@@ -696,12 +696,12 @@ public sealed partial class BaseDbContextActionsTests
 			await sqliteContext.SaveChangesAsync(Current.CancellationToken);
 			int entityId = entity.Id;
 
-			BaseDbContextActions<TestEntity, TestDbContext> testContext = new(sqliteProvider);
+			BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(sqliteProvider);
 
 			// Act & Assert - Just verify the operation doesn't throw
 			// Note: IgnoreQueryFilters from Z.EntityFramework.Plus may not work with SQLite in-memory
 			// so we can't reliably assert the actual deletion behavior
-			await Should.NotThrowAsync(async () => await testContext.DeleteByKey(entityId, new GlobalFilterOptions { FilterNamesToDisable = ["Filter1", "Filter2"] }));
+			await Should.NotThrowAsync(async () => await testDbContext.DeleteByKey(entityId, new GlobalFilterOptions { FilterNamesToDisable = ["Filter1", "Filter2"] }));
 		}
 		finally
 		{
@@ -719,10 +719,10 @@ public sealed partial class BaseDbContextActionsTests
 		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(provider);
 
 		// Act
-		bool result = await testContext.DeleteByKey(1, new GlobalFilterOptions { DisableAllFilters = true });
+		bool result = await testDbContext.DeleteByKey(1, new GlobalFilterOptions { DisableAllFilters = true });
 
 		// Assert
 		result.ShouldBeFalse();
@@ -739,10 +739,10 @@ public sealed partial class BaseDbContextActionsTests
 			await sqliteContext.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 			await sqliteContext.SaveChangesAsync(Current.CancellationToken);
 
-			BaseDbContextActions<TestEntity, TestDbContext> testContext = new(sqliteProvider);
+			BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(sqliteProvider);
 
 			// Act
-			int? result = await testContext.DeleteMany(
+			int? result = await testDbContext.DeleteMany(
 				x => x.Id > 0,
 				globalFilterOptions: new GlobalFilterOptions { DisableAllFilters = true },
 				cancellationToken: Current.CancellationToken);
@@ -767,10 +767,10 @@ public sealed partial class BaseDbContextActionsTests
 		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(provider);
 
 		// Act
-		int? result = await testContext.DeleteMany(x => x.Id > 0, cancellationToken: Current.CancellationToken);
+		int? result = await testDbContext.DeleteMany(x => x.Id > 0, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeNull();
@@ -784,12 +784,12 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act & Assert
 		try
 		{
-			bool result = await testContext.DeleteManyTracked(entities, removeNavigationProps: false);
+			bool result = await testDbContext.DeleteManyTracked(entities, removeNavigationProps: false);
 			// If it doesn't throw, that's fine
 			result.ShouldBeTrue();
 		}
@@ -805,10 +805,10 @@ public sealed partial class BaseDbContextActionsTests
 	{
 		// Arrange
 		List<TestEntity> entities = new() { null! };
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 
 		// Act
-		bool result = await testContext.DeleteManyTracked(entities, removeNavigationProps: true);
+		bool result = await testDbContext.DeleteManyTracked(entities, removeNavigationProps: true);
 
 		// Assert
 		result.ShouldBeFalse();
@@ -822,13 +822,13 @@ public sealed partial class BaseDbContextActionsTests
 		await context.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 		await context.SaveChangesAsync(Current.CancellationToken);
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(serviceProvider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(serviceProvider);
 		List<object> keys = entities.ConvertAll(e => (object)e.Id);
 
 		// Act & Assert
 		try
 		{
-			bool result = await testContext.DeleteManyByKeys(keys);
+			bool result = await testDbContext.DeleteManyByKeys(keys);
 			result.ShouldBeOfType<bool>();
 		}
 		catch
@@ -848,10 +848,10 @@ public sealed partial class BaseDbContextActionsTests
 		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(provider);
 
 		// Act
-		bool result = await testContext.DeleteManyByKeys(new List<object> { 1, 2 });
+		bool result = await testDbContext.DeleteManyByKeys(new List<object> { 1, 2 });
 
 		// Assert
 		result.ShouldBeFalse();
@@ -868,10 +868,10 @@ public sealed partial class BaseDbContextActionsTests
 			await sqliteContext.TestEntities.AddRangeAsync(entities, Current.CancellationToken);
 			await sqliteContext.SaveChangesAsync(Current.CancellationToken);
 
-			BaseDbContextActions<TestEntity, TestDbContext> testContext = new(sqliteProvider);
+			BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(sqliteProvider);
 
 			// Act
-			int? result = await testContext.UpdateMany(
+			int? result = await testDbContext.UpdateMany(
 				x => x.Id > 0,
 				s => s.SetProperty(e => e.Name, _ => "Updated"),
 				queryTimeout: TimeSpan.FromSeconds(30),
@@ -894,11 +894,11 @@ public sealed partial class BaseDbContextActionsTests
 		(IServiceProvider sqliteProvider, TestDbContext _, IDisposable scope) = CreateSqliteServiceProvider();
 		try
 		{
-			BaseDbContextActions<TestEntity, TestDbContext> testContext = new(sqliteProvider);
+			BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(sqliteProvider);
 
 			// Act - Try to update with an invalid operation that causes DbUpdateException
 			// This is tricky to trigger, so we'll create a scenario where the update fails
-			int? result = await testContext.UpdateMany(
+			int? result = await testDbContext.UpdateMany(
 				x => x.Id == -999, // Non-existent entity
 				s => s.SetProperty(e => e.Name, _ => "Updated"),
 				cancellationToken: Current.CancellationToken);
@@ -923,10 +923,10 @@ public sealed partial class BaseDbContextActionsTests
 		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(provider);
 
 		// Act
-		int? result = await testContext.UpdateMany(
+		int? result = await testDbContext.UpdateMany(
 			x => x.Id > 0,
 			s => s.SetProperty(e => e.Name, _ => "Updated"),
 			cancellationToken: Current.CancellationToken);
@@ -945,11 +945,11 @@ public sealed partial class BaseDbContextActionsTests
 		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(provider);
 		TestEntity entity = fixture.Create<TestEntity>();
 
 		// Act & Assert - Should not throw, just log the error
-		await Should.NotThrowAsync(async () => await testContext.Create(entity));
+		await Should.NotThrowAsync(async () => await testDbContext.Create(entity));
 	}
 
 	[Fact]
@@ -962,11 +962,11 @@ public sealed partial class BaseDbContextActionsTests
 		services.AddSingleton(_ => fakeContext);
 		ServiceProvider provider = services.BuildServiceProvider();
 
-		BaseDbContextActions<TestEntity, TestDbContext> testContext = new(provider);
+		BaseDbContextActions<TestEntity, TestDbContext> testDbContext = new(provider);
 		List<TestEntity> entities = fixture.CreateMany<TestEntity>(2).ToList();
 
 		// Act & Assert - Should not throw, just log the error
-		await Should.NotThrowAsync(async () => await testContext.CreateMany(entities));
+		await Should.NotThrowAsync(async () => await testDbContext.CreateMany(entities));
 	}
 
 	[Fact]
@@ -980,10 +980,10 @@ public sealed partial class BaseDbContextActionsTests
 			await sqliteContext.TestEntitiesWithCompoundKey.AddAsync(entity, Current.CancellationToken);
 			await sqliteContext.SaveChangesAsync(Current.CancellationToken);
 
-			BaseDbContextActions<TestEntityWithCompoundKey, TestDbContext> testContext = new(sqliteProvider);
+			BaseDbContextActions<TestEntityWithCompoundKey, TestDbContext> testDbContext = new(sqliteProvider);
 
 			// Act & Assert - This should return false because compound keys with global filters throw InvalidOperationException
-			bool result = await testContext.DeleteByKey(1, new GlobalFilterOptions { DisableAllFilters = true });
+			bool result = await testDbContext.DeleteByKey(1, new GlobalFilterOptions { DisableAllFilters = true });
 
 			// Assert
 			result.ShouldBeFalse();

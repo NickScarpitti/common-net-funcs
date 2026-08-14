@@ -113,21 +113,21 @@ public sealed class MemoryCacheEvictionCallbackTests
 		// Arrange - Add multiple entries with short expiration
 		for (int i = 0; i < 3; i++)
 		{
-			HttpContext testContext = new DefaultHttpContext
+			HttpContext testHttpContext = new DefaultHttpContext
 			{
 				Request = { Method = "GET", Path = $"/api/test{i}" },
 				Response = { StatusCode = StatusCodes.Status200OK }
 			};
 
 			Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
-			testContext.Request.Query = new QueryCollection(queryDict);
+			testHttpContext.Request.Query = new QueryCollection(queryDict);
 
 			byte[] data = Encoding.UTF8.GetBytes($"test data {i}");
 			RequestDelegate testNext = A.Fake<RequestDelegate>();
 			A.CallTo(() => testNext(A<HttpContext>._)).Invokes((HttpContext ctx) => ctx.Response.Body.Write(data, 0, data.Length));
 
 			MemoryCacheMiddleware middleware = new(testNext, cache, options, metrics, tracker);
-			await middleware.InvokeAsync(testContext);
+			await middleware.InvokeAsync(testHttpContext);
 		}
 
 		long initialCount = metrics.CurrentCacheEntryCount();

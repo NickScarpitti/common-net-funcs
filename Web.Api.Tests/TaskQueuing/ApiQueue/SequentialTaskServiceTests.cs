@@ -1,6 +1,7 @@
 ﻿using System.Threading.Channels;
 using CommonNetFuncs.Web.Api.TaskQueuing.ApiQueue;
 using Moq;
+using static Xunit.TestContext;
 
 namespace Web.Api.Tests.TaskQueuing.ApiQueue;
 
@@ -14,7 +15,7 @@ public class SequentialTaskServiceTests
 
 		SequentialTaskService service = new(processorMock.Object);
 
-		int result = await service.ExecuteAsync(_ => Task.FromResult(99), TestContext.Current.CancellationToken);
+		int result = await service.ExecuteAsync(_ => Task.FromResult(99), Current.CancellationToken);
 
 		result.ShouldBe(99);
 		processorMock.Verify(x => x.EnqueueAsync(It.IsAny<Func<CancellationToken, Task<int>>>(), It.IsAny<CancellationToken>()), Moq.Times.Once);

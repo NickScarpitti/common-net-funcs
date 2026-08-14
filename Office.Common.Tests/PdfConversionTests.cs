@@ -2,6 +2,7 @@
 using xRetry.v3;
 using static System.IO.Path;
 using static CommonNetFuncs.Office.Common.PdfConversion;
+using static Xunit.TestContext;
 
 namespace Office.Common.Tests;
 
@@ -33,7 +34,7 @@ public sealed class PdfConversionTests //: IDisposable
 
 		string sourceFile = Combine(testDataPath, fileName);
 		string outputFile = Combine(tempPath, $"{GetFileNameWithoutExtension(fileName)}.pdf");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		// Act
 #pragma warning disable S6966 // Awaitable method should be used
@@ -53,7 +54,7 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, fileName);
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		// Act & Assert
 		Should.Throw<ArgumentException>(() => ConvertToPdf(libreOfficePath, sourceFile));
@@ -74,7 +75,7 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, $"TestExcel-{Guid.NewGuid()}.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 		const string invalidLibreOfficePath = "invalid/path/to/soffice";
 
 		// Act & Assert
@@ -89,7 +90,7 @@ public sealed class PdfConversionTests //: IDisposable
 		Directory.CreateDirectory(tempPath);
 
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 		TimeSpan timeout = TimeSpan.FromMilliseconds(1); // Very short timeout
 
 		// Act & Assert
@@ -104,7 +105,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string fileName = $"Test-{Guid.NewGuid()}.xlsx";
 		string sourceFile = Combine(testDataPath, fileName);
 		string expectedOutputFile = Combine(testDataPath, $"{GetFileNameWithoutExtension(fileName)}.pdf");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		// Act
 #pragma warning disable S6966 // Awaitable method should be used
@@ -121,7 +122,7 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 		using CancellationTokenSource cts = new();
 
 		// Act & Assert
@@ -137,7 +138,7 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 		const string invalidLibreOfficePath = "invalid/path/to/soffice";
 
 		// Act & Assert
@@ -151,7 +152,7 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 		const string invalidLibreOfficePath = "invalid/path/to/soffice";
 
 		// Act & Assert
@@ -168,7 +169,7 @@ public sealed class PdfConversionTests //: IDisposable
 		Directory.CreateDirectory(tempPath);
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
 		string outputFile = Combine(tempPath, "Test.pdf");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		// Act
 		await ConvertToPdfAsync(libreOfficePath, sourceFile, tempPath, maxRetries: 3);
@@ -183,7 +184,7 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 		using CancellationTokenSource cts = new();
 		cts.CancelAfter(TimeSpan.FromMilliseconds(100));
 
@@ -235,7 +236,7 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, $"TestInvalid-{Guid.NewGuid()}.txt");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -269,7 +270,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string fileName = $"Test-NullOutput-{Guid.NewGuid()}.xlsx";
 		string sourceFile = Combine(testDataPath, fileName);
 		string expectedOutputFile = Combine(testDataPath, $"{GetFileNameWithoutExtension(fileName)}.pdf");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -303,7 +304,7 @@ public sealed class PdfConversionTests //: IDisposable
 		Directory.CreateDirectory(tempPath);
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
 		string outputFile = Combine(tempPath, "Test.pdf");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -331,7 +332,7 @@ public sealed class PdfConversionTests //: IDisposable
 		Directory.CreateDirectory(tempPath);
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
 		string outputFile = Combine(tempPath, $"{GetFileNameWithoutExtension("Test.xlsx")}.pdf");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -360,7 +361,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
 		Directory.CreateDirectory(tempPath);
 		string sourceFile = Combine(testDataPath, "Test.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -413,7 +414,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
 		Directory.CreateDirectory(tempPath);
 		string sourceFile = Combine(testDataPath, "InvalidFile.xyz");
-		await File.WriteAllTextAsync(sourceFile, "Not a real Office file", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Not a real Office file", Current.CancellationToken);
 
 		try
 		{
@@ -444,8 +445,8 @@ public sealed class PdfConversionTests //: IDisposable
 		string sourceFile = Combine(testDataPath, "TestExisting.xlsx");
 		string expectedOutputFile = Combine(tempPath, "TestExisting.pdf");
 
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(expectedOutputFile, "Old PDF content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
+		await File.WriteAllTextAsync(expectedOutputFile, "Old PDF content", Current.CancellationToken);
 
 		try
 		{
@@ -481,7 +482,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
 		Directory.CreateDirectory(tempPath);
 		string sourceFile = Combine(testDataPath, $"TestLocked-{Guid.NewGuid()}.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -522,7 +523,7 @@ public sealed class PdfConversionTests //: IDisposable
 			string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
 			Directory.CreateDirectory(tempPath);
 			string sourceFile = Combine(testDataPath, fileType);
-			await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+			await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 			try
 			{
@@ -555,8 +556,8 @@ public sealed class PdfConversionTests //: IDisposable
 		Directory.CreateDirectory(tempPath);
 		string sourceFile1 = Combine(testDataPath, "TestConcurrent1.xlsx");
 		string sourceFile2 = Combine(testDataPath, "TestConcurrent2.xlsx");
-		await File.WriteAllTextAsync(sourceFile1, "Test content 1", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(sourceFile2, "Test content 2", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile1, "Test content 1", Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile2, "Test content 2", Current.CancellationToken);
 
 		try
 		{
@@ -607,7 +608,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
 		Directory.CreateDirectory(tempPath);
 		string sourceFile = Combine(testDataPath, "TestLongRunning.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content with some data", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content with some data", Current.CancellationToken);
 
 		try
 		{
@@ -639,7 +640,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string tempPath = Combine(GetTempPath(), $"Test Path {Guid.NewGuid()}");
 		Directory.CreateDirectory(tempPath);
 		string sourceFile = Combine(testDataPath, "Test Special.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -671,7 +672,7 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, $"TestRetryOnce-{Guid.NewGuid()}.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 		const string invalidLibreOfficePath = "invalid/soffice";
 
 		try
@@ -696,7 +697,7 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, "TestCancel.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 		using CancellationTokenSource cts = new();
 
 		try
@@ -726,7 +727,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string fileName = $"TestEmpty-{Guid.NewGuid()}.xlsx";
 		string sourceFile = Combine(testDataPath, fileName);
 		string expectedOutputFile = Combine(testDataPath, $"{GetFileNameWithoutExtension(fileName)}.pdf");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -811,7 +812,7 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, "TestZeroRetry.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 		const string invalidPath = "definitely/not/a/real/path/soffice";
 
 		try
@@ -935,7 +936,7 @@ public sealed class PdfConversionTests //: IDisposable
 	{
 		// Arrange
 		string sourceFile = Combine(testDataPath, "TestCancelDuring.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 		using CancellationTokenSource cts = new();
 		cts.CancelAfter(TimeSpan.FromMilliseconds(10)); // Cancel very quickly
 
@@ -996,7 +997,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string tempPath = Combine(GetTempPath(), Guid.NewGuid().ToString());
 		Directory.CreateDirectory(tempPath);
 		string sourceFile = Combine(testDataPath, "TestLongTimeout.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -1032,8 +1033,8 @@ public sealed class PdfConversionTests //: IDisposable
 		string sourceFile = Combine(testDataPath, "TestNoOverwrite.xlsx");
 		string expectedOutputFile = Combine(tempPath, "TestNoOverwrite.pdf");
 
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(expectedOutputFile, "Existing PDF content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
+		await File.WriteAllTextAsync(expectedOutputFile, "Existing PDF content", Current.CancellationToken);
 
 		try
 		{
@@ -1071,8 +1072,8 @@ public sealed class PdfConversionTests //: IDisposable
 		string sourceFile = Combine(testDataPath, "TestOverwriteTrue.xlsx");
 		string expectedOutputFile = Combine(tempPath, "TestOverwriteTrue.pdf");
 
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(expectedOutputFile, "Old PDF to be overwritten", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
+		await File.WriteAllTextAsync(expectedOutputFile, "Old PDF to be overwritten", Current.CancellationToken);
 
 		try
 		{
@@ -1109,7 +1110,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string sourceFile = Combine(testDataPath, "TestNoExisting.xlsx");
 		string expectedOutputFile = Combine(tempPath, "TestNoExisting.pdf");
 
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -1144,7 +1145,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string sourceFile = Combine(testDataPath, "TestNoExistingOverwriteTrue.xlsx");
 		string expectedOutputFile = Combine(tempPath, "TestNoExistingOverwriteTrue.pdf");
 
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -1179,8 +1180,8 @@ public sealed class PdfConversionTests //: IDisposable
 		string sourceFile = Combine(testDataPath, "TestAsyncNoOverwrite.xlsx");
 		string expectedOutputFile = Combine(tempPath, "TestAsyncNoOverwrite.pdf");
 
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(expectedOutputFile, "Existing PDF content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
+		await File.WriteAllTextAsync(expectedOutputFile, "Existing PDF content", Current.CancellationToken);
 
 		try
 		{
@@ -1213,8 +1214,8 @@ public sealed class PdfConversionTests //: IDisposable
 		string sourceFile = Combine(testDataPath, "TestAsyncOverwriteTrue.xlsx");
 		string expectedOutputFile = Combine(tempPath, "TestAsyncOverwriteTrue.pdf");
 
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(expectedOutputFile, "Old PDF to be overwritten", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
+		await File.WriteAllTextAsync(expectedOutputFile, "Old PDF to be overwritten", Current.CancellationToken);
 
 		try
 		{
@@ -1247,8 +1248,8 @@ public sealed class PdfConversionTests //: IDisposable
 		string sourceFile = Combine(testDataPath, "TestAsyncDefaultOverwrite.xlsx");
 		string expectedOutputFile = Combine(tempPath, "TestAsyncDefaultOverwrite.pdf");
 
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(expectedOutputFile, "Existing PDF content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
+		await File.WriteAllTextAsync(expectedOutputFile, "Existing PDF content", Current.CancellationToken);
 
 		try
 		{
@@ -1280,8 +1281,8 @@ public sealed class PdfConversionTests //: IDisposable
 		string sourceFile = Combine(testDataPath, "TestSyncDefaultOverwrite.xlsx");
 		string expectedOutputFile = Combine(tempPath, "TestSyncDefaultOverwrite.pdf");
 
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
-		await File.WriteAllTextAsync(expectedOutputFile, "Existing PDF content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
+		await File.WriteAllTextAsync(expectedOutputFile, "Existing PDF content", Current.CancellationToken);
 
 		try
 		{
@@ -1320,7 +1321,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string sourceFile = Combine(testDataPath, $"TestOverwriteTheory{overwriteValue}.xlsx");
 		string expectedOutputFile = Combine(tempPath, $"TestOverwriteTheory{overwriteValue}.pdf");
 
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -1361,7 +1362,7 @@ public sealed class PdfConversionTests //: IDisposable
 		// Arrange - use a real executable that exits with non-zero to exercise the
 		// "process exited but ExitCode != 0" branch (lines 75 and 82-83 in the sync method)
 		string sourceFile = Combine(testDataPath, $"TestNonZeroExit-{Guid.NewGuid()}.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -1391,7 +1392,7 @@ public sealed class PdfConversionTests //: IDisposable
 		// Arrange - use a real executable that exits with non-zero to exercise the
 		// Console.WriteLine retry path (line 79) and the final throw (line 83)
 		string sourceFile = Combine(testDataPath, $"TestNonZeroRetry-{Guid.NewGuid()}.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -1420,7 +1421,7 @@ public sealed class PdfConversionTests //: IDisposable
 		// Arrange - use a real executable that exits with non-zero to exercise the
 		// "process exited but ExitCode != 0" branch (lines 140 and 147-148 in the async method)
 		string sourceFile = Combine(testDataPath, $"TestAsyncNonZeroExit-{Guid.NewGuid()}.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -1448,7 +1449,7 @@ public sealed class PdfConversionTests //: IDisposable
 		// Arrange - use a real executable that exits with non-zero to exercise the
 		// async Console.WriteLine retry path (line 144) and the final throw (line 148)
 		string sourceFile = Combine(testDataPath, $"TestAsyncNonZeroRetry-{Guid.NewGuid()}.xlsx");
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{
@@ -1477,7 +1478,7 @@ public sealed class PdfConversionTests //: IDisposable
 		string sourceFile = Combine(testDataPath, "TestMultipleOverwrites.xlsx");
 		string expectedOutputFile = Combine(tempPath, "TestMultipleOverwrites.pdf");
 
-		await File.WriteAllTextAsync(sourceFile, "Test content", TestContext.Current.CancellationToken);
+		await File.WriteAllTextAsync(sourceFile, "Test content", Current.CancellationToken);
 
 		try
 		{

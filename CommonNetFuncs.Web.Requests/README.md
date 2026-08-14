@@ -238,29 +238,36 @@ public class MyService(RestHelpersWrapper wrapper)
 True streaming support for MessagePack serialization in ASP.NET Core APIs. While MessagePack cannot directly serialize `IAsyncEnumerable<T>`, this infrastructure writes individual MessagePack-serialized items to the response stream, allowing clients to reconstruct the stream on their end.
 
 <a name="messagepack-streaming-overview"></a>
+
 ### Overview
 
 **How It Works:**
 
 **Server Side:**
-1. Returns `IActionResult` via `StreamMessagePack()` extension method
+
+1. Returns `IActionResult` via `this.StreamMessagePack()` extension method (Controller pattern) or `MessagePackStreaming.Stream()` (Minimal API pattern)
 2. `MessagePackStreamingResult` iterates through the `IAsyncEnumerable<T>`
 3. Each item is serialized individually with MessagePack
 4. Serialized bytes are written directly to response stream and flushed
 5. Creates a concatenated sequence of MessagePack structures
 
 **Client Side:**
+
 - The existing `ReadResponseStreamAsync` method in `RestHelpersStatic.cs` already handles this!
 - Uses `MessagePackStreamReader` to read MessagePack structures one at a time
 - Reconstructs them back into `IAsyncEnumerable<T>`
 - **No client-side changes needed** - existing `StreamingRestRequest()` calls work as-is with `MsgPackHeaders`
 
 **Benefits:**
+
 - ✅ True streaming: Data flows item-by-item, not loaded entirely into memory
 - ✅ Memory efficient: Both server and client process items as they arrive
 - ✅ Binary efficiency: MessagePack provides compact serialization
 - ✅ No breaking changes: Existing client code continues to work
 - ✅ Transparent: Clients don't need to know about the chunking mechanism
+- ✅ Works with both Controllers and Minimal APIs
+
+> **⚠️ MemoryPack Limitation:** Unlike MessagePack, **MemoryPack.Streaming does NOT support true server-side streaming** of `IAsyncEnumerable<T>` because its wire format requires knowing the total item count up-front. For true streaming scenarios, use MessagePack.
 
 ### MessagePack Streaming Usage Examples
 
@@ -399,11 +406,11 @@ List<MyModel> model = await rest.StreamingRestRequest<MyModel, object?>(
 
 **Comparison with Other Serializers:**
 
-| Serializer | Supports IAsyncEnumerable | Native Streaming | Binary Format |
-|------------|---------------------------|------------------|---------------|
-| JSON       | ✅ Yes (array)            | ✅ Yes           | ❌ No         |
-| MemoryPack | ✅ Yes (native)           | ✅ Yes           | ✅ Yes        |
-| MessagePack| ✅ Yes (via extension)    | ✅ Yes (custom)  | ✅ Yes        |
+| Serializer  | Supports IAsyncEnumerable | Native Streaming | Binary Format |
+| ----------- | ------------------------- | ---------------- | ------------- |
+| JSON        | ✅ Yes (array)            | ✅ Yes           | ❌ No         |
+| MemoryPack  | ✅ Yes (native)           | ✅ Yes           | ✅ Yes        |
+| MessagePack | ✅ Yes (via extension)    | ✅ Yes (custom)  | ✅ Yes        |
 
 </details>
 

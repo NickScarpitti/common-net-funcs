@@ -2,11 +2,11 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using CommonNetFuncs.Web.Requests;
 using CommonNetFuncs.Web.Requests.Rest;
 using MemoryPack;
 using MemoryPack.Streaming;
 using MessagePack;
+using static Xunit.TestContext;
 
 namespace Web.Requests.Tests;
 
@@ -43,7 +43,7 @@ public sealed class RestHelpersStaticTests
 			Content = new StringContent("\"result\"", Encoding.UTF8, "application/json")
 		};
 
-		string? result = await client.RestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await client.RestRequest<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBe("result");
 	}
@@ -68,7 +68,7 @@ public sealed class RestHelpersStaticTests
 			Content = new StringContent("\"result\"", Encoding.UTF8, "application/json")
 		};
 
-		string? result = await client.RestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await client.RestRequest<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBe("result");
 	}
@@ -92,7 +92,7 @@ public sealed class RestHelpersStaticTests
 			Content = new StringContent("\"result\"", Encoding.UTF8, "application/json")
 		};
 
-		string? result = await client.RestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await client.RestRequest<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBe("result");
 	}
@@ -116,7 +116,7 @@ public sealed class RestHelpersStaticTests
 			ExpectTaskCancellation = exceptionType == ExceptionType.TaskCanceledExpected
 		};
 
-		string? result = await client.RestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await client.RestRequest<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeNull();
 	}
@@ -140,7 +140,7 @@ public sealed class RestHelpersStaticTests
 			Content = new StringContent("\"result\"", Encoding.UTF8, "application/json")
 		};
 
-		string? result = await client.RestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await client.RestRequest<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBe("result");
 	}
@@ -157,7 +157,7 @@ public sealed class RestHelpersStaticTests
 			Content = new StringContent("\"foo\"", Encoding.UTF8, "application/json")
 		};
 
-		RestObject<string> result = await client.RestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		RestObject<string> result = await client.RestObjectRequest<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.Result.ShouldBe("foo");
 		result.Response.ShouldNotBeNull();
@@ -182,7 +182,7 @@ public sealed class RestHelpersStaticTests
 			ExpectTaskCancellation = exceptionType == ExceptionType.TaskCanceledExpected
 		};
 
-		RestObject<string> result = await client.RestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		RestObject<string> result = await client.RestObjectRequest<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.Result.ShouldBeNull();
 		if (exceptionType == ExceptionType.TaskCanceledExpected)
@@ -219,7 +219,7 @@ public sealed class RestHelpersStaticTests
 		};
 
 		List<string?> results = new();
-		await foreach (string? item in client.StreamingRestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (string? item in client.StreamingRestRequest<string, string>(options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -247,7 +247,7 @@ public sealed class RestHelpersStaticTests
 		};
 
 		List<string?> results = new();
-		await foreach (string? item in client.StreamingRestRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (string? item in client.StreamingRestRequest<string, string>(options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -261,8 +261,8 @@ public sealed class RestHelpersStaticTests
 		TestModel model1 = new() { Name = "a", Value = 1 };
 		TestModel model2 = new() { Name = "b", Value = 2 };
 		MemoryStream stream = new();
-		await stream.WriteAsync(MessagePackSerializer.Serialize(model1, cancellationToken: TestContext.Current.CancellationToken), TestContext.Current.CancellationToken);
-		await stream.WriteAsync(MessagePackSerializer.Serialize(model2, cancellationToken: TestContext.Current.CancellationToken), TestContext.Current.CancellationToken);
+		await stream.WriteAsync(MessagePackSerializer.Serialize(model1, cancellationToken: Current.CancellationToken), Current.CancellationToken);
+		await stream.WriteAsync(MessagePackSerializer.Serialize(model2, cancellationToken: Current.CancellationToken), Current.CancellationToken);
 		stream.Position = 0;
 
 		FakeHttpMessageHandler handler = new();
@@ -281,7 +281,7 @@ public sealed class RestHelpersStaticTests
 		handler.Response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-msgpack");
 
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in client.StreamingRestRequest<TestModel, TestModel>(options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (TestModel? item in client.StreamingRestRequest<TestModel, TestModel>(options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -296,7 +296,7 @@ public sealed class RestHelpersStaticTests
 	{
 		List<TestModel> models = new() { new() { Name = "a", Value = 1 }, new() { Name = "b", Value = 2 } };
 		MemoryStream stream = new();
-		await MemoryPackStreamingSerializer.SerializeAsync(stream, models.Count, models, cancellationToken: TestContext.Current.CancellationToken);
+		await MemoryPackStreamingSerializer.SerializeAsync(stream, models.Count, models, cancellationToken: Current.CancellationToken);
 		stream.Position = 0;
 
 		FakeHttpMessageHandler handler = new();
@@ -315,7 +315,7 @@ public sealed class RestHelpersStaticTests
 		handler.Response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-memorypack");
 
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in client.StreamingRestRequest<TestModel, TestModel>(options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (TestModel? item in client.StreamingRestRequest<TestModel, TestModel>(options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -337,7 +337,7 @@ public sealed class RestHelpersStaticTests
 			Content = new StringContent("[\"a\",\"b\"]", Encoding.UTF8, "application/json")
 		};
 
-		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.Response.ShouldNotBeNull();
 		result.Result.ShouldNotBeNull();
@@ -376,7 +376,7 @@ public sealed class RestHelpersStaticTests
 			Content = new StringContent("[\"a\"]", Encoding.UTF8, "application/json")
 		};
 
-		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.Response.ShouldNotBeNull();
 	}
@@ -400,7 +400,7 @@ public sealed class RestHelpersStaticTests
 			ExpectTaskCancellation = exceptionType == ExceptionType.TaskCanceledExpected
 		};
 
-		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		StreamingRestObject<string> result = await client.StreamingRestObjectRequest<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.Response.ShouldBeNull();
 	}
@@ -434,7 +434,7 @@ public sealed class RestHelpersStaticTests
 			LogResponse = true
 		};
 
-		string? result = await response.HandleResponse<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await response.HandleResponse<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBe("success");
 	}
@@ -455,7 +455,7 @@ public sealed class RestHelpersStaticTests
 			UseNewtonsoftDeserializer = true
 		};
 
-		string? result = await response.HandleResponse<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await response.HandleResponse<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBe("success");
 	}
@@ -475,7 +475,7 @@ public sealed class RestHelpersStaticTests
 			LogQuery = true
 		};
 
-		string? result = await response.HandleResponse<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await response.HandleResponse<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeNull();
 	}
@@ -504,7 +504,7 @@ public sealed class RestHelpersStaticTests
 			HttpMethod = HttpMethod.Get
 		};
 
-		string? result = await response.HandleResponse<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await response.HandleResponse<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeNull();
 	}
@@ -523,7 +523,7 @@ public sealed class RestHelpersStaticTests
 			HttpMethod = HttpMethod.Get
 		};
 
-		string? result = await response.HandleResponse<string, string>(options, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await response.HandleResponse<string, string>(options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeNull();
 	}
@@ -544,7 +544,7 @@ public sealed class RestHelpersStaticTests
 		};
 
 		List<string?> results = new();
-		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -563,12 +563,12 @@ public sealed class RestHelpersStaticTests
 		if (compressionType == CompressionType.GZip)
 		{
 			await using System.IO.Compression.GZipStream gzip = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await gzip.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
+			await gzip.WriteAsync(jsonBytes, Current.CancellationToken);
 		}
 		else
 		{
 			await using System.IO.Compression.BrotliStream brotli = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await brotli.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
+			await brotli.WriteAsync(jsonBytes, Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
 
@@ -586,7 +586,7 @@ public sealed class RestHelpersStaticTests
 		};
 
 		List<string?> results = new();
-		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -600,8 +600,8 @@ public sealed class RestHelpersStaticTests
 		TestModel model1 = new() { Name = "a", Value = 1 };
 		TestModel model2 = new() { Name = "b", Value = 2 };
 		MemoryStream stream = new();
-		await stream.WriteAsync(MessagePackSerializer.Serialize(model1, cancellationToken: TestContext.Current.CancellationToken), TestContext.Current.CancellationToken);
-		await stream.WriteAsync(MessagePackSerializer.Serialize(model2, cancellationToken: TestContext.Current.CancellationToken), TestContext.Current.CancellationToken);
+		await stream.WriteAsync(MessagePackSerializer.Serialize(model1, cancellationToken: Current.CancellationToken), Current.CancellationToken);
+		await stream.WriteAsync(MessagePackSerializer.Serialize(model2, cancellationToken: Current.CancellationToken), Current.CancellationToken);
 		stream.Position = 0;
 
 		HttpResponseMessage response = new(HttpStatusCode.OK)
@@ -617,7 +617,7 @@ public sealed class RestHelpersStaticTests
 		};
 
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in response.HandleResponseAsync<TestModel, TestModel>(options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (TestModel? item in response.HandleResponseAsync<TestModel, TestModel>(options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -632,7 +632,7 @@ public sealed class RestHelpersStaticTests
 	{
 		List<TestModel> models = new() { new() { Name = "a", Value = 1 }, new() { Name = "b", Value = 2 } };
 		MemoryStream stream = new();
-		await MemoryPackStreamingSerializer.SerializeAsync(stream, models.Count, models, cancellationToken: TestContext.Current.CancellationToken);
+		await MemoryPackStreamingSerializer.SerializeAsync(stream, models.Count, models, cancellationToken: Current.CancellationToken);
 		stream.Position = 0;
 
 		HttpResponseMessage response = new(HttpStatusCode.OK)
@@ -648,7 +648,7 @@ public sealed class RestHelpersStaticTests
 		};
 
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in response.HandleResponseAsync<TestModel, TestModel>(options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (TestModel? item in response.HandleResponseAsync<TestModel, TestModel>(options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -674,7 +674,7 @@ public sealed class RestHelpersStaticTests
 		};
 
 		List<string?> results = new();
-		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -710,7 +710,7 @@ public sealed class RestHelpersStaticTests
 		};
 
 		List<string?> results = new();
-		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -733,7 +733,7 @@ public sealed class RestHelpersStaticTests
 		};
 
 		List<string?> results = new();
-		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (string? item in response.HandleResponseAsync<string, string>(options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -763,7 +763,7 @@ public sealed class RestHelpersStaticTests
 			stream = new();
 			await using (System.IO.Compression.GZipStream gzip = new(stream, System.IO.Compression.CompressionMode.Compress, true))
 			{
-				await gzip.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
+				await gzip.WriteAsync(jsonBytes, Current.CancellationToken);
 			}
 			stream.Position = 0;
 		}
@@ -773,7 +773,7 @@ public sealed class RestHelpersStaticTests
 			stream = new();
 			await using (System.IO.Compression.BrotliStream brotli = new(stream, System.IO.Compression.CompressionMode.Compress, true))
 			{
-				await brotli.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
+				await brotli.WriteAsync(jsonBytes, Current.CancellationToken);
 			}
 			stream.Position = 0;
 		}
@@ -782,7 +782,7 @@ public sealed class RestHelpersStaticTests
 			stream = new(Encoding.UTF8.GetBytes(testData));
 		}
 
-		string? result = await stream.ReadResponseStream<string>(contentType, encoding, useNewtonsoft, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await stream.ReadResponseStream<string>(contentType, encoding, useNewtonsoft, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBe("test data");
 	}
@@ -792,7 +792,7 @@ public sealed class RestHelpersStaticTests
 	{
 		MemoryStream stream = new(Array.Empty<byte>());
 
-		string? result = await stream.ReadResponseStream<string>("application/json", null, false, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await stream.ReadResponseStream<string>("application/json", null, false, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeNull();
 	}
@@ -808,17 +808,17 @@ public sealed class RestHelpersStaticTests
 		if (compressionType == CompressionType.GZip)
 		{
 			await using System.IO.Compression.GZipStream gzip = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await gzip.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
+			await gzip.WriteAsync(jsonBytes, Current.CancellationToken);
 		}
 		else
 		{
 			await using System.IO.Compression.BrotliStream brotli = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await brotli.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
+			await brotli.WriteAsync(jsonBytes, Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
 
 		string encoding = compressionType == CompressionType.GZip ? "gzip" : "br";
-		string? result = await compressedStream.ReadResponseStream<string>("application/json", encoding, false, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await compressedStream.ReadResponseStream<string>("application/json", encoding, false, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBe("test");
 	}
@@ -834,17 +834,17 @@ public sealed class RestHelpersStaticTests
 		if (compressionType == CompressionType.GZip)
 		{
 			await using System.IO.Compression.GZipStream gzip = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await gzip.WriteAsync(textBytes, TestContext.Current.CancellationToken);
+			await gzip.WriteAsync(textBytes, Current.CancellationToken);
 		}
 		else
 		{
 			await using System.IO.Compression.BrotliStream brotli = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await brotli.WriteAsync(textBytes, TestContext.Current.CancellationToken);
+			await brotli.WriteAsync(textBytes, Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
 
 		string encoding = compressionType == CompressionType.GZip ? "gzip" : "br";
-		string? result = await compressedStream.ReadResponseStream<string>("text/plain", encoding, false, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await compressedStream.ReadResponseStream<string>("text/plain", encoding, false, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBe("plain text");
 	}
@@ -856,7 +856,7 @@ public sealed class RestHelpersStaticTests
 		byte[] memPackBytes = MemoryPackSerializer.Serialize(model);
 		MemoryStream stream = new(memPackBytes);
 
-		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-memorypack", null, false, cancellationToken: TestContext.Current.CancellationToken);
+		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-memorypack", null, false, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 		result!.Name.ShouldBe("Test");
@@ -875,17 +875,17 @@ public sealed class RestHelpersStaticTests
 		if (compressionType == CompressionType.GZip)
 		{
 			await using System.IO.Compression.GZipStream gzip = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await gzip.WriteAsync(memPackBytes, TestContext.Current.CancellationToken);
+			await gzip.WriteAsync(memPackBytes, Current.CancellationToken);
 		}
 		else
 		{
 			await using System.IO.Compression.BrotliStream brotli = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await brotli.WriteAsync(memPackBytes, TestContext.Current.CancellationToken);
+			await brotli.WriteAsync(memPackBytes, Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
 
 		string encoding = compressionType == CompressionType.GZip ? "gzip" : "br";
-		TestModel? result = await compressedStream.ReadResponseStream<TestModel>("application/x-memorypack", encoding, false, cancellationToken: TestContext.Current.CancellationToken);
+		TestModel? result = await compressedStream.ReadResponseStream<TestModel>("application/x-memorypack", encoding, false, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 		result!.Name.ShouldBe("Compressed");
@@ -903,17 +903,17 @@ public sealed class RestHelpersStaticTests
 		if (compressionType == CompressionType.GZip)
 		{
 			await using System.IO.Compression.GZipStream gzip = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await gzip.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
+			await gzip.WriteAsync(jsonBytes, Current.CancellationToken);
 		}
 		else
 		{
 			await using System.IO.Compression.BrotliStream brotli = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await brotli.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
+			await brotli.WriteAsync(jsonBytes, Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
 
 		string encoding = compressionType == CompressionType.GZip ? "gzip" : "br";
-		string? result = await compressedStream.ReadResponseStream<string>("application/json", encoding, true, cancellationToken: TestContext.Current.CancellationToken);
+		string? result = await compressedStream.ReadResponseStream<string>("application/json", encoding, true, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBe("test");
 	}
@@ -922,10 +922,10 @@ public sealed class RestHelpersStaticTests
 	public async Task ReadResponseStream_HandlesMessagePack()
 	{
 		TestModel model = new() { Name = "Test", Value = 123 };
-		byte[] msgPackBytes = MessagePackSerializer.Serialize(model, cancellationToken: TestContext.Current.CancellationToken);
+		byte[] msgPackBytes = MessagePackSerializer.Serialize(model, cancellationToken: Current.CancellationToken);
 		MemoryStream stream = new(msgPackBytes);
 
-		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-msgpack", null, false, cancellationToken: TestContext.Current.CancellationToken);
+		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-msgpack", null, false, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 		result!.Name.ShouldBe("Test");
@@ -936,12 +936,12 @@ public sealed class RestHelpersStaticTests
 	public async Task ReadResponseStream_HandlesMessagePackWithCompression()
 	{
 		TestModel model = new() { Name = "Test", Value = 123 };
-		byte[] msgPackBytes = MessagePackSerializer.Serialize(model, cancellationToken: TestContext.Current.CancellationToken);
+		byte[] msgPackBytes = MessagePackSerializer.Serialize(model, cancellationToken: Current.CancellationToken);
 		MemoryStream stream = new(msgPackBytes);
 
 		MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard;
 
-		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-msgpack", null, false, messagePackSerializerOptions: options, cancellationToken: TestContext.Current.CancellationToken);
+		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-msgpack", null, false, messagePackSerializerOptions: options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 	}
@@ -950,12 +950,12 @@ public sealed class RestHelpersStaticTests
 	public async Task ReadResponseStream_HandlesMessagePackWithUntrusted()
 	{
 		TestModel model = new() { Name = "Test", Value = 123 };
-		byte[] msgPackBytes = MessagePackSerializer.Serialize(model, cancellationToken: TestContext.Current.CancellationToken);
+		byte[] msgPackBytes = MessagePackSerializer.Serialize(model, cancellationToken: Current.CancellationToken);
 		MemoryStream stream = new(msgPackBytes);
 
 		MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard;
 
-		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-msgpack", null, false, messagePackSerializerOptions: options, cancellationToken: TestContext.Current.CancellationToken);
+		TestModel? result = await stream.ReadResponseStream<TestModel>("application/x-msgpack", null, false, messagePackSerializerOptions: options, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 	}
@@ -965,7 +965,7 @@ public sealed class RestHelpersStaticTests
 	{
 		MemoryStream stream = new(Encoding.UTF8.GetBytes("invalid json"));
 
-		TestModel? result = await stream.ReadResponseStream<TestModel>("application/json", null, false, cancellationToken: TestContext.Current.CancellationToken);
+		TestModel? result = await stream.ReadResponseStream<TestModel>("application/json", null, false, cancellationToken: Current.CancellationToken);
 
 		result.ShouldBeNull();
 	}
@@ -977,7 +977,7 @@ public sealed class RestHelpersStaticTests
 		MemoryStream stream = new(Encoding.UTF8.GetBytes(json));
 
 		List<string?> results = new();
-		await foreach (string? item in stream.ReadResponseStreamAsync<string>("application/json", null, null, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (string? item in stream.ReadResponseStreamAsync<string>("application/json", null, null, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -996,18 +996,18 @@ public sealed class RestHelpersStaticTests
 		if (compressionType == CompressionType.GZip)
 		{
 			await using System.IO.Compression.GZipStream gzip = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await gzip.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
+			await gzip.WriteAsync(jsonBytes, Current.CancellationToken);
 		}
 		else
 		{
 			await using System.IO.Compression.BrotliStream brotli = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await brotli.WriteAsync(jsonBytes, TestContext.Current.CancellationToken);
+			await brotli.WriteAsync(jsonBytes, Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
 
 		string encoding = compressionType == CompressionType.GZip ? "gzip" : "br";
 		List<string?> results = new();
-		await foreach (string? item in compressedStream.ReadResponseStreamAsync<string>("application/json", encoding, null, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (string? item in compressedStream.ReadResponseStreamAsync<string>("application/json", encoding, null, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -1036,12 +1036,12 @@ public sealed class RestHelpersStaticTests
 		TestModel model1 = new() { Name = "a", Value = 1 };
 		TestModel model2 = new() { Name = "b", Value = 2 };
 		MemoryStream stream = new();
-		await stream.WriteAsync(MessagePackSerializer.Serialize(model1, cancellationToken: TestContext.Current.CancellationToken), TestContext.Current.CancellationToken);
-		await stream.WriteAsync(MessagePackSerializer.Serialize(model2, cancellationToken: TestContext.Current.CancellationToken), TestContext.Current.CancellationToken);
+		await stream.WriteAsync(MessagePackSerializer.Serialize(model1, cancellationToken: Current.CancellationToken), Current.CancellationToken);
+		await stream.WriteAsync(MessagePackSerializer.Serialize(model2, cancellationToken: Current.CancellationToken), Current.CancellationToken);
 		stream.Position = 0;
 
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-msgpack", null, null, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-msgpack", null, null, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -1059,24 +1059,24 @@ public sealed class RestHelpersStaticTests
 	public async Task ReadResponseStreamAsync_HandlesMessagePackWithCompression(CompressionType compressionType)
 	{
 		TestModel model = new() { Name = "compressed", Value = 42 };
-		byte[] msgPackBytes = MessagePackSerializer.Serialize(model, cancellationToken: TestContext.Current.CancellationToken);
+		byte[] msgPackBytes = MessagePackSerializer.Serialize(model, cancellationToken: Current.CancellationToken);
 		MemoryStream compressedStream = new();
 
 		if (compressionType == CompressionType.GZip)
 		{
 			await using System.IO.Compression.GZipStream gzip = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await gzip.WriteAsync(msgPackBytes, TestContext.Current.CancellationToken);
+			await gzip.WriteAsync(msgPackBytes, Current.CancellationToken);
 		}
 		else
 		{
 			await using System.IO.Compression.BrotliStream brotli = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await brotli.WriteAsync(msgPackBytes, TestContext.Current.CancellationToken);
+			await brotli.WriteAsync(msgPackBytes, Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
 
 		string encoding = compressionType == CompressionType.GZip ? "gzip" : "br";
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in compressedStream.ReadResponseStreamAsync<TestModel>("application/x-msgpack", encoding, null, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (TestModel? item in compressedStream.ReadResponseStreamAsync<TestModel>("application/x-msgpack", encoding, null, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -1090,11 +1090,11 @@ public sealed class RestHelpersStaticTests
 	public async Task ReadResponseStreamAsync_MessagePackUsesProvidedSerializerOptions()
 	{
 		TestModel model = new() { Name = "opts", Value = 7 };
-		MemoryStream stream = new(MessagePackSerializer.Serialize(model, cancellationToken: TestContext.Current.CancellationToken));
+		MemoryStream stream = new(MessagePackSerializer.Serialize(model, cancellationToken: Current.CancellationToken));
 		MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard;
 
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-msgpack", null, null, messagePackSerializerOptions: options, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-msgpack", null, null, messagePackSerializerOptions: options, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -1109,7 +1109,7 @@ public sealed class RestHelpersStaticTests
 		MemoryStream stream = new();
 
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-msgpack", null, null, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-msgpack", null, null, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -1122,11 +1122,11 @@ public sealed class RestHelpersStaticTests
 	{
 		List<TestModel> models = new() { new() { Name = "a", Value = 1 }, new() { Name = "b", Value = 2 } };
 		MemoryStream stream = new();
-		await MemoryPackStreamingSerializer.SerializeAsync(stream, models.Count, models, cancellationToken: TestContext.Current.CancellationToken);
+		await MemoryPackStreamingSerializer.SerializeAsync(stream, models.Count, models, cancellationToken: Current.CancellationToken);
 		stream.Position = 0;
 
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-memorypack", null, null, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-memorypack", null, null, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -1145,25 +1145,25 @@ public sealed class RestHelpersStaticTests
 	{
 		TestModel model = new() { Name = "compressed", Value = 42 };
 		MemoryStream memPackStream = new();
-		await MemoryPackStreamingSerializer.SerializeAsync(memPackStream, 1, new[] { model }, cancellationToken: TestContext.Current.CancellationToken);
+		await MemoryPackStreamingSerializer.SerializeAsync(memPackStream, 1, new[] { model }, cancellationToken: Current.CancellationToken);
 		byte[] memPackBytes = memPackStream.ToArray();
 		MemoryStream compressedStream = new();
 
 		if (compressionType == CompressionType.GZip)
 		{
 			await using System.IO.Compression.GZipStream gzip = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await gzip.WriteAsync(memPackBytes, TestContext.Current.CancellationToken);
+			await gzip.WriteAsync(memPackBytes, Current.CancellationToken);
 		}
 		else
 		{
 			await using System.IO.Compression.BrotliStream brotli = new(compressedStream, System.IO.Compression.CompressionMode.Compress, true);
-			await brotli.WriteAsync(memPackBytes, TestContext.Current.CancellationToken);
+			await brotli.WriteAsync(memPackBytes, Current.CancellationToken);
 		}
 		compressedStream.Position = 0;
 
 		string encoding = compressionType == CompressionType.GZip ? "gzip" : "br";
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in compressedStream.ReadResponseStreamAsync<TestModel>("application/x-memorypack", encoding, null, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (TestModel? item in compressedStream.ReadResponseStreamAsync<TestModel>("application/x-memorypack", encoding, null, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}
@@ -1177,11 +1177,11 @@ public sealed class RestHelpersStaticTests
 	public async Task ReadResponseStreamAsync_MemoryPackEmptyStreamYieldsNoResults()
 	{
 		MemoryStream stream = new();
-		await MemoryPackStreamingSerializer.SerializeAsync(stream, 0, Array.Empty<TestModel>(), cancellationToken: TestContext.Current.CancellationToken);
+		await MemoryPackStreamingSerializer.SerializeAsync(stream, 0, Array.Empty<TestModel>(), cancellationToken: Current.CancellationToken);
 		stream.Position = 0;
 
 		List<TestModel?> results = new();
-		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-memorypack", null, null, cancellationToken: TestContext.Current.CancellationToken))
+		await foreach (TestModel? item in stream.ReadResponseStreamAsync<TestModel>("application/x-memorypack", null, null, cancellationToken: Current.CancellationToken))
 		{
 			results.Add(item);
 		}

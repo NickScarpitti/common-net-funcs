@@ -4,6 +4,7 @@ using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using static Xunit.TestContext;
 
 namespace Hangfire.Tests;
 
@@ -84,7 +85,7 @@ public sealed class HangfireShutdownMonitorTests
 		await cts.CancelAsync();
 
 		// Give the callback time to execute
-		await Task.Delay(100, TestContext.Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
 
 		// Assert - Verify the monitoring API was called (proves callback executed)
 		A.CallTo(() => storage.GetMonitoringApi()).MustHaveHappened();
@@ -109,7 +110,7 @@ public sealed class HangfireShutdownMonitorTests
 		await cts.CancelAsync();
 
 		// Give the callback time to execute
-		await Task.Delay(100, TestContext.Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
 
 		// Assert - Verify the service provider was called (proves callback executed despite error)
 		A.CallTo(() => serviceProvider.GetService(typeof(BackgroundJobServer))).MustHaveHappened();
@@ -141,7 +142,7 @@ public sealed class HangfireShutdownMonitorTests
 		await cts.CancelAsync();
 
 		// Give the callback time to execute
-		await Task.Delay(100, TestContext.Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
 
 		// Assert - Verify GetMonitoringApi was called (callback executed despite exception)
 		A.CallTo(() => mockStorage.GetMonitoringApi()).MustHaveHappened();
@@ -164,7 +165,7 @@ public sealed class HangfireShutdownMonitorTests
 		await cts.CancelAsync();
 
 		// Give the callback time to execute
-		await Task.Delay(100, TestContext.Current.CancellationToken);
+		await Task.Delay(100, Current.CancellationToken);
 
 		// Assert - Verify the callback executed by checking the monitoring API was called
 		A.CallTo(() => storage.GetMonitoringApi()).MustHaveHappened();

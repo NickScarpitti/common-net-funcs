@@ -1,6 +1,7 @@
 ﻿using FakeItEasy;
 using static CommonNetFuncs.Core.MathHelpers;
 using static CommonNetFuncs.Core.Random;
+using static Xunit.TestContext;
 
 namespace Core.Tests;
 
@@ -78,7 +79,7 @@ public sealed class RandomTests
 	public void GetRandomInts_GeneratesCorrectNumberOfValuesInRange(int count, int min, int max)
 	{
 		// Act
-		IEnumerable<int> results = GetRandomInts(count, min, max, TestContext.Current.CancellationToken);
+		IEnumerable<int> results = GetRandomInts(count, min, max, Current.CancellationToken);
 
 		// Assert
 		results.Count().ShouldBe(count);
@@ -150,7 +151,7 @@ public sealed class RandomTests
 	public void GetRandomDoubles_GeneratesCorrectNumberAndPrecision(int count, int precision)
 	{
 		// Act
-		IEnumerable<double> results = GetRandomDoubles(count, precision, TestContext.Current.CancellationToken);
+		IEnumerable<double> results = GetRandomDoubles(count, precision, Current.CancellationToken);
 
 		// Assert
 		results.Count().ShouldBe(count);
@@ -223,7 +224,7 @@ public sealed class RandomTests
 	public void GetRandomDecimals_GeneratesCorrectNumberAndPrecision(int count, int precision)
 	{
 		// Act
-		IEnumerable<decimal> results = GetRandomDecimals(count, precision, TestContext.Current.CancellationToken);
+		IEnumerable<decimal> results = GetRandomDecimals(count, precision, Current.CancellationToken);
 
 		// Assert
 		results.Count().ShouldBe(count);
@@ -251,7 +252,7 @@ public sealed class RandomTests
 		List<int> copy = original.ToList();
 
 		// Act
-		original.ShuffleListInPlace(cancellationToken: TestContext.Current.CancellationToken);
+		original.ShuffleListInPlace(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		original.Count.ShouldBe(copy.Count);
@@ -266,7 +267,7 @@ public sealed class RandomTests
 		List<int> emptyList = new();
 
 		// Act
-		IList<int> result = emptyList.ShuffleListInPlace(cancellationToken: TestContext.Current.CancellationToken);
+		IList<int> result = emptyList.ShuffleListInPlace(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeEmpty();
@@ -279,7 +280,7 @@ public sealed class RandomTests
 		List<int> singleItem = new() { 42 };
 
 		// Act
-		IList<int> result = singleItem.ShuffleListInPlace(cancellationToken: TestContext.Current.CancellationToken);
+		IList<int> result = singleItem.ShuffleListInPlace(cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Count.ShouldBe(1);
@@ -397,7 +398,7 @@ public sealed class RandomTests
 	public void GenerateRandomString_RespectsLengthBounds(int maxLength, int minLength)
 	{
 		// Act
-		string result = GenerateRandomString(maxLength, minLength, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRandomString(maxLength, minLength, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Length.ShouldBeGreaterThanOrEqualTo(minLength);
@@ -411,7 +412,7 @@ public sealed class RandomTests
 	public void GenerateRandomString_RespectsAsciiRange(int maxLength, int minLength, int lower, int upper)
 	{
 		// Act
-		string result = GenerateRandomString(maxLength, minLength, lower, upper, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRandomString(maxLength, minLength, lower, upper, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.All(c => c >= lower && c <= upper).ShouldBeTrue();
@@ -424,7 +425,7 @@ public sealed class RandomTests
 		HashSet<char> blacklist = ['a', 'e', 'i', 'o', 'u'];
 
 		// Act
-		string result = GenerateRandomString(100, blacklistedCharacters: blacklist, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRandomString(100, blacklistedCharacters: blacklist, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Any(blacklist.Contains).ShouldBeFalse();
@@ -436,7 +437,7 @@ public sealed class RandomTests
 	public void GenerateRandomStrings_GeneratesCorrectNumber(int count, int length)
 	{
 		// Act
-		IEnumerable<string> results = GenerateRandomStrings(count, length, cancellationToken: TestContext.Current.CancellationToken);
+		IEnumerable<string> results = GenerateRandomStrings(count, length, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		results.Count().ShouldBe(count);
@@ -452,7 +453,7 @@ public sealed class RandomTests
 		HashSet<char> charSet = ['A', 'B', 'C', '1', '2', '3'];
 
 		// Act
-		string result = GenerateRandomStringByCharSet(length, charSet, TestContext.Current.CancellationToken);
+		string result = GenerateRandomStringByCharSet(length, charSet, Current.CancellationToken);
 
 		// Assert
 		result.Length.ShouldBe(length);
@@ -465,7 +466,7 @@ public sealed class RandomTests
 	public void GenerateRandomStringByCharSet_UsesDefaultCharSet(int length)
 	{
 		// Act
-		string result = GenerateRandomStringByCharSet(length, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRandomStringByCharSet(length, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Length.ShouldBe(length);
@@ -481,7 +482,7 @@ public sealed class RandomTests
 		HashSet<char> emptyCharSet = new();
 
 		// Act
-		string result = GenerateRandomStringByCharSet(10, emptyCharSet, TestContext.Current.CancellationToken);
+		string result = GenerateRandomStringByCharSet(10, emptyCharSet, Current.CancellationToken);
 
 		// Assert
 		result.Length.ShouldBe(10);
@@ -612,7 +613,7 @@ public sealed class RandomTests
 	public void GenerateRandomString_WhenMinLengthEqualsMaxLength_ReturnsExactLength()
 	{
 		// Act
-		string result = GenerateRandomString(10, 10, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRandomString(10, 10, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.Length.ShouldBe(10);
@@ -917,7 +918,7 @@ public sealed class RandomTests
 	[InlineData(10, -50, 50, "seed2")]
 	public void GetRepeatableRandomInts_WithSeed_GeneratesCorrectCountAndRange(int count, int min, int max, string seed)
 	{
-		List<int> results = GetRepeatableRandomInts(count, seed, min, max, TestContext.Current.CancellationToken).ToList();
+		List<int> results = GetRepeatableRandomInts(count, seed, min, max, Current.CancellationToken).ToList();
 		results.Count.ShouldBe(count);
 		results.ShouldAllBe(x => x >= min && x < max);
 	}
@@ -927,8 +928,8 @@ public sealed class RandomTests
 	[InlineData(10, -50, 50, "seed2")]
 	public void GetRepeatableRandomInts_WithSeed_IsRepeatable(int count, int min, int max, string seed)
 	{
-		List<int> results1 = GetRepeatableRandomInts(count, seed, min, max, TestContext.Current.CancellationToken).ToList();
-		List<int> results2 = GetRepeatableRandomInts(count, seed, min, max, TestContext.Current.CancellationToken).ToList();
+		List<int> results1 = GetRepeatableRandomInts(count, seed, min, max, Current.CancellationToken).ToList();
+		List<int> results2 = GetRepeatableRandomInts(count, seed, min, max, Current.CancellationToken).ToList();
 		results1.SequenceEqual(results2).ShouldBeTrue();
 	}
 
@@ -937,7 +938,7 @@ public sealed class RandomTests
 	[InlineData(10, -50, 50)]
 	public void GetRepeatableRandomInts_WithRnd_GeneratesCorrectCountAndRange(int count, int min, int max)
 	{
-		List<int> results = GetRepeatableRandomInts(count, new System.Random(42), min, max, TestContext.Current.CancellationToken).ToList();
+		List<int> results = GetRepeatableRandomInts(count, new System.Random(42), min, max, Current.CancellationToken).ToList();
 		results.Count.ShouldBe(count);
 		results.ShouldAllBe(x => x >= min && x < max);
 	}
@@ -947,8 +948,8 @@ public sealed class RandomTests
 	[InlineData(10, -50, 50)]
 	public void GetRepeatableRandomInts_WithRnd_IsRepeatable(int count, int min, int max)
 	{
-		List<int> results1 = GetRepeatableRandomInts(count, new System.Random(42), min, max, TestContext.Current.CancellationToken).ToList();
-		List<int> results2 = GetRepeatableRandomInts(count, new System.Random(42), min, max, TestContext.Current.CancellationToken).ToList();
+		List<int> results1 = GetRepeatableRandomInts(count, new System.Random(42), min, max, Current.CancellationToken).ToList();
+		List<int> results2 = GetRepeatableRandomInts(count, new System.Random(42), min, max, Current.CancellationToken).ToList();
 		results1.SequenceEqual(results2).ShouldBeTrue();
 	}
 
@@ -1080,7 +1081,7 @@ public sealed class RandomTests
 	[InlineData(10, 10, "seed2")]
 	public void GetRepeatableRandomDoubles_WithSeed_GeneratesCorrectCountAndPrecision(int count, int decimalPlaces, string seed)
 	{
-		List<double> results = GetRepeatableRandomDoubles(count, seed, decimalPlaces, TestContext.Current.CancellationToken).ToList();
+		List<double> results = GetRepeatableRandomDoubles(count, seed, decimalPlaces, Current.CancellationToken).ToList();
 		results.Count.ShouldBe(count);
 		results.ShouldAllBe(x => x >= 0 && x < 1);
 		results.ShouldAllBe(x => x.GetPrecision() <= decimalPlaces);
@@ -1091,8 +1092,8 @@ public sealed class RandomTests
 	[InlineData(10, 10, "seed2")]
 	public void GetRepeatableRandomDoubles_WithSeed_IsRepeatable(int count, int decimalPlaces, string seed)
 	{
-		List<double> results1 = GetRepeatableRandomDoubles(count, seed, decimalPlaces, TestContext.Current.CancellationToken).ToList();
-		List<double> results2 = GetRepeatableRandomDoubles(count, seed, decimalPlaces, TestContext.Current.CancellationToken).ToList();
+		List<double> results1 = GetRepeatableRandomDoubles(count, seed, decimalPlaces, Current.CancellationToken).ToList();
+		List<double> results2 = GetRepeatableRandomDoubles(count, seed, decimalPlaces, Current.CancellationToken).ToList();
 		results1.SequenceEqual(results2).ShouldBeTrue();
 	}
 
@@ -1101,7 +1102,7 @@ public sealed class RandomTests
 	[InlineData(10, 10)]
 	public void GetRepeatableRandomDoubles_WithRnd_GeneratesCorrectCountAndPrecision(int count, int decimalPlaces)
 	{
-		List<double> results = GetRepeatableRandomDoubles(count, new System.Random(42), decimalPlaces, TestContext.Current.CancellationToken).ToList();
+		List<double> results = GetRepeatableRandomDoubles(count, new System.Random(42), decimalPlaces, Current.CancellationToken).ToList();
 		results.Count.ShouldBe(count);
 		results.ShouldAllBe(x => x >= 0 && x < 1);
 		results.ShouldAllBe(x => x.GetPrecision() <= decimalPlaces);
@@ -1112,8 +1113,8 @@ public sealed class RandomTests
 	[InlineData(10, 10)]
 	public void GetRepeatableRandomDoubles_WithRnd_IsRepeatable(int count, int decimalPlaces)
 	{
-		List<double> results1 = GetRepeatableRandomDoubles(count, new System.Random(42), decimalPlaces, TestContext.Current.CancellationToken).ToList();
-		List<double> results2 = GetRepeatableRandomDoubles(count, new System.Random(42), decimalPlaces, TestContext.Current.CancellationToken).ToList();
+		List<double> results1 = GetRepeatableRandomDoubles(count, new System.Random(42), decimalPlaces, Current.CancellationToken).ToList();
+		List<double> results2 = GetRepeatableRandomDoubles(count, new System.Random(42), decimalPlaces, Current.CancellationToken).ToList();
 		results1.SequenceEqual(results2).ShouldBeTrue();
 	}
 
@@ -1257,7 +1258,7 @@ public sealed class RandomTests
 	[InlineData(10, 10, "seed2")]
 	public void GetRepeatableRandomDecimals_WithSeed_GeneratesCorrectCountAndPrecision(int count, int decimalPlaces, string seed)
 	{
-		List<decimal> results = GetRepeatableRandomDecimals(count, seed, decimalPlaces, TestContext.Current.CancellationToken).ToList();
+		List<decimal> results = GetRepeatableRandomDecimals(count, seed, decimalPlaces, Current.CancellationToken).ToList();
 		results.Count.ShouldBe(count);
 		results.ShouldAllBe(x => x >= 0 && x < 1);
 		results.ShouldAllBe(x => x.GetPrecision() <= decimalPlaces);
@@ -1268,8 +1269,8 @@ public sealed class RandomTests
 	[InlineData(10, 10, "seed2")]
 	public void GetRepeatableRandomDecimals_WithSeed_IsRepeatable(int count, int decimalPlaces, string seed)
 	{
-		List<decimal> results1 = GetRepeatableRandomDecimals(count, seed, decimalPlaces, TestContext.Current.CancellationToken).ToList();
-		List<decimal> results2 = GetRepeatableRandomDecimals(count, seed, decimalPlaces, TestContext.Current.CancellationToken).ToList();
+		List<decimal> results1 = GetRepeatableRandomDecimals(count, seed, decimalPlaces, Current.CancellationToken).ToList();
+		List<decimal> results2 = GetRepeatableRandomDecimals(count, seed, decimalPlaces, Current.CancellationToken).ToList();
 		results1.SequenceEqual(results2).ShouldBeTrue();
 	}
 
@@ -1278,7 +1279,7 @@ public sealed class RandomTests
 	[InlineData(10, 10)]
 	public void GetRepeatableRandomDecimals_WithRnd_GeneratesCorrectCountAndPrecision(int count, int decimalPlaces)
 	{
-		List<decimal> results = GetRepeatableRandomDecimals(count, new System.Random(42), decimalPlaces, TestContext.Current.CancellationToken).ToList();
+		List<decimal> results = GetRepeatableRandomDecimals(count, new System.Random(42), decimalPlaces, Current.CancellationToken).ToList();
 		results.Count.ShouldBe(count);
 		results.ShouldAllBe(x => x >= 0 && x < 1);
 		results.ShouldAllBe(x => x.GetPrecision() <= decimalPlaces);
@@ -1289,8 +1290,8 @@ public sealed class RandomTests
 	[InlineData(10, 10)]
 	public void GetRepeatableRandomDecimals_WithRnd_IsRepeatable(int count, int decimalPlaces)
 	{
-		List<decimal> results1 = GetRepeatableRandomDecimals(count, new System.Random(42), decimalPlaces, TestContext.Current.CancellationToken).ToList();
-		List<decimal> results2 = GetRepeatableRandomDecimals(count, new System.Random(42), decimalPlaces, TestContext.Current.CancellationToken).ToList();
+		List<decimal> results1 = GetRepeatableRandomDecimals(count, new System.Random(42), decimalPlaces, Current.CancellationToken).ToList();
+		List<decimal> results2 = GetRepeatableRandomDecimals(count, new System.Random(42), decimalPlaces, Current.CancellationToken).ToList();
 		results1.SequenceEqual(results2).ShouldBeTrue();
 	}
 
@@ -1323,7 +1324,7 @@ public sealed class RandomTests
 	{
 		List<int> original = Enumerable.Range(1, 100).ToList();
 		List<int> copy = original.ToList();
-		copy.RepeatableShuffleListInPlace("testSeed", TestContext.Current.CancellationToken);
+		copy.RepeatableShuffleListInPlace("testSeed", Current.CancellationToken);
 		copy.Count.ShouldBe(original.Count);
 		copy.Order().SequenceEqual(original.Order()).ShouldBeTrue();
 	}
@@ -1333,8 +1334,8 @@ public sealed class RandomTests
 	{
 		List<int> list1 = Enumerable.Range(1, 100).ToList();
 		List<int> list2 = Enumerable.Range(1, 100).ToList();
-		list1.RepeatableShuffleListInPlace("testSeed", TestContext.Current.CancellationToken);
-		list2.RepeatableShuffleListInPlace("testSeed", TestContext.Current.CancellationToken);
+		list1.RepeatableShuffleListInPlace("testSeed", Current.CancellationToken);
+		list2.RepeatableShuffleListInPlace("testSeed", Current.CancellationToken);
 		list1.SequenceEqual(list2).ShouldBeTrue();
 	}
 
@@ -1343,7 +1344,7 @@ public sealed class RandomTests
 	{
 		List<int> original = Enumerable.Range(1, 100).ToList();
 		List<int> copy = original.ToList();
-		copy.RepeatableShuffleListInPlace(new System.Random(42), TestContext.Current.CancellationToken);
+		copy.RepeatableShuffleListInPlace(new System.Random(42), Current.CancellationToken);
 		copy.Count.ShouldBe(original.Count);
 		copy.Order().SequenceEqual(original.Order()).ShouldBeTrue();
 	}
@@ -1353,8 +1354,8 @@ public sealed class RandomTests
 	{
 		List<int> list1 = Enumerable.Range(1, 100).ToList();
 		List<int> list2 = Enumerable.Range(1, 100).ToList();
-		list1.RepeatableShuffleListInPlace(new System.Random(42), TestContext.Current.CancellationToken);
-		list2.RepeatableShuffleListInPlace(new System.Random(42), TestContext.Current.CancellationToken);
+		list1.RepeatableShuffleListInPlace(new System.Random(42), Current.CancellationToken);
+		list2.RepeatableShuffleListInPlace(new System.Random(42), Current.CancellationToken);
 		list1.SequenceEqual(list2).ShouldBeTrue();
 	}
 
@@ -1362,7 +1363,7 @@ public sealed class RandomTests
 	public void RepeatableShuffleListInPlace_WithSeed_WithEmptyList_ReturnsEmptyList()
 	{
 		List<int> emptyList = new();
-		IList<int> result = emptyList.RepeatableShuffleListInPlace("testSeed", TestContext.Current.CancellationToken);
+		IList<int> result = emptyList.RepeatableShuffleListInPlace("testSeed", Current.CancellationToken);
 		result.ShouldBeEmpty();
 	}
 
@@ -1370,7 +1371,7 @@ public sealed class RandomTests
 	public void RepeatableShuffleListInPlace_WithRnd_WithEmptyList_ReturnsEmptyList()
 	{
 		List<int> emptyList = new();
-		IList<int> result = emptyList.RepeatableShuffleListInPlace(new System.Random(42), TestContext.Current.CancellationToken);
+		IList<int> result = emptyList.RepeatableShuffleListInPlace(new System.Random(42), Current.CancellationToken);
 		result.ShouldBeEmpty();
 	}
 
@@ -1378,7 +1379,7 @@ public sealed class RandomTests
 	public void RepeatableShuffleListInPlace_WithSeed_WithSingleElement_ReturnsSameElement()
 	{
 		List<int> singleItem = new() { 42 };
-		IList<int> result = singleItem.RepeatableShuffleListInPlace("testSeed", TestContext.Current.CancellationToken);
+		IList<int> result = singleItem.RepeatableShuffleListInPlace("testSeed", Current.CancellationToken);
 		result.Count.ShouldBe(1);
 		result[0].ShouldBe(42);
 	}
@@ -1387,7 +1388,7 @@ public sealed class RandomTests
 	public void RepeatableShuffleListInPlace_WithRnd_WithSingleElement_ReturnsSameElement()
 	{
 		List<int> singleItem = new() { 42 };
-		IList<int> result = singleItem.RepeatableShuffleListInPlace(new System.Random(1), TestContext.Current.CancellationToken);
+		IList<int> result = singleItem.RepeatableShuffleListInPlace(new System.Random(1), Current.CancellationToken);
 		result.Count.ShouldBe(1);
 		result[0].ShouldBe(42);
 	}
@@ -1604,7 +1605,7 @@ public sealed class RandomTests
 	[InlineData(10, -1, "seed3")]
 	public void GenerateRepeatableRandomString_WithSeed_RespectsLengthBounds(int maxLength, int minLength, string seed)
 	{
-		string result = GenerateRepeatableRandomString(maxLength, seed, minLength, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRepeatableRandomString(maxLength, seed, minLength, cancellationToken: Current.CancellationToken);
 		result.Length.ShouldBeGreaterThanOrEqualTo(minLength == -1 ? maxLength : minLength);
 		result.Length.ShouldBeLessThanOrEqualTo(maxLength);
 	}
@@ -1614,8 +1615,8 @@ public sealed class RandomTests
 	[InlineData(20, 15, "seed2")]
 	public void GenerateRepeatableRandomString_WithSeed_IsRepeatable(int maxLength, int minLength, string seed)
 	{
-		string result1 = GenerateRepeatableRandomString(maxLength, seed, minLength, cancellationToken: TestContext.Current.CancellationToken);
-		string result2 = GenerateRepeatableRandomString(maxLength, seed, minLength, cancellationToken: TestContext.Current.CancellationToken);
+		string result1 = GenerateRepeatableRandomString(maxLength, seed, minLength, cancellationToken: Current.CancellationToken);
+		string result2 = GenerateRepeatableRandomString(maxLength, seed, minLength, cancellationToken: Current.CancellationToken);
 		result1.ShouldBe(result2);
 	}
 
@@ -1625,7 +1626,7 @@ public sealed class RandomTests
 	[InlineData(10, -1, 48, 57, "seed3")]  // numbers
 	public void GenerateRepeatableRandomString_WithSeed_RespectsAsciiRange(int maxLength, int minLength, int lower, int upper, string seed)
 	{
-		string result = GenerateRepeatableRandomString(maxLength, seed, minLength, lower, upper, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRepeatableRandomString(maxLength, seed, minLength, lower, upper, cancellationToken: Current.CancellationToken);
 		result.All(c => c >= lower && c <= upper).ShouldBeTrue();
 	}
 
@@ -1633,7 +1634,7 @@ public sealed class RandomTests
 	public void GenerateRepeatableRandomString_WithSeed_RespectsBlacklist()
 	{
 		HashSet<char> blacklist = ['a', 'e', 'i', 'o', 'u'];
-		string result = GenerateRepeatableRandomString(100, "testSeed", blacklistedCharacters: blacklist, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRepeatableRandomString(100, "testSeed", blacklistedCharacters: blacklist, cancellationToken: Current.CancellationToken);
 		result.Any(blacklist.Contains).ShouldBeFalse();
 	}
 
@@ -1643,7 +1644,7 @@ public sealed class RandomTests
 	[InlineData(10, -1, "seed3")]
 	public void GenerateRepeatableRandomString_WithRnd_RespectsLengthBounds(int maxLength, int minLength, string seed)
 	{
-		string result = GenerateRepeatableRandomString(maxLength, new System.Random(seed.GetHashCode()), minLength, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRepeatableRandomString(maxLength, new System.Random(seed.GetHashCode()), minLength, cancellationToken: Current.CancellationToken);
 		result.Length.ShouldBeGreaterThanOrEqualTo(minLength == -1 ? maxLength : minLength);
 		result.Length.ShouldBeLessThanOrEqualTo(maxLength);
 	}
@@ -1653,8 +1654,8 @@ public sealed class RandomTests
 	[InlineData(20, 15)]
 	public void GenerateRepeatableRandomString_WithRnd_IsRepeatable(int maxLength, int minLength)
 	{
-		string result1 = GenerateRepeatableRandomString(maxLength, new System.Random(42), minLength, cancellationToken: TestContext.Current.CancellationToken);
-		string result2 = GenerateRepeatableRandomString(maxLength, new System.Random(42), minLength, cancellationToken: TestContext.Current.CancellationToken);
+		string result1 = GenerateRepeatableRandomString(maxLength, new System.Random(42), minLength, cancellationToken: Current.CancellationToken);
+		string result2 = GenerateRepeatableRandomString(maxLength, new System.Random(42), minLength, cancellationToken: Current.CancellationToken);
 		result1.ShouldBe(result2);
 	}
 
@@ -1664,7 +1665,7 @@ public sealed class RandomTests
 	[InlineData(10, -1, 48, 57)]  // numbers
 	public void GenerateRepeatableRandomString_WithRnd_RespectsAsciiRange(int maxLength, int minLength, int lower, int upper)
 	{
-		string result = GenerateRepeatableRandomString(maxLength, new System.Random(42), minLength, lower, upper, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRepeatableRandomString(maxLength, new System.Random(42), minLength, lower, upper, cancellationToken: Current.CancellationToken);
 		result.All(c => c >= lower && c <= upper).ShouldBeTrue();
 	}
 
@@ -1672,7 +1673,7 @@ public sealed class RandomTests
 	public void GenerateRepeatableRandomString_WithRnd_RespectsBlacklist()
 	{
 		HashSet<char> blacklist = ['a', 'e', 'i', 'o', 'u'];
-		string result = GenerateRepeatableRandomString(100, new System.Random(42), blacklistedCharacters: blacklist, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRepeatableRandomString(100, new System.Random(42), blacklistedCharacters: blacklist, cancellationToken: Current.CancellationToken);
 		result.Any(blacklist.Contains).ShouldBeFalse();
 	}
 
@@ -1747,7 +1748,7 @@ public sealed class RandomTests
 	[InlineData(10, 20, "seed2")]
 	public void GenerateRepeatableRandomStrings_WithSeed_GeneratesCorrectCount(int count, int length, string seed)
 	{
-		List<string> results = GenerateRepeatableRandomStrings(count, length, seed, cancellationToken: TestContext.Current.CancellationToken).ToList();
+		List<string> results = GenerateRepeatableRandomStrings(count, length, seed, cancellationToken: Current.CancellationToken).ToList();
 		results.Count.ShouldBe(count);
 		results.ShouldAllBe(x => x.Length == length);
 	}
@@ -1757,8 +1758,8 @@ public sealed class RandomTests
 	[InlineData(10, 20, "seed2")]
 	public void GenerateRepeatableRandomStrings_WithSeed_IsRepeatable(int count, int length, string seed)
 	{
-		List<string> results1 = GenerateRepeatableRandomStrings(count, length, seed, cancellationToken: TestContext.Current.CancellationToken).ToList();
-		List<string> results2 = GenerateRepeatableRandomStrings(count, length, seed, cancellationToken: TestContext.Current.CancellationToken).ToList();
+		List<string> results1 = GenerateRepeatableRandomStrings(count, length, seed, cancellationToken: Current.CancellationToken).ToList();
+		List<string> results2 = GenerateRepeatableRandomStrings(count, length, seed, cancellationToken: Current.CancellationToken).ToList();
 		results1.SequenceEqual(results2).ShouldBeTrue();
 	}
 
@@ -1767,7 +1768,7 @@ public sealed class RandomTests
 	[InlineData(10, 20)]
 	public void GenerateRepeatableRandomStrings_WithRnd_GeneratesCorrectCount(int count, int length)
 	{
-		List<string> results = GenerateRepeatableRandomStrings(count, length, new System.Random(42), cancellationToken: TestContext.Current.CancellationToken).ToList();
+		List<string> results = GenerateRepeatableRandomStrings(count, length, new System.Random(42), cancellationToken: Current.CancellationToken).ToList();
 		results.Count.ShouldBe(count);
 		results.ShouldAllBe(x => x.Length == length);
 	}
@@ -1777,8 +1778,8 @@ public sealed class RandomTests
 	[InlineData(10, 20)]
 	public void GenerateRepeatableRandomStrings_WithRnd_IsRepeatable(int count, int length)
 	{
-		List<string> results1 = GenerateRepeatableRandomStrings(count, length, new System.Random(42), cancellationToken: TestContext.Current.CancellationToken).ToList();
-		List<string> results2 = GenerateRepeatableRandomStrings(count, length, new System.Random(42), cancellationToken: TestContext.Current.CancellationToken).ToList();
+		List<string> results1 = GenerateRepeatableRandomStrings(count, length, new System.Random(42), cancellationToken: Current.CancellationToken).ToList();
+		List<string> results2 = GenerateRepeatableRandomStrings(count, length, new System.Random(42), cancellationToken: Current.CancellationToken).ToList();
 		results1.SequenceEqual(results2).ShouldBeTrue();
 	}
 
@@ -1792,7 +1793,7 @@ public sealed class RandomTests
 	public void GenerateRepeatableRandomStringByCharSet_WithSeed_UsesProvidedCharSet(int length, string seed)
 	{
 		HashSet<char> charSet = ['A', 'B', 'C', '1', '2', '3'];
-		string result = GenerateRepeatableRandomStringByCharSet(length, seed, charSet, TestContext.Current.CancellationToken);
+		string result = GenerateRepeatableRandomStringByCharSet(length, seed, charSet, Current.CancellationToken);
 		result.Length.ShouldBe(length);
 		result.All(charSet.Contains).ShouldBeTrue();
 	}
@@ -1803,8 +1804,8 @@ public sealed class RandomTests
 	public void GenerateRepeatableRandomStringByCharSet_WithSeed_IsRepeatable(int length, string seed)
 	{
 		HashSet<char> charSet = ['A', 'B', 'C', '1', '2', '3'];
-		string result1 = GenerateRepeatableRandomStringByCharSet(length, seed, charSet, TestContext.Current.CancellationToken);
-		string result2 = GenerateRepeatableRandomStringByCharSet(length, seed, charSet, TestContext.Current.CancellationToken);
+		string result1 = GenerateRepeatableRandomStringByCharSet(length, seed, charSet, Current.CancellationToken);
+		string result2 = GenerateRepeatableRandomStringByCharSet(length, seed, charSet, Current.CancellationToken);
 		result1.ShouldBe(result2);
 	}
 
@@ -1813,7 +1814,7 @@ public sealed class RandomTests
 	[InlineData(20, "seed2")]
 	public void GenerateRepeatableRandomStringByCharSet_WithSeed_UsesDefaultCharSetWhenNullProvided(int length, string seed)
 	{
-		string result = GenerateRepeatableRandomStringByCharSet(length, seed, cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRepeatableRandomStringByCharSet(length, seed, cancellationToken: Current.CancellationToken);
 		result.Length.ShouldBe(length);
 		result.All(DefaultCharSet.Contains).ShouldBeTrue();
 	}
@@ -1824,7 +1825,7 @@ public sealed class RandomTests
 	public void GenerateRepeatableRandomStringByCharSet_WithRnd_UsesProvidedCharSet(int length)
 	{
 		HashSet<char> charSet = ['A', 'B', 'C', '1', '2', '3'];
-		string result = GenerateRepeatableRandomStringByCharSet(length, new System.Random(42), charSet, TestContext.Current.CancellationToken);
+		string result = GenerateRepeatableRandomStringByCharSet(length, new System.Random(42), charSet, Current.CancellationToken);
 		result.Length.ShouldBe(length);
 		result.All(charSet.Contains).ShouldBeTrue();
 	}
@@ -1835,8 +1836,8 @@ public sealed class RandomTests
 	public void GenerateRepeatableRandomStringByCharSet_WithRnd_IsRepeatable(int length)
 	{
 		HashSet<char> charSet = ['A', 'B', 'C', '1', '2', '3'];
-		string result1 = GenerateRepeatableRandomStringByCharSet(length, new System.Random(42), charSet, TestContext.Current.CancellationToken);
-		string result2 = GenerateRepeatableRandomStringByCharSet(length, new System.Random(42), charSet, TestContext.Current.CancellationToken);
+		string result1 = GenerateRepeatableRandomStringByCharSet(length, new System.Random(42), charSet, Current.CancellationToken);
+		string result2 = GenerateRepeatableRandomStringByCharSet(length, new System.Random(42), charSet, Current.CancellationToken);
 		result1.ShouldBe(result2);
 	}
 
@@ -1845,7 +1846,7 @@ public sealed class RandomTests
 	[InlineData(20)]
 	public void GenerateRepeatableRandomStringByCharSet_WithRnd_UsesDefaultCharSetWhenNullProvided(int length)
 	{
-		string result = GenerateRepeatableRandomStringByCharSet(length, new System.Random(42), cancellationToken: TestContext.Current.CancellationToken);
+		string result = GenerateRepeatableRandomStringByCharSet(length, new System.Random(42), cancellationToken: Current.CancellationToken);
 		result.Length.ShouldBe(length);
 		result.All(DefaultCharSet.Contains).ShouldBeTrue();
 	}

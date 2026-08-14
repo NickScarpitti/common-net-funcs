@@ -160,7 +160,7 @@ public sealed class GenericPagingModel<T> where T : class
     public int TotalRecords { get; set; }
 }
 
-GenericPagingModel<TestEntity> result = await testContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, orderByString: nameof(TestEntity.Id), skip: 1, pageSize: 2); // Skips first match and takes 2nd and 3rd record ordered by Id
+GenericPagingModel<TestEntity> result = await testDbContext.GetWithPagingFilter(whereExpression: _ => true, selectExpression: x => x, orderByString: nameof(TestEntity.Id), skip: 1, pageSize: 2); // Skips first match and takes 2nd and 3rd record ordered by Id
 ```
 
 #### GetOneWithFilter

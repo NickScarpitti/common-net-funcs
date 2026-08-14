@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using static Xunit.TestContext;
 
 namespace Web.Api.Tests;
 
@@ -56,7 +57,7 @@ public sealed class MsgPackRequestMiddlewareTests
 		});
 		await using WebApplication _ = app;
 
-		using HttpResponseMessage response = await client.GetAsync("/", TestContext.Current.CancellationToken);
+		using HttpResponseMessage response = await client.GetAsync("/", Current.CancellationToken);
 
 		capturedContentType.ShouldNotContain(MsgPackMimeType);
 	}
@@ -77,7 +78,7 @@ public sealed class MsgPackRequestMiddlewareTests
 
 		using HttpRequestMessage request = new(HttpMethod.Post, "/");
 		request.Content = new StringContent("""{"data":"test"}""", Encoding.UTF8, JsonMimeType);
-		await client.SendAsync(request, TestContext.Current.CancellationToken);
+		await client.SendAsync(request, Current.CancellationToken);
 
 		capturedContentType.ShouldContain(JsonMimeType);
 		capturedContentType.ShouldNotContain(MsgPackMimeType);
@@ -101,7 +102,7 @@ public sealed class MsgPackRequestMiddlewareTests
 		ByteArrayContent emptyContent = new([]);
 		emptyContent.Headers.ContentType = new MediaTypeHeaderValue(MsgPackMimeType);
 		request.Content = emptyContent;
-		await client.SendAsync(request, TestContext.Current.CancellationToken);
+		await client.SendAsync(request, Current.CancellationToken);
 
 		capturedContentType.ShouldContain(MsgPackMimeType);
 	}
@@ -123,12 +124,12 @@ public sealed class MsgPackRequestMiddlewareTests
 		});
 		await using WebApplication _ = app;
 
-		byte[] msgPackBytes = MessagePackSerializer.ConvertFromJson("""{"name":"msgpack"}""", cancellationToken: TestContext.Current.CancellationToken);
+		byte[] msgPackBytes = MessagePackSerializer.ConvertFromJson("""{"name":"msgpack"}""", cancellationToken: Current.CancellationToken);
 		using HttpRequestMessage request = new(HttpMethod.Post, "/");
 		ByteArrayContent content = new(msgPackBytes);
 		content.Headers.ContentType = new MediaTypeHeaderValue(MsgPackMimeType);
 		request.Content = content;
-		await client.SendAsync(request, TestContext.Current.CancellationToken);
+		await client.SendAsync(request, Current.CancellationToken);
 
 		capturedContentType.ShouldContain(JsonMimeType);
 		capturedBody.ShouldContain("msgpack");
@@ -151,12 +152,12 @@ public sealed class MsgPackRequestMiddlewareTests
 		});
 		await using WebApplication _ = app;
 
-		byte[] msgPackBytes = MessagePackSerializer.ConvertFromJson("""{"name":"registered"}""", cancellationToken: TestContext.Current.CancellationToken);
+		byte[] msgPackBytes = MessagePackSerializer.ConvertFromJson("""{"name":"registered"}""", cancellationToken: Current.CancellationToken);
 		using HttpRequestMessage request = new(HttpMethod.Post, "/");
 		ByteArrayContent content = new(msgPackBytes);
 		content.Headers.ContentType = new MediaTypeHeaderValue(MsgPackMimeType);
 		request.Content = content;
-		await client.SendAsync(request, TestContext.Current.CancellationToken);
+		await client.SendAsync(request, Current.CancellationToken);
 
 		capturedContentType.ShouldContain(JsonMimeType);
 		capturedBody.ShouldContain("registered");
@@ -180,12 +181,12 @@ public sealed class MsgPackRequestMiddlewareTests
 
 		// Serialize with LZ4 options so the bytes on the wire are LZ4-compressed msgpack
 
-		byte[] lz4Bytes = MessagePackSerializer.Serialize(new TestPayload { Name = "lz4payload" }, lz4Options, TestContext.Current.CancellationToken);
+		byte[] lz4Bytes = MessagePackSerializer.Serialize(new TestPayload { Name = "lz4payload" }, lz4Options, Current.CancellationToken);
 		using HttpRequestMessage request = new(HttpMethod.Post, "/");
 		ByteArrayContent content = new(lz4Bytes);
 		content.Headers.ContentType = new MediaTypeHeaderValue(MsgPackMimeType);
 		request.Content = content;
-		await client.SendAsync(request, TestContext.Current.CancellationToken);
+		await client.SendAsync(request, Current.CancellationToken);
 
 		// The middleware must have used the LZ4 options to decompress and convert the body
 
@@ -207,12 +208,12 @@ public sealed class MsgPackRequestMiddlewareTests
 		}, null);
 		await using WebApplication _ = app;
 
-		byte[] standardBytes = MessagePackSerializer.Serialize(new TestPayload { Name = "StandardFallback" }, cancellationToken: TestContext.Current.CancellationToken);
+		byte[] standardBytes = MessagePackSerializer.Serialize(new TestPayload { Name = "StandardFallback" }, cancellationToken: Current.CancellationToken);
 		using HttpRequestMessage request = new(HttpMethod.Post, "/");
 		ByteArrayContent content = new(standardBytes);
 		content.Headers.ContentType = new MediaTypeHeaderValue(MsgPackMimeType);
 		request.Content = content;
-		await client.SendAsync(request, TestContext.Current.CancellationToken);
+		await client.SendAsync(request, Current.CancellationToken);
 
 		capturedBody.ShouldContain("StandardFallback");
 	}
@@ -253,7 +254,7 @@ public sealed class MsgPackOutputFilterTests
 		using HttpClient client = app.GetTestClient();
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(JsonMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+		using HttpResponseMessage response = await client.SendAsync(request, Current.CancellationToken);
 
 		response.IsSuccessStatusCode.ShouldBeTrue();
 		response.Content.Headers.ContentType?.MediaType.ShouldBe(JsonMimeType);
@@ -271,7 +272,7 @@ public sealed class MsgPackOutputFilterTests
 		using HttpClient client = app.GetTestClient();
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+		using HttpResponseMessage response = await client.SendAsync(request, Current.CancellationToken);
 
 		response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 	}
@@ -288,7 +289,7 @@ public sealed class MsgPackOutputFilterTests
 		using HttpClient client = app.GetTestClient();
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+		using HttpResponseMessage response = await client.SendAsync(request, Current.CancellationToken);
 
 		response.Content.Headers.ContentType?.MediaType.ShouldNotBe(MsgPackMimeType);
 	}
@@ -305,12 +306,12 @@ public sealed class MsgPackOutputFilterTests
 		using HttpClient client = app.GetTestClient();
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+		using HttpResponseMessage response = await client.SendAsync(request, Current.CancellationToken);
 
 		response.StatusCode.ShouldBe(HttpStatusCode.OK);
 		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
-		byte[] bytes = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
-		TestPayload? deserialized = MessagePackSerializer.Deserialize<TestPayload>(bytes, cancellationToken: TestContext.Current.CancellationToken);
+		byte[] bytes = await response.Content.ReadAsByteArrayAsync(Current.CancellationToken);
+		TestPayload? deserialized = MessagePackSerializer.Deserialize<TestPayload>(bytes, cancellationToken: Current.CancellationToken);
 		deserialized?.Name.ShouldBe("hello");
 	}
 
@@ -327,12 +328,12 @@ public sealed class MsgPackOutputFilterTests
 		using HttpClient client = app.GetTestClient();
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+		using HttpResponseMessage response = await client.SendAsync(request, Current.CancellationToken);
 
 		response.StatusCode.ShouldBe(HttpStatusCode.OK);
 		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
-		byte[] bytes = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
-		TestPayload? deserialized = MessagePackSerializer.Deserialize<TestPayload>(bytes, customOptions, TestContext.Current.CancellationToken);
+		byte[] bytes = await response.Content.ReadAsByteArrayAsync(Current.CancellationToken);
+		TestPayload? deserialized = MessagePackSerializer.Deserialize<TestPayload>(bytes, customOptions, Current.CancellationToken);
 		deserialized?.Name.ShouldBe("custom");
 	}
 
@@ -348,11 +349,11 @@ public sealed class MsgPackOutputFilterTests
 		using HttpClient client = app.GetTestClient();
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+		using HttpResponseMessage response = await client.SendAsync(request, Current.CancellationToken);
 
 		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
-		byte[] bytes = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
-		TestPayload? result = MessagePackSerializer.Deserialize<TestPayload>(bytes, cancellationToken: TestContext.Current.CancellationToken);
+		byte[] bytes = await response.Content.ReadAsByteArrayAsync(Current.CancellationToken);
+		TestPayload? result = MessagePackSerializer.Deserialize<TestPayload>(bytes, cancellationToken: Current.CancellationToken);
 		result?.Name.ShouldBe("default");
 	}
 
@@ -373,12 +374,12 @@ public sealed class MsgPackOutputFilterTests
 
 		using HttpRequestMessage r1 = new(HttpMethod.Get, "/items/one");
 		r1.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage resp1 = await client.SendAsync(r1, TestContext.Current.CancellationToken);
+		using HttpResponseMessage resp1 = await client.SendAsync(r1, Current.CancellationToken);
 		resp1.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
 
 		using HttpRequestMessage r2 = new(HttpMethod.Get, "/items/two");
 		r2.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage resp2 = await client.SendAsync(r2, TestContext.Current.CancellationToken);
+		using HttpResponseMessage resp2 = await client.SendAsync(r2, Current.CancellationToken);
 		resp2.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
 	}
 }
@@ -416,10 +417,10 @@ public sealed class DirectMsgPackResultTests
 
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+		using HttpResponseMessage response = await client.SendAsync(request, Current.CancellationToken);
 
 		response.StatusCode.ShouldBe(HttpStatusCode.OK);
-		byte[] body = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
+		byte[] body = await response.Content.ReadAsByteArrayAsync(Current.CancellationToken);
 		body.Length.ShouldBe(0);
 	}
 
@@ -434,13 +435,13 @@ public sealed class DirectMsgPackResultTests
 
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+		using HttpResponseMessage response = await client.SendAsync(request, Current.CancellationToken);
 
 		response.StatusCode.ShouldBe(HttpStatusCode.OK);
 		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
-		byte[] bytes = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
+		byte[] bytes = await response.Content.ReadAsByteArrayAsync(Current.CancellationToken);
 		bytes.Length.ShouldBeGreaterThan(0);
-		TestPayload? deserialized = MessagePackSerializer.Deserialize<TestPayload>(bytes, cancellationToken: TestContext.Current.CancellationToken);
+		TestPayload? deserialized = MessagePackSerializer.Deserialize<TestPayload>(bytes, cancellationToken: Current.CancellationToken);
 		deserialized?.Name.ShouldBe("direct");
 	}
 
@@ -455,7 +456,7 @@ public sealed class DirectMsgPackResultTests
 
 		using HttpRequestMessage request = new(HttpMethod.Get, "/");
 		request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MsgPackMimeType));
-		using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+		using HttpResponseMessage response = await client.SendAsync(request, Current.CancellationToken);
 
 		response.StatusCode.ShouldBe(HttpStatusCode.Created);
 		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);

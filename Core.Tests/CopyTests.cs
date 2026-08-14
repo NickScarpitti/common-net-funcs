@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using CommonNetFuncs.Core;
 using xRetry.v3;
+using static Xunit.TestContext;
 
 namespace Core.Tests;
 
@@ -407,7 +408,7 @@ public sealed class CopyTests
 		};
 
 		// Act
-		SourceClass result = target.MergeInstances(new[] { source1, source2 }, cancellationToken: TestContext.Current.CancellationToken);
+		SourceClass result = target.MergeInstances(new[] { source1, source2 }, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeSameAs(target); // Should return the same instance
@@ -432,7 +433,7 @@ public sealed class CopyTests
 		};
 
 		// Act
-		SourceClass result = target.MergeInstances(source, cancellationToken: TestContext.Current.CancellationToken);
+		SourceClass result = target.MergeInstances(source, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeSameAs(target); // Should return the same instance
@@ -457,7 +458,7 @@ public sealed class CopyTests
 		};
 
 		// Act
-		SourceClass result = target.MergeInstances(source, cancellationToken: TestContext.Current.CancellationToken);
+		SourceClass result = target.MergeInstances(source, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		result.ShouldBeSameAs(target); // Should return the same instance

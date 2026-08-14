@@ -357,6 +357,17 @@ numbers.AddRange([4, 5, 6]); // [1, 2, 3, 4, 5, 6]
 numbers.AddRangeParallel([4, 5, 6]); // [1, 2, 3, 4, 5, 6]
 ```
 
+Also available for `IDictionary<TKey, TValue>`, adding a collection of `KeyValuePair`s at once. Null items are skipped, and `overwriteExisting` controls whether existing keys are updated or left as-is.
+
+```cs
+Dictionary<string, int> dictionary = new() { { "test1", 42 } };
+List<KeyValuePair<string, int>?> toAdd = [new("test1", 99), new("test2", 2), null];
+
+dictionary.AddRange(toAdd, overwriteExisting: false); // { "test1": 42, "test2": 2 } - existing key not overwritten
+//Or
+dictionary.AddRange(toAdd, overwriteExisting: true); // { "test1": 99, "test2": 2 } - existing key overwritten
+```
+
 #### SetValue & SetValueParallel
 
 Set all items in a collection to a specific value, optionally in parallel.

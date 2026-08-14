@@ -167,6 +167,36 @@ public static partial class Collections
 	}
 
 	/// <summary>
+	/// Adds AddRange functionality to <see cref="IDictionary{TKey, TValue}"/> similar to a <see cref="List{T}"/>. Skips null items
+	/// </summary>
+	/// <remarks>Null items are not added to the <paramref name="dictionary"/></remarks>
+	/// <typeparam name="TKey">Type of the key of the dictionary</typeparam>
+	/// <typeparam name="TValue">Type of the value of the dictionary</typeparam>
+	/// <param name="dictionary"><see cref="IDictionary{TKey, TValue}"/> to add list of items to</param>
+	/// <param name="toAdd">Items to add to <paramref name="dictionary"/></param>
+	/// <param name="overwriteExisting">Whether to overwrite existing values by key in the dictionary.</param>
+	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+	public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IEnumerable<KeyValuePair<TKey, TValue>?> toAdd, bool overwriteExisting, CancellationToken cancellationToken = default)
+	{
+		foreach (KeyValuePair<TKey, TValue>? item in toAdd.SelectNonNull())
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			if (overwriteExisting)
+			{
+				dictionary[item!.Value.Key] = item!.Value.Value;
+			}
+			else
+			{
+				if(dictionary.ContainsKey(item!.Value.Key))
+				{
+					continue;
+				}
+				dictionary.Add(item!.Value.Key, item!.Value.Value);
+			}
+		}
+	}
+
+	/// <summary>
 	/// Set values in an <see cref="IEnumerable{T}"/> as an extension of linq.
 	/// </summary>
 	/// <typeparam name="T">Type of object having values set.</typeparam>

@@ -433,7 +433,7 @@ public sealed class CollectionsTests
 	}
 
 	[Fact]
-	public void AddRange_ToDictionary_AddsNewItems()
+	public void AddRange_FromEnumerable_KVP_ToDictionary_AddsNewItems()
 	{
 		// Arrange
 
@@ -456,7 +456,7 @@ public sealed class CollectionsTests
 	}
 
 	[Fact]
-	public void AddRange_ToDictionary_SkipsNullItems()
+	public void AddRange_FromEnumerable_KVP_ToDictionary_SkipsNullItems()
 	{
 		// Arrange
 
@@ -480,7 +480,7 @@ public sealed class CollectionsTests
 	}
 
 	[Fact]
-	public void AddRange_ToDictionary_WithExistingKeys_OverwriteExistingFalse_DoesNotOverwrite()
+	public void AddRange_FromEnumerable_KVP_ToDictionary_WithExistingKeys_OverwriteExistingFalse_DoesNotOverwrite()
 	{
 		// Arrange
 
@@ -503,7 +503,7 @@ public sealed class CollectionsTests
 	}
 
 	[Fact]
-	public void AddRange_ToDictionary_WithExistingKeys_OverwriteExistingTrue_Overwrites()
+	public void AddRange_FromEnumerable_KVP_ToDictionary_WithExistingKeys_OverwriteExistingTrue_Overwrites()
 	{
 		// Arrange
 
@@ -526,7 +526,7 @@ public sealed class CollectionsTests
 	}
 
 	[Fact]
-	public void AddRange_ToDictionary_WithEmptyEnumerable_DoesNothing()
+	public void AddRange_FromEnumerable_KVP_ToDictionary_WithEmptyEnumerable_DoesNothing()
 	{
 		// Arrange
 
@@ -544,7 +544,7 @@ public sealed class CollectionsTests
 	}
 
 	[Fact]
-	public void AddRange_ToDictionary_WithCancelledToken_ThrowsOperationCanceledException()
+	public void AddRange_FromEnumerable_KVP_ToDictionary_WithCancelledToken_ThrowsOperationCanceledException()
 	{
 		// Arrange
 
@@ -554,6 +554,136 @@ public sealed class CollectionsTests
 			new KeyValuePair<string, int>("test1", 1),
 			new KeyValuePair<string, int>("test2", 2)
 		};
+		using CancellationTokenSource cts = new();
+		cts.Cancel();
+
+		// Act & Assert
+
+		Should.Throw<OperationCanceledException>(() => dictionary.AddRange(items, false, cts.Token));
+	}
+
+	[Fact]
+	public void AddRange_FromDictionary_ToDictionary_AddsNewItems()
+	{
+		// Arrange
+
+		Dictionary<string, int> dictionary = new();
+		Dictionary<string, int> items = new()
+		{
+			{ "test1", 1 },
+			{ "test2", 2 }
+		};
+
+		// Act
+
+		dictionary.AddRange(items, false, Current.CancellationToken);
+
+		// Assert
+
+		dictionary.Count.ShouldBe(2);
+		dictionary["test1"].ShouldBe(1);
+		dictionary["test2"].ShouldBe(2);
+	}
+
+	[Fact]
+	public void AddRange_FromDictionary_ToDictionary_SkipsNullItems()
+	{
+		// Arrange
+
+		Dictionary<string, int> dictionary = new();
+		Dictionary<string, int>? items = new()
+		{
+			{ "test1", 1 },
+			{ "test2", 2 }
+		};
+
+		// Act
+
+		dictionary.AddRange(items, false, Current.CancellationToken);
+
+		// Assert
+
+		dictionary.Count.ShouldBe(2);
+		dictionary["test1"].ShouldBe(1);
+		dictionary["test2"].ShouldBe(2);
+	}
+
+	[Fact]
+	public void AddRange_FromDictionary_ToDictionary_WithExistingKeys_OverwriteExistingFalse_DoesNotOverwrite()
+	{
+		// Arrange
+
+		Dictionary<string, int> dictionary = new() { { "test1", 42 } };
+		Dictionary<string, int>? items = new()
+		{
+			{ "test1", 99 },
+			{ "test2", 2 }
+		};
+
+		// Act
+
+		dictionary.AddRange(items, false, Current.CancellationToken);
+
+		// Assert
+
+		dictionary.Count.ShouldBe(2);
+		dictionary["test1"].ShouldBe(42);
+		dictionary["test2"].ShouldBe(2);
+	}
+
+	[Fact]
+	public void AddRange_FromDictionary_ToDictionary_WithExistingKeys_OverwriteExistingTrue_Overwrites()
+	{
+		// Arrange
+
+		Dictionary<string, int> dictionary = new() { { "test1", 42 } };
+		Dictionary<string, int> items = new()
+		{
+			{ "test1", 99 },
+			{ "test2", 2 }
+		};
+
+		// Act
+
+		dictionary.AddRange(items, true, Current.CancellationToken);
+
+		// Assert
+
+		dictionary.Count.ShouldBe(2);
+		dictionary["test1"].ShouldBe(99);
+		dictionary["test2"].ShouldBe(2);
+	}
+
+	[Fact]
+	public void AddRange_FromDictionary_ToDictionary_WithEmptyEnumerable_DoesNothing()
+	{
+		// Arrange
+
+		Dictionary<string, int> dictionary = new() { { "test1", 1 } };
+		Dictionary<string, int>? items = new();
+
+		// Act
+
+		dictionary.AddRange(items, false, Current.CancellationToken);
+
+		// Assert
+
+		dictionary.Count.ShouldBe(1);
+		dictionary["test1"].ShouldBe(1);
+	}
+
+	[Fact]
+	public void AddRange_FromDictionary_ToDictionary_WithCancelledToken_ThrowsOperationCanceledException()
+	{
+		// Arrange
+
+		Dictionary<string, int> dictionary = new();
+		Dictionary<string, int>? items = new()
+		{
+			{ "test1", 1 },
+			{ "test2", 2 }
+		};
+
 		using CancellationTokenSource cts = new();
 		cts.Cancel();
 

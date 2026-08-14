@@ -176,9 +176,9 @@ public static partial class Collections
 	/// <param name="toAdd">Items to add to <paramref name="dictionary"/></param>
 	/// <param name="overwriteExisting">Whether to overwrite existing values by key in the dictionary.</param>
 	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
-	public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IEnumerable<KeyValuePair<TKey, TValue>?> toAdd, bool overwriteExisting, CancellationToken cancellationToken = default)
+	public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue?> dictionary, IEnumerable<KeyValuePair<TKey, TValue?>?> toAdd, bool overwriteExisting, CancellationToken cancellationToken = default) where TKey : notnull
 	{
-		foreach (KeyValuePair<TKey, TValue>? item in toAdd.SelectNonNull())
+		foreach (KeyValuePair<TKey, TValue?>? item in toAdd.SelectNonNull())
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 			if (overwriteExisting)
@@ -192,6 +192,41 @@ public static partial class Collections
 					continue;
 				}
 				dictionary.Add(item!.Value.Key, item!.Value.Value);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Adds AddRange functionality to <see cref="IDictionary{TKey, TValue}"/> similar to a <see cref="List{T}"/>. Skips null items
+	/// </summary>
+	/// <remarks>Null items are not added to the <paramref name="dictionary"/></remarks>
+	/// <typeparam name="TKey">Type of the key of the dictionary</typeparam>
+	/// <typeparam name="TValue">Type of the value of the dictionary</typeparam>
+	/// <param name="dictionary"><see cref="IDictionary{TKey, TValue}"/> to add list of items to</param>
+	/// <param name="toAdd">Items to add to <paramref name="dictionary"/></param>
+	/// <param name="overwriteExisting">Whether to overwrite existing values by key in the dictionary.</param>
+	/// <param name="cancellationToken">Optional: The cancellation token for this operation.</param>
+	public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue?> dictionary, IDictionary<TKey, TValue?>? toAdd, bool overwriteExisting, CancellationToken cancellationToken = default) where TKey : notnull
+	{
+		if (toAdd == null)
+		{
+			return;
+		}
+
+		foreach (KeyValuePair<TKey, TValue?> item in toAdd.SelectNonNull())
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			if (overwriteExisting)
+			{
+				dictionary[item.Key] = item.Value;
+			}
+			else
+			{
+				if(dictionary.ContainsKey(item.Key))
+				{
+					continue;
+				}
+				dictionary.Add(item.Key, item.Value);
 			}
 		}
 	}

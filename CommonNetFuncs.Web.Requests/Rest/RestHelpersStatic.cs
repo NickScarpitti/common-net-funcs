@@ -398,7 +398,7 @@ public static class RestHelpersStatic
 	/// <param name="contentEncoding">Content encoding of the response.</param>
 	/// <param name="useNewtonsoftDeserializer">Whether to use Newtonsoft.Json for deserialization.</param>
 	/// <param name="jsonSerializerOptions">JSON serializer options.</param>
-	/// <param name="MessagePackSerializerOptions">MessagePack serializer options.</param>
+	/// <param name="messagePackSerializerOptions">MessagePack serializer options.</param>
 	/// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
 	/// <returns>Deserialized response content.</returns>
 	public static async Task<TResponse?> ReadResponseStream<TResponse>(this Stream responseStream, string? contentType, string? contentEncoding, bool useNewtonsoftDeserializer,
@@ -549,20 +549,20 @@ public static class RestHelpersStatic
 	public static async IAsyncEnumerable<TResponse?> ReadResponseStreamAsync<TResponse>(this Stream responseStream, string? contentType, string? contentEncoding, JsonSerializerOptions? jsonSerializerOptions,
 		MessagePackSerializerOptions? messagePackSerializerOptions = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
-		if (contentType.StrEq(MsgPack)) //Message Pack uses native compression, but content may still be compressed if the server chose to do so anyway
+		Stream streamToRead = responseStream;
+		try
 		{
-			Stream streamToRead = responseStream;
-			try
+			if (contentEncoding.StrEq(GZip))
 			{
-				if (contentEncoding.StrEq(GZip))
-				{
-					streamToRead = responseStream.Decompress(ECompressionType.Gzip);
-				}
-				else if (contentEncoding.StrEq(Brotli))
-				{
-					streamToRead = responseStream.Decompress(ECompressionType.Brotli);
-				}
+				streamToRead = responseStream.Decompress(ECompressionType.Gzip);
+			}
+			else if (contentEncoding.StrEq(Brotli))
+			{
+				streamToRead = responseStream.Decompress(ECompressionType.Brotli);
+			}
 
+			if (contentType.StrEq(MsgPack)) //Message Pack uses native compression, but content may still be compressed if the server chose to do so anyway
+			{
 				//MessagePackStreamReader reads one top-level msgpack structure at a time off of a stream containing a concatenated sequence of them
 				using MessagePackStreamReader messagePackStreamReader = new(streamToRead, leaveOpen: true);
 				while (await messagePackStreamReader.ReadAsync(cancellationToken).ConfigureAwait(false) is ReadOnlySequence<byte> msgPackData)
@@ -574,25 +574,8 @@ public static class RestHelpersStatic
 					}
 				}
 			}
-			finally
+			else if (contentType.StrEq(MemPack)) // ***Will fail if trying to deserialize null value, ensure NoContent is sent back for nulls***
 			{
-				await streamToRead.DisposeAsync().ConfigureAwait(false);
-			}
-		}
-		else if (contentType.StrEq(MemPack)) // ***Will fail if trying to deserialize null value, ensure NoContent is sent back for nulls***
-		{
-			Stream streamToRead = responseStream;
-			try
-			{
-				if (contentEncoding.StrEq(GZip))
-				{
-					streamToRead = responseStream.Decompress(ECompressionType.Gzip);
-				}
-				else if (contentEncoding.StrEq(Brotli))
-				{
-					streamToRead = responseStream.Decompress(ECompressionType.Brotli);
-				}
-
 				await foreach (TResponse? item in MemoryPackStreamingSerializer.DeserializeAsync<TResponse>(streamToRead, cancellationToken: cancellationToken).ConfigureAwait(false))
 				{
 					if (item != null)
@@ -601,25 +584,8 @@ public static class RestHelpersStatic
 					}
 				}
 			}
-			finally
+			else if (contentType.ContainsInvariant("json"))
 			{
-				await streamToRead.DisposeAsync().ConfigureAwait(false);
-			}
-		}
-		else if (contentType.ContainsInvariant("json"))
-		{
-			Stream streamToRead = responseStream;
-			try
-			{
-				if (contentEncoding.StrEq(GZip))
-				{
-					streamToRead = responseStream.Decompress(ECompressionType.Gzip);
-				}
-				else if (contentEncoding.StrEq(Brotli))
-				{
-					streamToRead = responseStream.Decompress(ECompressionType.Brotli);
-				}
-
 				await foreach (TResponse? item in System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<TResponse?>(streamToRead, jsonSerializerOptions ?? defaultJsonSerializerOptions, cancellationToken).ConfigureAwait(false))
 				{
 					if (item != null)
@@ -628,14 +594,14 @@ public static class RestHelpersStatic
 					}
 				}
 			}
-			finally
+			else
 			{
-				await streamToRead.DisposeAsync().ConfigureAwait(false);
+				throw new NotImplementedException($"Content type {contentType.UrlEncodeReadable(cancellationToken: cancellationToken)} is not available");
 			}
 		}
-		else
+		finally
 		{
-			throw new NotImplementedException($"Content type {contentType.UrlEncodeReadable(cancellationToken: cancellationToken)} is not available");
+			await streamToRead.DisposeAsync().ConfigureAwait(false);
 		}
 	}
 

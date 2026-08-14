@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using CommonNetFuncs.Web.Requests.MessagePack;
 using MessagePack;
 using Microsoft.AspNetCore.Http;
@@ -35,7 +36,7 @@ public sealed class MessagePackStreamingTests
 			new TestModel { Id = 2, Name = "Test2" }
 		];
 		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable());
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 
 		// Act
 		await result.ExecuteResultAsync(actionContext);
@@ -73,14 +74,13 @@ public sealed class MessagePackStreamingTests
 		// Arrange
 		List<TestModel> emptyData = [];
 		MessagePackStreamingResult<TestModel> result = new(emptyData.ToAsyncEnumerable());
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 
 		// Act
 		await result.ExecuteResultAsync(actionContext);
 
 		// Assert
 		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status204NoContent);
-		actionContext.HttpContext.Response.ContentType.ShouldBe("application/x-msgpack");
 	}
 
 	[Fact]
@@ -89,7 +89,7 @@ public sealed class MessagePackStreamingTests
 		// Arrange
 		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test" }];
 		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable(), successStatusCode: StatusCodes.Status202Accepted);
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 
 		// Act
 		await result.ExecuteResultAsync(actionContext);
@@ -104,7 +104,7 @@ public sealed class MessagePackStreamingTests
 		// Arrange
 		List<TestModel> emptyData = [];
 		MessagePackStreamingResult<TestModel> result = new(emptyData.ToAsyncEnumerable(), emptyStatusCode: StatusCodes.Status404NotFound);
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 
 		// Act
 		await result.ExecuteResultAsync(actionContext);
@@ -120,7 +120,7 @@ public sealed class MessagePackStreamingTests
 		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test" }];
 		MessagePackSerializerOptions options = MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
 		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable(), options);
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 
 		// Act
 		await result.ExecuteResultAsync(actionContext);
@@ -161,7 +161,7 @@ public sealed class MessagePackStreamingTests
 		}
 
 		MessagePackStreamingResult<TestModel> result = new(GetDataWithError());
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 
 		// Act & Assert
 		await Should.ThrowAsync<InvalidOperationException>(async () => await result.ExecuteResultAsync(actionContext));
@@ -191,7 +191,7 @@ public sealed class MessagePackStreamingTests
 		}
 
 		MessagePackStreamingResult<TestModel> result = new(GetDataSlowly());
-		ActionContext actionContext = CreateActionContext(cts.Token);
+		ActionContext actionContext = CreateActionContext(cts.Token, "application/x-msgpack");
 
 		// Act - cancellation should be handled internally, not thrown
 		await result.ExecuteResultAsync(actionContext);
@@ -220,7 +220,7 @@ public sealed class MessagePackStreamingTests
 		}
 
 		MessagePackStreamingResult<TestModel> result = new(GetDataObservingCancellation(Current.CancellationToken));
-		ActionContext actionContext = CreateActionContext(cts.Token);
+		ActionContext actionContext = CreateActionContext(cts.Token, "application/x-msgpack");
 
 		Task executeTask = result.ExecuteResultAsync(actionContext);
 		await Task.Delay(50, Current.CancellationToken);
@@ -246,7 +246,7 @@ public sealed class MessagePackStreamingTests
 			new TestModel { Id = 2, Name = "Test2" }
 		];
 		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable());
-		ActionContext actionContext = CreateActionContext(new CancellationToken(canceled: true));
+		ActionContext actionContext = CreateActionContext(new CancellationToken(canceled: true), "application/x-msgpack");
 
 		// Act
 		await result.ExecuteResultAsync(actionContext);
@@ -267,7 +267,7 @@ public sealed class MessagePackStreamingTests
 		}
 
 		MessagePackStreamingResult<TestModel> result = new(GetDataWithUnrelatedCancellation());
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 
 		// Act & Assert - since actionContext's RequestAborted token was never cancelled, this should not be treated as a client disconnect
 		await Should.ThrowAsync<OperationCanceledException>(async () => await result.ExecuteResultAsync(actionContext));
@@ -352,7 +352,7 @@ public sealed class MessagePackStreamingTests
 
 		// Act - Using static helper as you would in a Minimal API
 		MessagePackStreamingResult<TestModel> result = MessagePackStreaming.Stream(testData.ToAsyncEnumerable());
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 		await result.ExecuteResultAsync(actionContext);
 
 		// Assert
@@ -389,7 +389,7 @@ public sealed class MessagePackStreamingTests
 
 		// Act - Using static helper as you would in a Minimal API
 		MessagePackStreamingResult<TestModel> result = MessagePackStreaming.Stream(emptyData.ToAsyncEnumerable());
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 		await result.ExecuteResultAsync(actionContext);
 
 		// Assert
@@ -405,7 +405,7 @@ public sealed class MessagePackStreamingTests
 
 		// Act - Using static helper with compression as you would in a Minimal API
 		MessagePackStreamingResult<TestModel> result = MessagePackStreaming.Stream(testData.ToAsyncEnumerable(), options);
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 		await result.ExecuteResultAsync(actionContext);
 
 		// Assert
@@ -423,7 +423,7 @@ public sealed class MessagePackStreamingTests
 		// Act - Using static helper with custom status codes
 		MessagePackStreamingResult<TestModel> result = MessagePackStreaming.Stream(testData.ToAsyncEnumerable(), successStatusCode: StatusCodes.Status202Accepted, emptyStatusCode: StatusCodes.Status404NotFound);
 
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 		await result.ExecuteResultAsync(actionContext);
 
 		// Assert
@@ -445,7 +445,7 @@ public sealed class MessagePackStreamingTests
 
 		// Act - Using static helper for large dataset streaming
 		MessagePackStreamingResult<TestModel> result = MessagePackStreaming.Stream(GetLargeDataset());
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 		await result.ExecuteResultAsync(actionContext);
 
 		// Assert
@@ -506,7 +506,7 @@ public sealed class MessagePackStreamingTests
 			result = MessagePackStreaming.Stream(testData.ToAsyncEnumerable());
 		}
 
-		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken, "application/x-msgpack");
 
 		// Act
 		await result.ExecuteResultAsync(actionContext);
@@ -537,13 +537,277 @@ public sealed class MessagePackStreamingTests
 
 	#endregion
 
+	#region Content Negotiation Tests
+
+	[Fact]
+	public async Task MessagePackStreamingResult_WithJsonAcceptHeader_ReturnsNDJSON()
+	{
+		// Arrange
+		List<TestModel> testData =
+		[
+			new TestModel { Id = 1, Name = "Test1" },
+			new TestModel { Id = 2, Name = "Test2" }
+		];
+		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable());
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		actionContext.HttpContext.Request.Headers.Accept = "application/json";
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
+		actionContext.HttpContext.Response.ContentType.ShouldBe("application/x-ndjson");
+
+		// Verify the stream contains NDJSON data
+		MemoryStream ms = (MemoryStream)actionContext.HttpContext.Response.Body;
+		ms.Position = 0;
+		StreamReader reader = new(ms);
+		string content = await reader.ReadToEndAsync(Current.CancellationToken);
+
+		string[] lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+		lines.Length.ShouldBe(2);
+
+		TestModel? item1 = JsonSerializer.Deserialize<TestModel>(lines[0]);
+		item1.ShouldNotBeNull();
+		item1.Id.ShouldBe(1);
+		item1.Name.ShouldBe("Test1");
+
+		TestModel? item2 = JsonSerializer.Deserialize<TestModel>(lines[1]);
+		item2.ShouldNotBeNull();
+		item2.Id.ShouldBe(2);
+		item2.Name.ShouldBe("Test2");
+	}
+
+	[Fact]
+	public async Task MessagePackStreamingResult_WithNoAcceptHeader_DefaultsToJSON()
+	{
+		// Arrange
+		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test1" }];
+		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable());
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		// No Accept header set
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
+		actionContext.HttpContext.Response.ContentType.ShouldBe("application/x-ndjson");
+	}
+
+	[Fact]
+	public async Task MessagePackStreamingResult_WithWildcardAccept_DefaultsToJSON()
+	{
+		// Arrange
+		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test1" }];
+		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable());
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		actionContext.HttpContext.Request.Headers.Accept = "*/*";
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
+		actionContext.HttpContext.Response.ContentType.ShouldBe("application/x-ndjson");
+	}
+
+	[Fact]
+	public async Task MessagePackStreamingResult_WithMessagePackAcceptHeader_ReturnsMessagePack()
+	{
+		// Arrange
+		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test1" }];
+		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable());
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		actionContext.HttpContext.Request.Headers.Accept = "application/x-msgpack";
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
+		actionContext.HttpContext.Response.ContentType.ShouldBe("application/x-msgpack");
+	}
+
+	[Fact]
+	public async Task MessagePackStreamingResult_WithUnsupportedAcceptHeader_ReturnsBadRequest()
+	{
+		// Arrange
+		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test1" }];
+		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable());
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		actionContext.HttpContext.Request.Headers.Accept = "application/xml";
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
+		actionContext.HttpContext.Response.ContentType.ShouldBe("text/plain");
+
+		// Verify error message
+		MemoryStream ms = (MemoryStream)actionContext.HttpContext.Response.Body;
+		ms.Position = 0;
+		StreamReader reader = new(ms);
+		string content = await reader.ReadToEndAsync(Current.CancellationToken);
+		content.ShouldContain("Unsupported Accept header");
+		content.ShouldContain("application/xml");
+	}
+
+	[Fact]
+	public async Task MessagePackStreamingResult_WithCustomJsonOptions_UsesProvidedOptions()
+	{
+		// Arrange
+		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test1" }];
+		JsonSerializerOptions jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable(), jsonOptions: jsonOptions);
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		actionContext.HttpContext.Request.Headers["Accept"] = "application/json";
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		MemoryStream ms = (MemoryStream)actionContext.HttpContext.Response.Body;
+		ms.Position = 0;
+		StreamReader reader = new(ms);
+		string content = await reader.ReadToEndAsync(Current.CancellationToken);
+
+		// Camel case formatting should be applied
+		content.ShouldContain("\"id\":");
+		content.ShouldContain("\"name\":");
+	}
+
+	[Fact]
+	public async Task MessagePackStreamingResult_EmptyDataWithJsonAccept_ReturnsNoContent()
+	{
+		// Arrange
+		List<TestModel> emptyData = [];
+		MessagePackStreamingResult<TestModel> result = new(emptyData.ToAsyncEnumerable());
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		actionContext.HttpContext.Request.Headers["Accept"] = "application/json";
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status204NoContent);
+	}
+
+	[Fact]
+	public async Task StreamMessagePack_Extension_WithJsonAccept_ReturnsNDJSON()
+	{
+		// Arrange
+		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test1" }];
+		FakeController controller = new();
+		IActionResult result = controller.StreamMessagePack(testData.ToAsyncEnumerable());
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		actionContext.HttpContext.Request.Headers["Accept"] = "application/json";
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
+		actionContext.HttpContext.Response.ContentType.ShouldBe("application/x-ndjson");
+	}
+
+	[Fact]
+	public async Task MessagePackStreaming_Static_WithJsonAccept_ReturnsNDJSON()
+	{
+		// Arrange
+		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test1" }];
+		IActionResult result = MessagePackStreaming.Stream(testData.ToAsyncEnumerable());
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		actionContext.HttpContext.Request.Headers["Accept"] = "application/json";
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
+		actionContext.HttpContext.Response.ContentType.ShouldBe("application/x-ndjson");
+	}
+
+	[Theory]
+	[InlineData("application/json")]
+	[InlineData("application/x-ndjson")]
+	[InlineData("*/*")]
+	[InlineData("application/*")]
+	[InlineData("")]
+	public async Task MessagePackStreamingResult_VariousJsonAcceptHeaders_ReturnsJSON(string acceptHeader)
+	{
+		// Arrange
+		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test1" }];
+		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable());
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		if (!string.IsNullOrEmpty(acceptHeader))
+		{
+			actionContext.HttpContext.Request.Headers["Accept"] = acceptHeader;
+		}
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
+		actionContext.HttpContext.Response.ContentType.ShouldBe("application/x-ndjson");
+	}
+
+	[Theory]
+	[InlineData("application/x-msgpack")]
+	[InlineData("application/msgpack")]
+	public async Task MessagePackStreamingResult_MessagePackAcceptHeaders_ReturnsMessagePack(string acceptHeader)
+	{
+		// Arrange
+		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test1" }];
+		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable());
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		actionContext.HttpContext.Request.Headers["Accept"] = acceptHeader;
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
+		actionContext.HttpContext.Response.ContentType.ShouldBe("application/x-msgpack");
+	}
+
+	[Theory]
+	[InlineData("application/xml")]
+	[InlineData("text/html")]
+	[InlineData("text/plain")]
+	[InlineData("application/protobuf")]
+	public async Task MessagePackStreamingResult_UnsupportedAcceptHeaders_ReturnsBadRequest(string acceptHeader)
+	{
+		// Arrange
+		List<TestModel> testData = [new TestModel { Id = 1, Name = "Test1" }];
+		MessagePackStreamingResult<TestModel> result = new(testData.ToAsyncEnumerable());
+		ActionContext actionContext = CreateActionContext(Current.CancellationToken);
+		actionContext.HttpContext.Request.Headers.Accept = acceptHeader;
+
+		// Act
+		await result.ExecuteResultAsync(actionContext);
+
+		// Assert
+		actionContext.HttpContext.Response.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
+	}
+
+	#endregion
+
 	#region Helper Methods
 
-	private static ActionContext CreateActionContext(CancellationToken cancellationToken = default)
+	private static ActionContext CreateActionContext(CancellationToken cancellationToken = default, string acceptHeader = "")
 	{
 		DefaultHttpContext httpContext = new();
 		httpContext.Response.Body = new MemoryStream();
 		httpContext.RequestAborted = cancellationToken;
+
+		if (!string.IsNullOrEmpty(acceptHeader))
+		{
+			httpContext.Request.Headers.Accept = acceptHeader;
+		}
 
 		return new ActionContext
 		{

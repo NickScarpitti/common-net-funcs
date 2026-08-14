@@ -184,9 +184,16 @@ internal static class WrapperHelpers
 	internal static void UpdateStreamingHeaders(RestHelperOptions options)
 	{
 		options.HttpHeaders ??= new Dictionary<string, string>();
-		// Leave the accept header to PopulateHeaders when a MessagePack/MemoryPack format is requested via CompressionOptions
-		bool usesExplicitFormat = options.CompressionOptions?.UseMemPack == true || options.CompressionOptions?.UseMsgPack == true;
-		if (!usesExplicitFormat && !options.HttpHeaders.ContainsKey(AcceptHeader))
+
+		// Convert to mutable dictionary if read-only
+		if (options.HttpHeaders.IsReadOnly)
+		{
+			options.HttpHeaders = new Dictionary<string, string>(options.HttpHeaders);
+		}
+
+		// Leave the accept header to PopulateHeaders when a MessagePack or MemoryPack format is requested via CompressionOptions
+		bool usesExplicitSerializationFormat = (options.CompressionOptions?.UseMsgPack == true) || (options.CompressionOptions?.UseMemPack == true);
+		if (!usesExplicitSerializationFormat && !options.HttpHeaders.ContainsKey(AcceptHeader))
 		{
 			options.HttpHeaders[AcceptHeader] = Json;
 		}

@@ -127,7 +127,7 @@ public sealed class RestHelpersWrapper
 	public async IAsyncEnumerable<TResponse?> GetStreaming<TResponse>(RestHelperOptions options, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
 		FillDefaultOptions(options);
-		UpdateStreamingHeaders(options); // Ensure application/json is used for streaming
+		UpdateStreamingHeaders(options); // Ensure application/json or application/x-msgpack is used for streaming
 
 		StreamingRestObject<TResponse>? result = null;
 		int attempts = 0;
@@ -281,7 +281,7 @@ public sealed class RestHelpersWrapper
 	public async IAsyncEnumerable<TBody?> PostRequestStreaming<TBody>(RestHelperOptions options, TBody postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
 		FillDefaultOptions(options);
-		UpdateStreamingHeaders(options); // Ensure application/json is used for streaming
+		UpdateStreamingHeaders(options); // Ensure application/json or application/x-msgpack is used for streaming
 
 		StreamingRestObject<TBody>? result = null;
 		int attempts = 0;
@@ -432,7 +432,7 @@ public sealed class RestHelpersWrapper
 	public async IAsyncEnumerable<TResponse?> GenericPostRequestStreaming<TResponse, TBody>(RestHelperOptions options, TBody postObject, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 	{
 		FillDefaultOptions(options);
-		UpdateStreamingHeaders(options); // Ensure application/json is used for streaming
+		UpdateStreamingHeaders(options); // Ensure application/json or application/x-msgpack is used for streaming
 
 		StreamingRestObject<TResponse>? result = null;
 		int attempts = 0;
@@ -497,6 +497,7 @@ public sealed class RestHelpersWrapper
 		}
 		else
 		{
+			logger.Warn("POST (Generic Streaming) {Url} failed with response: [{StatusCode}]:{Response}", options.Url, result?.Response?.StatusCode, result?.Response?.ReasonPhrase);
 			yield break;
 		}
 	}

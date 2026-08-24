@@ -8,7 +8,7 @@
     <PackageVersion Include="AutoFixture.Xunit3" Version="4.19.0" />
     <PackageVersion Include="AWSSDK.S3" Version="4.0.102" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageVersion Include="CliWrap" Version="3.10.4" />
+    <PackageVersion Include="CliWrap" Version="3.10.5" />
     <PackageVersion Include="ClosedXML" Version="0.105.1" />
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
@@ -19,15 +19,15 @@
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.24" />
     <PackageVersion Include="Hangfire.Core" Version="1.8.24" />
     <PackageVersion Include="MailKit" Version="4.17.0" />
-    <PackageVersion Include="Mapster" Version="10.0.11" />
+    <PackageVersion Include="Mapster" Version="10.0.12" />
     <PackageVersion Include="MemoryPack.Streaming" Version="1.21.4" />
     <PackageVersion Include="Microsoft.AspNetCore.JsonPatch" Version="10.0.11" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.11" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
     <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.11" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.6.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.2" />
     <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="10.0.11" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
@@ -47,8 +47,8 @@
     <PackageVersion Include="MinVer" Version="7.0.0" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageVersion Include="NLog" Version="6.1.4" />
-    <PackageVersion Include="NLog.Extensions.Logging" Version="6.1.4" />
+    <PackageVersion Include="NLog" Version="6.2.0" />
+    <PackageVersion Include="NLog.Extensions.Logging" Version="6.2.0" />
     <PackageVersion Include="Npgsql" Version="10.0.3" />
     <PackageVersion Include="NPOI" Version="2.8.0" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
@@ -56,7 +56,7 @@
     <PackageVersion Include="Portable.System.DateTimeOnly" Version="9.0.2" />
     <PackageVersion Include="Reinforced.Typings" Version="1.6.7" />
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.20" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.17.1" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="SkiaSharp" Version="4.151.1" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.151.1" />
@@ -73,9 +73,9 @@
     <PackageVersion Include="System.Text.Json" Version="10.0.11" />
     <PackageVersion Include="Xabe.FFmpeg" Version="6.0.2" />
     <PackageVersion Include="xRetry.v3" Version="1.0.0-rc3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageVersion Include="xunit.v3" Version="3.2.2" />
-    <PackageVersion Include="Z.EntityFramework.Extensions.EFCore" Version="10.105.7" />
-    <PackageVersion Include="Z.EntityFramework.Plus.EFCore" Version="10.105.7" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
+    <PackageVersion Include="Z.EntityFramework.Extensions.EFCore" Version="10.105.8" />
+    <PackageVersion Include="Z.EntityFramework.Plus.EFCore" Version="10.105.8" />
   </ItemGroup>
 </Project>

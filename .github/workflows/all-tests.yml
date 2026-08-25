@@ -161,6 +161,10 @@ jobs:
       credentials:
         username: zeshue
         password: ${{ secrets.docker_hub_password }}
+    env:
+      # The container's /etc/localtime is broken, which crashes coveralls-action's Crystal binary with
+      # "Time::Location::InvalidLocationNameError: Invalid location name: /UTC" - force a valid TZ instead.
+      TZ: Etc/UTC
 
     strategy:
       fail-fast: false
@@ -168,6 +172,10 @@ jobs:
         test-suite: ${{ fromJson(needs.discover-tests.outputs.matrix) }}
 
     steps:
+      - name: Install git
+        run: apt-get update && apt-get install -y git
+        shell: sh
+
       - uses: actions/checkout@v4
 
       - name: Get Curl
@@ -258,6 +266,8 @@ jobs:
     needs: [discover-tests, test]
     if: ${{ always() }}
     runs-on: ubuntu-latest
+    env:
+      TZ: Etc/UTC
     steps:
       - name: Coveralls Finished
         uses: coverallsapp/github-action@v2.3.6

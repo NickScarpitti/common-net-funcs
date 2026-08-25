@@ -8,18 +8,12 @@
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<CoverletExclude>[*.Tests]*;[*]System.Text.RegularExpressions.Generated.*</CoverletExclude>
+		<CoverletExcludeByFile>**/*.g.cs;**/obj/**;**/bin/**</CoverletExcludeByFile>
+	</PropertyGroup>
 	<ItemGroup>
-		<CoverletExclude Include="[*.Tests]*" />
-		<CoverletExclude Include="[*]System.Text.RegularExpressions.Generated.*" />
-		<CoverletExcludeByFile Include="**/*.g.cs" />
-		<CoverletExcludeByFile Include="**/obj/**" />
-		<CoverletExcludeByFile Include="**/bin/**" />
-	</ItemGroup>
-	<ItemGroup>
-		<PackageReference Include="coverlet.collector">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="coverlet.MTP" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
 			<PrivateAssets>all</PrivateAssets>

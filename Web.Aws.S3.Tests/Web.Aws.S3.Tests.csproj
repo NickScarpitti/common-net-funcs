@@ -13,23 +13,17 @@
 		<DefineConstants>$(DefineConstants);CORE_NATIVE_BUILD</DefineConstants>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<CoverletExclude Include="[*.Tests]*" />
-		<CoverletExclude Include="[*]System.Text.RegularExpressions.Generated.*" />
-		<CoverletExcludeByFile Include="**/*.g.cs" />
-		<CoverletExcludeByFile Include="**/obj/**" />
-		<CoverletExcludeByFile Include="**/bin/**" />
-	</ItemGroup>
+	<PropertyGroup>
+		<CoverletExclude>[*.Tests]*;[*]System.Text.RegularExpressions.Generated.*</CoverletExclude>
+		<CoverletExcludeByFile>**/*.g.cs;**/obj/**;**/bin/**</CoverletExcludeByFile>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AutoFixture" />
 		<PackageReference Include="AutoFixture.AutoFakeItEasy" />
 		<PackageReference Include="FakeItEasy" />
 		<PackageReference Include="AWSSDK.S3" />
-		<PackageReference Include="coverlet.collector">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="coverlet.MTP" />
 		<!-- <PackageReference Include="Microsoft.Extensions.Logging" /> -->
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="NLog" />

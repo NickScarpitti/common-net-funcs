@@ -62,7 +62,7 @@
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.151.1" />
     <PackageVersion Include="SkiaSharp.Svg" Version="1.60.0" />
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
-    <PackageVersion Include="Svg.Skia" Version="5.2.1" />
+    <PackageVersion Include="Svg.Skia" Version="5.2.2" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     <PackageVersion Include="SSH.NET" Version="2026.0.0" />
     <PackageVersion Include="System.Data.Odbc" Version="10.0.11" />
@@ -72,7 +72,7 @@
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.11" />
     <PackageVersion Include="System.Text.Json" Version="10.0.11" />
     <PackageVersion Include="Xabe.FFmpeg" Version="6.0.2" />
-    <PackageVersion Include="xRetry.v3" Version="1.0.0-rc3" />
+    <PackageVersion Include="xRetry.v3" Version="1.0.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.0" />
     <PackageVersion Include="Z.EntityFramework.Extensions.EFCore" Version="10.105.8" />

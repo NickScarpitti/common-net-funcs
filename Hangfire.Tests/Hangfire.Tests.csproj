@@ -8,21 +8,15 @@
 		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<CoverletExclude Include="[*.Tests]*" />
-		<CoverletExclude Include="[*]System.Text.RegularExpressions.Generated.*" />
-		<CoverletExcludeByFile Include="**/*.g.cs" />
-		<CoverletExcludeByFile Include="**/obj/**" />
-		<CoverletExcludeByFile Include="**/bin/**" />
-	</ItemGroup>
+	<PropertyGroup>
+		<CoverletExclude>[*.Tests]*;[*]System.Text.RegularExpressions.Generated.*</CoverletExclude>
+		<CoverletExcludeByFile>**/*.g.cs;**/obj/**;**/bin/**</CoverletExcludeByFile>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AutoFixture" />
 		<PackageReference Include="FakeItEasy" />
-		<PackageReference Include="coverlet.collector">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="coverlet.MTP" />
 		<PackageReference Include="Hangfire.AspNetCore" />
 		<PackageReference Include="Hangfire.Core" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />

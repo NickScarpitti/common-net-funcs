@@ -1,0 +1,21 @@
+<Project>
+	<!--
+		Wire up coverlet.MTP coverage collection for every *.Tests project, driven by the
+		CoverletExclude/CoverletExcludeByFile properties (semicolon-separated, declared as plain MSBuild
+		properties - NOT items - to avoid MSBuild's automatic filesystem glob-expansion of Include="**/..."
+		item values) declared in each test project, plus an assembly-name filter derived from the
+		"<Name>.Tests" -> "CommonNetFuncs.<Name>" naming convention so coverage attributed to a given test
+		suite only reflects the library it's actually testing.
+
+		The MTP-native "dotnet test" runner (global.json test.runner) reads TestingPlatformCommandLineArguments
+		from plain project evaluation rather than running the legacy InvokeTestingPlatform MSBuild target, so
+		this must be a simple PropertyGroup rather than something set from inside a Target.
+	-->
+	<PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+		<_CoverageProjectUnderTest>CommonNetFuncs.$(MSBuildProjectName.Replace('.Tests', ''))</_CoverageProjectUnderTest>
+		<TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --coverlet --coverlet-output-format cobertura --coverlet-include "[$(_CoverageProjectUnderTest)]*"</TestingPlatformCommandLineArguments>
+		<TestingPlatformCommandLineArguments Condition="'$(CoverletExclude)' != ''">$(TestingPlatformCommandLineArguments) --coverlet-exclude "$(CoverletExclude.Replace(';', '" --coverlet-exclude "'))"</TestingPlatformCommandLineArguments>
+		<TestingPlatformCommandLineArguments Condition="'$(CoverletExcludeByFile)' != ''">$(TestingPlatformCommandLineArguments) --coverlet-exclude-by-file "$(CoverletExcludeByFile.Replace(';', '" --coverlet-exclude-by-file "'))"</TestingPlatformCommandLineArguments>
+	</PropertyGroup>
+
+</Project>

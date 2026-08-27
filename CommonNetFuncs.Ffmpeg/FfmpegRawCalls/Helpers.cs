@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using CommonNetFuncs.Ffmpeg.Internal;
+using ZLinq;
 using static CommonNetFuncs.Core.Strings;
 
 [assembly: InternalsVisibleTo("Ffmpeg.Tests")]
@@ -113,17 +114,20 @@ internal static partial class Helpers
 		}
 
 		mediaInfo.Duration = mediaInfo.Streams
+			.AsValueEnumerable()
 			.Where(x => x?.Duration > TimeSpan.Zero)
 			.Select(x => x.Duration)
 			.DefaultIfEmpty(TimeSpan.Zero)
 			.Max();
 
 		mediaInfo.VideoFormat = mediaInfo.Streams
+			.AsValueEnumerable()
 			.Where(x => x?.CodecType == CodecType.Video)
 			.Select(x => x.CodecName)
 			.FirstOrDefault();
 
 		mediaInfo.AudioFormat = mediaInfo.Streams
+			.AsValueEnumerable()
 			.Where(x => x?.CodecType == CodecType.Audio)
 			.Select(x => x.CodecName)
 			.FirstOrDefault();

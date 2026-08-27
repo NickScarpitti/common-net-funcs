@@ -1,11 +1,12 @@
-﻿using Amazon.S3;
-using Amazon.S3.Model;
-using NLog;
-using System.Buffers;
+﻿using System.Buffers;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
+using Amazon.S3;
+using Amazon.S3.Model;
+using NLog;
+using ZLinq;
 using static Amazon.S3.Util.AmazonS3Util;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.ExceptionLocation;
@@ -18,10 +19,12 @@ public static class AwsS3HelpersStatic
 	private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 	private static readonly ConcurrentDictionary<string, bool> ValidatedBuckets = [];
 	internal const long MultipartThreshold = 10 * 1024 * 1024; // 10MB
+
 	private const string BeginUploadTemplate = "Starting upload of {fileName} to bucket { bucketName }";
 	private const string CompleteUploadTemplate = "Finished upload of {fileName} to bucket {bucketName} in {time}ms";
 	private const string AwsErrorLocationTemplate = "{ErrorLocation} AWS S3 Error";
 	private const string UnableToGetFileTemplate = "Unable to get file {FileName} from {BucketName} bucket in {ErrorLocation}";
+
 
 	/// <summary>
 	/// Upload a file to S3 bucket.
@@ -162,6 +165,7 @@ public static class AwsS3HelpersStatic
 		}
 		return success;
 	}
+
 
 	/// <summary>
 	/// Upload a file to S3 bucket.
@@ -316,6 +320,7 @@ public static class AwsS3HelpersStatic
 		}
 	}
 
+
 	/// <summary>
 	/// Uploads a file to S3 using multipart upload (typically for large files only).
 	/// </summary>
@@ -337,6 +342,7 @@ public static class AwsS3HelpersStatic
 		try
 		{
 			// Initiate multipart upload
+
 			InitiateMultipartUploadRequest initiateRequest = new()
 			{
 				BucketName = bucketName,
@@ -349,18 +355,24 @@ public static class AwsS3HelpersStatic
 			uploadId = initiateResponse.UploadId;
 
 			// Calculate chunk size (minimum 5MB for S3, maximum 5GB)
+
 			const long minChunkSize = 5 * 1024 * 1024; // 5MB
+
 			const long maxChunkSize = 5L * 1024 * 1024 * 1024; // 5GB
+
 			const int maxParts = 10000; // S3 limit
+
 
 			long totalSize = stream.Length;
 			long chunkSize = Math.Max(minChunkSize, totalSize / maxParts);
 			chunkSize = Math.Min(chunkSize, maxChunkSize);
 
 			// Ensure chunk size is reasonable for parallel processing
+
 			chunkSize = Math.Max(chunkSize, 10 * 1024 * 1024); // At least 10MB for efficiency
 
 			// Calculate number of parts
+
 			int totalParts = (int)Math.Ceiling((double)totalSize / chunkSize);
 
 			if (logInfo)
@@ -369,6 +381,7 @@ public static class AwsS3HelpersStatic
 			}
 
 			// Create semaphore to limit concurrent uploads (adjust based on your needs)
+
 			using SemaphoreSlim semaphore = new(Environment.ProcessorCount * 2, Environment.ProcessorCount * 2);
 
 			Stopwatch? sw = null;
@@ -379,6 +392,7 @@ public static class AwsS3HelpersStatic
 			}
 
 			// Upload parts in parallel
+
 			Task<PartETag?>[] uploadTasks = new Task<PartETag?>[totalParts];
 			for (int i = 1; i <= totalParts; i++)
 			{
@@ -386,9 +400,11 @@ public static class AwsS3HelpersStatic
 			}
 
 			// Wait for all uploads to complete
+
 			PartETag?[] results = await Task.WhenAll(uploadTasks).ConfigureAwait(false);
 
 			// Check if all parts uploaded successfully
+
 			partETags = results.Where(r => r != null).Cast<PartETag>().OrderBy(x => x.PartNumber).ToList();
 
 			if (partETags.Count != totalParts)
@@ -397,6 +413,7 @@ public static class AwsS3HelpersStatic
 			}
 
 			// Complete multipart upload
+
 			CompleteMultipartUploadRequest completeRequest = new()
 			{
 				BucketName = bucketName,
@@ -423,6 +440,7 @@ public static class AwsS3HelpersStatic
 		catch (Exception ex)
 		{
 			// Abort multipart upload on failure
+
 			if (!string.IsNullOrEmpty(uploadId))
 			{
 				try
@@ -461,10 +479,13 @@ public static class AwsS3HelpersStatic
 			long startPosition = (partNumber - 1) * chunkSize;
 			long actualChunkSize = Math.Min(chunkSize, totalSize - startPosition);
 			byte[] buffer = BufferPool.Rent((int)actualChunkSize); // Create a buffer for this chunk
+
 			try
 			{
 				// Read the chunk from the source stream (thread-safe)
+
 				int totalBytesRead;
+
 #pragma warning disable S3998 // Threads should not lock on objects with weak identity
 				lock (sourceStream)
 				{
@@ -474,11 +495,13 @@ public static class AwsS3HelpersStatic
 
 					while (totalBytesRead < actualChunkSize && (bytesRead = sourceStream.ReadAsync(buffer, totalBytesRead, (int)(actualChunkSize - totalBytesRead), cancellationToken).Result) > 0)
 					//while (totalBytesRead < actualChunkSize && (bytesRead = sourceStream.Read(buffer, totalBytesRead, (int)(actualChunkSize - totalBytesRead))) > 0)
+
 					{
 						totalBytesRead += bytesRead;
 					}
 				}
 #pragma warning restore S3998 // Threads should not lock on objects with weak identity
+
 
 				if (totalBytesRead != actualChunkSize)
 				{
@@ -487,6 +510,7 @@ public static class AwsS3HelpersStatic
 
 				// Upload the part
 				//await using MemoryStream partStream = new(buffer);
+
 				await using MemoryStream partStream = new(buffer, 0, totalBytesRead, writable: false);
 
 				UploadPartRequest uploadPartRequest = new()
@@ -498,6 +522,7 @@ public static class AwsS3HelpersStatic
 					InputStream = partStream,
 					PartSize = actualChunkSize,
 					//IsLastPart = isLastPart,
+
 				};
 
 				Stopwatch? sw = null;
@@ -541,6 +566,7 @@ public static class AwsS3HelpersStatic
 			semaphore.Release();
 		}
 	}
+
 
 	/// <summary>
 	/// Retrieve a file from the specified S3 bucket.
@@ -606,6 +632,7 @@ public static class AwsS3HelpersStatic
 					else
 					{
 						//ECompressionType currentCompression = await response.ResponseStream.DetectCompressionType().ConfigureAwait(false);
+
 						(ECompressionType currentCompression, Stream resetStream) = await DetectCompressionTypeAndReset(response.ResponseStream).ConfigureAwait(false);
 						if (currentCompression != ECompressionType.None)
 						{
@@ -614,6 +641,7 @@ public static class AwsS3HelpersStatic
 						else
 						{
 							//await responseStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
+
 							await resetStream.CopyToAsync(fileData, cancellationToken).ConfigureAwait(false);
 						}
 
@@ -643,6 +671,7 @@ public static class AwsS3HelpersStatic
 
 		}
 	}
+
 
 	/// <summary>
 	/// Retrieve a file from the specified S3 bucket.
@@ -696,7 +725,7 @@ public static class AwsS3HelpersStatic
 					logger.Debug("Starting download of {fileName} from bucket {bucketName}", fileName, bucketName);
 				}
 
-using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cancellationToken).ConfigureAwait(false);
+				using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cancellationToken).ConfigureAwait(false);
 				if (logDebug)
 				{
 					sw!.Stop();
@@ -739,6 +768,7 @@ using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cance
 
 		}
 	}
+
 
 	/// <summary>
 	/// Deletes a file from the specified S3 bucket.
@@ -813,6 +843,7 @@ using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cance
 		return success;
 	}
 
+
 	/// <summary>
 	/// Check to see if a file exists within the given S3 bucket.
 	/// </summary>
@@ -871,6 +902,7 @@ using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cance
 		}
 		return success;
 	}
+
 
 	/// <summary>
 	/// Get a list containing the names of every file within an S3 bucket.
@@ -932,6 +964,7 @@ using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cance
 		}
 		return fileNames;
 	}
+
 
 	/// <summary>
 	/// Get the URL corresponding to a single file within an S3 bucket.
@@ -1007,6 +1040,7 @@ using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cance
 		return url;
 	}
 
+
 	/// <summary>
 	/// Checks whether an S3 bucket exists and is reachable or not.
 	/// </summary>
@@ -1034,7 +1068,7 @@ using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cance
 			{
 				if (validatedBuckets.Any(x => x.Key.StrEq(bucketName)))
 				{
-					isValid = validatedBuckets.Where(x => x.Key.StrEq(bucketName)).Select(x => x.Value).First();
+					isValid = validatedBuckets.AsValueEnumerable().Where(x => x.Key.StrEq(bucketName)).Select(x => x.Value).First();
 				}
 				else
 				{
@@ -1057,6 +1091,7 @@ using GetObjectResponse? response = await s3Client.GetObjectAsync(request, cance
 			}
 
 			if (!isValid) //Retry in case of intermittent outage
+
 			{
 				if (logDebug)
 				{

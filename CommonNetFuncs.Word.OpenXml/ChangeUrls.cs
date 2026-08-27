@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml.Packaging;
+using ZLinq;
 
 namespace CommonNetFuncs.Word.OpenXml;
 
@@ -71,7 +72,7 @@ public static class ChangeUrls
 			{
 				foreach (HyperlinkRelationship hyperlink in mainPart.HyperlinkRelationships.ToList())
 				{
-					string? newUrl = urlsToUpdate.Where(x => string.Equals(x.Key, hyperlink.Uri.ToString(), StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
+					string? newUrl = urlsToUpdate.AsValueEnumerable().Where(x => string.Equals(x.Key, hyperlink.Uri.ToString(), StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
 					if (newUrl != null)
 					{
 						mainPart.DeleteReferenceRelationship(hyperlink);

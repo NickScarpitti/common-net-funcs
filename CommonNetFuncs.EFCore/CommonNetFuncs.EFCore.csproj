@@ -29,7 +29,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.3.3</Version>
+		<Version>4.3.4</Version>
 		<MinVerTagPrefix>efcore-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -88,6 +88,7 @@
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
 		<PackageReference Include="System.Linq.Dynamic.Core" PrivateAssets="all" />
 		<PackageReference Include="Z.EntityFramework.Plus.EFCore" PrivateAssets="all" />
+		<PackageReference Include="ZLinq" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -3,6 +3,7 @@ using MemoryPack;
 using MessagePack;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
+using ZLinq;
 using static System.Convert;
 using static CommonNetFuncs.Sql.Common.QueryParameters;
 using static CommonNetFuncs.Web.Common.ContentTypes;
@@ -28,60 +29,60 @@ public static class DataTableHelpers
 		{
 			if (FormDataTypes.Any(x => request.ContentType?.Contains(x, StringComparison.InvariantCultureIgnoreCase) ?? false) && request.Form != null)
 			{
-				dataTableRequest.Draw = request.Form.Where(x => string.Equals(x.Key, "draw", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
+				dataTableRequest.Draw = request.Form.AsValueEnumerable().Where(x => string.Equals(x.Key, "draw", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
 
 				for (int i = 0; request.Form.Any(y => string.Equals(y.Key, $"order[{i}][column]", StringComparison.InvariantCultureIgnoreCase)); i++)
 				{
-					dataTableRequest.SortColumns.Add(i, request.Form.Where(x => string.Equals(x.Key, "columns[" + request.Form.Where(y => string.Equals(y.Key, $"order[{i}][column]", StringComparison.InvariantCultureIgnoreCase))
+					dataTableRequest.SortColumns.Add(i, request.Form.AsValueEnumerable().Where(x => string.Equals(x.Key, "columns[" + request.Form.AsValueEnumerable().Where(y => string.Equals(y.Key, $"order[{i}][column]", StringComparison.InvariantCultureIgnoreCase))
 						.Select(z => z.Value).FirstOrDefault() + "][data]", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault());
 
-					dataTableRequest.SortColumnDir.Add(i, request.Form.Where(x => string.Equals(x.Key, $"order[{i}][dir]", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault());
+					dataTableRequest.SortColumnDir.Add(i, request.Form.AsValueEnumerable().Where(x => string.Equals(x.Key, $"order[{i}][dir]", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault());
 				}
 
-				string? start = request.Form.Where(x => string.Equals(x.Key, "start", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
-				string? length = request.Form.Where(x => string.Equals(x.Key, "length", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
-				string? searchValue = request.Form.Where(x => string.Equals(x.Key, "search[value]", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
+				string? start = request.Form.AsValueEnumerable().Where(x => string.Equals(x.Key, "start", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
+				string? length = request.Form.AsValueEnumerable().Where(x => string.Equals(x.Key, "length", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
+				string? searchValue = request.Form.AsValueEnumerable().Where(x => string.Equals(x.Key, "search[value]", StringComparison.InvariantCultureIgnoreCase)).Select(x => x.Value).FirstOrDefault();
 
 				//Paging Size (10,20,50,100)
 				dataTableRequest.PageSize = length != StringValues.Empty ? ToInt32(length) : 0;
 				dataTableRequest.Skip = start != StringValues.Empty ? ToInt32(start) : 0;
 
-        //Get search value key pairs
-        if (!string.IsNullOrEmpty(searchValue))
-        {
-          foreach (string val in searchValue.Split(','))
-          {
-            string cleanVal = val.CleanQueryParam()!;
-            int startPos = cleanVal.IndexOf('=') + 1;
-            if (startPos == 0)
-            {
-              continue;
-            }
-            string key = cleanVal[..(startPos - 1)];
-            if (startPos + 1 <= cleanVal.Length)
-            {
-              int valLength = cleanVal.Length - startPos;
-              string outVal = cleanVal.Substring(startPos, valLength);
-              dataTableRequest.SearchValues.Add(key, outVal);
-            }
-            else
-            {
-              dataTableRequest.SearchValues.Add(key, null);
-            }
-          }
-        }
-      }
-      else
-      {
-        logger.Warn($"Unable to read Datatable request: Body is not a valid form data type [{string.Join(", ", FormDataTypes)}], or form data is null");
-      }
-    }
-    catch (Exception ex)
-    {
-      logger.Error(ex, "{Class}.{Method} Error", $"{nameof(DataTableHelpers)}.{nameof(GetDataTableRequest)}");
-    }
-    return dataTableRequest;
-  }
+				//Get search value key pairs
+				if (!string.IsNullOrEmpty(searchValue))
+				{
+					foreach (string val in searchValue.Split(','))
+					{
+						string cleanVal = val.CleanQueryParam()!;
+						int startPos = cleanVal.IndexOf('=') + 1;
+						if (startPos == 0)
+						{
+							continue;
+						}
+						string key = cleanVal[..(startPos - 1)];
+						if (startPos + 1 <= cleanVal.Length)
+						{
+							int valLength = cleanVal.Length - startPos;
+							string outVal = cleanVal.Substring(startPos, valLength);
+							dataTableRequest.SearchValues.Add(key, outVal);
+						}
+						else
+						{
+							dataTableRequest.SearchValues.Add(key, null);
+						}
+					}
+				}
+			}
+			else
+			{
+				logger.Warn($"Unable to read Datatable request: Body is not a valid form data type [{string.Join(", ", FormDataTypes)}], or form data is null");
+			}
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{Class}.{Method} Error", $"{nameof(DataTableHelpers)}.{nameof(GetDataTableRequest)}");
+		}
+		return dataTableRequest;
+	}
 
 	/// <summary>
 	/// Transform DataTableRequest into an object that can be used to limit the results sent back from a query why using paging or applying a sort

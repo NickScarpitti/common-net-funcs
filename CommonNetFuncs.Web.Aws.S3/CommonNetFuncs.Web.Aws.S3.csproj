@@ -28,7 +28,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.3.4</Version>
+		<Version>4.3.5</Version>
 		<MinVerTagPrefix>web.aws.s3-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -82,6 +82,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
+		<PackageReference Include="ZLinq" />
 	</ItemGroup>
 
 	<ItemGroup>

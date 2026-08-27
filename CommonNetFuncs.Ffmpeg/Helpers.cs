@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using CommonNetFuncs.Ffmpeg.Internal;
 using Xabe.FFmpeg;
+using ZLinq;
 using static CommonNetFuncs.Core.Collections;
 using static CommonNetFuncs.Core.ExceptionLocation;
 using static CommonNetFuncs.Core.Strings;
@@ -64,7 +65,7 @@ public static class Helpers
 	public static string GetTotalFileDif(ConcurrentBag<string> conversionOutputs)
 	{
 		NumberFormatInfo format = new() { NegativeSign = "-" }; //Needed to do this so negatives are read correctly
-		return conversionOutputs.Sum(x => x.Split(",").Where(y => y.Contains($"{EOutputTags.SizeDif}")).Select(y => long.Parse(y.Replace($"{EOutputTags.SizeDif}=", string.Empty), format)).FirstOrDefault()).GetFileSizeFromBytesWithUnits();
+		return conversionOutputs.Sum(x => x.Split(",").AsValueEnumerable().Where(y => y.Contains($"{EOutputTags.SizeDif}")).Select(y => long.Parse(y.Replace($"{EOutputTags.SizeDif}=", string.Empty), format)).FirstOrDefault()).GetFileSizeFromBytesWithUnits();
 	}
 
 	/// <summary>

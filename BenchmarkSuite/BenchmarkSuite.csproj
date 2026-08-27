@@ -17,6 +17,7 @@
 		<PackageReference Include="Riok.Mapperly" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+		<PackageReference Include="ZLinq" />
 	</ItemGroup>
 
 	<ItemGroup>

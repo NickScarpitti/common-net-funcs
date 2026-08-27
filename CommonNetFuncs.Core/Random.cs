@@ -4,6 +4,7 @@ using System.Collections.Frozen;
 using System.Security.Cryptography;
 using System.Text;
 using CommonNetFuncs.Core.Internal;
+using ZLinq;
 using static System.Math;
 
 namespace CommonNetFuncs.Core;
@@ -693,7 +694,7 @@ public static class Random
 	/// <returns>Randomly selected object</returns>
 	public static T? GetRandomElement<T>(this IEnumerable<T> items)
 	{
-		return items.Skip(GetRandomInt(0, items.Count())).First();
+		return items.AsValueEnumerable().Skip(GetRandomInt(0, items.Count())).First();
 	}
 
 	/// <summary>
@@ -718,7 +719,7 @@ public static class Random
 	/// <returns>Randomly selected object</returns>
 	public static T? GetRepeatableRandomElement<T>(this IEnumerable<T> items, System.Random rnd)
 	{
-		return items.Skip(GetRepeatableRandomInt(0, items.Count(), rnd)).First();
+		return items.AsValueEnumerable().Skip(GetRepeatableRandomInt(0, items.Count(), rnd)).First();
 	}
 
 	/// <summary>
@@ -759,7 +760,7 @@ public static class Random
 	{
 		for (int i = 0; i < selectQuantity; i++)
 		{
-			yield return items.Skip(GetRepeatableRandomInt(0, items.Count(), rnd)).First();
+			yield return items.AsValueEnumerable().Skip(GetRepeatableRandomInt(0, items.Count(), rnd)).First();
 		}
 	}
 
@@ -921,7 +922,7 @@ public static class Random
 		else
 		{
 			HashSet<int> blackListCharVals = blacklistedCharacters.Select(x => (int)x).ToHashSet();
-			IEnumerable<int> whiteListCharVals = Enumerable.Range(lowerAsciiBound, upperAsciiBound - lowerAsciiBound);
+			var whiteListCharVals = ValueEnumerable.Range(lowerAsciiBound, upperAsciiBound - lowerAsciiBound);
 			if (whiteListCharVals.Intersect(blackListCharVals).Count() == whiteListCharVals.Count())
 			{
 				throw new ArgumentException("Black list contains all available values", nameof(blacklistedCharacters));
@@ -1012,7 +1013,7 @@ public static class Random
 		else
 		{
 			HashSet<int> blackListCharVals = blacklistedCharacters.Select(x => (int)x).ToHashSet();
-			IEnumerable<int> whiteListCharVals = Enumerable.Range(lowerAsciiBound, upperAsciiBound - lowerAsciiBound);
+			var whiteListCharVals = ValueEnumerable.Range(lowerAsciiBound, upperAsciiBound - lowerAsciiBound);
 			if (whiteListCharVals.Intersect(blackListCharVals).Count() == whiteListCharVals.Count())
 			{
 				throw new ArgumentException("Black list contains all available values", nameof(blacklistedCharacters));

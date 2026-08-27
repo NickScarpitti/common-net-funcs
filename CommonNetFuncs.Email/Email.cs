@@ -8,6 +8,7 @@ using MailKit.Net.Proxy;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
+using ZLinq;
 using static CommonNetFuncs.Compression.Files;
 using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Email.EmailConstants;
@@ -410,13 +411,13 @@ public static class Email
 			}
 
 			// Check that there is at least one recipient
-			if (!sendEmailConfig.EmailAddresses.ToAddresses.Any(x => x != null) && (sendEmailConfig.EmailAddresses.CcAddresses?.Any(x => x != null) != true) && (sendEmailConfig.EmailAddresses.BccAddresses?.Any(x => x != null) != true))
+			if (!sendEmailConfig.EmailAddresses.ToAddresses.AsValueEnumerable().Any(x => x != null) && (sendEmailConfig.EmailAddresses.CcAddresses?.AsValueEnumerable().Any(x => x != null) != true) && (sendEmailConfig.EmailAddresses.BccAddresses?.AsValueEnumerable().Any(x => x != null) != true))
 			{
 				throw new ArgumentException("At least one recipient is required");
 			}
 
 			// Validate all recipient email addresses
-			success = success && (!sendEmailConfig.EmailAddresses.ToAddresses.Any(x => x != null) || sendEmailConfig.EmailAddresses.ToAddresses.Where(x => x != null).All(mailAddress => mailAddress.Email.IsValidEmail()));
+			success = success && (!sendEmailConfig.EmailAddresses.ToAddresses.AsValueEnumerable().Any(x => x != null) || sendEmailConfig.EmailAddresses.ToAddresses.AsValueEnumerable().Where(x => x != null).All(mailAddress => mailAddress.Email.IsValidEmail()));
 			if (!success)
 			{
 				IEnumerable<string> invalidToEmails = sendEmailConfig.EmailAddresses.ToAddresses.Where(mailAddress => !mailAddress.Email.IsValidEmail())
@@ -424,7 +425,7 @@ public static class Email
 				throw new ArgumentException("The following To email addresses are invalid: {emails}", string.Join(", ", invalidToEmails));
 			}
 
-			success = success && (sendEmailConfig.EmailAddresses.CcAddresses?.Any(x => x != null) != true || sendEmailConfig.EmailAddresses.CcAddresses.Where(x => x != null).All(mailAddress => mailAddress.Email.IsValidEmail()));
+			success = success && (sendEmailConfig.EmailAddresses.CcAddresses?.AsValueEnumerable().Any(x => x != null) != true || sendEmailConfig.EmailAddresses.CcAddresses.AsValueEnumerable().Where(x => x != null).All(mailAddress => mailAddress.Email.IsValidEmail()));
 			if (!success && sendEmailConfig.EmailAddresses.CcAddresses != null)
 			{
 				IEnumerable<string> invalidCcEmails = sendEmailConfig.EmailAddresses.CcAddresses.Where(mailAddress => !mailAddress.Email.IsValidEmail())
@@ -432,7 +433,7 @@ public static class Email
 				throw new ArgumentException("The following CC email addresses are invalid: {emails}", string.Join(", ", invalidCcEmails));
 			}
 
-			success = success && (sendEmailConfig.EmailAddresses.BccAddresses?.Any(x => x != null) != true || sendEmailConfig.EmailAddresses.BccAddresses.Where(x => x != null).All(mailAddress => mailAddress.Email.IsValidEmail()));
+			success = success && (sendEmailConfig.EmailAddresses.BccAddresses?.AsValueEnumerable().Any(x => x != null) != true || sendEmailConfig.EmailAddresses.BccAddresses.AsValueEnumerable().Where(x => x != null).All(mailAddress => mailAddress.Email.IsValidEmail()));
 			if (!success && sendEmailConfig.EmailAddresses.BccAddresses != null)
 			{
 				IEnumerable<string> invalidBccEmails = sendEmailConfig.EmailAddresses.BccAddresses.Where(mailAddress => !mailAddress.Email.IsValidEmail())
@@ -444,14 +445,14 @@ public static class Email
 			{
 				MimeMessage email = new();
 				email.From.Add(new MailboxAddress(sendEmailConfig.EmailAddresses.FromAddress.Name, sendEmailConfig.EmailAddresses.FromAddress.Email!));
-				email.To.AddRange(sendEmailConfig.EmailAddresses.ToAddresses.Where(x => x != null).Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
+				email.To.AddRange(sendEmailConfig.EmailAddresses.ToAddresses.AsValueEnumerable().Where(x => x != null).Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
 				if (sendEmailConfig.EmailAddresses.CcAddresses?.Length > 0)
 				{
-					email.Cc.AddRange(sendEmailConfig.EmailAddresses.CcAddresses.Where(x => x != null).Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
+					email.Cc.AddRange(sendEmailConfig.EmailAddresses.CcAddresses.AsValueEnumerable().Where(x => x != null).Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
 				}
 				if (sendEmailConfig.EmailAddresses.BccAddresses?.Length > 0)
 				{
-					email.Bcc.AddRange(sendEmailConfig.EmailAddresses.BccAddresses.Where(x => x != null).Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
+					email.Bcc.AddRange(sendEmailConfig.EmailAddresses.BccAddresses.AsValueEnumerable().Where(x => x != null).Select(x => new MailboxAddress(x.Name, x.Email!)).ToList());
 				}
 
 				email.Subject = sendEmailConfig.EmailContent.Subject ?? throw new ArgumentException("Email subject is required");

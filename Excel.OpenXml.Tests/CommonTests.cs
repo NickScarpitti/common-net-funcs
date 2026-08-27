@@ -55,6 +55,92 @@ public sealed class CommonTests : IDisposable
 		document.WorkbookPart!.Workbook!.Sheets?.Count().ShouldBe(1);
 	}
 
+	[RetryFact(3)]
+	public void InitializeExcelFile_NoParameters_ShouldCreateWorkbookPartWorkbookAndSheets_WhenNoneExist()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+
+		// Act
+		WorkbookPart workbookPart = document.InitializeExcelFile();
+
+		// Assert
+		workbookPart.ShouldNotBeNull();
+		document.WorkbookPart.ShouldBeSameAs(workbookPart);
+		workbookPart.Workbook.ShouldNotBeNull();
+		Sheets? sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
+		sheets.ShouldNotBeNull();
+		sheets!.Elements<Sheet>().ShouldBeEmpty();
+	}
+
+	[RetryFact(3)]
+	public void InitializeExcelFile_NoParameters_ShouldReuseExistingWorkbookPart_WhenAlreadyPresent()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		WorkbookPart existingWorkbookPart = document.AddWorkbookPart();
+
+		// Act
+		WorkbookPart workbookPart = document.InitializeExcelFile();
+
+		// Assert
+		workbookPart.ShouldBeSameAs(existingWorkbookPart);
+		document.WorkbookPart.ShouldBeSameAs(existingWorkbookPart);
+	}
+
+	[RetryFact(3)]
+	public void InitializeExcelFile_NoParameters_ShouldCreateWorkbook_WhenWorkbookPartExistsWithoutWorkbook()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.AddWorkbookPart();
+		document.WorkbookPart!.Workbook.ShouldBeNull();
+
+		// Act
+		WorkbookPart workbookPart = document.InitializeExcelFile();
+
+		// Assert
+		workbookPart.Workbook.ShouldNotBeNull();
+		workbookPart.Workbook!.GetFirstChild<Sheets>().ShouldNotBeNull();
+	}
+
+	[RetryFact(3)]
+	public void InitializeExcelFile_NoParameters_ShouldNotDuplicateSheetsElement_WhenSheetsAlreadyExists()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		uint existingSheetId = document.CreateNewSheet("Existing Sheet");
+
+		// Act
+		WorkbookPart workbookPart = document.InitializeExcelFile();
+
+		// Assert
+		workbookPart.Workbook!.Elements<Sheets>().ShouldHaveSingleItem();
+		Sheet sheet = workbookPart.Workbook!.Descendants<Sheet>().ShouldHaveSingleItem();
+		sheet.SheetId!.Value.ShouldBe(existingSheetId);
+		sheet.Name!.Value.ShouldBe("Existing Sheet");
+	}
+
+	[RetryFact(3)]
+	public void InitializeExcelFile_NoParameters_ShouldBeIdempotent_WhenCalledMultipleTimes()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+
+		// Act
+		WorkbookPart firstCallResult = document.InitializeExcelFile();
+		WorkbookPart secondCallResult = document.InitializeExcelFile();
+
+		// Assert
+		secondCallResult.ShouldBeSameAs(firstCallResult);
+		firstCallResult.Workbook!.Elements<Sheets>().ShouldHaveSingleItem();
+	}
+
 	[RetryTheory(3)]
 	[InlineData(null)]
 	[InlineData("Custom Sheet")]

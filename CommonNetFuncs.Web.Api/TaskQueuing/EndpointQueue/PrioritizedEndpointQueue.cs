@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using CommonNetFuncs.Core;
+using ZLinq;
 
 namespace CommonNetFuncs.Web.Api.TaskQueuing.EndpointQueue;
 
@@ -32,6 +33,7 @@ public class PrioritizedEndpointQueue : IDisposable
 		stats = new PrioritizedQueueStats(endpointKey);
 
 		// Initialize priority breakdown
+
 		foreach (TaskPriority priority in Enum.GetValues<TaskPriority>())
 		{
 			stats.PriorityBreakdown[priority] = new PriorityStats();
@@ -39,11 +41,13 @@ public class PrioritizedEndpointQueue : IDisposable
 		}
 
 		// Don't start processing task yet - it will be started lazily on first enqueue
+
 	}
 
 	public async Task<T?> EnqueueAsync<T>(Func<CancellationToken, Task<T>> taskFunction, int priority, TaskPriority priorityLevel, CancellationToken cancellationToken = default)
 	{
 		// Ensure processing task is started
+
 		EnsureProcessingTaskStarted();
 
 		PrioritizedQueuedTask queuedTask = new(async ct => await taskFunction(ct).ConfigureAwait(false))
@@ -65,6 +69,7 @@ public class PrioritizedEndpointQueue : IDisposable
 			}
 
 			newTaskEvent.Set(); // Signal that a new task is available
+
 		}
 		finally
 		{
@@ -99,6 +104,7 @@ public class PrioritizedEndpointQueue : IDisposable
 			List<PrioritizedQueuedTask> tasksToKeep = new();
 
 			// Extract all tasks
+
 			while (priorityQueue.TryDequeue(out PrioritizedQueuedTask? task, out _))
 			{
 				if (task != null && task.PriorityLevel == priority && !task.IsCancelled)
@@ -112,12 +118,14 @@ public class PrioritizedEndpointQueue : IDisposable
 			}
 
 			// Re-enqueue tasks we want to keep
+
 			foreach (PrioritizedQueuedTask task in tasksToKeep)
 			{
 				priorityQueue.Enqueue(task, task);
 			}
 
 			// Cancel the tasks
+
 			foreach (PrioritizedQueuedTask task in tasksToCancel)
 			{
 				await task.CancellationTokenSource.CancelAsync();
@@ -151,6 +159,7 @@ public class PrioritizedEndpointQueue : IDisposable
 				PrioritizedQueuedTask? currentTask = null;
 
 				// Wait for tasks or cancellation
+
 				await queueSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 				try
 				{
@@ -178,15 +187,18 @@ public class PrioritizedEndpointQueue : IDisposable
 				if (currentTask == null)
 				{
 					// Check shutdown flag before waiting
+
 					if (isShuttingDown)
 					{
 						break;
 					}
 
 					// No tasks available, wait for new tasks with a timeout to allow periodic shutdown checks
+
 					try
 					{
 						newTaskEvent.Wait(100, cancellationToken); // 100ms timeout
+
 						newTaskEvent.Reset();
 					}
 					catch (OperationCanceledException)
@@ -196,12 +208,14 @@ public class PrioritizedEndpointQueue : IDisposable
 					catch (ObjectDisposedException)
 					{
 						// Resources disposed during shutdown
+
 						break;
 					}
 					continue;
 				}
 
 				// Process the task
+
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				try
@@ -210,6 +224,7 @@ public class PrioritizedEndpointQueue : IDisposable
 					{
 						logger.Debug("Skipping cancelled task {TaskId} for endpoint {EndpointKey}", currentTask.Id, EndpointKey);
 						// Set the completion source to cancelled so waiting callers don't hang
+
 						currentTask.CompletionSource.TrySetCanceled(currentTask.CancellationTokenSource.Token);
 						continue;
 					}
@@ -248,6 +263,7 @@ public class PrioritizedEndpointQueue : IDisposable
 				{
 					logger.Debug(cancelEx, "Task {TaskId} was cancelled for endpoint {EndpointKey}", currentTask.Id, EndpointKey);
 					// Set the completion source to cancelled so waiting callers don't hang
+
 					currentTask.CompletionSource.TrySetCanceled(currentTask.CancellationTokenSource.Token);
 				}
 				catch (Exception ex)
@@ -275,10 +291,12 @@ public class PrioritizedEndpointQueue : IDisposable
 		catch (OperationCanceledException)
 		{
 			// Expected when cancellation is requested
+
 		}
 		catch (ObjectDisposedException)
 		{
 			// Expected when resources are disposed during shutdown
+
 		}
 	}
 
@@ -300,13 +318,15 @@ public class PrioritizedEndpointQueue : IDisposable
 			};
 
 			// Calculate overall average processing time
-			List<TimeSpan> allProcessingTimes = processingTimesByPriority.Values.SelectMany(times => times).ToList();
+
+			List<TimeSpan> allProcessingTimes = processingTimesByPriority.Values.AsValueEnumerable().SelectMany(times => times).ToList();
 			if (allProcessingTimes.AnyFast())
 			{
 				currentStats.AverageProcessingTime = TimeSpan.FromMilliseconds(allProcessingTimes.Average(t => t.TotalMilliseconds));
 			}
 
 			// Copy priority breakdown with calculated averages
+
 			foreach (KeyValuePair<TaskPriority, PriorityStats> kvp in stats.PriorityBreakdown)
 			{
 				PriorityStats priorityStats = new()
@@ -346,9 +366,11 @@ public class PrioritizedEndpointQueue : IDisposable
 			if (disposing)
 			{
 				// Signal shutdown
+
 				isShuttingDown = true;
 
 				// Cancel and wake up the processing task
+
 				try
 				{
 					cancellationTokenSource.Cancel();
@@ -360,6 +382,7 @@ public class PrioritizedEndpointQueue : IDisposable
 				}
 
 				// Wait briefly for processing task to complete
+
 				try
 				{
 					processingTask?.Wait(TimeSpan.FromSeconds(5));
@@ -370,6 +393,7 @@ public class PrioritizedEndpointQueue : IDisposable
 				}
 
 				// Dispose of resources
+
 				cancellationTokenSource.Dispose();
 				newTaskEvent.Dispose();
 				queueSemaphore.Dispose();

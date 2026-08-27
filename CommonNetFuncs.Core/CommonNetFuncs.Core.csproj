@@ -29,7 +29,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.3.5</Version>
+		<Version>4.3.6</Version>
 		<MinVerTagPrefix>core-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -97,6 +97,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
+		<PackageReference Include="ZLinq" />
 	</ItemGroup>
 
 	<!-- Polyfills needed only when targeting netstandard2.1, where DateOnly/TimeOnly and System.IO.Pipelines are not part of the framework -->

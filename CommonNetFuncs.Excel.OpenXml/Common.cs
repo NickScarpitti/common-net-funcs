@@ -8,6 +8,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using SkiaSharp;
+using ZLinq;
 using static CommonNetFuncs.Core.ExceptionLocation;
 //Aliased to prevent issue with DocumentFormat.OpenXml.Spreadsheet.Color
 using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
@@ -1882,7 +1883,7 @@ public static partial class Common
 		uint imageId = 1;
 		if (worksheetDrawing?.Elements<Xdr.TwoCellAnchor>().Any() == true)
 		{
-			imageId = worksheetDrawing.Elements<Xdr.TwoCellAnchor>().Where(x => x != null)
+			imageId = worksheetDrawing.Elements<Xdr.TwoCellAnchor>().AsValueEnumerable().Where(x => x != null)
 				.Max(x => uint.Parse((x.Elements<Xdr.Picture>().FirstOrDefault()?.NonVisualPictureProperties?.NonVisualDrawingProperties?.Id ?? '0')!)) + 1;
 		}
 
@@ -2044,7 +2045,7 @@ public static partial class Common
 	public static CellReference GetLastPopulatedCell(this SheetData sheetData)
 	{
 		uint maxRow = sheetData.Elements<Row>().Max(x => x.RowIndex?.Value ?? 0);
-		uint maxCol = sheetData.Descendants<Cell>().Where(x => x != null).Max(x => new CellReference(x.CellReference!).ColumnIndex);
+		uint maxCol = sheetData.Descendants<Cell>().AsValueEnumerable().Where(x => x != null).Max(x => new CellReference(x.CellReference!).ColumnIndex);
 		return new CellReference(maxCol, maxRow);
 	}
 
@@ -2357,7 +2358,7 @@ public static partial class Common
 	/// <returns>Table indicated by tableName, null if not found</returns>
 	public static Table? FindTable(this WorkbookPart workbookPart, string? tableName)
 	{
-		return workbookPart.WorksheetParts.Where(worksheetPart => worksheetPart.TableDefinitionParts != null)
+		return workbookPart.WorksheetParts.AsValueEnumerable().Where(worksheetPart => worksheetPart.TableDefinitionParts != null)
 			.SelectMany(worksheetPart => worksheetPart.TableDefinitionParts.Where(tableDefinitionPart => (tableName == null) || (tableDefinitionPart.Table?.Name == tableName))).FirstOrDefault()?.Table;
 	}
 

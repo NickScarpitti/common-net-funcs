@@ -8,6 +8,7 @@ using CommonNetFuncs.ReinforcedTypings.Valibot;
 using Reinforced.Typings;
 using Reinforced.Typings.Attributes;
 using Reinforced.Typings.Fluent;
+using ZLinq;
 
 namespace CommonNetFuncs.ReinforcedTypings;
 
@@ -63,7 +64,7 @@ public static class ReinforcedTypingsFluentConfig
 			? builder.Context.SourceAssemblies
 			: [typeof(ReinforcedTypingsFluentConfig).Assembly];
 
-		Type[] allTypes = sourceAssemblies.SelectMany(a => a.GetTypes()).ToArray();
+		Type[] allTypes = sourceAssemblies.AsValueEnumerable().SelectMany(a => a.GetTypes()).ToArray();
 
 		// ── Valibot schema generation ──────────────────────────────────────────
 		Type[] schemaTypes = allTypes

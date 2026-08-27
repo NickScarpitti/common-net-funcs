@@ -77,5 +77,6 @@
 		<PackageVersion Include="xunit.v3" Version="4.0.0" />
 		<PackageVersion Include="Z.EntityFramework.Extensions.EFCore" Version="10.105.8" />
 		<PackageVersion Include="Z.EntityFramework.Plus.EFCore" Version="10.105.8" />
+		<PackageVersion Include="ZLinq" Version="1.5.6" />
 	</ItemGroup>
 </Project>

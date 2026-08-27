@@ -251,7 +251,7 @@ public sealed class CommonTests : IDisposable
 
 		document.CreateNewSheet("Test Sheet");
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
-		worksheet.InsertCellValue(1, 1, new CellValue("Test"), CellValues.String);
+		worksheet.InsertCellValue(1, 1, new("Test"), CellValues.String);
 
 		// Act
 		worksheet.AutoFitColumns();

@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using FastExpressionCompiler;
+using ZLinq;
 using static System.Convert;
 using static System.Web.HttpUtility;
 using static CommonNetFuncs.Core.MathHelpers;
@@ -664,11 +665,11 @@ public static partial class Strings
 
 		if (useOrComparison)
 		{
-			return textsToFind.Any(s.ContainsInvariant);
+			return textsToFind.AsValueEnumerable().Any(s.ContainsInvariant);
 		}
 		else
 		{
-			return textsToFind.All(s.ContainsInvariant);
+			return textsToFind.AsValueEnumerable().All(s.ContainsInvariant);
 		}
 	}
 
@@ -840,11 +841,11 @@ public static partial class Strings
 
 		if (useOrComparison)
 		{
-			return stringsToFind.Any(s.Contains);
+			return stringsToFind.AsValueEnumerable().Any(s.Contains);
 		}
 		else
 		{
-			return stringsToFind.All(s.Contains);
+			return stringsToFind.AsValueEnumerable().All(s.Contains);
 		}
 	}
 
@@ -1725,7 +1726,7 @@ public static partial class Strings
 	/// <returns><see cref="List{T}"/> of integers where the strings could be parsed to integers and not null</returns>
 	public static List<int> ToListInt(this IList<string> values)
 	{
-		return values.Select(x => int.TryParse(x, out int i) ? i : (int?)null).Where(i => i.HasValue).Select(i => i!.Value).ToList();
+		return values.AsValueEnumerable().Select(x => int.TryParse(x, out int i) ? i : (int?)null).Where(i => i.HasValue).Select(i => i!.Value).ToList();
 	}
 
 	/// <summary>

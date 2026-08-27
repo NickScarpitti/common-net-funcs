@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-
+using ZLinq;
 using static CommonNetFuncs.Core.ReflectionCaches;
 
 namespace CommonNetFuncs.Core;
@@ -19,7 +19,7 @@ public static class Validation
 		List<ValidationResult> validationResults = [];
 		if (!Validator.TryValidateObject(obj, context, validationResults, validateAll))
 		{
-			HashSet<string> propertiesToSetToDefault = new(validationResults.SelectMany(x => x.MemberNames));
+			HashSet<string> propertiesToSetToDefault = validationResults.AsValueEnumerable().SelectMany(x => x.MemberNames).ToHashSet();
 			foreach (PropertyInfo prop in GetOrAddPropertiesFromReflectionCache(typeof(T)).Where(x => propertiesToSetToDefault.Contains(x.Name)))
 			{
 				prop.SetValue(obj, default);

@@ -4,11 +4,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using CommonNetFuncs.Core.Internal;
 using FastExpressionCompiler;
+using ZLinq;
 using static System.Convert;
 using static CommonNetFuncs.Core.ReflectionCaches;
-using CommonNetFuncs.Core.Internal;
-using System.Runtime.CompilerServices;
 
 namespace CommonNetFuncs.Core;
 
@@ -187,7 +188,7 @@ public static partial class Collections
 			}
 			else
 			{
-				if(dictionary.ContainsKey(item!.Value.Key))
+				if (dictionary.ContainsKey(item!.Value.Key))
 				{
 					continue;
 				}
@@ -222,7 +223,7 @@ public static partial class Collections
 			}
 			else
 			{
-				if(dictionary.ContainsKey(item.Key))
+				if (dictionary.ContainsKey(item.Key))
 				{
 					continue;
 				}
@@ -1159,7 +1160,7 @@ public static partial class Collections
 		PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T));
 		PropertyInfo[] groupingProperties = properties.Where(p => !propsToAgg.Contains(p.Name)).ToArray();
 
-		return !groupingProperties.AnyFast() || (propsToAgg.Intersect(properties.Select(x => x.Name)).Count() < propsToAgg.Count)
+		return !groupingProperties.AnyFast() || (propsToAgg.AsValueEnumerable().Intersect(properties.Select(x => x.Name)).Count() < propsToAgg.Count)
 			? throw new ArgumentException($"Invalid aggregate property values. All values in propsToAgg must be present in type {typeof(T)}", nameof(propsToAgg))
 			: !parallel
 			? collection.GroupBy(x => new { GroupKey = string.Join("|", groupingProperties.Select(y => y.GetValue(x)?.ToString() ?? string.Empty)) })
@@ -1225,7 +1226,7 @@ public static partial class Collections
 	public static int IndexOf<T>(this IEnumerable<T> collection, T value, IEqualityComparer<T>? comparer)
 	{
 		comparer ??= EqualityComparer<T>.Default;
-		var found = collection.Select((a, i) => new { a, i }).FirstOrDefault(x => comparer.Equals(x.a, value));
+		var found = collection.AsValueEnumerable().Select((a, i) => new { a, i }).FirstOrDefault(x => comparer.Equals(x.a, value));
 		return (found == null) ? (-1) : found.i;
 	}
 
@@ -1277,7 +1278,7 @@ public static partial class Collections
 		// Build up combinations for remaining sequences
 		for (int i = 1; i < length; i++)
 		{
-			current = current.SelectMany(existingCombo => sourcesArray[i].Select(x => new List<string>(existingCombo) { x?.ToString() ?? string.Empty })).ToList();
+			current = current.AsValueEnumerable().SelectMany(existingCombo => sourcesArray[i].Select(x => new List<string>(existingCombo) { x?.ToString() ?? string.Empty })).ToList();
 			if (maxCombinations.HasValue && current.Count >= maxCombinations) // Stop making combinations once reaching the maxCombinations
 			{
 				break;
@@ -1381,7 +1382,7 @@ public static partial class Collections
 	public static bool ContainsDuplicates<T>(this IEnumerable<T> enumerable)
 	{
 		HashSet<T> uniqueElements = new();
-		return enumerable.Any(element => !uniqueElements.Add(element));
+		return enumerable.AsValueEnumerable().Any(element => !uniqueElements.Add(element));
 	}
 
 	/// <summary>

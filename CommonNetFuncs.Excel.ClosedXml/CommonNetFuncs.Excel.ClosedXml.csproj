@@ -28,7 +28,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.3.3</Version>
+		<Version>4.3.4</Version>
 		<MinVerTagPrefix>excel.closedxml-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -84,6 +84,7 @@
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
 		<PackageReference Include="SkiaSharp" PrivateAssets="all" />
 		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" PrivateAssets="all" />
+		<PackageReference Include="ZLinq" />
 	</ItemGroup>
 
 	<ItemGroup>

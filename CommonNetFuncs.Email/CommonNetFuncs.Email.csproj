@@ -28,7 +28,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.3.3</Version>
+		<Version>4.3.4</Version>
 		<MinVerTagPrefix>email-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
@@ -83,6 +83,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="NLog.Extensions.Logging" PrivateAssets="all" />
+		<PackageReference Include="ZLinq" />
 	</ItemGroup>
 
 	<!-- System.Text.Json is part of the net10.0 shared framework, but must be referenced explicitly on netstandard2.1 -->

@@ -139,6 +139,8 @@ public static class Export
 	private static bool AddGenericTableInternal<T>(this SpreadsheetDocument document, object? data, Type dataType, string sheetName, bool createTable = false,
 		string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
 	{
+		document.InitializeExcelFile();
+
 		bool success = false;
 		try
 		{
@@ -234,13 +236,13 @@ public static class Export
 				{
 					string text = properties[i].Name;
 					int ssIdx = GetOrAddSharedString(text, sharedStringCache, sharedStringTable, ref ssCount);
-					headerRow.Append(new Cell
+					headerRow.Append((OpenXmlElement[])[new Cell
 					{
 						CellReference = colLetters[i] + y,
 						StyleIndex = headerStyleId,
 						DataType = CellValues.SharedString,
 						CellValue = new CellValue(ssIdx.ToString())
-					});
+					}]);
 
 					double w = CalculateWidth(text, headerStyleId);
 					if (w > colWidths[i])
@@ -248,7 +250,7 @@ public static class Export
 						colWidths[i] = w;
 					}
 				}
-				sheetData.Append(headerRow);
+				sheetData.Append((OpenXmlElement[])[headerRow]);
 				y++;
 
 				// Write data rows
@@ -260,20 +262,20 @@ public static class Export
 					{
 						string text = properties[i].GetValue(item)?.ToString() ?? string.Empty;
 						int ssIdx = GetOrAddSharedString(text, sharedStringCache, sharedStringTable, ref ssCount);
-						dataRow.Append(new Cell
+						dataRow.Append((OpenXmlElement[])[new Cell
 						{
 							CellReference = colLetters[i] + y,
 							StyleIndex = bodyStyleId,
 							DataType = CellValues.SharedString,
 							CellValue = new CellValue(ssIdx.ToString())
-						});
+						}]);
 						double w = CalculateWidth(text, bodyStyleId);
 						if (w > colWidths[i])
 						{
 							colWidths[i] = w;
 						}
 					}
-					sheetData.Append(dataRow);
+					sheetData.Append((OpenXmlElement[])[dataRow]);
 					y++;
 				}
 
@@ -286,7 +288,7 @@ public static class Export
 				{
 					if (colWidths[i] > 0)
 					{
-						columns.Append(new Column { Min = (uint)(i + 1), Max = (uint)(i + 1), Width = Math.Min(colWidths[i], 100), CustomWidth = true });
+						columns.Append((OpenXmlElement[])[new Column { Min = (uint)(i + 1), Max = (uint)(i + 1), Width = Math.Min(colWidths[i], 100), CustomWidth = true }]);
 					}
 				}
 
@@ -382,20 +384,20 @@ public static class Export
 
 					string text = data.Columns[i].ColumnName;
 					int ssIdx = GetOrAddSharedString(text, sharedStringCache, sharedStringTable, ref ssCount);
-					headerRow.Append(new Cell
+					headerRow.Append((OpenXmlElement[])[new Cell
 					{
 						CellReference = colLetters[i] + y,
 						StyleIndex = headerStyleId,
 						DataType = CellValues.SharedString,
 						CellValue = new CellValue(ssIdx.ToString())
-					});
+					}]);
 					double w = CalculateWidth(text, headerStyleId);
 					if (w > colWidths[i])
 					{
 						colWidths[i] = w;
 					}
 				}
-				sheetData.Append(headerRow);
+				sheetData.Append((OpenXmlElement[])[headerRow]);
 				y++;
 
 				// Write data rows
@@ -412,20 +414,20 @@ public static class Export
 						}
 						string text = items[i]!.ToString() ?? string.Empty;
 						int ssIdx = GetOrAddSharedString(text, sharedStringCache, sharedStringTable, ref ssCount);
-						dataRow.Append(new Cell
+						dataRow.Append((OpenXmlElement[])[new Cell
 						{
 							CellReference = colLetters[i] + y,
 							StyleIndex = bodyStyleId,
 							DataType = CellValues.SharedString,
 							CellValue = new CellValue(ssIdx.ToString())
-						});
+						}]);
 						double w = CalculateWidth(text, bodyStyleId);
 						if (w > colWidths[i])
 						{
 							colWidths[i] = w;
 						}
 					}
-					sheetData.Append(dataRow);
+					sheetData.Append((OpenXmlElement[])[dataRow]);
 					y++;
 				}
 
@@ -438,7 +440,7 @@ public static class Export
 				{
 					if (colWidths[i] > 0)
 					{
-						columns.Append(new Column { Min = (uint)(i + 1), Max = (uint)(i + 1), Width = Math.Min(colWidths[i], 100), CustomWidth = true });
+						columns.Append((OpenXmlElement[])[new Column { Min = (uint)(i + 1), Max = (uint)(i + 1), Width = Math.Min(colWidths[i], 100), CustomWidth = true }]);
 					}
 				}
 
@@ -475,7 +477,7 @@ public static class Export
 		{
 			return index;
 		}
-		table.AppendChild(new SharedStringItem(new Text(text)));
+		table.AppendChild(new SharedStringItem((OpenXmlElement[])[new Text(text)]));
 		cache[text] = count;
 		return count++;
 	}

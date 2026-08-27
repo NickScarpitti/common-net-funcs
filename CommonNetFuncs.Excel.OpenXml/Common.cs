@@ -33,12 +33,32 @@ public static partial class Common
 	private const string WorksheetNotPartOfWorkbookError = "Worksheet is not part of a workbook.";
 
 	/// <summary>
+	/// Populates SpreadsheetDocument with all components needed for a new Excel file without any sheets present yet.
+	/// </summary>
+	/// <param name="document">SpreadsheetDocument to add components to</param>
+	/// <returns>Id of the sheet that was created during initialization</returns>
+	public static WorkbookPart InitializeExcelFile(this SpreadsheetDocument document)
+	{
+		WorkbookPart? workbookPart = document.WorkbookPart;
+
+		workbookPart ??= document.AddWorkbookPart();
+		workbookPart.Workbook ??= new();
+
+		// Ensure that sheets collection exists in the workbook
+		if(workbookPart.Workbook.GetFirstChild<Sheets>() == null)
+		{
+			workbookPart.Workbook.AppendChild(new Sheets());
+		}
+		return workbookPart;
+	}
+
+	/// <summary>
 	/// Populates SpreadsheetDocument with all components needed for a new Excel file including a single new sheet
 	/// </summary>
 	/// <param name="document">SpreadsheetDocument to add components to</param>
-	/// <param name="sheetName">Optional name for the new sheet that will be created</param>
+	/// <param name="sheetName">Name for the initial sheet that will be created (Defaults to Sheet1)</param>
 	/// <returns>Id of the sheet that was created during initialization</returns>
-	public static uint InitializeExcelFile(this SpreadsheetDocument document, string? sheetName = null)
+	public static uint InitializeExcelFile(this SpreadsheetDocument document, string sheetName)
 	{
 		return document.CreateNewSheet(sheetName);
 	}

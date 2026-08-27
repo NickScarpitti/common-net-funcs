@@ -9,26 +9,26 @@ This project contains helper methods for reading and writing Excel files using t
 ## Contents
 
 - [CommonNetFuncs.Excel.OpenXml](#commonnetfuncsexcelopenxml)
-	- [Contents](#contents)
-	- [Common](#common)
-		- [Common Usage Examples](#common-usage-examples)
-			- [InitializeExcelFile / CreateNewSheet](#initializeexcelfile--createnewsheet)
-			- [WriteAndClose / WriteAndCloseAsync](#writeandclose--writeandcloseasync)
-			- [Performance-Optimized Shared String APIs](#performance-optimized-shared-string-apis)
-			- [Reading Cell Values](#reading-cell-values)
-			- [Reading to DataTable](#reading-to-datatable)
-			- [Writing Cell Values](#writing-cell-values)
-			- [Cell Styles](#cell-styles)
-			- [Column Sizing](#column-sizing)
-			- [Table Helpers](#table-helpers)
-			- [Worksheet Utilities](#worksheet-utilities)
-	- [Export](#export)
-		- [Export Usage Examples](#export-usage-examples)
-			- [GenericExcelExport](#genericexcelexport)
-			- [AddGenericTable](#addgenerictable)
-			- [ExportFromTable](#exportfromtable)
-	- [Installation](#installation)
-	- [License](#license)
+  - [Contents](#contents)
+  - [Common](#common)
+    - [Common Usage Examples](#common-usage-examples)
+      - [InitializeExcelFile / CreateNewSheet](#initializeexcelfile--createnewsheet)
+      - [WriteAndClose / WriteAndCloseAsync](#writeandclose--writeandcloseasync)
+      - [Performance-Optimized Shared String APIs](#performance-optimized-shared-string-apis)
+      - [Reading Cell Values](#reading-cell-values)
+      - [Reading to DataTable](#reading-to-datatable)
+      - [Writing Cell Values](#writing-cell-values)
+      - [Cell Styles](#cell-styles)
+      - [Column Sizing](#column-sizing)
+      - [Table Helpers](#table-helpers)
+      - [Worksheet Utilities](#worksheet-utilities)
+  - [Export](#export)
+    - [Export Usage Examples](#export-usage-examples)
+      - [GenericExcelExport](#genericexcelexport)
+      - [AddGenericTable](#addgenerictable)
+      - [ExportFromTable](#exportfromtable)
+  - [Installation](#installation)
+  - [License](#license)
 
 ---
 
@@ -43,6 +43,8 @@ Low-level helpers for building and manipulating `SpreadsheetDocument` objects wi
 
 #### InitializeExcelFile / CreateNewSheet
 
+`InitializeExcelFile()` (no sheet name) only sets up the `WorkbookPart`/`Workbook`/`Sheets` scaffolding — with no sheets — and returns the `WorkbookPart` that was created or reused. `InitializeExcelFile(sheetName)` goes a step further and also creates the first sheet, returning its sheet ID.
+
 ```cs
 using DocumentFormat.OpenXml.Packaging;
 using CommonNetFuncs.Excel.OpenXml;
@@ -54,6 +56,12 @@ uint sheetId = document.InitializeExcelFile("Sheet1"); // creates the workbook a
 uint sheet2Id = document.CreateNewSheet("Sheet2");     // appends a second sheet
 
 Worksheet? ws = document.GetWorksheetById(sheetId);
+
+// Or set up the workbook scaffolding without creating any sheet yet
+using MemoryStream ms2 = new();
+using SpreadsheetDocument emptyDocument = SpreadsheetDocument.Create(ms2, SpreadsheetDocumentType.Workbook, true);
+WorkbookPart workbookPart = emptyDocument.InitializeExcelFile(); // Workbook + empty Sheets collection, no sheets yet
+uint firstSheetId = emptyDocument.CreateNewSheet("Sheet1");      // add sheets whenever you're ready
 ```
 
 #### WriteAndClose / WriteAndCloseAsync

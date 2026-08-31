@@ -136,7 +136,10 @@ public sealed class MailAttachmentBytes : IMailAttachment
 	public MailAttachmentBytes(string? AttachmentName = null, byte[]? AttachmentBytes = null, CompressionLevel compressionLevel = CompressionLevel.Optimal)
 	{
 		this.AttachmentName = AttachmentName;
-		this.AttachmentBytes = AttachmentBytes?.Compress(ECompressionType.Gzip, compressionLevel);
+
+		// Deserializers (e.g., Hangfire/Newtonsoft reconstructing a job argument) invoke this same constructor with bytes that are
+		// already Gzip-compressed from a previous instance; compressing them again would corrupt the attachment on decompression
+		this.AttachmentBytes = AttachmentBytes.IsGzipCompressed() ? AttachmentBytes : AttachmentBytes?.Compress(ECompressionType.Gzip, compressionLevel);
 	}
 
 	public MailAttachmentBytes(string? AttachmentName = null, Stream? AttachmentStream = null, CompressionLevel compressionLevel = CompressionLevel.Optimal)

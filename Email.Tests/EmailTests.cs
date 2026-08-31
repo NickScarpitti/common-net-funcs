@@ -474,6 +474,58 @@ public sealed class EmailTests
 		resultCopy.ToArray().ShouldBe(originalBytes);
 	}
 
+	[Theory]
+	[InlineData(CompressionLevel.NoCompression)]
+	[InlineData(CompressionLevel.Fastest)]
+	[InlineData(CompressionLevel.Optimal)]
+	[InlineData(CompressionLevel.SmallestSize)]
+	public void MailAttachmentBytes_ReconstructedFromAlreadyCompressedBytes_ShouldNotDoubleCompress(CompressionLevel compressionLevel)
+	{
+		// Arrange - simulates a deserializer (e.g., Hangfire/Newtonsoft) reconstructing the object by invoking
+		// the byte[] constructor again with the already-compressed AttachmentBytes from a previously constructed instance
+		byte[] originalBytes = System.Text.Encoding.UTF8.GetBytes("This is the content of an important attachment file.");
+		MailAttachmentBytes original = new("test.xlsx", originalBytes, compressionLevel);
+
+		// Act
+		MailAttachmentBytes reconstructed = new("test.xlsx", original.AttachmentBytes);
+		Stream? result = reconstructed.GetStream();
+
+		// Assert
+		result.ShouldNotBeNull();
+		using MemoryStream resultCopy = new();
+		result.CopyTo(resultCopy);
+		resultCopy.ToArray().ShouldBe(originalBytes);
+	}
+
+#if CORE_NATIVE_BUILD
+	[Theory]
+	[InlineData(CompressionLevel.NoCompression)]
+	[InlineData(CompressionLevel.Fastest)]
+	[InlineData(CompressionLevel.Optimal)]
+	[InlineData(CompressionLevel.SmallestSize)]
+	public void MailAttachmentBytes_NewtonsoftJsonRoundTrip_ShouldNotCorruptAttachment(CompressionLevel compressionLevel)
+	{
+		// Arrange - mirrors how Hangfire serializes/deserializes job arguments (Newtonsoft.Json with TypeNameHandling for the IMailAttachment interface array)
+		byte[] originalBytes = System.Text.Encoding.UTF8.GetBytes("This simulates the binary content of an Excel attachment.");
+		IMailAttachment[] attachments = new IMailAttachment[] { new MailAttachmentBytes("Report.xlsx", originalBytes, compressionLevel) };
+
+		Newtonsoft.Json.JsonSerializerSettings settings = new() { TypeNameHandling = Newtonsoft.Json.TypeNameHandling.Auto };
+
+		// Act
+		string json = Newtonsoft.Json.JsonConvert.SerializeObject(attachments, settings);
+		IMailAttachment[]? deserializedAttachments = Newtonsoft.Json.JsonConvert.DeserializeObject<IMailAttachment[]>(json, settings);
+
+		// Assert
+		deserializedAttachments.ShouldNotBeNull();
+		deserializedAttachments.Length.ShouldBe(1);
+		Stream? result = deserializedAttachments[0].GetStream();
+		result.ShouldNotBeNull();
+		using MemoryStream resultCopy = new();
+		result.CopyTo(resultCopy);
+		resultCopy.ToArray().ShouldBe(originalBytes);
+	}
+#endif
+
 	[Fact]
 	public void MailAttachmentBytes_ImplementsIMailAttachment()
 	{

@@ -26,6 +26,7 @@
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="MimeKit" />
 		<PackageReference Include="NLog.Extensions.Logging" />
+		<PackageReference Include="Newtonsoft.Json" />
 		<PackageReference Include="Shouldly" />
 		<PackageReference Include="xunit.v3" />
 		<PackageReference Include="xunit.runner.visualstudio">

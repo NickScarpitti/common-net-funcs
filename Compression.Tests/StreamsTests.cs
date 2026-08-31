@@ -300,7 +300,7 @@ public sealed class StreamsTests
 
 		// Assert
 		compressedData.Length.ShouldBeGreaterThan(0);
-		compressedData.Decompress(ECompressionType.Gzip).ShouldBe(originalData);
+		compressedData.Decompress(ECompressionType.Gzip, cancellationToken: Current.CancellationToken).ShouldBe(originalData);
 	}
 
 	[Theory]
@@ -323,7 +323,7 @@ public sealed class StreamsTests
 		compressedData.Length.ShouldBeGreaterThan(0);
 
 		// Verify we can decompress it back
-		byte[] decompressedData = compressedData.Decompress(compressionType);
+		byte[] decompressedData = compressedData.Decompress(compressionType, cancellationToken: Current.CancellationToken);
 		decompressedData.ShouldBe(mediumData);
 	}
 
@@ -344,7 +344,7 @@ public sealed class StreamsTests
 		byte[] compressedData = originalData.Compress(compressionType);
 
 		// Act
-		byte[] decompressedData = compressedData.Decompress(compressionType);
+		byte[] decompressedData = compressedData.Decompress(compressionType, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		decompressedData.ShouldBe(originalData);
@@ -464,6 +464,254 @@ public sealed class StreamsTests
 
 		// Assert
 		result.ShouldBe(expected);
+	}
+
+	// Tests for byte[] Is*Compressed header-signature helpers
+	[Theory]
+	[InlineData(null, false)]
+	[InlineData(new byte[0], false)]
+	[InlineData(new byte[] { 0x1F }, false)]
+	[InlineData(new byte[] { 0x1F, 0x8B }, true)]
+	[InlineData(new byte[] { 0x1F, 0x8B, 0x08, 0x00 }, true)]
+	[InlineData(new byte[] { 0x00, 0x00 }, false)]
+	public void IsGzipCompressed_ByteArray_Should_Detect_Gzip_Header(byte[]? data, bool expected)
+	{
+		// Act
+		bool result = data.IsGzipCompressed();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(null, false)]
+	[InlineData(new byte[0], false)]
+	[InlineData(new byte[] { 0x78 }, false)]
+	[InlineData(new byte[] { 0x78, 0x01 }, true)]
+	[InlineData(new byte[] { 0x78, 0x9C }, true)]
+	[InlineData(new byte[] { 0x78, 0xDA }, true)]
+	[InlineData(new byte[] { 0x78, 0x00 }, false)]
+	[InlineData(new byte[] { 0x00, 0x00 }, false)]
+	public void IsZLibCompressed_ByteArray_Should_Detect_ZLib_Header(byte[]? data, bool expected)
+	{
+		// Act
+		bool result = data.IsZLibCompressed();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(null, false)]
+	[InlineData(new byte[0], false)]
+	[InlineData(new byte[] { 0xCE, 0xB2, 0xCF }, false)] // Only 3 of the 4 required bytes
+	[InlineData(new byte[] { 0xCE, 0xB2, 0xCF, 0x81 }, true)]
+	[InlineData(new byte[] { 0x00, 0x00, 0x00, 0x00 }, false)]
+	public void IsBrotliCompressed_ByteArray_Should_Detect_Brotli_Header(byte[]? data, bool expected)
+	{
+		// Act
+		bool result = data.IsBrotliCompressed();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	// Tests for Stream Is*Compressed header-signature helpers
+	[Fact]
+	public void IsGzipCompressed_Stream_Should_Return_False_For_Null_Stream()
+	{
+		Stream? stream = null;
+		stream.IsGzipCompressed().ShouldBeFalse();
+	}
+
+	[Fact]
+	public void IsGzipCompressed_Stream_Should_Return_False_For_Unreadable_Stream()
+	{
+		// Arrange
+		using MemoryStream stream = new();
+		stream.Close();
+
+		// Act & Assert
+		stream.IsGzipCompressed().ShouldBeFalse();
+	}
+
+	[Fact]
+	public void IsGzipCompressed_Stream_Should_Return_False_For_Empty_Stream()
+	{
+		// Arrange
+		using MemoryStream stream = new();
+
+		// Act & Assert
+		stream.IsGzipCompressed().ShouldBeFalse();
+		stream.Position.ShouldBe(0);
+	}
+
+	[Theory]
+	[InlineData(ECompressionType.Gzip, true)]
+	[InlineData(ECompressionType.Deflate, false)]
+	public async Task IsGzipCompressed_Stream_Should_Detect_Gzip_For_Seekable_Stream(ECompressionType compressionType, bool expected)
+	{
+		// Arrange
+		byte[] compressedData = await smallData.CompressAsync(compressionType, cancellationToken: Current.CancellationToken);
+		using MemoryStream stream = new(compressedData);
+
+		// Act
+		bool result = stream.IsGzipCompressed();
+
+		// Assert
+		result.ShouldBe(expected);
+		stream.Position.ShouldBe(0);
+	}
+
+	[Fact]
+	public void IsGzipCompressed_Stream_Should_Preserve_NonZero_Position_For_Seekable_Stream()
+	{
+		// Arrange - none of the bytes visible from the current position match the Gzip signature
+		using MemoryStream stream = new(new byte[] { 0x11, 0x22, 0x33, 0x44, 0x55, 0x66 });
+		stream.Position = 2;
+
+		// Act
+		bool result = stream.IsGzipCompressed();
+
+		// Assert
+		result.ShouldBeFalse();
+		stream.Position.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task IsGzipCompressed_Stream_Should_Detect_Gzip_For_NonSeekable_Stream_Without_Throwing()
+	{
+		// Arrange
+		byte[] compressedData = await smallData.CompressAsync(ECompressionType.Gzip, cancellationToken: Current.CancellationToken);
+		await using NonSeekableStream stream = new(compressedData);
+
+		// Act & Assert
+		Should.NotThrow(() => stream.IsGzipCompressed().ShouldBeTrue());
+	}
+
+	[Fact]
+	public void IsZLibCompressed_Stream_Should_Return_False_For_Null_Stream()
+	{
+		Stream? stream = null;
+		stream.IsZLibCompressed().ShouldBeFalse();
+	}
+
+	[Fact]
+	public void IsZLibCompressed_Stream_Should_Return_False_For_Unreadable_Stream()
+	{
+		// Arrange
+		using MemoryStream stream = new();
+		stream.Close();
+
+		// Act & Assert
+		stream.IsZLibCompressed().ShouldBeFalse();
+	}
+
+	[Theory]
+	[InlineData(ECompressionType.ZLib, true)]
+	[InlineData(ECompressionType.Gzip, false)]
+	public async Task IsZLibCompressed_Stream_Should_Detect_ZLib_For_Seekable_Stream(ECompressionType compressionType, bool expected)
+	{
+		// Arrange
+		byte[] compressedData = await smallData.CompressAsync(compressionType, cancellationToken: Current.CancellationToken);
+		using MemoryStream stream = new(compressedData);
+
+		// Act
+		bool result = stream.IsZLibCompressed();
+
+		// Assert
+		result.ShouldBe(expected);
+		stream.Position.ShouldBe(0);
+	}
+
+	[Fact]
+	public void IsZLibCompressed_Stream_Should_Preserve_NonZero_Position_For_Seekable_Stream()
+	{
+		// Arrange - none of the bytes visible from the current position match a valid ZLib header
+		using MemoryStream stream = new(new byte[] { 0x11, 0x22, 0x33, 0x44, 0x55, 0x66 });
+		stream.Position = 2;
+
+		// Act
+		bool result = stream.IsZLibCompressed();
+
+		// Assert
+		result.ShouldBeFalse();
+		stream.Position.ShouldBe(2);
+	}
+
+	[Fact]
+	public async Task IsZLibCompressed_Stream_Should_Detect_ZLib_For_NonSeekable_Stream_Without_Throwing()
+	{
+		// Arrange
+		byte[] compressedData = await smallData.CompressAsync(ECompressionType.ZLib, cancellationToken: Current.CancellationToken);
+		await using NonSeekableStream stream = new(compressedData);
+
+		// Act & Assert
+		Should.NotThrow(() => stream.IsZLibCompressed().ShouldBeTrue());
+	}
+
+	[Fact]
+	public void IsBrotliCompressed_Stream_Should_Return_False_For_Null_Stream()
+	{
+		Stream? stream = null;
+		stream.IsBrotliCompressed().ShouldBeFalse();
+	}
+
+	[Fact]
+	public void IsBrotliCompressed_Stream_Should_Return_False_For_Unreadable_Stream()
+	{
+		// Arrange
+		using MemoryStream stream = new();
+		stream.Close();
+
+		// Act & Assert
+		stream.IsBrotliCompressed().ShouldBeFalse();
+	}
+
+	[Fact]
+	public async Task IsBrotliCompressed_Stream_Should_Return_True_For_Data_With_Brotli_Signature()
+	{
+		// Arrange - .NET's BrotliStream output has no fixed magic number, so the signature is crafted manually here (matches AnalyzeHeader's convention)
+		byte[] data = new byte[] { 0xCE, 0xB2, 0xCF, 0x81, 0x00, 0x00 };
+		using MemoryStream stream = new(data);
+
+		// Act
+		bool result = stream.IsBrotliCompressed();
+
+		// Assert
+		result.ShouldBeTrue();
+		stream.Position.ShouldBe(0);
+
+		// Sanity check: real Gzip-compressed data should not match the Brotli signature
+		byte[] gzipData = await smallData.CompressAsync(ECompressionType.Gzip, cancellationToken: Current.CancellationToken);
+		using MemoryStream gzipStream = new(gzipData);
+		gzipStream.IsBrotliCompressed().ShouldBeFalse();
+	}
+
+	[Fact]
+	public void IsBrotliCompressed_Stream_Should_Preserve_NonZero_Position_For_Seekable_Stream()
+	{
+		// Arrange - none of the bytes visible from the current position match the Brotli signature
+		using MemoryStream stream = new(new byte[] { 0x11, 0x22, 0x33, 0x44, 0x55, 0x66 });
+		stream.Position = 2;
+
+		// Act
+		bool result = stream.IsBrotliCompressed();
+
+		// Assert
+		result.ShouldBeFalse();
+		stream.Position.ShouldBe(2);
+	}
+
+	[Fact]
+	public void IsBrotliCompressed_Stream_Should_Detect_Brotli_For_NonSeekable_Stream_Without_Throwing()
+	{
+		// Arrange
+		byte[] data = new byte[] { 0xCE, 0xB2, 0xCF, 0x81, 0x00, 0x00 };
+		using NonSeekableStream stream = new(data);
+
+		// Act & Assert
+		Should.NotThrow(() => stream.IsBrotliCompressed().ShouldBeTrue());
 	}
 
 	// Tests for Compress(Stream) method
@@ -638,7 +886,7 @@ public sealed class StreamsTests
 		byte[] compressedData = await originalData.CompressAsync(ECompressionType.Deflate, cancellationToken: Current.CancellationToken);
 
 		// Act
-		bool isDeflate = await IsDeflateCompressed(compressedData);
+		bool isDeflate = await compressedData.IsDeflateCompressed();
 
 		// Assert
 		isDeflate.ShouldBeTrue();
@@ -651,7 +899,7 @@ public sealed class StreamsTests
 		byte[] originalData = "Hello, World! This is not compressed data."u8.ToArray();
 
 		// Act
-		bool isDeflate = await IsDeflateCompressed(originalData);
+		bool isDeflate = await originalData.IsDeflateCompressed();
 
 		// Assert
 		isDeflate.ShouldBeFalse();
@@ -664,7 +912,7 @@ public sealed class StreamsTests
 		byte[] emptyData = [];
 
 		// Act
-		bool isDeflate = await IsDeflateCompressed(emptyData);
+		bool isDeflate = await emptyData.IsDeflateCompressed();
 
 		// Assert
 		isDeflate.ShouldBeFalse();

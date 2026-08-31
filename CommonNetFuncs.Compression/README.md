@@ -135,6 +135,21 @@ public void CompressAndDecompressBytes()
 }
 ```
 
+Check whether a byte array or stream is already compressed with a specific algorithm by inspecting its header signature, without fully decompressing it. `IsGzipCompressed`, `IsZLibCompressed`, and `IsBrotliCompressed` are available for both `byte[]` and `Stream` inputs. The `Stream` overloads restore the stream's original position afterward when the stream is seekable; for non-seekable streams the header bytes read to check the signature are consumed and cannot be recovered.
+
+```cs
+public void CheckIfDataIsCompressed(byte[] data, Stream stream)
+{
+    bool bytesAreGzipped = data.IsGzipCompressed();
+    bool bytesAreZLibCompressed = data.IsZLibCompressed();
+    bool bytesAreBrotliCompressed = data.IsBrotliCompressed();
+
+    bool streamIsGzipped = stream.IsGzipCompressed();
+    bool streamIsZLibCompressed = stream.IsZLibCompressed();
+    bool streamIsBrotliCompressed = stream.IsBrotliCompressed();
+}
+```
+
 </details>
 
 ## Installation

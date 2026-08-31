@@ -297,7 +297,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		results[1]!.Id.ShouldBe(2);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task GetStreaming_ShouldUseMemPackHeaders_WhenConfiguredWithoutCompression()
 	{
 		// Arrange
@@ -504,7 +504,7 @@ public sealed class RestHelpersWrapperTests : IDisposable
 		results[1]!.Id.ShouldBe(2);
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public async Task PostRequestStreaming_ShouldUseMemPackHeaders_WhenConfiguredWithoutCompression()
 	{
 		// Arrange

@@ -22,7 +22,7 @@ internal static class WrapperHelpers
 	private static readonly ImmutableDictionary<string, string> JsonHeadersWithBrotli = ImmutableDictionary.CreateRange([JsonContentHeader, JsonAcceptHeader, BrotliEncodingHeader]);
 
 	/// <summary>
-	/// Populates an existing dictionary with headers instead of creating a new one (for use with pooling).
+	/// Populates a dictionary with custom and compression headers.
 	/// </summary>
 	internal static void PopulateHeaders(Dictionary<string, string> headers, RestHelperOptions options, bool isStreaming)
 	{

@@ -90,7 +90,7 @@ public static class AwsS3HelpersStatic
 
 					if (compressSteam)
 					{
-						await decompressedStream.CompressStream(uploadStream, compressionType, CompressionLevel.Optimal, cancellationToken).ConfigureAwait(false);
+						await decompressedStream.CompressStreamAsync(uploadStream, compressionType, CompressionLevel.Optimal, cancellationToken).ConfigureAwait(false);
 					}
 					else if (currentCompression != ECompressionType.None)
 					{

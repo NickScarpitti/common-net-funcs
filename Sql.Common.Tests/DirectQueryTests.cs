@@ -62,12 +62,12 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task GetDataTable_ShouldReturnPopulatedDataTable_WhenQuerySucceeds()
+	public async Task GetDataTableAsync_ShouldReturnPopulatedDataTable_WhenQuerySucceeds()
 	{
 		await using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM TestTable";
 
-		using DataTable result = await DirectQuery.GetDataTable(connection, cmd, cancellationToken: Current.CancellationToken);
+		using DataTable result = await DirectQuery.GetDataTableAsync(connection, cmd, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 		result.Rows.Count.ShouldBe(5);
@@ -76,12 +76,12 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataTableSynchronous_ShouldReturnPopulatedDataTable_WhenQuerySucceeds()
+	public void GetDataTable_ShouldReturnPopulatedDataTable_WhenQuerySucceeds()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM TestTable";
 
-		using DataTable result = DirectQuery.GetDataTableSynchronous(connection, cmd);
+		using DataTable result = DirectQuery.GetDataTable(connection, cmd);
 
 		result.ShouldNotBeNull();
 		result.Rows.Count.ShouldBe(5);
@@ -90,7 +90,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task GetDataTable_ShouldRetryOnFailure()
+	public async Task GetDataTableAsync_ShouldRetryOnFailure()
 	{
 		// Simulate a failure by using an invalid SQL for the first two attempts, then a valid one
 		DataTable result = null!;
@@ -109,7 +109,7 @@ public sealed class DirectQueryTests : IDisposable
 
 			try
 			{
-				result = await DirectQuery.GetDataTable(connection, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
+				result = await DirectQuery.GetDataTableAsync(connection, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
 				if (result.Rows.Count > 0)
 				{
 					break;
@@ -128,24 +128,24 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task RunUpdateQuery_ShouldReturnSuccessResult_WhenUpdateSucceeds()
+	public async Task RunUpdateQueryAsync_ShouldReturnSuccessResult_WhenUpdateSucceeds()
 	{
 		await using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
 
-		UpdateResult result = await DirectQuery.RunUpdateQuery(connection, cmd, cancellationToken: Current.CancellationToken);
+		UpdateResult result = await DirectQuery.RunUpdateQueryAsync(connection, cmd, cancellationToken: Current.CancellationToken);
 
 		result.Success.ShouldBeTrue();
 		result.RecordsChanged.ShouldBe(5);
 	}
 
 	[Fact]
-	public void RunUpdateQuerySynchronous_ShouldReturnSuccessResult_WhenUpdateSucceeds()
+	public void RunUpdateQuery_ShouldReturnSuccessResult_WhenUpdateSucceeds()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
 
-		UpdateResult result = DirectQuery.RunUpdateQuerySynchronous(connection, cmd);
+		UpdateResult result = DirectQuery.RunUpdateQuery(connection, cmd);
 
 		result.Success.ShouldBeTrue();
 		result.RecordsChanged.ShouldBe(5);
@@ -306,13 +306,13 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataStreamSynchronous_ShouldYieldMappedObjects()
+	public void GetDataStream_ShouldYieldMappedObjects()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT Id, Name FROM TestTable ORDER BY Id LIMIT 2";
 
 		List<TestModel> results = new();
-		results.AddRange(DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, cancellationToken: Current.CancellationToken));
+		results.AddRange(DirectQuery.GetDataStream<TestModel>(connection, cmd, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(2);
 		results[0].Id.ShouldBe(1);
@@ -322,7 +322,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataStreamSynchronous_ShouldRespectCancellationToken()
+	public void GetDataStream_ShouldRespectCancellationToken()
 	{
 		using CancellationTokenSource cts = new();
 		using SqliteCommand cmd = connection.CreateCommand();
@@ -330,7 +330,7 @@ public sealed class DirectQueryTests : IDisposable
 
 		List<TestModel> results = new();
 		int count = 0;
-		foreach (TestModel item in DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, cancellationToken: cts.Token))
+		foreach (TestModel item in DirectQuery.GetDataStream<TestModel>(connection, cmd, cancellationToken: cts.Token))
 		{
 			results.Add(item);
 			count++;
@@ -375,24 +375,24 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task RunUpdateQuery_ShouldRetryOnFailure()
+	public async Task RunUpdateQueryAsync_ShouldRetryOnFailure()
 	{
 		await using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name = 'Test1'";
 
-		UpdateResult result = await DirectQuery.RunUpdateQuery(connection, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
+		UpdateResult result = await DirectQuery.RunUpdateQueryAsync(connection, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
 
 		result.Success.ShouldBeTrue();
 		result.RecordsChanged.ShouldBe(1);
 	}
 
 	[Fact]
-	public void RunUpdateQuerySynchronous_ShouldRetryOnFailure()
+	public void RunUpdateQuery_ShouldRetryOnFailure()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "UPDATE TestTable SET Name = 'Updated' WHERE Name = 'Test1'";
 
-		UpdateResult result = DirectQuery.RunUpdateQuerySynchronous(connection, cmd, maxRetry: 3);
+		UpdateResult result = DirectQuery.RunUpdateQuery(connection, cmd, maxRetry: 3);
 
 		result.Success.ShouldBeTrue();
 		result.RecordsChanged.ShouldBe(1);
@@ -418,13 +418,13 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataStreamSynchronous_WithoutCache_ShouldYieldMappedObjects()
+	public void GetDataStream_WithoutCache_ShouldYieldMappedObjects()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT Id, Name FROM TestTable ORDER BY Id LIMIT 2";
 
 		List<TestModel> results = new();
-		results.AddRange(DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, useCache: false, cancellationToken: Current.CancellationToken));
+		results.AddRange(DirectQuery.GetDataStream<TestModel>(connection, cmd, useCache: false, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(2);
 		results[0].Id.ShouldBe(1);
@@ -460,24 +460,24 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task GetDataTable_WithCustomTimeout_ShouldReturnPopulatedDataTable()
+	public async Task GetDataTableAsync_WithCustomTimeout_ShouldReturnPopulatedDataTable()
 	{
 		await using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM TestTable";
 
-		using DataTable result = await DirectQuery.GetDataTable(connection, cmd, commandTimeoutSeconds: 60, cancellationToken: Current.CancellationToken);
+		using DataTable result = await DirectQuery.GetDataTableAsync(connection, cmd, commandTimeoutSeconds: 60, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 		result.Rows.Count.ShouldBe(5);
 	}
 
 	[Fact]
-	public void GetDataTableSynchronous_WithCustomTimeout_ShouldReturnPopulatedDataTable()
+	public void GetDataTable_WithCustomTimeout_ShouldReturnPopulatedDataTable()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM TestTable";
 
-		using DataTable result = DirectQuery.GetDataTableSynchronous(connection, cmd, commandTimeoutSeconds: 60);
+		using DataTable result = DirectQuery.GetDataTable(connection, cmd, commandTimeoutSeconds: 60);
 
 		result.ShouldNotBeNull();
 		result.Rows.Count.ShouldBe(5);
@@ -534,7 +534,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataStreamSynchronous_ComplexModel_ShouldMapCorrectly()
+	public void GetDataStream_ComplexModel_ShouldMapCorrectly()
 	{
 		SetupDb_AdditionalTable_ForComplexTests();
 
@@ -542,7 +542,7 @@ public sealed class DirectQueryTests : IDisposable
 		cmd.CommandText = "SELECT Id, Name, LongValue, DoubleValue FROM ComplexTestTable ORDER BY Id";
 
 		List<ComplexTestModel> results = new();
-		results.AddRange(DirectQuery.GetDataStreamSynchronous<ComplexTestModel>(connection, cmd, cancellationToken: Current.CancellationToken));
+		results.AddRange(DirectQuery.GetDataStream<ComplexTestModel>(connection, cmd, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(2);
 		results[0].Id.ShouldBe(1);
@@ -603,7 +603,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataStreamSynchronous_WithNullValues_ShouldMapCorrectly()
+	public void GetDataStream_WithNullValues_ShouldMapCorrectly()
 	{
 		using SqliteCommand createCommand = connection.CreateCommand();
 		createCommand.CommandText =
@@ -621,7 +621,7 @@ public sealed class DirectQueryTests : IDisposable
 		cmd.CommandText = "SELECT Id, Name FROM NullableTestTable2 ORDER BY Id";
 
 		List<NullableTestModel> results = new();
-		results.AddRange(DirectQuery.GetDataStreamSynchronous<NullableTestModel>(connection, cmd, cancellationToken: Current.CancellationToken));
+		results.AddRange(DirectQuery.GetDataStream<NullableTestModel>(connection, cmd, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(2);
 		results[0].Name.ShouldBeNull();
@@ -653,48 +653,48 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task GetDataTable_WithInvalidQuery_ShouldReturnEmptyDataTable()
+	public async Task GetDataTableAsync_WithInvalidQuery_ShouldReturnEmptyDataTable()
 	{
 		await using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM NonExistentTable";
 
-		using DataTable result = await DirectQuery.GetDataTable(connection, cmd, maxRetry: 1, cancellationToken: Current.CancellationToken);
+		using DataTable result = await DirectQuery.GetDataTableAsync(connection, cmd, maxRetry: 1, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 		result.Rows.Count.ShouldBe(0);
 	}
 
 	[Fact]
-	public void GetDataTableSynchronous_WithInvalidQuery_ShouldReturnEmptyDataTable()
+	public void GetDataTable_WithInvalidQuery_ShouldReturnEmptyDataTable()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM NonExistentTable";
 
-		using DataTable result = DirectQuery.GetDataTableSynchronous(connection, cmd, maxRetry: 1);
+		using DataTable result = DirectQuery.GetDataTable(connection, cmd, maxRetry: 1);
 
 		result.ShouldNotBeNull();
 		result.Rows.Count.ShouldBe(0);
 	}
 
 	[Fact]
-	public async Task RunUpdateQuery_WithInvalidQuery_ShouldReturnFailure()
+	public async Task RunUpdateQueryAsync_WithInvalidQuery_ShouldReturnFailure()
 	{
 		await using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "UPDATE NonExistentTable SET Name = 'Test'";
 
-		UpdateResult result = await DirectQuery.RunUpdateQuery(connection, cmd, maxRetry: 1, cancellationToken: Current.CancellationToken);
+		UpdateResult result = await DirectQuery.RunUpdateQueryAsync(connection, cmd, maxRetry: 1, cancellationToken: Current.CancellationToken);
 
 		result.Success.ShouldBeFalse();
 		result.RecordsChanged.ShouldBe(0);
 	}
 
 	[Fact]
-	public void RunUpdateQuerySynchronous_WithInvalidQuery_ShouldReturnFailure()
+	public void RunUpdateQuery_WithInvalidQuery_ShouldReturnFailure()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "UPDATE NonExistentTable SET Name = 'Test'";
 
-		UpdateResult result = DirectQuery.RunUpdateQuerySynchronous(connection, cmd, maxRetry: 1);
+		UpdateResult result = DirectQuery.RunUpdateQuery(connection, cmd, maxRetry: 1);
 
 		result.Success.ShouldBeFalse();
 		result.RecordsChanged.ShouldBe(0);
@@ -710,48 +710,48 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task GetDataTable_WithMultipleRetries_ShouldReturnEmptyDataTable()
+	public async Task GetDataTableAsync_WithMultipleRetries_ShouldReturnEmptyDataTable()
 	{
 		await using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM NonExistentTable";
 
-		using DataTable result = await DirectQuery.GetDataTable(connection, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
+		using DataTable result = await DirectQuery.GetDataTableAsync(connection, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 		result.Rows.Count.ShouldBe(0);
 	}
 
 	[Fact]
-	public void GetDataTableSynchronous_WithMultipleRetries_ShouldReturnEmptyDataTable()
+	public void GetDataTable_WithMultipleRetries_ShouldReturnEmptyDataTable()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM NonExistentTable";
 
-		using DataTable result = DirectQuery.GetDataTableSynchronous(connection, cmd, maxRetry: 3);
+		using DataTable result = DirectQuery.GetDataTable(connection, cmd, maxRetry: 3);
 
 		result.ShouldNotBeNull();
 		result.Rows.Count.ShouldBe(0);
 	}
 
 	[Fact]
-	public async Task RunUpdateQuery_WithMultipleRetries_ShouldReturnFailure()
+	public async Task RunUpdateQueryAsync_WithMultipleRetries_ShouldReturnFailure()
 	{
 		await using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "UPDATE NonExistentTable SET Name = 'Test'";
 
-		UpdateResult result = await DirectQuery.RunUpdateQuery(connection, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
+		UpdateResult result = await DirectQuery.RunUpdateQueryAsync(connection, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
 
 		result.Success.ShouldBeFalse();
 		result.RecordsChanged.ShouldBe(0);
 	}
 
 	[Fact]
-	public void RunUpdateQuerySynchronous_WithMultipleRetries_ShouldReturnFailure()
+	public void RunUpdateQuery_WithMultipleRetries_ShouldReturnFailure()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "UPDATE NonExistentTable SET Name = 'Test'";
 
-		UpdateResult result = DirectQuery.RunUpdateQuerySynchronous(connection, cmd, maxRetry: 3);
+		UpdateResult result = DirectQuery.RunUpdateQuery(connection, cmd, maxRetry: 3);
 
 		result.Success.ShouldBeFalse();
 		result.RecordsChanged.ShouldBe(0);
@@ -804,13 +804,13 @@ public sealed class DirectQueryTests : IDisposable
 	// Exception Path Tests - Testing various exception scenarios
 
 	[Fact]
-	public async Task GetDataTable_WithDisposedConnection_ShouldHandleExceptionAndReturnEmptyTable()
+	public async Task GetDataTableAsync_WithDisposedConnection_ShouldHandleExceptionAndReturnEmptyTable()
 	{
 		SqliteConnection disposedConn = new("DataSource=:memory:");
 		await disposedConn.DisposeAsync();
 		await using SqliteCommand cmd = new("SELECT 1", disposedConn);
 
-		using DataTable result = await DirectQuery.GetDataTable(disposedConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
+		using DataTable result = await DirectQuery.GetDataTableAsync(disposedConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 		// SQLite can still execute simple queries even with disposed connection due to how it manages connections
@@ -818,39 +818,39 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataTableSynchronous_WithDisposedConnection_ShouldHandleExceptionAndReturnEmptyTable()
+	public void GetDataTable_WithDisposedConnection_ShouldHandleExceptionAndReturnEmptyTable()
 	{
 		SqliteConnection disposedConn = new("DataSource=:memory:");
 		disposedConn.Dispose();
 		using SqliteCommand cmd = new("SELECT 1", disposedConn);
 
-		using DataTable result = DirectQuery.GetDataTableSynchronous(disposedConn, cmd, maxRetry: 2);
+		using DataTable result = DirectQuery.GetDataTable(disposedConn, cmd, maxRetry: 2);
 
 		result.ShouldNotBeNull();
 		// SQLite can still execute simple queries even with disposed connection
 	}
 
 	[Fact]
-	public async Task RunUpdateQuery_WithDisposedConnection_ShouldReturnFailureAfterRetries()
+	public async Task RunUpdateQueryAsync_WithDisposedConnection_ShouldReturnFailureAfterRetries()
 	{
 		SqliteConnection disposedConn = new("DataSource=:memory:");
 		await disposedConn.DisposeAsync();
 		await using SqliteCommand cmd = new("UPDATE TestTable SET Name = 'Test'", disposedConn);
 
-		UpdateResult result = await DirectQuery.RunUpdateQuery(disposedConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
+		UpdateResult result = await DirectQuery.RunUpdateQueryAsync(disposedConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
 
 		result.Success.ShouldBeFalse();
 		result.RecordsChanged.ShouldBe(0);
 	}
 
 	[Fact]
-	public void RunUpdateQuerySynchronous_WithDisposedConnection_ShouldReturnFailureAfterRetries()
+	public void RunUpdateQuery_WithDisposedConnection_ShouldReturnFailureAfterRetries()
 	{
 		SqliteConnection disposedConn = new("DataSource=:memory:");
 		disposedConn.Dispose();
 		using SqliteCommand cmd = new("UPDATE TestTable SET Name = 'Test'", disposedConn);
 
-		UpdateResult result = DirectQuery.RunUpdateQuerySynchronous(disposedConn, cmd, maxRetry: 2);
+		UpdateResult result = DirectQuery.RunUpdateQuery(disposedConn, cmd, maxRetry: 2);
 
 		result.Success.ShouldBeFalse();
 		result.RecordsChanged.ShouldBe(0);
@@ -878,14 +878,14 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataStreamSynchronous_WithTypeMismatch_ShouldThrowDataException()
+	public void GetDataStream_WithTypeMismatch_ShouldThrowDataException()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT Id, Name FROM TestTable LIMIT 1";
 
 		Should.Throw<DataException>(() =>
 		{
-			foreach (IncompatibleTypeModel item in DirectQuery.GetDataStreamSynchronous<IncompatibleTypeModel>(connection, cmd))
+			foreach (IncompatibleTypeModel item in DirectQuery.GetDataStream<IncompatibleTypeModel>(connection, cmd))
 			{
 				// This should throw before we get here
 			}
@@ -902,13 +902,13 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task GetDataTable_WithConnectionThatFailsOnOpen_ShouldRetryAndReturnEmpty()
+	public async Task GetDataTableAsync_WithConnectionThatFailsOnOpen_ShouldRetryAndReturnEmpty()
 	{
 		// SQLite is very resilient - even with unusual paths it can work
 		SqliteConnection badConn = new("DataSource=|invalid|path|");
 		await using SqliteCommand cmd = new("SELECT 1", badConn);
 
-		using DataTable result = await DirectQuery.GetDataTable(badConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
+		using DataTable result = await DirectQuery.GetDataTableAsync(badConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 		// May succeed or fail depending on SQLite behavior, but should not crash
@@ -916,13 +916,13 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataTableSynchronous_WithConnectionThatFailsOnOpen_ShouldRetryAndReturnEmpty()
+	public void GetDataTable_WithConnectionThatFailsOnOpen_ShouldRetryAndReturnEmpty()
 	{
 		// SQLite is very resilient - even with unusual paths it can work
 		SqliteConnection badConn = new("DataSource=|invalid|path|");
 		using SqliteCommand cmd = new("SELECT 1", badConn);
 
-		using DataTable result = DirectQuery.GetDataTableSynchronous(badConn, cmd, maxRetry: 2);
+		using DataTable result = DirectQuery.GetDataTable(badConn, cmd, maxRetry: 2);
 
 		result.ShouldNotBeNull();
 		// May succeed or fail depending on SQLite behavior, but should not crash
@@ -930,12 +930,12 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task RunUpdateQuery_WithConnectionThatFailsOnOpen_ShouldRetryAndReturnFailure()
+	public async Task RunUpdateQueryAsync_WithConnectionThatFailsOnOpen_ShouldRetryAndReturnFailure()
 	{
 		SqliteConnection badConn = new("DataSource=|invalid|path|");
 		await using SqliteCommand cmd = new("UPDATE TestTable SET Name = 'Test'", badConn);
 
-		UpdateResult result = await DirectQuery.RunUpdateQuery(badConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
+		UpdateResult result = await DirectQuery.RunUpdateQueryAsync(badConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
 
 		result.Success.ShouldBeFalse();
 		result.RecordsChanged.ShouldBe(0);
@@ -943,12 +943,12 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void RunUpdateQuerySynchronous_WithConnectionThatFailsOnOpen_ShouldRetryAndReturnFailure()
+	public void RunUpdateQuery_WithConnectionThatFailsOnOpen_ShouldRetryAndReturnFailure()
 	{
 		SqliteConnection badConn = new("DataSource=|invalid|path|");
 		using SqliteCommand cmd = new("UPDATE TestTable SET Name = 'Test'", badConn);
 
-		UpdateResult result = DirectQuery.RunUpdateQuerySynchronous(badConn, cmd, maxRetry: 2);
+		UpdateResult result = DirectQuery.RunUpdateQuery(badConn, cmd, maxRetry: 2);
 
 		result.Success.ShouldBeFalse();
 		result.RecordsChanged.ShouldBe(0);
@@ -966,25 +966,25 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task GetDataTable_WithVeryShortTimeout_MayTriggerExceptions()
+	public async Task GetDataTableAsync_WithVeryShortTimeout_MayTriggerExceptions()
 	{
 		await using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM TestTable";
 
 		// Very short timeout might cause issues, but should still return a result or empty table
-		using DataTable result = await DirectQuery.GetDataTable(connection, cmd, commandTimeoutSeconds: 1, maxRetry: 1, cancellationToken: Current.CancellationToken);
+		using DataTable result = await DirectQuery.GetDataTableAsync(connection, cmd, commandTimeoutSeconds: 1, maxRetry: 1, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 	}
 
 	[Fact]
-	public void GetDataTableSynchronous_WithVeryShortTimeout_MayTriggerExceptions()
+	public void GetDataTable_WithVeryShortTimeout_MayTriggerExceptions()
 	{
 		using SqliteCommand cmd = connection.CreateCommand();
 		cmd.CommandText = "SELECT * FROM TestTable";
 
 		// Very short timeout might cause issues, but should still return a result or empty table
-		using DataTable result = DirectQuery.GetDataTableSynchronous(connection, cmd, commandTimeoutSeconds: 1, maxRetry: 1);
+		using DataTable result = DirectQuery.GetDataTable(connection, cmd, commandTimeoutSeconds: 1, maxRetry: 1);
 
 		result.ShouldNotBeNull();
 	}
@@ -1026,7 +1026,7 @@ public sealed class DirectQueryTests : IDisposable
 		// Dispose immediately after creating
 		await tempConn.DisposeAsync();
 
-		using DataTable result = await DirectQuery.GetDataTable(tempConn, cmd, maxRetry: 1, cancellationToken: Current.CancellationToken);
+		using DataTable result = await DirectQuery.GetDataTableAsync(tempConn, cmd, maxRetry: 1, cancellationToken: Current.CancellationToken);
 
 		result.ShouldNotBeNull();
 		// SQLite may still execute simple queries even with disposed connections
@@ -1069,7 +1069,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataStreamSynchronous_WithConnectionError_ShouldCloseInFinally()
+	public void GetDataStream_WithConnectionError_ShouldCloseInFinally()
 	{
 		SqliteConnection invalidConn = new("DataSource=:memory:");
 		invalidConn.Dispose();
@@ -1077,7 +1077,7 @@ public sealed class DirectQueryTests : IDisposable
 
 		try
 		{
-			foreach (TestModel item in DirectQuery.GetDataStreamSynchronous<TestModel>(invalidConn, cmd, cancellationToken: Current.CancellationToken))
+			foreach (TestModel item in DirectQuery.GetDataStream<TestModel>(invalidConn, cmd, cancellationToken: Current.CancellationToken))
 			{
 				// Should not reach here
 			}
@@ -1107,7 +1107,7 @@ public sealed class DirectQueryTests : IDisposable
 		await using SqliteCommand cmd = tempConn.CreateCommand();
 		cmd.CommandText = "SELECT * FROM NonExistentTable";
 
-		using DataTable result = await DirectQuery.GetDataTable(tempConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
+		using DataTable result = await DirectQuery.GetDataTableAsync(tempConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
 
 		// Should return empty table after retries fail
 		result.ShouldNotBeNull();
@@ -1115,7 +1115,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataTableSynchronous_WithSyntaxError_ShouldRetryAndReturnEmpty()
+	public void GetDataTable_WithSyntaxError_ShouldRetryAndReturnEmpty()
 	{
 		using SqliteConnection tempConn = new("DataSource=:memory:");
 		tempConn.Open();
@@ -1123,7 +1123,7 @@ public sealed class DirectQueryTests : IDisposable
 		using SqliteCommand cmd = tempConn.CreateCommand();
 		cmd.CommandText = "SELECT * FROM INVALID SYNTAX ERROR";
 
-		using DataTable result = DirectQuery.GetDataTableSynchronous(tempConn, cmd, maxRetry: 2);
+		using DataTable result = DirectQuery.GetDataTable(tempConn, cmd, maxRetry: 2);
 
 		// Should return empty table after retries fail
 		result.ShouldNotBeNull();
@@ -1131,7 +1131,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task RunUpdateQuery_WithSyntaxError_ShouldRetryAndReturnFailure()
+	public async Task RunUpdateQueryAsync_WithSyntaxError_ShouldRetryAndReturnFailure()
 	{
 		await using SqliteConnection tempConn = new("DataSource=:memory:");
 		await tempConn.OpenAsync(Current.CancellationToken);
@@ -1139,14 +1139,14 @@ public sealed class DirectQueryTests : IDisposable
 		await using SqliteCommand cmd = tempConn.CreateCommand();
 		cmd.CommandText = "UPDATE INVALID SYNTAX";
 
-		UpdateResult result = await DirectQuery.RunUpdateQuery(tempConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
+		UpdateResult result = await DirectQuery.RunUpdateQueryAsync(tempConn, cmd, maxRetry: 2, cancellationToken: Current.CancellationToken);
 
 		result.Success.ShouldBeFalse();
 		result.RecordsChanged.ShouldBe(0);
 	}
 
 	[Fact]
-	public void RunUpdateQuerySynchronous_WithSyntaxError_ShouldRetryAndReturnFailure()
+	public void RunUpdateQuery_WithSyntaxError_ShouldRetryAndReturnFailure()
 	{
 		using SqliteConnection tempConn = new("DataSource=:memory:");
 		tempConn.Open();
@@ -1154,7 +1154,7 @@ public sealed class DirectQueryTests : IDisposable
 		using SqliteCommand cmd = tempConn.CreateCommand();
 		cmd.CommandText = "UPDATE INVALID SYNTAX";
 
-		UpdateResult result = DirectQuery.RunUpdateQuerySynchronous(tempConn, cmd, maxRetry: 2);
+		UpdateResult result = DirectQuery.RunUpdateQuery(tempConn, cmd, maxRetry: 2);
 
 		result.Success.ShouldBeFalse();
 		result.RecordsChanged.ShouldBe(0);
@@ -1170,7 +1170,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task GetDataTable_WithNonDbException_ShouldCatchAndRetry()
+	public async Task GetDataTableAsync_WithNonDbException_ShouldCatchAndRetry()
 	{
 		// Create a scenario where a general exception (not DbException) occurs
 		await using SqliteConnection tempConn = new("DataSource=:memory:");
@@ -1179,7 +1179,7 @@ public sealed class DirectQueryTests : IDisposable
 		await using SqliteCommand cmd = tempConn.CreateCommand();
 		cmd.CommandText = "SELECT * FROM NonExistentTable";
 
-		using DataTable result = await DirectQuery.GetDataTable(tempConn, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
+		using DataTable result = await DirectQuery.GetDataTableAsync(tempConn, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
 
 		// Should handle the exception and return empty table
 		result.ShouldNotBeNull();
@@ -1187,7 +1187,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataTableSynchronous_WithNonDbException_ShouldCatchAndRetry()
+	public void GetDataTable_WithNonDbException_ShouldCatchAndRetry()
 	{
 		// Create a scenario where a general exception (not DbException) occurs
 		using SqliteConnection tempConn = new("DataSource=:memory:");
@@ -1196,7 +1196,7 @@ public sealed class DirectQueryTests : IDisposable
 		using SqliteCommand cmd = tempConn.CreateCommand();
 		cmd.CommandText = "SELECT * FROM NonExistentTable";
 
-		using DataTable result = DirectQuery.GetDataTableSynchronous(tempConn, cmd, maxRetry: 3);
+		using DataTable result = DirectQuery.GetDataTable(tempConn, cmd, maxRetry: 3);
 
 		// Should handle the exception and return empty table
 		result.ShouldNotBeNull();
@@ -1204,7 +1204,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public async Task RunUpdateQuery_WithNonDbException_ShouldCatchAndRetry()
+	public async Task RunUpdateQueryAsync_WithNonDbException_ShouldCatchAndRetry()
 	{
 		await using SqliteConnection tempConn = new("DataSource=:memory:");
 		await tempConn.OpenAsync(Current.CancellationToken);
@@ -1212,13 +1212,13 @@ public sealed class DirectQueryTests : IDisposable
 		await using SqliteCommand cmd = tempConn.CreateCommand();
 		cmd.CommandText = "UPDATE NonExistentTable SET X = 1";
 
-		UpdateResult result = await DirectQuery.RunUpdateQuery(tempConn, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
+		UpdateResult result = await DirectQuery.RunUpdateQueryAsync(tempConn, cmd, maxRetry: 3, cancellationToken: Current.CancellationToken);
 
 		result.Success.ShouldBeFalse();
 	}
 
 	[Fact]
-	public void RunUpdateQuerySynchronous_WithNonDbException_ShouldCatchAndRetry()
+	public void RunUpdateQuery_WithNonDbException_ShouldCatchAndRetry()
 	{
 		using SqliteConnection tempConn = new("DataSource=:memory:");
 		tempConn.Open();
@@ -1226,7 +1226,7 @@ public sealed class DirectQueryTests : IDisposable
 		using SqliteCommand cmd = tempConn.CreateCommand();
 		cmd.CommandText = "UPDATE NonExistentTable SET X = 1";
 
-		UpdateResult result = DirectQuery.RunUpdateQuerySynchronous(tempConn, cmd, maxRetry: 3);
+		UpdateResult result = DirectQuery.RunUpdateQuery(tempConn, cmd, maxRetry: 3);
 
 		result.Success.ShouldBeFalse();
 	}
@@ -1358,7 +1358,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataStreamSynchronous_WithLimitedCache_FirstCall_ShouldCreateAndCacheMapper()
+	public void GetDataStream_WithLimitedCache_FirstCall_ShouldCreateAndCacheMapper()
 	{
 		// Setup: Use limited cache
 		DirectQuery.CacheManager.SetUseLimitedCache(true);
@@ -1370,7 +1370,7 @@ public sealed class DirectQueryTests : IDisposable
 
 		// First call - should create and cache the mapper
 		List<TestModel> results = new();
-		results.AddRange(DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, useCache: true, cancellationToken: Current.CancellationToken));
+		results.AddRange(DirectQuery.GetDataStream<TestModel>(connection, cmd, useCache: true, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(1);
 
@@ -1379,7 +1379,7 @@ public sealed class DirectQueryTests : IDisposable
 	}
 
 	[Fact]
-	public void GetDataStreamSynchronous_WithRegularCache_FirstCall_ShouldCreateAndCacheMapper()
+	public void GetDataStream_WithRegularCache_FirstCall_ShouldCreateAndCacheMapper()
 	{
 		// Setup: Use regular cache (not limited)
 		DirectQuery.CacheManager.SetUseLimitedCache(false);
@@ -1390,7 +1390,7 @@ public sealed class DirectQueryTests : IDisposable
 
 		// First call - should create and cache the mapper
 		List<TestModel> results = new();
-		results.AddRange(DirectQuery.GetDataStreamSynchronous<TestModel>(connection, cmd, useCache: true, cancellationToken: Current.CancellationToken));
+		results.AddRange(DirectQuery.GetDataStream<TestModel>(connection, cmd, useCache: true, cancellationToken: Current.CancellationToken));
 
 		results.Count.ShouldBe(1);
 

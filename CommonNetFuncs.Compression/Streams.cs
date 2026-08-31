@@ -80,7 +80,7 @@ public static class Streams
 	/// <param name="compressionLevel">Optional: Compression level to use (defaults to Optimal).</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <exception cref="NotSupportedException">Thrown if the compressed stream does not support writing or the uncompressed stream does not support reading.</exception>
-	public static async Task CompressStream(this Stream uncompressedStream, Stream compressedStream, ECompressionType compressionType, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
+	public static async Task CompressStreamAsync(this Stream uncompressedStream, Stream compressedStream, ECompressionType compressionType, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
 	{
 		if (!compressedStream.CanWrite)
 		{
@@ -124,7 +124,7 @@ public static class Streams
 	/// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib).</param>
 	/// <param name="compressionLevel">Optional: Compression level to use (defaults to Optimal).</param>
 	/// <exception cref="NotSupportedException">Thrown if the compressed stream does not support writing or the uncompressed stream does not support reading.</exception>
-	public static void CompressStreamSynchronous(this Stream uncompressedStream, Stream compressedStream, ECompressionType compressionType, CompressionLevel compressionLevel = CompressionLevel.Optimal)
+	public static void CompressStream(this Stream uncompressedStream, Stream compressedStream, ECompressionType compressionType, CompressionLevel compressionLevel = CompressionLevel.Optimal)
 	{
 		if (!compressedStream.CanWrite)
 		{
@@ -167,7 +167,7 @@ public static class Streams
 	/// <param name="compressionType">Type of compression used in stream (GZip, Brotli, Deflate, or ZLib).</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <exception cref="NotSupportedException">Thrown if the decompressed stream does not support writing or the compressed stream does not support reading.</exception>
-	public static async Task DecompressStream(this Stream compressedStream, Stream decompressedStream, ECompressionType compressionType, CancellationToken cancellationToken = default)
+	public static async Task DecompressStreamAsync(this Stream compressedStream, Stream decompressedStream, ECompressionType compressionType, CancellationToken cancellationToken = default)
 	{
 		if (!decompressedStream.CanWrite)
 		{
@@ -212,7 +212,7 @@ public static class Streams
 	/// <param name="decompressedStream">Stream to receive decompressed form of compressedStream.</param>
 	/// <param name="compressionType">Type of compression used in stream (GZip, Brotli, Deflate, or ZLib).</param>
 	/// <exception cref="NotSupportedException">Thrown if the decompressed stream does not support writing or the compressed stream does not support reading.</exception>
-	public static void DecompressStreamSynchronous(this Stream compressedStream, Stream decompressedStream, ECompressionType compressionType)
+	public static void DecompressStream(this Stream compressedStream, Stream decompressedStream, ECompressionType compressionType)
 	{
 		if (!decompressedStream.CanWrite)
 		{
@@ -282,7 +282,7 @@ public static class Streams
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>Byte array containing the decompressed version of the original byte array.</returns>
 	/// <exception cref="CompressionLimitExceededException">Thrown if the decompressed data exceeds the maximum allowed size which defaults to 1000 times the compressed size.</exception>
-	public static async Task<byte[]> Decompress(this byte[] compressedData, ECompressionType compressionType, int maxCompressionRatio = MaxCompressionRatio, CancellationToken cancellationToken = default)
+	public static async Task<byte[]> DecompressAsync(this byte[] compressedData, ECompressionType compressionType, int maxCompressionRatio = MaxCompressionRatio, CancellationToken cancellationToken = default)
 	{
 		await using MemoryStream compressedStream = new(compressedData);
 		// Estimate initial capacity (compressed data typically expands 2-10x)
@@ -294,6 +294,32 @@ public static class Streams
 		await using (Stream decompressionStream = CreateDecompressionStream(compressedStream, compressionType, true))
 		{
 			await decompressionStream.CopyWithLimitAsync(decompressedStream, maxDecompressedSize, cancellationToken).ConfigureAwait(false);
+		}
+
+		return decompressedStream.ToArray();
+	}
+
+	/// <summary>
+	/// Decompress the data contained within a byte array that was compressed using a supported compression type.
+	/// </summary>
+	/// <param name="compressedData">The byte array containing the compressed data to decompress.</param>
+	/// <param name="compressionType">Type of compression used on the data (GZip, Brotli, Deflate, or ZLib).</param>
+	/// <param name="maxCompressionRatio">Optional: If the compressed data exceeds this compression ratio the method will stop execution as a safety mechanism.</param>
+	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+	/// <returns>Byte array containing the decompressed version of the original byte array.</returns>
+	/// <exception cref="CompressionLimitExceededException">Thrown if the decompressed data exceeds the maximum allowed size which defaults to 1000 times the compressed size.</exception>
+	public static byte[] Decompress(this byte[] compressedData, ECompressionType compressionType, int maxCompressionRatio = MaxCompressionRatio, CancellationToken cancellationToken = default)
+	{
+		using MemoryStream compressedStream = new(compressedData);
+		// Estimate initial capacity (compressed data typically expands 2-10x)
+		int estimatedSize = Math.Min((int)(compressedData.Length * 4L), int.MaxValue / 2);
+		using MemoryStream decompressedStream = new(estimatedSize);
+
+		long maxDecompressedSize = compressedData.LongLength * maxCompressionRatio;
+
+		using (Stream decompressionStream = CreateDecompressionStream(compressedStream, compressionType, true))
+		{
+			decompressionStream.CopyWithLimit(decompressedStream, maxDecompressedSize, cancellationToken);
 		}
 
 		return decompressedStream.ToArray();
@@ -330,7 +356,7 @@ public static class Streams
 	/// <param name="compressionLevel">Optional: Compression level to use (defaults to Optimal).</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
 	/// <returns>Byte array containing the compressed version of the original byte array.</returns>
-	public static async Task<byte[]> Compress(this byte[] data, ECompressionType compressionType, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
+	public static async Task<byte[]> CompressAsync(this byte[] data, ECompressionType compressionType, CompressionLevel compressionLevel = CompressionLevel.Optimal, CancellationToken cancellationToken = default)
 	{
 		// Estimate initial capacity for compressed stream
 		// Use better heuristic: smaller for highly compressible data, cap at reasonable size
@@ -351,6 +377,34 @@ public static class Streams
 		return memoryStream.ToArray();
 	}
 
+	/// <summary>
+	/// Compress the data contained within a byte array using a supported compression type.
+	/// </summary>
+	/// <param name="data">The byte array containing the data to compress.</param>
+	/// <param name="compressionType">Type of compression to use on stream (GZip, Brotli, Deflate, or ZLib).</param>
+	/// <param name="compressionLevel">Optional: Compression level to use (defaults to Optimal).</param>
+	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
+	/// <returns>Byte array containing the compressed version of the original byte array.</returns>
+	public static byte[] Compress(this byte[] data, ECompressionType compressionType, CompressionLevel compressionLevel = CompressionLevel.Optimal)
+	{
+		// Estimate initial capacity for compressed stream
+		// Use better heuristic: smaller for highly compressible data, cap at reasonable size
+		int estimatedSize = data.Length switch
+		{
+			<= 1024 => 512,
+			<= 10240 => data.Length / 4,
+			_ => Math.Min(data.Length / 3, 512 * 1024) // Cap at 512KB for very large inputs
+		};
+		using MemoryStream memoryStream = new(estimatedSize);
+
+		// Write all data at once - compression streams handle internal buffering efficiently
+		using (Stream compressionStream = CreateCompressionStream(memoryStream, compressionType, compressionLevel, true))
+		{
+			compressionStream.Write(data, 0, data.Length);
+		}
+
+		return memoryStream.ToArray();
+	}
 
 	/// <summary>
 	/// Detect the compression type of a <see cref="Stream"/> based on its header without advancing the <see cref="Stream"/> position.
@@ -537,6 +591,7 @@ public static class Streams
 			}
 		}
 	}
+
 	/// <summary>
 	/// Asynchronously copies data from the source <see cref="Stream"/> to the destination <see cref="Stream"/>, ensuring that the total number of bytes copied does not exceed the specified limit.
 	/// </summary>

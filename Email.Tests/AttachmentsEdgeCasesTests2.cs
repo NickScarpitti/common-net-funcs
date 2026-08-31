@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.IO.Compression;
 using CommonNetFuncs.Email;
 using MimeKit;
 using static CommonNetFuncs.Email.Email;
@@ -461,7 +462,7 @@ public sealed class AttachmentsEdgeCasesTests2
 		MockDisposableAttachment syncDisposableAttachment = new("sync.txt");
 		IMailAttachment[] attachments = new IMailAttachment[]
 		{
-			new MailAttachment("async.txt", stream), // IAsyncDisposable
+			new MailAttachment("async.txt", stream, CompressionLevel.NoCompression), // IAsyncDisposable
 			syncDisposableAttachment // IDisposable only
 		};
 		SendEmailConfig config = new()

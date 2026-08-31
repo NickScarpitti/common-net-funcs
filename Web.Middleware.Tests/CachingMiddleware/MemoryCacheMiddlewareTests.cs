@@ -227,7 +227,7 @@ public sealed class MemoryCacheMiddlewareTests
 		context.Request.Query = new QueryCollection(queryDict);
 
 		const string originalData = "Test data";
-		byte[] compressedData = await Encoding.UTF8.GetBytes(originalData).Compress(ECompressionType.Gzip);
+		byte[] compressedData = await Encoding.UTF8.GetBytes(originalData).CompressAsync(ECompressionType.Gzip);
 		object? outValue = new CacheEntry()
 		{
 			Data = compressedData,
@@ -1145,7 +1145,7 @@ public sealed class MemoryCacheMiddlewareTests
 		Dictionary<string, StringValues> queryDict = new() { { options.UseCacheQueryParam, "true" } };
 		context.Request.Query = new QueryCollection(queryDict);
 
-		byte[] emptyCompressed = await Array.Empty<byte>().Compress(ECompressionType.Gzip);
+		byte[] emptyCompressed = await Array.Empty<byte>().CompressAsync(ECompressionType.Gzip);
 		CacheEntry cachedEntry = new()
 		{
 			Data = emptyCompressed,

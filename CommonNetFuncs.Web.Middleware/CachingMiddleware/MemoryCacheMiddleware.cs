@@ -1,4 +1,6 @@
-﻿using CommonNetFuncs.Web.Common.CachingSupportClasses;
+﻿using System.Security.Cryptography;
+using System.Text;
+using CommonNetFuncs.Web.Common.CachingSupportClasses;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -6,8 +8,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
-using System.Security.Cryptography;
-using System.Text;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Core.UnitConversion;
@@ -58,7 +58,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 
 					if (cachedValue.CompressionType > 0)
 					{
-						byte[] decompressedData = await cachedValue.Data.Decompress((ECompressionType)cachedValue.CompressionType).ConfigureAwait(false);
+						byte[] decompressedData = await cachedValue.Data.DecompressAsync((ECompressionType)cachedValue.CompressionType).ConfigureAwait(false);
 						await context.Response.Body.WriteAsync(decompressedData.AsMemory(0, decompressedData.Length)).ConfigureAwait(false);
 					}
 					else
@@ -114,7 +114,7 @@ internal class MemoryCacheMiddleware(RequestDelegate next, IMemoryCache cache, C
 						{
 							CacheEntry entry = new()
 							{
-								Data = cacheOptions.UseCompression ? await responseData.Compress(cacheOptions.CompressionType).ConfigureAwait(false) : responseData,
+								Data = cacheOptions.UseCompression ? await responseData.CompressAsync(cacheOptions.CompressionType).ConfigureAwait(false) : responseData,
 								Tags = ExtractCacheTags(context),
 								Headers = context.Response.Headers.Where(x => cacheOptions.HeadersToCache.ContainsInvariant(x.Key)).ToDictionary(h => h.Key, h => h.Value.ToString()), //Only cache needed headers
 								CompressionType = cacheOptions.UseCompression ? (short)cacheOptions.CompressionType : (short)0

@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
+using CommonNetFuncs.Compression;
 using CommonNetFuncs.Core;
 using MailKit.Net.Proxy;
 using MailKit.Net.Smtp;
@@ -10,6 +11,7 @@ using MailKit.Security;
 using MimeKit;
 using ZLinq;
 using static CommonNetFuncs.Compression.Files;
+using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Strings;
 using static CommonNetFuncs.Email.EmailConstants;
 
@@ -44,27 +46,36 @@ public sealed class MailAddress(string? Name = null, string? Email = null)
 }
 
 /// <summary>
-/// Represents an email attachment with a name and stream. This class takes ownership of the stream and will dispose it when disposed.
+/// Represents an email attachment as a <see cref="Stream" />. This class takes ownership of the stream and will dispose it when disposed.
 /// </summary>
 public sealed class MailAttachment : IMailAttachment, IAsyncDisposable, IDisposable
 {
 	private bool disposed;
 
-	public MailAttachment(string? AttachmentName = null, byte[]? AttachmentBytes = null)
+	// Original stream passed to the Stream constructor, kept only so it can be disposed alongside the internal compressed copy
+	private readonly Stream? originalStream;
+
+	public MailAttachment(string? AttachmentName = null, byte[]? AttachmentBytes = null, CompressionLevel compressionLevel = CompressionLevel.Optimal)
 	{
 		this.AttachmentName = AttachmentName;
 		if (AttachmentBytes != null)
 		{
+			AttachmentBytes = AttachmentBytes.Compress(ECompressionType.Gzip, compressionLevel);
 			AttachmentStream = new MemoryStream();
 			AttachmentStream.Write(AttachmentBytes, 0, AttachmentBytes.Length);
 			AttachmentStream.Position = 0;
 		}
 	}
 
-	public MailAttachment(string? AttachmentName = null, Stream? AttachmentStream = null)
+	public MailAttachment(string? AttachmentName = null, Stream? AttachmentStream = null, CompressionLevel compressionLevel = CompressionLevel.Optimal)
 	{
 		this.AttachmentName = AttachmentName;
-		this.AttachmentStream = AttachmentStream;
+		if (AttachmentStream != null)
+		{
+			originalStream = AttachmentStream;
+			this.AttachmentStream = new MemoryStream();
+			AttachmentStream.CompressStream(this.AttachmentStream, ECompressionType.Gzip, compressionLevel);
+		}
 	}
 
 	public string? AttachmentName { get; set; }
@@ -73,7 +84,15 @@ public sealed class MailAttachment : IMailAttachment, IAsyncDisposable, IDisposa
 
 	public Stream? GetStream()
 	{
-		return AttachmentStream;
+		if (AttachmentStream == null)
+		{
+			return null;
+		}
+
+		// AttachmentStream always holds Gzip-compressed data regardless of the compression level used, so it must be decompressed before use
+		MemoryStream decompressedStream = new();
+		AttachmentStream.DecompressStream(decompressedStream, ECompressionType.Gzip);
+		return decompressedStream;
 	}
 
 	public async ValueTask DisposeAsync()
@@ -83,6 +102,10 @@ public sealed class MailAttachment : IMailAttachment, IAsyncDisposable, IDisposa
 			if (AttachmentStream != null)
 			{
 				await AttachmentStream.DisposeAsync().ConfigureAwait(false);
+			}
+			if (originalStream != null)
+			{
+				await originalStream.DisposeAsync().ConfigureAwait(false);
 			}
 			disposed = true;
 		}
@@ -94,30 +117,38 @@ public sealed class MailAttachment : IMailAttachment, IAsyncDisposable, IDisposa
 		if (!disposed)
 		{
 			AttachmentStream?.Dispose();
+			originalStream?.Dispose();
 			disposed = true;
 		}
 		GC.SuppressFinalize(this);
 	}
 }
 
+/// <summary>
+/// Mail attachment class that stores the attachment as a <see cref="byte[]"/>.
+/// This class is serialization-friendly and can be used in scenarios where streams cannot be serialized (e.g., Hangfire background jobs).
+/// </summary>
 public sealed class MailAttachmentBytes : IMailAttachment
 {
 #if NET10_0_OR_GREATER
 	[Newtonsoft.Json.JsonConstructor] // Required for Hangfire serialization
 #endif
-	public MailAttachmentBytes(string? AttachmentName = null, byte[]? AttachmentBytes = null)
+	public MailAttachmentBytes(string? AttachmentName = null, byte[]? AttachmentBytes = null, CompressionLevel compressionLevel = CompressionLevel.Optimal)
 	{
 		this.AttachmentName = AttachmentName;
-		this.AttachmentBytes = AttachmentBytes;
+		this.AttachmentBytes = AttachmentBytes?.Compress(ECompressionType.Gzip, compressionLevel);
 	}
 
-	public MailAttachmentBytes(string? AttachmentName = null, Stream? AttachmentStream = null)
+	public MailAttachmentBytes(string? AttachmentName = null, Stream? AttachmentStream = null, CompressionLevel compressionLevel = CompressionLevel.Optimal)
 	{
 		using MemoryStream memoryStream = new();
 		AttachmentStream?.CopyTo(memoryStream);
 
 		this.AttachmentName = AttachmentName;
-		AttachmentBytes = memoryStream.ToArray();
+
+		using MemoryStream compressedStream = new();
+		memoryStream.CompressStream(compressedStream, ECompressionType.Gzip, compressionLevel);
+		AttachmentBytes = compressedStream.ToArray();
 	}
 
 	public string? AttachmentName { get; set; }
@@ -132,7 +163,8 @@ public sealed class MailAttachmentBytes : IMailAttachment
 		}
 
 		MemoryStream stream = new();
-		stream.Write(AttachmentBytes, 0, AttachmentBytes.Length);
+		byte[] decompressedBytes = AttachmentBytes.Decompress(ECompressionType.Gzip);
+		stream.Write(decompressedBytes, 0, decompressedBytes.Length);
 		stream.Position = 0;
 		return stream;
 	}

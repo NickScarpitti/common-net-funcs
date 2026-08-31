@@ -148,7 +148,7 @@ public static class Files
 		await using FileStream inputStream = new(inputFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, ChunkSize, FileOptions.SequentialScan);
 		await using FileStream outputStream = new(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, ChunkSize, FileOptions.SequentialScan);
 
-		await inputStream.CompressStream(outputStream, compressionType, CompressionLevel.Optimal, cancellationToken).ConfigureAwait(false);
+		await inputStream.CompressStreamAsync(outputStream, compressionType, CompressionLevel.Optimal, cancellationToken).ConfigureAwait(false);
 	}
 
 	/// <summary>
@@ -175,6 +175,6 @@ public static class Files
 		await using FileStream inputStream = new(compressedFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, ChunkSize, FileOptions.SequentialScan);
 		await using FileStream outputStream = new(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, ChunkSize, FileOptions.SequentialScan);
 
-		await inputStream.DecompressStream(outputStream, compressionType, cancellationToken).ConfigureAwait(false);
+		await inputStream.DecompressStreamAsync(outputStream, compressionType, cancellationToken).ConfigureAwait(false);
 	}
 }

@@ -9,18 +9,18 @@ This project contains helper methods for executing SQL queries and commands agai
 ## Contents
 
 - [CommonNetFuncs.Sql.Odbc](#commonnetfuncssqlodbc)
-	- [Contents](#contents)
-	- [DirectQuery](#directquery)
-		- [DirectQuery Usage Examples](#directquery-usage-examples)
-			- [GetDataTable](#getdatatable)
-			- [GetDataTableSynchronous](#getdatatablesynchronous)
-			- [RunUpdateQuery](#runupdatequery)
-			- [RunUpdateQuerySynchronous](#runupdatequerysynchronous)
-			- [GetDataStreamSynchronous](#getdatastreamsynchronous)
-			- [GetDataStreamAsync](#getdatastreamasync)
-			- [GetDataDirectAsync](#getdatadirectasync)
-	- [Installation](#installation)
-	- [License](#license)
+  - [Contents](#contents)
+  - [DirectQuery](#directquery)
+    - [DirectQuery Usage Examples](#directquery-usage-examples)
+      - [GetDataTable](#getdatatable)
+      - [GetDataTable](#getdatatable-1)
+      - [RunUpdateQueryAsync](#runupdatequeryasync)
+      - [RunUpdateQuery](#runupdatequery)
+      - [GetDataStream](#getdatastream)
+      - [GetDataStreamAsync](#getdatastreamasync)
+      - [GetDataDirectAsync](#getdatadirectasync)
+  - [Installation](#installation)
+  - [License](#license)
 
 ---
 
@@ -42,7 +42,7 @@ string sql = "SELECT * FROM TestTable";
 using DataTable queryResultsTable = await DirectQuery.GetDataTable(sql, connectionString); // queryResultsTable will contain the results of the query
 ```
 
-#### GetDataTableSynchronous
+#### GetDataTable
 
 Executes a SELECT query synchronously and returns the results as a DataTable.
 
@@ -51,7 +51,7 @@ string sql = "SELECT * FROM TestTable";
 using DataTable queryResultsTable = DirectQuery.GetDataTable(sql, connectionString); // queryResultsTable will contain the results of the query
 ```
 
-#### RunUpdateQuery
+#### RunUpdateQueryAsync
 
 Executes an UPDATE, INSERT, or DELETE query asynchronously and returns an UpdateResult containing the number of affected rows and a boolean indicating success.
 
@@ -60,22 +60,22 @@ string sql = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
 UpdateResult updateResult = await DirectQuery.RunUpdateQuery(sql, connectionString); // { RecordsChanged = 1, Success = true }
 ```
 
-#### RunUpdateQuerySynchronous
+#### RunUpdateQuery
 
 Executes an UPDATE, INSERT, or DELETE query synchronously and returns an UpdateResult containing the number of affected rows and a boolean indicating success.
 
 ```cs
 string sql = "UPDATE TestTable SET Name = 'Updated' WHERE Name LIKE 'Test%'";
-UpdateResult updateResult = DirectQuery.RunUpdateQuerySynchronous(sql, connectionString); // { RecordsChanged = 1, Success = true }
+UpdateResult updateResult = DirectQuery.RunUpdateQuery(sql, connectionString); // { RecordsChanged = 1, Success = true }
 ```
 
-#### GetDataStreamSynchronous
+#### GetDataStream
 
 Gets a data from a query synchronously and returns an IEnumerable of the query result type.
 
 ```cs
 string sql = "SELECT * FROM TestTable";
-IEnumerable<TestEntity> queryResults = DirectQuery.GetDataStreamSynchronous(sql, connectionString); // queryResults will contain the results of the query as TestEntity objects
+IEnumerable<TestEntity> queryResults = DirectQuery.GetDataStream(sql, connectionString); // queryResults will contain the results of the query as TestEntity objects
 ```
 
 #### GetDataStreamAsync

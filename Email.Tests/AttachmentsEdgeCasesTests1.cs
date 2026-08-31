@@ -1,4 +1,5 @@
-﻿using AutoFixture.Xunit3;
+﻿using System.IO.Compression;
+using AutoFixture.Xunit3;
 using CommonNetFuncs.Email;
 using MimeKit;
 using static CommonNetFuncs.Email.Email;
@@ -404,7 +405,7 @@ public sealed class AttachmentsEdgeCasesTests1
 		MemoryStream stream = new(new byte[] { 1, 2, 3 });
 		IMailAttachment[] attachments = new[]
 		{
-			new MailAttachment("test.txt", stream)
+			new MailAttachment("test.txt", stream, CompressionLevel.NoCompression)
 		};
 		SendEmailConfig config = new()
 		{
@@ -645,8 +646,8 @@ public sealed class AttachmentsEdgeCasesTests1
 		MemoryStream stream1 = new(new byte[] { 1, 2, 3 });
 		IMailAttachment[] attachments = new IMailAttachment[]
 		{
-			new MailAttachment("test1.txt", stream1),
-			new MailAttachmentBytes("test2.txt", new byte[] { 7, 8, 9 })
+			new MailAttachment("test1.txt", stream1, CompressionLevel.NoCompression),
+			new MailAttachmentBytes("test2.txt", new byte[] { 7, 8, 9 }, CompressionLevel.NoCompression)
 		};
 		SendEmailConfig config = new()
 		{

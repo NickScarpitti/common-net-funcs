@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.IO.Compression;
 using AutoFixture.Xunit3;
 using CommonNetFuncs.Email;
 using MimeKit;
+using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Email.Email;
 using static Xunit.TestContext;
 
@@ -265,15 +267,61 @@ public sealed class EmailTests
 	public void MailAttachment_GetStream_ShouldReturnAttachmentStream()
 	{
 		// Arrange
-		MemoryStream stream = new(new byte[] { 1, 2, 3, 4, 5 });
-		MailAttachment attachment = new("test.txt", stream);
+		byte[] originalBytes = new byte[] { 1, 2, 3, 4, 5 };
+		MemoryStream stream = new(originalBytes);
+		MailAttachment attachment = new("test.txt", stream, CompressionLevel.NoCompression);
 
 		// Act
 		Stream? result = attachment.GetStream();
 
 		// Assert
 		result.ShouldNotBeNull();
-		result.ShouldBe(stream);
+		using MemoryStream resultCopy = new();
+		result.CopyTo(resultCopy);
+		resultCopy.ToArray().ShouldBe(originalBytes);
+	}
+
+	[Theory]
+	[InlineData(CompressionLevel.NoCompression)]
+	[InlineData(CompressionLevel.Fastest)]
+	[InlineData(CompressionLevel.Optimal)]
+	[InlineData(CompressionLevel.SmallestSize)]
+	public void MailAttachment_StreamConstructor_GetStream_ShouldRoundTripForAllCompressionLevels(CompressionLevel compressionLevel)
+	{
+		// Arrange
+		byte[] originalBytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		MemoryStream sourceStream = new(originalBytes);
+		MailAttachment attachment = new("test.txt", sourceStream, compressionLevel);
+
+		// Act
+		Stream? result = attachment.GetStream();
+
+		// Assert
+		result.ShouldNotBeNull();
+		using MemoryStream resultCopy = new();
+		result.CopyTo(resultCopy);
+		resultCopy.ToArray().ShouldBe(originalBytes);
+	}
+
+	[Theory]
+	[InlineData(CompressionLevel.NoCompression)]
+	[InlineData(CompressionLevel.Fastest)]
+	[InlineData(CompressionLevel.Optimal)]
+	[InlineData(CompressionLevel.SmallestSize)]
+	public void MailAttachment_ByteArrayConstructor_GetStream_ShouldRoundTripForAllCompressionLevels(CompressionLevel compressionLevel)
+	{
+		// Arrange
+		byte[] originalBytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		MailAttachment attachment = new("test.txt", originalBytes, compressionLevel);
+
+		// Act
+		Stream? result = attachment.GetStream();
+
+		// Assert
+		result.ShouldNotBeNull();
+		using MemoryStream resultCopy = new();
+		result.CopyTo(resultCopy);
+		resultCopy.ToArray().ShouldBe(originalBytes);
 	}
 
 	[Fact]
@@ -296,12 +344,14 @@ public sealed class EmailTests
 		byte[] bytes = new byte[] { 1, 2, 3, 4, 5 };
 
 		// Act
-		MailAttachment attachment = new("test.txt", bytes);
+		MailAttachment attachment = new("test.txt", bytes, CompressionLevel.NoCompression);
 
-		// Assert
+		// Assert - AttachmentStream holds Gzip-compressed data, so it will be larger than the original and must be decompressed to verify
 		attachment.AttachmentStream.ShouldNotBeNull();
-		attachment.AttachmentStream!.Length.ShouldBe(5);
-		attachment.AttachmentStream.Position.ShouldBe(0);
+		attachment.AttachmentStream!.Position.ShouldBe(0);
+		using MemoryStream compressedCopy = new();
+		attachment.AttachmentStream.CopyTo(compressedCopy);
+		compressedCopy.ToArray().Decompress(ECompressionType.Gzip, cancellationToken: Current.CancellationToken).ShouldBe(bytes);
 	}
 
 	[Fact]
@@ -374,12 +424,54 @@ public sealed class EmailTests
 		MemoryStream stream = new(originalBytes);
 
 		// Act
-		MailAttachmentBytes attachment = new("test.txt", stream);
+		MailAttachmentBytes attachment = new("test.txt", stream, CompressionLevel.NoCompression);
+
+		// Assert - AttachmentBytes holds Gzip-compressed data, so it must be decompressed to verify against the original
+		attachment.AttachmentBytes.ShouldNotBeNull();
+		attachment.AttachmentBytes.Decompress(ECompressionType.Gzip, cancellationToken: Current.CancellationToken).ShouldBe(originalBytes);
+	}
+
+	[Theory]
+	[InlineData(CompressionLevel.NoCompression)]
+	[InlineData(CompressionLevel.Fastest)]
+	[InlineData(CompressionLevel.Optimal)]
+	[InlineData(CompressionLevel.SmallestSize)]
+	public void MailAttachmentBytes_StreamConstructor_GetStream_ShouldRoundTripForAllCompressionLevels(CompressionLevel compressionLevel)
+	{
+		// Arrange
+		byte[] originalBytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		MemoryStream sourceStream = new(originalBytes);
+		MailAttachmentBytes attachment = new("test.txt", sourceStream, compressionLevel);
+
+		// Act
+		Stream? result = attachment.GetStream();
 
 		// Assert
-		attachment.AttachmentBytes.ShouldNotBeNull();
-		attachment.AttachmentBytes.Length.ShouldBe(5);
-		attachment.AttachmentBytes.ShouldBe(originalBytes);
+		result.ShouldNotBeNull();
+		using MemoryStream resultCopy = new();
+		result.CopyTo(resultCopy);
+		resultCopy.ToArray().ShouldBe(originalBytes);
+	}
+
+	[Theory]
+	[InlineData(CompressionLevel.NoCompression)]
+	[InlineData(CompressionLevel.Fastest)]
+	[InlineData(CompressionLevel.Optimal)]
+	[InlineData(CompressionLevel.SmallestSize)]
+	public void MailAttachmentBytes_ByteArrayConstructor_GetStream_ShouldRoundTripForAllCompressionLevels(CompressionLevel compressionLevel)
+	{
+		// Arrange
+		byte[] originalBytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+		MailAttachmentBytes attachment = new("test.txt", originalBytes, compressionLevel);
+
+		// Act
+		Stream? result = attachment.GetStream();
+
+		// Assert
+		result.ShouldNotBeNull();
+		using MemoryStream resultCopy = new();
+		result.CopyTo(resultCopy);
+		resultCopy.ToArray().ShouldBe(originalBytes);
 	}
 
 	[Fact]
@@ -466,6 +558,96 @@ public sealed class EmailTests
 		bodyBuilder.Attachments.Count.ShouldBe(2);
 		(bodyBuilder.Attachments[0] as MimePart)?.FileName.ShouldBe("test1.txt");
 		(bodyBuilder.Attachments[1] as MimePart)?.FileName.ShouldBe("test2.txt");
+	}
+
+	#endregion
+
+	#region Compression Level Coverage
+
+	[Theory]
+	[InlineData(CompressionLevel.NoCompression)]
+	[InlineData(CompressionLevel.Fastest)]
+	[InlineData(CompressionLevel.Optimal)]
+	[InlineData(CompressionLevel.SmallestSize)]
+	public async Task AddAttachments_WithoutZip_ShouldPreserveOriginalContent_ForAllCompressionLevels(CompressionLevel compressionLevel)
+	{
+		// Arrange
+		byte[] originalBytes1 = new byte[] { 1, 2, 3, 4, 5 };
+		byte[] originalBytes2 = new byte[] { 6, 7, 8, 9, 10 };
+		BodyBuilder bodyBuilder = new();
+		IMailAttachment[] attachments = new IMailAttachment[]
+		{
+			new MailAttachment("test1.txt", originalBytes1, compressionLevel),
+			new MailAttachmentBytes("test2.txt", originalBytes2, compressionLevel)
+		};
+
+		// Act
+		await AddAttachments(attachments, bodyBuilder, false, Current.CancellationToken);
+
+		// Assert
+		bodyBuilder.Attachments.Count.ShouldBe(2);
+
+		MimePart? part1 = bodyBuilder.Attachments[0] as MimePart;
+		part1.ShouldNotBeNull();
+		part1.Content.ShouldNotBeNull();
+		await using MemoryStream content1 = new();
+		await part1.Content!.DecodeToAsync(content1, Current.CancellationToken);
+		content1.ToArray().ShouldBe(originalBytes1);
+
+		MimePart? part2 = bodyBuilder.Attachments[1] as MimePart;
+		part2.ShouldNotBeNull();
+		part2.Content.ShouldNotBeNull();
+		await using MemoryStream content2 = new();
+		await part2.Content!.DecodeToAsync(content2, Current.CancellationToken);
+		content2.ToArray().ShouldBe(originalBytes2);
+	}
+
+	[Theory]
+	[InlineData(CompressionLevel.NoCompression)]
+	[InlineData(CompressionLevel.Fastest)]
+	[InlineData(CompressionLevel.Optimal)]
+	[InlineData(CompressionLevel.SmallestSize)]
+	public async Task AddAttachments_WithZip_ShouldPreserveOriginalContent_ForAllCompressionLevels(CompressionLevel compressionLevel)
+	{
+		// Arrange
+		byte[] originalBytes1 = new byte[] { 1, 2, 3, 4, 5 };
+		byte[] originalBytes2 = new byte[] { 6, 7, 8, 9, 10 };
+		BodyBuilder bodyBuilder = new();
+		IMailAttachment[] attachments = new IMailAttachment[]
+		{
+			new MailAttachment("test1.txt", originalBytes1, compressionLevel),
+			new MailAttachmentBytes("test2.txt", originalBytes2, compressionLevel)
+		};
+
+		// Act
+		await AddAttachments(attachments, bodyBuilder, true, Current.CancellationToken);
+
+		// Assert
+		bodyBuilder.Attachments.Count.ShouldBe(1);
+		MimePart? zipPart = bodyBuilder.Attachments[0] as MimePart;
+		zipPart.ShouldNotBeNull();
+		zipPart.FileName.ShouldBe("Files.zip");
+		zipPart.Content.ShouldNotBeNull();
+
+		await using MemoryStream zipContent = new();
+		await zipPart.Content!.DecodeToAsync(zipContent, Current.CancellationToken);
+		zipContent.Position = 0;
+
+		using ZipArchive archive = new(zipContent, ZipArchiveMode.Read);
+
+		using MemoryStream entry1Content = new();
+		await using (Stream entry1Stream = archive.GetEntry("test1.txt")!.Open())
+		{
+			await entry1Stream.CopyToAsync(entry1Content, Current.CancellationToken);
+		}
+		entry1Content.ToArray().ShouldBe(originalBytes1);
+
+		using MemoryStream entry2Content = new();
+		await using (Stream entry2Stream = archive.GetEntry("test2.txt")!.Open())
+		{
+			await entry2Stream.CopyToAsync(entry2Content, Current.CancellationToken);
+		}
+		entry2Content.ToArray().ShouldBe(originalBytes2);
 	}
 
 	#endregion

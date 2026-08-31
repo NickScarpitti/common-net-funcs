@@ -9,13 +9,13 @@ This project contains helper methods for compressing files into a zip file as we
 ## Contents
 
 - [CommonNetFuncs.Compression](#commonnetfuncscompression)
-	- [Contents](#contents)
-	- [Files](#files)
-		- [Files Usage Examples](#files-usage-examples)
-	- [Streams](#streams)
-		- [Streams Usage Examples](#streams-usage-examples)
-	- [Installation](#installation)
-	- [License](#license)
+  - [Contents](#contents)
+  - [Files](#files)
+    - [Files Usage Examples](#files-usage-examples)
+  - [Streams](#streams)
+    - [Streams Usage Examples](#streams-usage-examples)
+  - [Installation](#installation)
+  - [License](#license)
 
 ---
 
@@ -91,7 +91,7 @@ public async Task CreatePeopleAndAddressesZipFile()
 
 ## Streams
 
-Used for compressing and decompressing streams of data.
+Used for compressing and decompressing streams of data as well as byte arrays.
 Currently supported compression algorithms:
 
 - Brotli
@@ -114,11 +114,24 @@ public async Task CompressAndDecompressFile()
 
     //Compress the stream
     await using MemoryStream compressedStream = new();
-    await fileStream.DecompressStream(compressedStream, ECompressionType.Gzip);
+    await fileStream.CompressStreamAsync(compressedStream, ECompressionType.Gzip);
 
     //Decompress the stream
     await using MemoryStream decompressedStream = new();
-    await compressedStream.DecompressStream(decompressedStream, ECompressionType.Gzip);
+    await compressedStream.DecompressStreamAsync(decompressedStream, ECompressionType.Gzip);
+}
+```
+
+Compress and decompress a byte array synchronously.
+
+```cs
+public void CompressAndDecompressBytes()
+{
+    byte[] originalBytes = File.ReadAllBytes("TestFile.txt");
+
+    byte[] compressedBytes = originalBytes.Compress(ECompressionType.Gzip, CompressionLevel.SmallestSize);
+
+    byte[] decompressedBytes = compressedBytes.Decompress(ECompressionType.Gzip);
 }
 ```
 

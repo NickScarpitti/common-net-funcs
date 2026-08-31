@@ -5,20 +5,27 @@
 root = true
 # All files
 [*]
-indent_style = tab
 tab_width = 2
 guidelines = 175 1.5px dotted cc30b0d4, 190 1.5px dashed ccbf9000, 205 1.5px solid cccc0000
 
 # XML project files
 [*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
+indent_style = tab
 indent_size = 2
 
 # XML config files
 [*.{props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
+indent_style = tab
+indent_size = 2
+
+# Markdown
+[*.{md}]
+indent_style = space
 indent_size = 2
 
 # Code files
 [*.{cs,csx,vb,vbx}]
+indent_style = tab
 indent_size = 2
 insert_final_newline = false
 charset = utf-8-bom

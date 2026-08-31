@@ -96,7 +96,7 @@ public sealed class ApiAwsS3Tests
 		byte[] compressedContent = fileContent;
 		if (!contentEncoding.IsNullOrWhiteSpace())
 		{
-			compressedContent = await fileContent.Compress(contentEncoding == "gzip" ? ECompressionType.Gzip : ECompressionType.Deflate, cancellationToken: Current.CancellationToken);
+			compressedContent = await fileContent.CompressAsync(contentEncoding == "gzip" ? ECompressionType.Gzip : ECompressionType.Deflate, cancellationToken: Current.CancellationToken);
 		}
 
 		GetObjectResponse response = new()

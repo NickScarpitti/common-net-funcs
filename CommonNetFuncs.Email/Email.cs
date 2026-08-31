@@ -44,7 +44,7 @@ public sealed class MailAddress(string? Name = null, string? Email = null)
 }
 
 /// <summary>
-/// Represents an email attachment with a name and stream. This class takes ownership of the stream and will dispose it when disposed.
+/// Represents an email attachment as a <see cref="Stream" />. This class takes ownership of the stream and will dispose it when disposed.
 /// </summary>
 public sealed class MailAttachment : IMailAttachment, IAsyncDisposable, IDisposable
 {
@@ -100,6 +100,10 @@ public sealed class MailAttachment : IMailAttachment, IAsyncDisposable, IDisposa
 	}
 }
 
+/// <summary>
+/// Mail attachment class that stores the attachment as a <see cref="byte[]"/>.
+/// This class is serialization-friendly and can be used in scenarios where streams cannot be serialized (e.g., Hangfire background jobs).
+/// </summary>
 public sealed class MailAttachmentBytes : IMailAttachment
 {
 #if NET10_0_OR_GREATER

@@ -2,7 +2,6 @@
 using System.Text;
 using CommonNetFuncs.Web.Requests.Rest.Options;
 using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.Extensions.ObjectPool;
 using NLog;
 using static CommonNetFuncs.Web.Common.ContentTypes;
 using static CommonNetFuncs.Web.Requests.Rest.RestHelperWrapper.WrapperHelpers;
@@ -28,8 +27,6 @@ public sealed class RestHelpersWrapper
 	private readonly RestHelperOptionsDefaultConfig? defaultOptions;
 
 	private readonly Logger logger = LogManager.GetCurrentClassLogger();
-
-	private static readonly ObjectPool<Dictionary<string, string>> headerPool = new DefaultObjectPool<Dictionary<string, string>>(new DefaultPooledObjectPolicy<Dictionary<string, string>>());
 
 	private void FillDefaultOptions(RestHelperOptions options)
 	{
@@ -67,11 +64,10 @@ public sealed class RestHelpersWrapper
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
-		Dictionary<string, string> headers = headerPool.Get();
+		Dictionary<string, string> requestHeaders = new();
 		try
 		{
-			headers.Clear();
-			PopulateHeaders(headers, options, false);
+			PopulateHeaders(requestHeaders, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -84,7 +80,7 @@ public sealed class RestHelpersWrapper
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TResponse> baseRequestOptions = GetRequestOptions<TResponse>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
+				RequestOptions<TResponse> baseRequestOptions = GetRequestOptions<TResponse>(options, client.BaseAddress, requestHeaders, HttpMethod.Get, bearerToken, default);
 
 				result = await client.RestObjectRequest<TResponse, TResponse>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -109,10 +105,6 @@ public sealed class RestHelpersWrapper
 			logger.Error(ex, "Exception occurred during GET request to {Url}: {Message}", options.Url, ex.Message);
 			throw new HttpRequestException("Error occurred during GET request", ex);
 		}
-		finally
-		{
-			headerPool.Return(headers);
-		}
 
 		return result == null ? default : result.Result;
 	}
@@ -136,11 +128,10 @@ public sealed class RestHelpersWrapper
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
-		Dictionary<string, string> headers = headerPool.Get();
+		Dictionary<string, string> requestHeaders = new();
 		try
 		{
-			headers.Clear();
-			PopulateHeaders(headers, options, true);
+			PopulateHeaders(requestHeaders, options, true);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -153,7 +144,7 @@ public sealed class RestHelpersWrapper
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TResponse> baseRequestOptions = GetRequestOptions<TResponse>(options, client.BaseAddress, headers, HttpMethod.Get, bearerToken, default);
+				RequestOptions<TResponse> baseRequestOptions = GetRequestOptions<TResponse>(options, client.BaseAddress, requestHeaders, HttpMethod.Get, bearerToken, default);
 
 				result = await client.StreamingRestObjectRequest<TResponse, TResponse>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -177,10 +168,6 @@ public sealed class RestHelpersWrapper
 		{
 			logger.Error(ex, "Exception occurred during GET Streaming request to {Url}: {Message}", options.Url, ex.Message);
 			throw new HttpRequestException("Error occurred during GET Streaming request", ex);
-		}
-		finally
-		{
-			headerPool.Return(headers);
 		}
 
 		if (result?.Result != null)
@@ -220,11 +207,10 @@ public sealed class RestHelpersWrapper
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
-		Dictionary<string, string> headers = headerPool.Get();
+		Dictionary<string, string> requestHeaders = new();
 		try
 		{
-			headers.Clear();
-			PopulateHeaders(headers, options, false);
+			PopulateHeaders(requestHeaders, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -237,7 +223,7 @@ public sealed class RestHelpersWrapper
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, requestHeaders, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.RestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -261,10 +247,6 @@ public sealed class RestHelpersWrapper
 		{
 			logger.Error(ex, "Exception occurred during POST request to {Url}: {Message}", options.Url, ex.Message);
 			throw new HttpRequestException("Error occurred during POST request", ex);
-		}
-		finally
-		{
-			headerPool.Return(headers);
 		}
 
 		return result == null ? default : result.Result;
@@ -290,11 +272,10 @@ public sealed class RestHelpersWrapper
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
-		Dictionary<string, string> headers = headerPool.Get();
+		Dictionary<string, string> requestHeaders = new();
 		try
 		{
-			headers.Clear();
-			PopulateHeaders(headers, options, true);
+			PopulateHeaders(requestHeaders, options, true);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -307,7 +288,7 @@ public sealed class RestHelpersWrapper
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, requestHeaders, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.StreamingRestObjectRequest<TBody, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -331,10 +312,6 @@ public sealed class RestHelpersWrapper
 		{
 			logger.Error(ex, "Exception occurred during POST Streaming request to {Url}: {Message}", options.Url, ex.Message);
 			throw new HttpRequestException("Error occurred during POST Streaming request", ex);
-		}
-		finally
-		{
-			headerPool.Return(headers);
 		}
 
 		if (result?.Result != null)
@@ -370,11 +347,10 @@ public sealed class RestHelpersWrapper
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
-		Dictionary<string, string> headers = headerPool.Get();
+		Dictionary<string, string> requestHeaders = new();
 		try
 		{
-			headers.Clear();
-			PopulateHeaders(headers, options, false);
+			PopulateHeaders(requestHeaders, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -387,7 +363,7 @@ public sealed class RestHelpersWrapper
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, requestHeaders, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.RestObjectRequest<TResponse, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -411,10 +387,6 @@ public sealed class RestHelpersWrapper
 		{
 			logger.Error(ex, "Exception occurred during generic POST request to {Url}: {Message}", options.Url, ex.Message);
 			throw new HttpRequestException("Error occurred during generic POST request", ex);
-		}
-		finally
-		{
-			headerPool.Return(headers);
 		}
 
 		return result == null ? default : result.Result;
@@ -441,11 +413,10 @@ public sealed class RestHelpersWrapper
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
-		Dictionary<string, string> headers = headerPool.Get();
+		Dictionary<string, string> requestHeaders = new();
 		try
 		{
-			headers.Clear();
-			PopulateHeaders(headers, options, true);
+			PopulateHeaders(requestHeaders, options, true);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -458,7 +429,7 @@ public sealed class RestHelpersWrapper
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, requestHeaders, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.StreamingRestObjectRequest<TResponse, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -482,10 +453,6 @@ public sealed class RestHelpersWrapper
 		{
 			logger.Error(ex, "Exception occurred during generic POST streaming request to {Url}: {Message}", options.Url, ex.Message);
 			throw new HttpRequestException("Error occurred during generic POST streaming request", ex);
-		}
-		finally
-		{
-			headerPool.Return(headers);
 		}
 
 		if (result?.Result != null)
@@ -521,11 +488,10 @@ public sealed class RestHelpersWrapper
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
-		Dictionary<string, string> headers = headerPool.Get();
+		Dictionary<string, string> requestHeaders = new();
 		try
 		{
-			headers.Clear();
-			PopulateHeaders(headers, options, false);
+			PopulateHeaders(requestHeaders, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -538,7 +504,7 @@ public sealed class RestHelpersWrapper
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Post, bearerToken, postObject);
+				RequestOptions<TBody> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, requestHeaders, HttpMethod.Post, bearerToken, postObject);
 
 				result = await client.RestObjectRequest<string?, TBody>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -562,10 +528,6 @@ public sealed class RestHelpersWrapper
 		{
 			logger.Error(ex, "Exception occurred during string POST request to {Url}: {Message}", options.Url, ex.Message);
 			throw new HttpRequestException("Error occurred during string POST request", ex);
-		}
-		finally
-		{
-			headerPool.Return(headers);
 		}
 
 		return result?.Result;
@@ -603,11 +565,10 @@ public sealed class RestHelpersWrapper
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
-		Dictionary<string, string> headers = headerPool.Get();
+		Dictionary<string, string> requestHeaders = new();
 		try
 		{
-			headers.Clear();
-			PopulateHeaders(headers, options, false);
+			PopulateHeaders(requestHeaders, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -620,7 +581,7 @@ public sealed class RestHelpersWrapper
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions<TEntity>(options, client.BaseAddress, headers, HttpMethod.Patch, bearerToken, default,
+				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions<TEntity>(options, client.BaseAddress, requestHeaders, HttpMethod.Patch, bearerToken, default,
 					patchDocument: new StringContent(SerializeObject(patchDocument), Encoding.UTF8, Json)); //new StringContent(System.Text.Json.JsonSerializer.Serialize(patchDocument), Encoding.UTF8, Json)); // System.Text.Json has issues producing JsonPatchDocument in the correct format
 
 				result = await client.RestObjectRequest<TEntity, TEntity>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
@@ -646,10 +607,6 @@ public sealed class RestHelpersWrapper
 			logger.Error(ex, "Exception occurred during PATCH request to {Url}: {Message}", options.Url, ex.Message);
 			throw new HttpRequestException("Error occurred during PATCH request", ex);
 		}
-		finally
-		{
-			headerPool.Return(headers);
-		}
 
 		return result?.Result;
 	}
@@ -673,11 +630,10 @@ public sealed class RestHelpersWrapper
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
-		Dictionary<string, string> headers = headerPool.Get();
+		Dictionary<string, string> requestHeaders = new();
 		try
 		{
-			headers.Clear();
-			PopulateHeaders(headers, options, false);
+			PopulateHeaders(requestHeaders, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -690,7 +646,7 @@ public sealed class RestHelpersWrapper
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, headers, HttpMethod.Put, bearerToken, replacementModel);
+				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions(options, client.BaseAddress, requestHeaders, HttpMethod.Put, bearerToken, replacementModel);
 
 				result = await client.RestObjectRequest<TEntity, TEntity>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -715,10 +671,6 @@ public sealed class RestHelpersWrapper
 			logger.Error(ex, "Exception occurred during PUT request to {Url}: {Message}", options.Url, ex.Message);
 			throw new HttpRequestException("Error occurred during PUT request", ex);
 		}
-		finally
-		{
-			headerPool.Return(headers);
-		}
 		return result?.Result;
 	}
 
@@ -740,11 +692,10 @@ public sealed class RestHelpersWrapper
 		IRestClient client = restClientFactory.CreateClient(options.ApiName);
 		options.ResilienceOptions ??= new();
 
-		Dictionary<string, string> headers = headerPool.Get();
+		Dictionary<string, string> requestHeaders = new();
 		try
 		{
-			headers.Clear();
-			PopulateHeaders(headers, options, false);
+			PopulateHeaders(requestHeaders, options, false);
 			while ((result?.Response == null || !result.Response.IsSuccessStatusCode) && attempts < options.ResilienceOptions.MaxRetry)
 			{
 				if (attempts > 0)
@@ -757,7 +708,7 @@ public sealed class RestHelpersWrapper
 					bearerToken = await PopulateBearerToken(options, attempts, lastResponse, bearerToken).ConfigureAwait(false);
 				}
 
-				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions<TEntity>(options, client.BaseAddress, headers, HttpMethod.Delete, bearerToken, default);
+				RequestOptions<TEntity> baseRequestOptions = GetRequestOptions<TEntity>(options, client.BaseAddress, requestHeaders, HttpMethod.Delete, bearerToken, default);
 
 				result = await client.RestObjectRequest<TEntity, TEntity>(baseRequestOptions, cancellationToken).ConfigureAwait(false);
 
@@ -781,10 +732,6 @@ public sealed class RestHelpersWrapper
 		{
 			logger.Error(ex, "Exception occurred during DELETE request to {Url}: {Message}", options.Url, ex.Message);
 			throw new HttpRequestException("Error occurred during DELETE request", ex);
-		}
-		finally
-		{
-			headerPool.Return(headers);
 		}
 
 		return result?.Result;

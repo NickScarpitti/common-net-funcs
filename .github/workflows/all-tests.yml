@@ -24,7 +24,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       all-projects: ${{ steps.set-matrix.outputs.all-projects }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # need full history to diff against the base commit
 
@@ -176,7 +176,7 @@ jobs:
         run: apt-get update && apt-get install -y git
         shell: sh
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Get Curl
         run: apt-get update && apt-get install -y curl
@@ -300,7 +300,7 @@ jobs:
 #     outputs:
 #       matrix: ${{ steps.set-matrix.outputs.matrix }}
 #     steps:
-#       - uses: actions/checkout@v4
+#       - uses: actions/checkout@v7
 
 #       - name: Discover test projects
 #         id: set-matrix
@@ -335,7 +335,7 @@ jobs:
 #         test-suite: ${{ fromJson(needs.discover-tests.outputs.matrix) }}
 
 #     steps:
-#       - uses: actions/checkout@v4
+#       - uses: actions/checkout@v7
 
 #       - name: Get Curl
 #         run: apt-get update && apt-get install -y curl

@@ -1,4 +1,5 @@
-﻿using AutoFixture.Xunit3;
+﻿using System.IO.Compression;
+using AutoFixture.Xunit3;
 using CommonNetFuncs.Email;
 using static CommonNetFuncs.Email.Email;
 using static Xunit.TestContext;
@@ -278,7 +279,7 @@ public sealed class EmailConfigBytesTests
 	{
 		// Arrange
 		MemoryStream stream = new(new byte[] { 1, 2, 3 });
-		MailAttachment attachment = new("test.txt", stream);
+		MailAttachment attachment = new("test.txt", stream, CompressionLevel.NoCompression);
 
 		// Act
 		await attachment.DisposeAsync();
@@ -292,7 +293,7 @@ public sealed class EmailConfigBytesTests
 	{
 		// Arrange
 		MemoryStream stream = new(new byte[] { 1, 2, 3 });
-		MailAttachment attachment = new("test.txt", stream);
+		MailAttachment attachment = new("test.txt", stream, CompressionLevel.NoCompression);
 
 		// Act
 		attachment.Dispose();

@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Compression;
+﻿using System.IO.Compression;
+using CommonNetFuncs.Compression;
 using static CommonNetFuncs.Compression.Streams;
 using static CommonNetFuncs.Core.Random;
 using static Xunit.TestContext;
@@ -21,7 +22,7 @@ public sealed class StreamsTests
 	[InlineData(ECompressionType.Gzip)]
 	[InlineData(ECompressionType.Deflate)]
 	[InlineData(ECompressionType.ZLib)]
-	public async Task CompressStream_Should_Compress_Data(ECompressionType compressionType)
+	public async Task CompressStreamAsync_Should_Compress_Data(ECompressionType compressionType)
 	{
 		// Arrange
 		byte[] uncompressedData = smallData;
@@ -29,7 +30,7 @@ public sealed class StreamsTests
 		await using MemoryStream compressedStream = new();
 
 		// Act
-		await uncompressedStream.CompressStream(compressedStream, compressionType, cancellationToken: Current.CancellationToken);
+		await uncompressedStream.CompressStreamAsync(compressedStream, compressionType, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		compressedStream.Length.ShouldBeGreaterThan(0);
@@ -59,22 +60,22 @@ public sealed class StreamsTests
 		{
 			if (useAsync)
 			{
-				await Should.ThrowAsync<NotSupportedException>(uncompressedStream.CompressStream(compressedStream, ECompressionType.Deflate, cancellationToken: Current.CancellationToken));
+				await Should.ThrowAsync<NotSupportedException>(uncompressedStream.CompressStreamAsync(compressedStream, ECompressionType.Deflate, cancellationToken: Current.CancellationToken));
 			}
 			else
 			{
-				Should.Throw<NotSupportedException>(() => uncompressedStream.CompressStreamSynchronous(compressedStream, ECompressionType.Deflate));
+				Should.Throw<NotSupportedException>(() => uncompressedStream.CompressStream(compressedStream, ECompressionType.Deflate));
 			}
 		}
 		else
 		{
 			if (useAsync)
 			{
-				await Should.NotThrowAsync(uncompressedStream.CompressStream(compressedStream, ECompressionType.Deflate, cancellationToken: Current.CancellationToken));
+				await Should.NotThrowAsync(uncompressedStream.CompressStreamAsync(compressedStream, ECompressionType.Deflate, cancellationToken: Current.CancellationToken));
 			}
 			else
 			{
-				Should.NotThrow(() => uncompressedStream.CompressStreamSynchronous(compressedStream, ECompressionType.Deflate));
+				Should.NotThrow(() => uncompressedStream.CompressStream(compressedStream, ECompressionType.Deflate));
 			}
 			compressedStream.Length.ShouldBeGreaterThan(0);
 		}
@@ -85,7 +86,7 @@ public sealed class StreamsTests
 	[InlineData(ECompressionType.Gzip)]
 	[InlineData(ECompressionType.Deflate)]
 	[InlineData(ECompressionType.ZLib)]
-	public void CompressStreamSynchronous_Should_Compress_Data(ECompressionType compressionType)
+	public void CompressStream_Should_Compress_Data(ECompressionType compressionType)
 	{
 		// Arrange
 		byte[] uncompressedData = smallData;
@@ -93,7 +94,7 @@ public sealed class StreamsTests
 		using MemoryStream compressedStream = new();
 
 		// Act
-		uncompressedStream.CompressStreamSynchronous(compressedStream, compressionType);
+		uncompressedStream.CompressStream(compressedStream, compressionType);
 
 		// Assert
 		compressedStream.Length.ShouldBeGreaterThan(0);
@@ -104,7 +105,7 @@ public sealed class StreamsTests
 	[InlineData(ECompressionType.Gzip)]
 	[InlineData(ECompressionType.Deflate)]
 	[InlineData(ECompressionType.ZLib)]
-	public async Task DecompressStream_Should_Decompress_Data(ECompressionType compressionType)
+	public async Task DecompressStreamAsync_Should_Decompress_Data(ECompressionType compressionType)
 	{
 		// Arrange
 		byte[] originalData = smallData;
@@ -112,11 +113,11 @@ public sealed class StreamsTests
 		await using MemoryStream compressedStream = new();
 		await using MemoryStream decompressedStream = new();
 
-		await uncompressedStream.CompressStream(compressedStream, compressionType, cancellationToken: Current.CancellationToken);
+		await uncompressedStream.CompressStreamAsync(compressedStream, compressionType, cancellationToken: Current.CancellationToken);
 		compressedStream.Position = 0;
 
 		// Act
-		await compressedStream.DecompressStream(decompressedStream, compressionType, cancellationToken: Current.CancellationToken);
+		await compressedStream.DecompressStreamAsync(decompressedStream, compressionType, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		decompressedStream.ToArray().ShouldBe(originalData);
@@ -138,7 +139,7 @@ public sealed class StreamsTests
 
 		await using MemoryStream decompressedStream = (!canWriteDecompressedStream) ? new([], false) : new();
 
-		await uncompressedStream.CompressStream(compressedStream, ECompressionType.Deflate, cancellationToken: Current.CancellationToken);
+		await uncompressedStream.CompressStreamAsync(compressedStream, ECompressionType.Deflate, cancellationToken: Current.CancellationToken);
 		compressedStream.Position = 0;
 
 		if (!canReadCompressedStream)
@@ -151,22 +152,22 @@ public sealed class StreamsTests
 		{
 			if (useAsync)
 			{
-				await Should.ThrowAsync<NotSupportedException>(compressedStream.DecompressStream(decompressedStream, ECompressionType.Deflate, cancellationToken: Current.CancellationToken));
+				await Should.ThrowAsync<NotSupportedException>(compressedStream.DecompressStreamAsync(decompressedStream, ECompressionType.Deflate, cancellationToken: Current.CancellationToken));
 			}
 			else
 			{
-				Should.Throw<NotSupportedException>(() => compressedStream.DecompressStreamSynchronous(decompressedStream, ECompressionType.Deflate));
+				Should.Throw<NotSupportedException>(() => compressedStream.DecompressStream(decompressedStream, ECompressionType.Deflate));
 			}
 		}
 		else
 		{
 			if (useAsync)
 			{
-				await Should.NotThrowAsync(compressedStream.DecompressStream(decompressedStream, ECompressionType.Deflate, cancellationToken: Current.CancellationToken));
+				await Should.NotThrowAsync(compressedStream.DecompressStreamAsync(decompressedStream, ECompressionType.Deflate, cancellationToken: Current.CancellationToken));
 			}
 			else
 			{
-				Should.NotThrow(() => compressedStream.DecompressStreamSynchronous(decompressedStream, ECompressionType.Deflate));
+				Should.NotThrow(() => compressedStream.DecompressStream(decompressedStream, ECompressionType.Deflate));
 			}
 			decompressedStream.ToArray().ShouldBe(originalData);
 		}
@@ -177,7 +178,7 @@ public sealed class StreamsTests
 	[InlineData(ECompressionType.Gzip)]
 	[InlineData(ECompressionType.Deflate)]
 	[InlineData(ECompressionType.ZLib)]
-	public void DecompressStreamSynchronous_Should_Decompress_Data(ECompressionType compressionType)
+	public void DecompressStream_Should_Decompress_Data(ECompressionType compressionType)
 	{
 		// Arrange
 		byte[] originalData = smallData;
@@ -185,11 +186,11 @@ public sealed class StreamsTests
 		MemoryStream compressedStream = new();
 		MemoryStream decompressedStream = new();
 
-		uncompressedStream.CompressStreamSynchronous(compressedStream, compressionType);
+		uncompressedStream.CompressStream(compressedStream, compressionType);
 		compressedStream.Position = 0;
 
 		// Act
-		compressedStream.DecompressStreamSynchronous(decompressedStream, compressionType);
+		compressedStream.DecompressStream(decompressedStream, compressionType);
 
 		// Assert
 		decompressedStream.ToArray().ShouldBe(originalData);
@@ -210,7 +211,7 @@ public sealed class StreamsTests
 		byte[] originalData = useLargeData ? largeData : smallData;
 
 		// Act
-		byte[] compressedData = await originalData.Compress(compressionType, cancellationToken: Current.CancellationToken);
+		byte[] compressedData = await originalData.CompressAsync(compressionType, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		compressedData.Length.ShouldBeGreaterThan(0);
@@ -230,13 +231,13 @@ public sealed class StreamsTests
 		byte[] mediumData = GetRandomBytes(dataSize);
 
 		// Act
-		byte[] compressedData = await mediumData.Compress(compressionType, cancellationToken: Current.CancellationToken);
+		byte[] compressedData = await mediumData.CompressAsync(compressionType, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		compressedData.Length.ShouldBeGreaterThan(0);
 
 		// Verify we can decompress it back
-		byte[] decompressedData = await compressedData.Decompress(compressionType, cancellationToken: Current.CancellationToken);
+		byte[] decompressedData = await compressedData.DecompressAsync(compressionType, cancellationToken: Current.CancellationToken);
 		decompressedData.ShouldBe(mediumData);
 	}
 
@@ -253,13 +254,110 @@ public sealed class StreamsTests
 	{
 		// Arrange
 		byte[] originalData = useLargeData ? largeData : smallData;
-		byte[] compressedData = await originalData.Compress(compressionType, cancellationToken: Current.CancellationToken);
+		byte[] compressedData = await originalData.CompressAsync(compressionType, cancellationToken: Current.CancellationToken);
 
 		// Act
-		byte[] decompressedData = await compressedData.Decompress(compressionType, cancellationToken: Current.CancellationToken);
+		byte[] decompressedData = await compressedData.DecompressAsync(compressionType, cancellationToken: Current.CancellationToken);
 
 		// Assert
 		decompressedData.ShouldBe(originalData);
+	}
+
+	// Tests for the synchronous byte[] Compress overload
+	[Theory]
+	[InlineData(ECompressionType.Brotli, false)]
+	[InlineData(ECompressionType.Gzip, false)]
+	[InlineData(ECompressionType.Deflate, false)]
+	[InlineData(ECompressionType.ZLib, false)]
+	[InlineData(ECompressionType.Brotli, true)]
+	[InlineData(ECompressionType.Gzip, true)]
+	[InlineData(ECompressionType.Deflate, true)]
+	[InlineData(ECompressionType.ZLib, true)]
+	public void Compress_Should_Compress_Byte_Array_Synchronously(ECompressionType compressionType, bool useLargeData)
+	{
+		// Arrange
+		byte[] originalData = useLargeData ? largeData : smallData;
+
+		// Act
+		byte[] compressedData = originalData.Compress(compressionType);
+
+		// Assert
+		compressedData.Length.ShouldBeGreaterThan(0);
+	}
+
+	[Theory]
+	[InlineData(CompressionLevel.NoCompression)]
+	[InlineData(CompressionLevel.Fastest)]
+	[InlineData(CompressionLevel.Optimal)]
+	[InlineData(CompressionLevel.SmallestSize)]
+	public void Compress_Should_Respect_CompressionLevel_Synchronously(CompressionLevel compressionLevel)
+	{
+		// Arrange
+		byte[] originalData = smallData;
+
+		// Act
+		byte[] compressedData = originalData.Compress(ECompressionType.Gzip, compressionLevel);
+
+		// Assert
+		compressedData.Length.ShouldBeGreaterThan(0);
+		compressedData.Decompress(ECompressionType.Gzip).ShouldBe(originalData);
+	}
+
+	[Theory]
+	[InlineData(ECompressionType.Gzip, 2000)]
+	[InlineData(ECompressionType.Deflate, 5000)]
+	[InlineData(ECompressionType.ZLib, 8000)]
+	[InlineData(ECompressionType.Gzip, 1024)] // Edge case for <= 1024 branch
+	[InlineData(ECompressionType.Deflate, 1025)] // Just above 1024
+	[InlineData(ECompressionType.ZLib, 10240)] // Edge case for <= 10240 branch
+	[InlineData(ECompressionType.Gzip, 10241)] // Just above 10240
+	public void Compress_Should_Handle_Medium_Sized_Data_Synchronously(ECompressionType compressionType, int dataSize)
+	{
+		// Arrange - Create medium-sized data to hit the <= 10240 branch in Compress method
+		byte[] mediumData = GetRandomBytes(dataSize);
+
+		// Act
+		byte[] compressedData = mediumData.Compress(compressionType);
+
+		// Assert
+		compressedData.Length.ShouldBeGreaterThan(0);
+
+		// Verify we can decompress it back
+		byte[] decompressedData = compressedData.Decompress(compressionType);
+		decompressedData.ShouldBe(mediumData);
+	}
+
+	// Tests for the synchronous byte[] Decompress overload
+	[Theory]
+	[InlineData(ECompressionType.Brotli, false)]
+	[InlineData(ECompressionType.Gzip, false)]
+	[InlineData(ECompressionType.Deflate, false)]
+	[InlineData(ECompressionType.ZLib, false)]
+	[InlineData(ECompressionType.Brotli, true)]
+	[InlineData(ECompressionType.Gzip, true)]
+	[InlineData(ECompressionType.Deflate, true)]
+	[InlineData(ECompressionType.ZLib, true)]
+	public void Decompress_Should_Decompress_Byte_Array_Synchronously(ECompressionType compressionType, bool useLargeData)
+	{
+		// Arrange
+		byte[] originalData = useLargeData ? largeData : smallData;
+		byte[] compressedData = originalData.Compress(compressionType);
+
+		// Act
+		byte[] decompressedData = compressedData.Decompress(compressionType);
+
+		// Assert
+		decompressedData.ShouldBe(originalData);
+	}
+
+	[Fact]
+	public void Decompress_Should_Throw_When_MaxCompressionRatio_Exceeded_Synchronously()
+	{
+		// Arrange
+		byte[] compressedData = smallData.Compress(ECompressionType.Gzip);
+
+		// Act & Assert
+		Should.Throw<CompressionLimitExceededException>(() => compressedData.Decompress(ECompressionType.Gzip, maxCompressionRatio: 0));
 	}
 
 	[Theory]
@@ -419,7 +517,7 @@ public sealed class StreamsTests
 	{
 		// Arrange
 		byte[] originalData = smallData;
-		byte[] compressedData = await originalData.Compress(compressionType, cancellationToken: Current.CancellationToken);
+		byte[] compressedData = await originalData.CompressAsync(compressionType, cancellationToken: Current.CancellationToken);
 		await using MemoryStream compressedStream = new(compressedData);
 
 		// Act
@@ -465,7 +563,7 @@ public sealed class StreamsTests
 	{
 		// Arrange
 		byte[] originalData = smallData;
-		byte[] compressedData = await originalData.Compress(compressionType, cancellationToken: Current.CancellationToken);
+		byte[] compressedData = await originalData.CompressAsync(compressionType, cancellationToken: Current.CancellationToken);
 		await using MemoryStream compressedStream = new(compressedData);
 
 		// Act
@@ -521,7 +619,7 @@ public sealed class StreamsTests
 	public async Task DetectCompressionType_Should_Detect_Type_For_NonSeekable_Stream(ECompressionType compressionType)
 	{
 		// Arrange
-		byte[] compressedData = await smallData.Compress(compressionType, cancellationToken: Current.CancellationToken);
+		byte[] compressedData = await smallData.CompressAsync(compressionType, cancellationToken: Current.CancellationToken);
 		await using NonSeekableStream nonSeekableStream = new(compressedData);
 
 		// Act
@@ -537,7 +635,7 @@ public sealed class StreamsTests
 	{
 		// Arrange
 		byte[] originalData = smallData;
-		byte[] compressedData = await originalData.Compress(ECompressionType.Deflate, cancellationToken: Current.CancellationToken);
+		byte[] compressedData = await originalData.CompressAsync(ECompressionType.Deflate, cancellationToken: Current.CancellationToken);
 
 		// Act
 		bool isDeflate = await IsDeflateCompressed(compressedData);
@@ -580,7 +678,7 @@ public sealed class StreamsTests
 	{
 		// Arrange
 		byte[] originalData = smallData;
-		byte[] compressedData = await originalData.Compress(compressionType, cancellationToken: Current.CancellationToken);
+		byte[] compressedData = await originalData.CompressAsync(compressionType, cancellationToken: Current.CancellationToken);
 		await using MemoryStream compressedStream = new(compressedData);
 
 		// Act
@@ -599,7 +697,7 @@ public sealed class StreamsTests
 	{
 		// Arrange
 		byte[] originalData = smallData;
-		byte[] compressedData = await originalData.Compress(compressionType, cancellationToken: Current.CancellationToken);
+		byte[] compressedData = await originalData.CompressAsync(compressionType, cancellationToken: Current.CancellationToken);
 
 		// Create a non-seekable stream wrapper
 		await using NonSeekableStream nonSeekableStream = new(compressedData);
@@ -929,7 +1027,7 @@ public sealed class StreamsTests
 	{
 		// Arrange
 		byte[] originalData = smallData;
-		byte[] compressedData = await originalData.Compress(compressionType, cancellationToken: Current.CancellationToken);
+		byte[] compressedData = await originalData.CompressAsync(compressionType, cancellationToken: Current.CancellationToken);
 		MemoryStream compressedStream = new(compressedData);
 
 		// Act

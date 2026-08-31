@@ -25,9 +25,9 @@ public static class DirectQuery
 	/// <param name="maxRetry">Optional: Number of times to re-try executing the command on failure. Default is 3.</param>
 	/// <param name="cancellationToken">Optional: Token to monitor for cancellation requests.</param>
 	/// <returns><see cref="DataTable"/> containing the results of the database command</returns>
-	public static Task<DataTable> GetDataTable(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
+	public static Task<DataTable> GetDataTableAsync(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
 	{
-		return GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken);
+		return GetDataTableInternalAsync(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken);
 	}
 
 	/// <summary>
@@ -39,7 +39,7 @@ public static class DirectQuery
 	/// <param name="maxRetry">Optional: Number of times to re-try executing the command on failure. Default is 3.</param>
 	/// <param name="cancellationToken">Optional: Token to monitor for cancellation requests.</param>
 	/// <returns><see cref="DataTable"/> containing the results of the database command.</returns>
-	internal static async Task<DataTable> GetDataTableInternal(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
+	internal static async Task<DataTable> GetDataTableInternalAsync(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
 	{
 		DataTable dt = new();
 		for (int i = 0; i < maxRetry; i++)
@@ -78,9 +78,9 @@ public static class DirectQuery
 	/// <param name="commandTimeoutSeconds">Optional: Query execution timeout length in seconds. Default is 30 seconds.</param>
 	/// <param name="maxRetry">Optional: Number of times to re-try executing the command on failure. Default is 3.</param>
 	/// <returns><see cref="DataTable"/> containing the results of the database command.</returns>
-	public static DataTable GetDataTableSynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
+	public static DataTable GetDataTable(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
 	{
-		return GetDataTableInternalSynchronous(conn, cmd, commandTimeoutSeconds, maxRetry);
+		return GetDataTableInternal(conn, cmd, commandTimeoutSeconds, maxRetry);
 	}
 
 	/// <summary>
@@ -91,7 +91,7 @@ public static class DirectQuery
 	/// <param name="commandTimeoutSeconds">Optional: Query execution timeout length in seconds. Default is 30 seconds.</param>
 	/// <param name="maxRetry">Optional: Number of times to re-try executing the command on failure. Default is 3.</param>
 	/// <returns><see cref="DataTable"/> containing the results of the database command.</returns>
-	internal static DataTable GetDataTableInternalSynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
+	internal static DataTable GetDataTableInternal(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
 	{
 		DataTable dt = new();
 		for (int i = 0; i < maxRetry; i++)
@@ -131,9 +131,9 @@ public static class DirectQuery
 	/// <param name="maxRetry">Optional: Number of times to re-try executing the command on failure. Default is 3.</param>
 	/// <param name="cancellationToken">Optional: Token to monitor for cancellation requests.</param>
 	/// <returns><see cref="UpdateResult"/> containing the number of records altered and whether the query executed successfully.</returns>
-	public static Task<UpdateResult> RunUpdateQuery(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
+	public static Task<UpdateResult> RunUpdateQueryAsync(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
 	{
-		return RunUpdateQueryInternal(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken);
+		return RunUpdateQueryInternalAsync(conn, cmd, commandTimeoutSeconds, maxRetry, cancellationToken);
 	}
 
 	/// <summary>
@@ -145,7 +145,7 @@ public static class DirectQuery
 	/// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
 	/// <param name="cancellationToken">Optional: Token to monitor for cancellation requests.</param>
 	/// <returns><see cref="UpdateResult"/> containing the number of records altered and whether the query executed successfully</returns>
-	internal static async Task<UpdateResult> RunUpdateQueryInternal(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
+	internal static async Task<UpdateResult> RunUpdateQueryInternalAsync(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3, CancellationToken cancellationToken = default)
 	{
 		for (int i = 0; i < maxRetry; i++)
 		{
@@ -182,9 +182,9 @@ public static class DirectQuery
 	/// <param name="commandTimeoutSeconds">Query execution timeout length in seconds</param>
 	/// <param name="maxRetry">Number of times to re-try executing the command on failure</param>
 	/// <returns><see cref="UpdateResult"/> containing the number of records altered and whether the query executed successfully</returns>
-	public static UpdateResult RunUpdateQuerySynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
+	public static UpdateResult RunUpdateQuery(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
 	{
-		return RunUpdateQueryInternalSynchronous(conn, cmd, commandTimeoutSeconds, maxRetry);
+		return RunUpdateQueryInternal(conn, cmd, commandTimeoutSeconds, maxRetry);
 	}
 
 	/// <summary>
@@ -195,7 +195,7 @@ public static class DirectQuery
 	/// <param name="commandTimeoutSeconds">Optional: Query execution timeout length in seconds. Default is 30 seconds.</param>
 	/// <param name="maxRetry">Optional: Number of times to re-try executing the command on failure. Default is 3.</param>
 	/// <returns><see cref="UpdateResult"/> containing the number of records altered and whether the query executed successfully.</returns>
-	internal static UpdateResult RunUpdateQueryInternalSynchronous(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
+	internal static UpdateResult RunUpdateQueryInternal(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, int maxRetry = 3)
 	{
 		for (int i = 0; i < maxRetry; i++)
 		{
@@ -336,7 +336,7 @@ public static class DirectQuery
 	/// <param name="useCache">Optional: If true, use a cached mapping delegate for improved performance on repeated calls. Default is true.</param>
 	/// <param name="cancellationToken">Optional: Token to monitor for cancellation requests.</param>
 	/// <returns>Enumerated results of type <typeparamref name="T"/> from the command that was run on the database.</returns>
-	public static IEnumerable<T> GetDataStreamSynchronous<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, bool useCache = true, CancellationToken cancellationToken = default) where T : class, new()
+	public static IEnumerable<T> GetDataStream<T>(DbConnection conn, DbCommand cmd, int commandTimeoutSeconds = 30, bool useCache = true, CancellationToken cancellationToken = default) where T : class, new()
 	{
 		DbDataReader? reader = null;
 		try
@@ -346,7 +346,7 @@ public static class DirectQuery
 			reader = cmd.ExecuteReader();
 			Func<IDataReader, T> mapper = GetOrCreateMapperDelegate<T>(useCache);
 
-			foreach (T item in EnumerateReaderSynchronous(reader, mapper, cancellationToken))
+			foreach (T item in EnumerateReader(reader, mapper, cancellationToken))
 			{
 				yield return item;
 			}
@@ -381,7 +381,7 @@ public static class DirectQuery
 
 			Func<IDataReader, T> mapper = GetOrCreateMapperDelegate<T>(useCache);
 
-			IAsyncEnumerator<T> enumeratedReader = EnumerateReader(reader, mapper, cancellationToken).GetAsyncEnumerator(cancellationToken);
+			IAsyncEnumerator<T> enumeratedReader = EnumerateReaderAsync(reader, mapper, cancellationToken).GetAsyncEnumerator(cancellationToken);
 			while (await enumeratedReader.MoveNextAsync().ConfigureAwait(false))
 			{
 				if (!cancellationToken.IsCancellationRequested)
@@ -453,7 +453,7 @@ public static class DirectQuery
 		return values;
 	}
 
-	private static async IAsyncEnumerable<T> EnumerateReader<T>(DbDataReader reader, Func<IDataReader, T> mapper, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
+	private static async IAsyncEnumerable<T> EnumerateReaderAsync<T>(DbDataReader reader, Func<IDataReader, T> mapper, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
 	{
 		while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
 		{
@@ -472,7 +472,7 @@ public static class DirectQuery
 		}
 	}
 
-	private static IEnumerable<T> EnumerateReaderSynchronous<T>(DbDataReader reader, Func<IDataReader, T> mapper, CancellationToken cancellationToken = default) where T : class, new()
+	private static IEnumerable<T> EnumerateReader<T>(DbDataReader reader, Func<IDataReader, T> mapper, CancellationToken cancellationToken = default) where T : class, new()
 	{
 		while (reader.Read())
 		{

@@ -1,4 +1,5 @@
-﻿using CommonNetFuncs.Email;
+﻿using System.IO.Compression;
+using CommonNetFuncs.Email;
 using static CommonNetFuncs.Email.Email;
 using static Xunit.TestContext;
 
@@ -132,8 +133,8 @@ public sealed class AttachmentsEdgeCasesTests3
 		MemoryStream stream2 = new(new byte[] { 4, 5, 6 });
 		IMailAttachment[] attachments = new IMailAttachment[]
 		{
-			new MailAttachment("file1.txt", stream1),
-			new MailAttachment("file2.txt", stream2)
+			new MailAttachment("file1.txt", stream1, CompressionLevel.NoCompression),
+			new MailAttachment("file2.txt", stream2, CompressionLevel.NoCompression)
 		};
 
 		SendEmailConfig config = new()
@@ -319,7 +320,7 @@ public sealed class AttachmentsEdgeCasesTests3
 	{
 		// Arrange
 		MemoryStream asyncStream = new(new byte[] { 1, 2, 3 });
-		MailAttachment asyncDisposable = new("async.txt", asyncStream);
+		MailAttachment asyncDisposable = new("async.txt", asyncStream, CompressionLevel.NoCompression);
 		MockDisposableAttachment syncDisposable = new("sync.txt");
 
 		IMailAttachment[] attachments = new IMailAttachment[] { asyncDisposable, syncDisposable };

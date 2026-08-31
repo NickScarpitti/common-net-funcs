@@ -4,17 +4,17 @@
 [![NuGet Version](https://img.shields.io/nuget/v/CommonNetFuncs.Email)](https://www.nuget.org/packages/CommonNetFuncs.Email/)
 [![nuget](https://img.shields.io/nuget/dt/CommonNetFuncs.Email)](https://www.nuget.org/packages/CommonNetFuncs.Email/)
 
-This  contains helper methods for sending emails in .NET applications. It includes a simple interface for sending emails as well as an implementation that can be used directly or consumed as a service.
+This contains helper methods for sending emails in .NET applications. It includes a simple interface for sending emails as well as an implementation that can be used directly or consumed as a service.
 
 ## Contents
 
 - [CommonNetFuncs.Email](#commonnetfuncsemail)
-	- [Contents](#contents)
-	- [Email](#email)
-		- [Email Usage Examples](#email-usage-examples)
-			- [SendEmail](#sendemail)
-	- [Installation](#installation)
-	- [License](#license)
+  - [Contents](#contents)
+  - [Email](#email)
+    - [Email Usage Examples](#email-usage-examples)
+      - [SendEmail](#sendemail)
+  - [Installation](#installation)
+  - [License](#license)
 
 ---
 
@@ -32,26 +32,27 @@ Helper class for sending emails
 Sends an email with the specified parameters. Can be consumed as a service using the IEmailService interface and EmailService implementation of that service.
 
 ```cs
-MailAddress fromAddress = new()
-{
-  Name = "Nick",
-  Email = "NickEmail@test.com"
-};
+SmtpSettings smtpSettings = new("smtp.server.address", 25);
 
-MailAddress toAddress = new()
-{
-  Name = "Chris",
-  Email = "ChrisEmail@test.com"
-};
+EmailAddresses emailAddresses = new(
+    fromAddress: new MailAddress("Nick", "NickEmail@test.com"),
+    toAddresses: [new MailAddress("Chris", "ChrisEmail@test.com")]);
 
-MailAttachment attachment = new()
-{
-  AttachmentName = "Important Attachment.txt",
-  AttachmentStream = new FileStream(@"C:\Documents\Important Attachment.txt")
-}
+await using FileStream attachmentStream = new(@"C:\Documents\Important Attachment.txt", FileMode.Open, FileAccess.Read);
 
-Email.SendEmail("smtp.server.address", 25, fromAddress, toAddress, "Subject Line", "Mail Body", attachments: [attachment], zipAttachments: true); // Sends email with zipped attachment
+// Attachment data is compressed in memory (Gzip, CompressionLevel.Optimal by default) and transparently decompressed when the email is sent
+MailAttachment attachment = new("Important Attachment.txt", attachmentStream);
+
+EmailContent emailContent = new(
+    subject: "Subject Line",
+    body: "Mail Body",
+    attachments: [attachment],
+    zipAttachments: true); // Sends email with zipped attachment
+
+bool success = await SendEmail(new SendEmailConfig(smtpSettings, emailAddresses, emailContent));
 ```
+
+`MailAttachment` and `MailAttachmentBytes` both accept an optional `CompressionLevel` parameter to control how the attachment is compressed while held in memory (defaults to `CompressionLevel.Optimal`). `MailAttachmentBytes` stores the attachment as a `byte[]` instead of a `Stream`, making it serialization-friendly for scenarios such as Hangfire background jobs - use it along with `EmailContentBytes`/`SendEmailConfigBytes` in those cases.
 
 </details>
 

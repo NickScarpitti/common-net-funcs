@@ -30,9 +30,9 @@ public class CompressionStreamsBenchmarks
 		largeData = GenerateTestData(1024 * 1024); // 1 MB
 
 		// Pre-compress data for decompression benchmarks
-		compressedSmallGzip = await smallData.Compress(Streams.ECompressionType.Gzip);
-		compressedMediumGzip = await mediumData.Compress(Streams.ECompressionType.Gzip);
-		compressedLargeGzip = await largeData.Compress(Streams.ECompressionType.Gzip);
+		compressedSmallGzip = await smallData.CompressAsync(Streams.ECompressionType.Gzip);
+		compressedMediumGzip = await mediumData.CompressAsync(Streams.ECompressionType.Gzip);
+		compressedLargeGzip = await largeData.CompressAsync(Streams.ECompressionType.Gzip);
 
 		// Prepare streams for detection benchmarks
 		seekableStream = new MemoryStream(compressedSmallGzip);
@@ -71,31 +71,31 @@ public class CompressionStreamsBenchmarks
 	[Benchmark]
 	public async Task<byte[]> CompressSmall_Gzip()
 	{
-		return await smallData.Compress(Streams.ECompressionType.Gzip);
+		return await smallData.CompressAsync(Streams.ECompressionType.Gzip);
 	}
 
 	[Benchmark]
 	public async Task<byte[]> CompressMedium_Gzip()
 	{
-		return await mediumData.Compress(Streams.ECompressionType.Gzip);
+		return await mediumData.CompressAsync(Streams.ECompressionType.Gzip);
 	}
 
 	[Benchmark]
 	public async Task<byte[]> CompressLarge_Gzip()
 	{
-		return await largeData.Compress(Streams.ECompressionType.Gzip);
+		return await largeData.CompressAsync(Streams.ECompressionType.Gzip);
 	}
 
 	[Benchmark]
 	public async Task<byte[]> CompressSmall_Brotli()
 	{
-		return await smallData.Compress(Streams.ECompressionType.Brotli);
+		return await smallData.CompressAsync(Streams.ECompressionType.Brotli);
 	}
 
 	[Benchmark]
 	public async Task<byte[]> CompressMedium_Brotli()
 	{
-		return await mediumData.Compress(Streams.ECompressionType.Brotli);
+		return await mediumData.CompressAsync(Streams.ECompressionType.Brotli);
 	}
 
 	// ===== Decompression Benchmarks =====
@@ -103,19 +103,19 @@ public class CompressionStreamsBenchmarks
 	[Benchmark]
 	public async Task<byte[]> DecompressSmall_Gzip()
 	{
-		return await compressedSmallGzip.Decompress(Streams.ECompressionType.Gzip);
+		return await compressedSmallGzip.DecompressAsync(Streams.ECompressionType.Gzip);
 	}
 
 	[Benchmark]
 	public async Task<byte[]> DecompressMedium_Gzip()
 	{
-		return await compressedMediumGzip.Decompress(Streams.ECompressionType.Gzip);
+		return await compressedMediumGzip.DecompressAsync(Streams.ECompressionType.Gzip);
 	}
 
 	[Benchmark]
 	public async Task<byte[]> DecompressLarge_Gzip()
 	{
-		return await compressedLargeGzip.Decompress(Streams.ECompressionType.Gzip);
+		return await compressedLargeGzip.DecompressAsync(Streams.ECompressionType.Gzip);
 	}
 
 	// ===== Stream Compression Benchmarks =====
@@ -125,7 +125,7 @@ public class CompressionStreamsBenchmarks
 	{
 		await using MemoryStream inputStream = new(mediumData);
 		await using MemoryStream outputStream = new();
-		await inputStream.CompressStream(outputStream, Streams.ECompressionType.Gzip);
+		await inputStream.CompressStreamAsync(outputStream, Streams.ECompressionType.Gzip);
 	}
 
 	[Benchmark]
@@ -133,7 +133,7 @@ public class CompressionStreamsBenchmarks
 	{
 		await using MemoryStream inputStream = new(compressedMediumGzip);
 		await using MemoryStream outputStream = new();
-		await inputStream.DecompressStream(outputStream, Streams.ECompressionType.Gzip);
+		await inputStream.DecompressStreamAsync(outputStream, Streams.ECompressionType.Gzip);
 	}
 
 	// ===== Detection Benchmarks =====

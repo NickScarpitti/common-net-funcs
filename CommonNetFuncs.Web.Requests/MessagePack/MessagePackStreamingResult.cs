@@ -28,7 +28,7 @@ public class MessagePackStreamingResult<T>(
 	MessagePackSerializerOptions? messagePackOptions = null,
 	JsonSerializerOptions? jsonOptions = null,
 	int successStatusCode = StatusCodes.Status200OK,
-	int emptyStatusCode = StatusCodes.Status204NoContent) : IActionResult
+	int emptyStatusCode = StatusCodes.Status204NoContent) : IActionResult, IResult
 {
 	private readonly IAsyncEnumerable<T> data = data ?? throw new ArgumentNullException(nameof(data));
 	private readonly MessagePackSerializerOptions? messagePackOptions = messagePackOptions;
@@ -39,10 +39,16 @@ public class MessagePackStreamingResult<T>(
 	public async Task ExecuteResultAsync(ActionContext context)
 	{
 		ArgumentNullException.ThrowIfNull(context);
+		await ExecuteAsync(context.HttpContext).ConfigureAwait(false);
+	}
 
-		HttpRequest request = context.HttpContext.Request;
-		HttpResponse response = context.HttpContext.Response;
-		CancellationToken cancellationToken = context.HttpContext.RequestAborted;
+	public async Task ExecuteAsync(HttpContext httpContext)
+	{
+		ArgumentNullException.ThrowIfNull(httpContext);
+
+		HttpRequest request = httpContext.Request;
+		HttpResponse response = httpContext.Response;
+		CancellationToken cancellationToken = httpContext.RequestAborted;
 
 		// Content negotiation: determine format from Accept header
 		string acceptHeader = request.Headers[HeaderNames.Accept].ToString() ?? string.Empty;

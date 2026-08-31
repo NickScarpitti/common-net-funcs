@@ -525,7 +525,6 @@ public static class Streams
 		}
 
 		// ZLIB: 78 01 / 78 9C / 78 DA (first byte 0x78, second varies)
-		// Optimize by checking first byte once
 		if (bytesRead >= 2 && header[0] == 0x78)
 		{
 			byte second = header[1];
@@ -545,11 +544,116 @@ public static class Streams
 	}
 
 	/// <summary>
+	/// Checks a <see cref="byte"/> <see cref="Array"/> to determine if it has been compressed using the Gzip compression algorithm, based on its header bytes.
+	/// </summary>
+	/// <param name="data">Byte array to check for Gzip compression.</param>
+	/// <returns><see langword="true"/> if the byte array's header matches the Gzip magic number.</returns>
+	public static bool IsGzipCompressed(this byte[]? data)
+	{
+		return (data?.Length ?? 0) >= 2 && data![0] == 0x1F && data[1] == 0x8B;
+	}
+
+	/// <summary>
+	/// Checks a <see cref="Stream"/> to determine if it has been compressed using the Gzip compression algorithm, based on its header bytes.
+	/// </summary>
+	/// <param name="data">Stream to check for Gzip compression.</param>
+	/// <returns><see langword="true"/> if the stream's header matches the Gzip magic number.</returns>
+	/// <remarks>If the stream is not seekable, the header bytes read to check the signature are consumed from the stream and cannot be recovered.</remarks>
+	public static bool IsGzipCompressed(this Stream? data)
+	{
+		if (data == null || !data.CanRead)
+		{
+			return false;
+		}
+		long originalPosition = data.CanSeek ? data.Position : 0;
+		byte[] headerArray = ArrayPool<byte>.Shared.Rent(4);
+		int bytesRead = data.Read(headerArray, 0, 4);
+
+		bool result = bytesRead >= 2 && headerArray[0] == 0x1F && headerArray[1] == 0x8B;
+		if (data.CanSeek)
+		{
+			data.Position = originalPosition;
+		}
+		ArrayPool<byte>.Shared.Return(headerArray);
+		return result;
+	}
+
+	/// <summary>
+	/// Checks a <see cref="byte"/> <see cref="Array"/> to determine if it has been compressed using the ZLib compression algorithm, based on its header bytes.
+	/// </summary>
+	/// <param name="data">Byte array to check for ZLib compression.</param>
+	/// <returns><see langword="true"/> if the byte array's header matches a valid ZLib header.</returns>
+	public static bool IsZLibCompressed(this byte[]? data)
+	{
+		return (data?.Length ?? 0) >= 2 && data![0] == 0x78 && (data[1] == 0x01 || data[1] == 0x9C || data[1] == 0xDA);
+	}
+
+	/// <summary>
+	/// Checks a <see cref="Stream"/> to determine if it has been compressed using the ZLib compression algorithm, based on its header bytes.
+	/// </summary>
+	/// <param name="data">Stream to check for ZLib compression.</param>
+	/// <returns><see langword="true"/> if the stream's header matches a valid ZLib header.</returns>
+	/// <remarks>If the stream is not seekable, the header bytes read to check the signature are consumed from the stream and cannot be recovered.</remarks>
+	public static bool IsZLibCompressed(this Stream? data)
+	{
+		if (data == null || !data.CanRead)
+		{
+			return false;
+		}
+		long originalPosition = data.CanSeek ? data.Position : 0;
+		byte[] headerArray = ArrayPool<byte>.Shared.Rent(2);
+		int bytesRead = data.Read(headerArray, 0, 2);
+
+		bool result = bytesRead >= 2 && headerArray[0] == 0x78 && (headerArray[1] == 0x01 || headerArray[1] == 0x9C || headerArray[1] == 0xDA);
+		if (data.CanSeek)
+		{
+			data.Position = originalPosition;
+		}
+		ArrayPool<byte>.Shared.Return(headerArray);
+		return result;
+	}
+
+	/// <summary>
+	/// Checks a <see cref="byte"/> <see cref="Array"/> to determine if it has been compressed using the Brotli compression algorithm, based on its header bytes.
+	/// </summary>
+	/// <param name="data">Byte array to check for Brotli compression.</param>
+	/// <returns><see langword="true"/> if the byte array's header matches the Brotli magic number.</returns>
+	public static bool IsBrotliCompressed(this byte[]? data)
+	{
+		return (data?.Length ?? 0) >= 4 && data![0] == 0xCE && data[1] == 0xB2 && data[2] == 0xCF && data[3] == 0x81;
+	}
+
+	/// <summary>
+	/// Checks a <see cref="Stream"/> to determine if it has been compressed using the Brotli compression algorithm, based on its header bytes.
+	/// </summary>
+	/// <param name="data">Stream to check for Brotli compression.</param>
+	/// <returns><see langword="true"/> if the stream's header matches the Brotli magic number.</returns>
+	/// <remarks>If the stream is not seekable, the header bytes read to check the signature are consumed from the stream and cannot be recovered.</remarks>
+	public static bool IsBrotliCompressed(this Stream? data)
+	{
+		if (data == null || !data.CanRead)
+		{
+			return false;
+		}
+		long originalPosition = data.CanSeek ? data.Position : 0;
+		byte[] headerArray = ArrayPool<byte>.Shared.Rent(4);
+		int bytesRead = data.Read(headerArray, 0, 4);
+
+		bool result = bytesRead >= 4 && headerArray[0] == 0xCE && headerArray[1] == 0xB2 && headerArray[2] == 0xCF && headerArray[3] == 0x81;
+		if (data.CanSeek)
+		{
+			data.Position = originalPosition;
+		}
+		ArrayPool<byte>.Shared.Return(headerArray);
+		return result;
+	}
+
+	/// <summary>
 	/// Checks a <see cref="byte"/> <see cref="Array"/> to determine if it has been compressed using the deflate compression algorithm.
 	/// </summary>
 	/// <param name="data">Byte array to check for deflate compression.</param>
 	/// <returns><see langword="true"/> if byte array contains data that was compressed using the deflate compression algorithm.</returns>
-	public static Task<bool> IsDeflateCompressed(byte[] data)
+	public static Task<bool> IsDeflateCompressed(this byte[] data)
 	{
 		return IsDeflateCompressedCore(data.AsMemory());
 	}
@@ -559,7 +663,7 @@ public static class Streams
 	/// </summary>
 	/// <param name="data">Memory to check for deflate compression.</param>
 	/// <returns><see langword="true"/> if data was compressed using the deflate compression algorithm.</returns>
-	internal static Task<bool> IsDeflateCompressed(Memory<byte> data)
+	internal static Task<bool> IsDeflateCompressed(this Memory<byte> data)
 	{
 		return IsDeflateCompressedCore(data);
 	}

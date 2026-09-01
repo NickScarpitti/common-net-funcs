@@ -102,15 +102,17 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="IList{T}"/> obj variable asynchronously.
+	/// Populates an <see cref="IList{T}"/> from the awaited result of a Task, accepting either a nullable (Task<T?>) or non-nullable (Task<T>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="T">Element type of the list being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be T or T? — never specify this explicitly.</typeparam>
 	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Async task that returns the value to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this IList<T?> obj, Task<T?> task)
+	public static async Task ObjectFill<T, TResult>(this IList<T?> obj, Task<TResult> task) where TResult : T?
 	{
 		try
 		{
-			T? resultObject = await task.ConfigureAwait(false);
+			TResult resultObject = await task.ConfigureAwait(false);
 			lock (obj)
 			{
 				obj.Add(resultObject);
@@ -123,15 +125,17 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="IList{T}"/> obj variable asynchronously.
+	/// Populates an <see cref="IList{T}"/> from the awaited result of a Task, accepting either a nullable (Task<T?>) or non-nullable (Task<T>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="T">Element type of the list being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be T or T? — never specify this explicitly.</typeparam>
 	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this IList<T?> obj, Func<Task<T?>> task)
+	public static async Task ObjectFill<T, TResult>(this IList<T?> obj, Func<Task<TResult>> task) where TResult : T?
 	{
 		try
 		{
-			T? resultObject = await task().ConfigureAwait(false);
+			TResult resultObject = await task().ConfigureAwait(false);
 			lock (obj)
 			{
 				obj.Add(resultObject);
@@ -144,13 +148,15 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="IList{T}"/> obj variable asynchronously.
+	/// Populates an <see cref="IList{T}"/> from the awaited result of a Task, accepting either a nullable (Task<T?>) or non-nullable (Task<T>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="T">Element type of the list being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be T or T? — never specify this explicitly.</typeparam>
 	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<T>(this IList<T?> obj, Func<Task<T?>> task, SemaphoreSlim? semaphore, CancellationToken cancellationToken = default)
+	public static async Task ObjectFill<T, TResult>(this IList<T?> obj, Func<Task<TResult>> task, SemaphoreSlim? semaphore, CancellationToken cancellationToken = default) where TResult : T?
 	{
 		try
 		{
@@ -160,90 +166,8 @@ public static class Async
 			}
 			if (obj != null)
 			{
-				T? resultObject = await task().ConfigureAwait(false);
+				TResult resultObject = await task().ConfigureAwait(false);
 				obj.Add(resultObject);
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-		finally
-		{
-			semaphore?.Release();
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="List{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
-	/// <param name="task">Async task that returns the value to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this List<T> obj, Task<List<T>?> task)
-	{
-		try
-		{
-			List<T>? resultObject = await task.ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="List{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
-	/// <param name="task">Async task that returns the value to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this List<T> obj, Func<Task<List<T>?>> task)
-	{
-		try
-		{
-			List<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="List{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">List object to insert data into.</param>
-	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
-	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<T>(this List<T> obj, Func<Task<List<T>?>> task, SemaphoreSlim? semaphore, CancellationToken cancellationToken = default)
-	{
-		try
-		{
-			if (semaphore != null)
-			{
-				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-			}
-			List<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject);
-				}
 			}
 		}
 		catch (Exception ex)
@@ -333,179 +257,17 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
+	/// Populates a <see cref="List{T}"/> from the awaited result of a Task, accepting either a nullable (Task<IEnumerable<T>?>) or non-nullable (Task<IEnumerable<T>>) task without triggering CS8620 at the call site.
 	/// </summary>
-	/// <param name="obj">HashSet object to insert data into.</param>
-	/// <param name="task">Async task that returns the value to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Task<HashSet<T>?> task)
-	{
-		try
-		{
-			HashSet<T>? resultObject = await task.ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">HashSet object to insert data into.</param>
-	/// <param name="task">Async task that returns the value to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Func<Task<HashSet<T>?>> task)
-	{
-		try
-		{
-			HashSet<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">HashSet object to insert data into.</param>
-	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
-	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Func<Task<HashSet<T>?>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
-	{
-		try
-		{
-			if (semaphore != null)
-			{
-				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-			}
-			HashSet<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject, cancellationToken: cancellationToken);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-		finally
-		{
-			semaphore?.Release();
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">HashSet object to insert data into.</param>
-	/// <param name="task">Async task that returns the value to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Task<List<T>?> task)
-	{
-		try
-		{
-			List<T>? resultObject = await task.ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">HashSet object to insert data into.</param>
-	/// <param name="task">Async task that returns the value to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Func<Task<List<T>?>> task)
-	{
-		try
-		{
-			List<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">HashSet object to insert data into.</param>
-	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj object.</param>
-	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Func<Task<List<T>?>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
-	{
-		try
-		{
-			if (semaphore != null)
-			{
-				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-			}
-			List<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject, cancellationToken: cancellationToken);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-		finally
-		{
-			semaphore?.Release();
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="List{T}"/> obj variable asynchronously.
-	/// </summary>
+	/// <typeparam name="T">Element type of the list being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be IEnumerable<T> or IEnumerable<T>? — never specify this explicitly.</typeparam>
 	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this List<T> obj, Task<IEnumerable<T>?> task)
+	public static async Task ObjectFill<T, TResult>(this List<T> obj, Task<TResult> task) where TResult : IEnumerable<T>?
 	{
 		try
 		{
-			IEnumerable<T>? resultObject = await task.ConfigureAwait(false);
+			TResult resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -521,15 +283,17 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="List{T}"/> obj variable asynchronously.
+	/// Populates a <see cref="List{T}"/> from the awaited result of a Task, accepting either a nullable (Task<IEnumerable<T>?>) or non-nullable (Task<IEnumerable<T>>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="T">Element type of the list being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be IEnumerable<T> or IEnumerable<T>? — never specify this explicitly.</typeparam>
 	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this List<T> obj, Func<Task<IEnumerable<T>?>> task)
+	public static async Task ObjectFill<T, TResult>(this List<T> obj, Func<Task<TResult>> task) where TResult : IEnumerable<T>?
 	{
 		try
 		{
-			IEnumerable<T>? resultObject = await task().ConfigureAwait(false);
+			TResult resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -545,13 +309,15 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="List{T}"/> obj variable asynchronously.
+	/// Populates a <see cref="List{T}"/> from the awaited result of a Task, accepting either a nullable (Task<IEnumerable<T>?>) or non-nullable (Task<IEnumerable<T>>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="T">Element type of the list being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be IEnumerable<T> or IEnumerable<T>? — never specify this explicitly.</typeparam>
 	/// <param name="obj">List object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<T>(this List<T> obj, Func<Task<IEnumerable<T>?>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
+	public static async Task ObjectFill<T, TResult>(this List<T> obj, Func<Task<TResult>> task, SemaphoreSlim? semaphore, CancellationToken cancellationToken = default) where TResult : IEnumerable<T>?
 	{
 		try
 		{
@@ -559,7 +325,7 @@ public static class Async
 			{
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
-			IEnumerable<T>? resultObject = await task().ConfigureAwait(false);
+			TResult resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -579,15 +345,17 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
+	/// Populates a <see cref="HashSet{T}"/> from the awaited result of a Task, accepting either a nullable (Task<IEnumerable<T>?>) or non-nullable (Task<IEnumerable<T>>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="T">Element type of the set being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be IEnumerable<T> or IEnumerable<T>? — never specify this explicitly.</typeparam>
 	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Task<IEnumerable<T>?> task)
+	public static async Task ObjectFill<T, TResult>(this HashSet<T> obj, Task<TResult> task) where TResult : IEnumerable<T>?
 	{
 		try
 		{
-			IEnumerable<T>? resultObject = await task.ConfigureAwait(false);
+			TResult resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -603,15 +371,17 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
+	/// Populates a <see cref="HashSet{T}"/> from the awaited result of a Task, accepting either a nullable (Task<IEnumerable<T>?>) or non-nullable (Task<IEnumerable<T>>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="T">Element type of the set being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be IEnumerable<T> or IEnumerable<T>? — never specify this explicitly.</typeparam>
 	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Func<Task<IEnumerable<T>?>> task)
+	public static async Task ObjectFill<T, TResult>(this HashSet<T> obj, Func<Task<TResult>> task) where TResult : IEnumerable<T>?
 	{
 		try
 		{
-			IEnumerable<T>? resultObject = await task().ConfigureAwait(false);
+			TResult resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -627,13 +397,15 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
+	/// Populates a <see cref="HashSet{T}"/> from the awaited result of a Task, accepting either a nullable (Task<IEnumerable<T>?>) or non-nullable (Task<IEnumerable<T>>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="T">Element type of the set being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be IEnumerable<T> or IEnumerable<T>? — never specify this explicitly.</typeparam>
 	/// <param name="obj">HashSet object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Func<Task<IEnumerable<T>?>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
+	public static async Task ObjectFill<T, TResult>(this HashSet<T> obj, Func<Task<TResult>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default) where TResult : IEnumerable<T>?
 	{
 		try
 		{
@@ -641,89 +413,7 @@ public static class Async
 			{
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
-			IEnumerable<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject, cancellationToken: cancellationToken);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-		finally
-		{
-			semaphore?.Release();
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">HashSet object to insert data into.</param>
-	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Task<ConcurrentBag<T>?> task)
-	{
-		try
-		{
-			ConcurrentBag<T>? resultObject = await task.ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">HashSet object to insert data into.</param>
-	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Func<Task<ConcurrentBag<T>?>> task)
-	{
-		try
-		{
-			ConcurrentBag<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null)
-			{
-				lock (obj)
-				{
-					obj.AddRange(resultObject);
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="HashSet{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">HashSet object to insert data into.</param>
-	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<T>(this HashSet<T> obj, Func<Task<ConcurrentBag<T>?>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
-	{
-		try
-		{
-			if (semaphore != null)
-			{
-				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-			}
-			IEnumerable<T>? resultObject = await task().ConfigureAwait(false);
+			TResult resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null)
 			{
 				lock (obj)
@@ -810,15 +500,17 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
+	/// Populates a <see cref="ConcurrentBag{T}"/> from the awaited result of a Task, accepting either a nullable (Task<IEnumerable<T>?>) or non-nullable (Task<IEnumerable<T>>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="T">Element type of the bag being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be IEnumerable<T> or IEnumerable<T>? — never specify this explicitly.</typeparam>
 	/// <param name="obj">ConcurrentBag object to insert data into.</param>
 	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<IEnumerable<T>?> task)
+	public static async Task ObjectFill<T, TResult>(this ConcurrentBag<T>? obj, Task<TResult> task) where TResult : IEnumerable<T>?
 	{
 		try
 		{
-			IEnumerable<T>? resultObject = await task.ConfigureAwait(false);
+			TResult resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null && obj != null)
 			{
 				obj.AddRangeParallel(resultObject);
@@ -831,15 +523,17 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
+	/// Populates a <see cref="ConcurrentBag{T}"/> from the awaited result of a Task, accepting either a nullable (Task<IEnumerable<T>?>) or non-nullable (Task<IEnumerable<T>>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="T">Element type of the bag being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be IEnumerable<T> or IEnumerable<T>? — never specify this explicitly.</typeparam>
 	/// <param name="obj">ConcurrentBag object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Func<Task<IEnumerable<T>?>> task)
+	public static async Task ObjectFill<T, TResult>(this ConcurrentBag<T>? obj, Func<Task<TResult>> task) where TResult : IEnumerable<T>?
 	{
 		try
 		{
-			IEnumerable<T>? resultObject = await task().ConfigureAwait(false);
+			TResult resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null && obj != null)
 			{
 				obj.AddRangeParallel(resultObject);
@@ -852,13 +546,15 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
+	/// Populates a <see cref="ConcurrentBag{T}"/> from the awaited result of a Task, accepting either a nullable (Task<IEnumerable<T>?>) or non-nullable (Task<IEnumerable<T>>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="T">Element type of the bag being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be IEnumerable<T> or IEnumerable<T>? — never specify this explicitly.</typeparam>
 	/// <param name="obj">ConcurrentBag object to insert data into.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Func<Task<IEnumerable<T>>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
+	public static async Task ObjectFill<T, TResult>(this ConcurrentBag<T>? obj, Func<Task<TResult>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default) where TResult : IEnumerable<T>?
 	{
 		try
 		{
@@ -866,7 +562,7 @@ public static class Async
 			{
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
-			IEnumerable<T>? resultObject = await task().ConfigureAwait(false);
+			TResult resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null && obj != null)
 			{
 				obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
@@ -883,160 +579,15 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
+	/// Populates a <see cref="ConcurrentDictionary{TKey, TValue}"/> entry from the awaited result of a Task, accepting either a nullable (Task<TValue?>) or non-nullable (Task<TValue>) task without triggering CS8620 at the call site.
 	/// </summary>
-	/// <param name="obj">ConcurrentBag object to insert data into.</param>
-	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<ConcurrentBag<T>?> task)
-	{
-		try
-		{
-			ConcurrentBag<T>? resultObject = await task.ConfigureAwait(false);
-			if (resultObject != null && obj != null)
-			{
-				obj.AddRangeParallel(resultObject);
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">ConcurrentBag object to insert data into.</param>
-	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Func<Task<ConcurrentBag<T>?>> task)
-	{
-		try
-		{
-			ConcurrentBag<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null && obj != null)
-			{
-				obj.AddRangeParallel(resultObject);
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">ConcurrentBag object to insert data into.</param>
-	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Func<Task<ConcurrentBag<T>>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
-	{
-		try
-		{
-			if (semaphore != null)
-			{
-				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-			}
-			ConcurrentBag<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null && obj != null)
-			{
-				obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-		finally
-		{
-			semaphore?.Release();
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">ConcurrentBag object to insert data into.</param>
-	/// <param name="task">Async task that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Task<List<T>?> task)
-	{
-		try
-		{
-			List<T>? resultObject = await task.ConfigureAwait(false);
-			if (resultObject != null && obj != null)
-			{
-				obj.AddRangeParallel(resultObject);
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">ConcurrentBag object to insert data into.</param>
-	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Func<Task<List<T>?>> task)
-	{
-		try
-		{
-			List<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null && obj != null)
-			{
-				obj.AddRangeParallel(resultObject);
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="ConcurrentBag{T}"/> obj variable asynchronously.
-	/// </summary>
-	/// <param name="obj">ConcurrentBag object to insert data into.</param>
-	/// <param name="task">Function that creates and returns the task to run that returns the list of values to insert into obj object.</param>
-	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<T>(this ConcurrentBag<T>? obj, Func<Task<List<T>?>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
-	{
-		try
-		{
-			if (semaphore != null)
-			{
-				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-			}
-			List<T>? resultObject = await task().ConfigureAwait(false);
-			if (resultObject != null && obj != null)
-			{
-				obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
-			}
-		}
-		catch (Exception ex)
-		{
-			logger.Error(ex, ErrorLocationTemplate, ex.GetLocationOfException());
-		}
-		finally
-		{
-			semaphore?.Release();
-		}
-	}
-
-	/// <summary>
-	/// Task to fill <see cref="ConcurrentDictionary{TKey, TValue}"> obj variable for a specific key asynchronously.
-	/// </summary>
+	/// <typeparam name="TKey">Key type of the dictionary being filled.</typeparam>
+	/// <typeparam name="TValue">Value type of the dictionary being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be TValue or TValue? — never specify this explicitly.</typeparam>
 	/// <param name="obj">ConcurrentDictionary object to insert data into.</param>
 	/// <param name="key">Key of the item to insert into the ConcurrentDictionary.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj with the provided key.</param>
-	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<TKey, TValue>(this ConcurrentDictionary<TKey, TValue?>? obj, TKey key, Task<TValue?> task) where TKey : notnull
+	public static async Task ObjectFill<TKey, TValue, TResult>(this ConcurrentDictionary<TKey, TValue?>? obj, TKey key, Task<TResult> task) where TKey : notnull where TResult : TValue?
 	{
 		try
 		{
@@ -1049,14 +600,15 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="ConcurrentDictionary{TKey, TValue}"> obj variable for a specific key asynchronously.
+	/// Populates a <see cref="ConcurrentDictionary{TKey, TValue}"/> entry from the awaited result of a Task, accepting either a nullable (Task<TValue?>) or non-nullable (Task<TValue>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="TKey">Key type of the dictionary being filled.</typeparam>
+	/// <typeparam name="TValue">Value type of the dictionary being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be TValue or TValue? — never specify this explicitly.</typeparam>
 	/// <param name="obj">ConcurrentDictionary object to insert data into.</param>
 	/// <param name="key">Key of the item to insert into the ConcurrentDictionary.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj with the provided key.</param>
-	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
-	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<TKey, TValue>(this ConcurrentDictionary<TKey, TValue?>? obj, TKey key, Func<Task<TValue?>> task) where TKey : notnull
+	public static async Task ObjectFill<TKey, TValue, TResult>(this ConcurrentDictionary<TKey, TValue?>? obj, TKey key, Func<Task<TResult>> task) where TKey : notnull where TResult : TValue?
 	{
 		try
 		{
@@ -1069,14 +621,17 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="ConcurrentDictionary{TKey, TValue}"> obj variable for a specific key asynchronously.
+	/// Populates a <see cref="ConcurrentDictionary{TKey, TValue}"/> entry from the awaited result of a Task, accepting either a nullable (Task<TValue?>) or non-nullable (Task<TValue>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="TKey">Key type of the dictionary being filled.</typeparam>
+	/// <typeparam name="TValue">Value type of the dictionary being filled.</typeparam>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be TValue or TValue? — never specify this explicitly.</typeparam>
 	/// <param name="obj">ConcurrentDictionary object to insert data into.</param>
 	/// <param name="key">Key of the item to insert into the ConcurrentDictionary.</param>
 	/// <param name="task">Function that creates and returns the task to run that returns the value to insert into obj with the provided key.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill<TKey, TValue>(this ConcurrentDictionary<TKey, TValue?>? obj, TKey key, Func<Task<TValue?>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default) where TKey : notnull
+	public static async Task ObjectFill<TKey, TValue, TResult>(this ConcurrentDictionary<TKey, TValue?>? obj, TKey key, Func<Task<TResult>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default) where TKey : notnull where TResult : TValue?
 	{
 		try
 		{
@@ -1098,15 +653,16 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill a <see cref="DataTable"/> asynchronously.
+	/// Populates a <see cref="DataTable"/> from the awaited result of a Task, accepting either a nullable (Task<DataTable?>) or non-nullable (Task<DataTable>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be DataTable or DataTable? — never specify this explicitly.</typeparam>
 	/// <param name="dt">DataTable to insert data into.</param>
 	/// <param name="task">Async task that returns a <see cref="DataTable"/> object to insert into <paramref name="dt"/>.</param>
-	public static async Task ObjectFill(this DataTable dt, Task<DataTable> task)
+	public static async Task ObjectFill<TResult>(this DataTable dt, Task<TResult> task) where TResult : DataTable?
 	{
 		try
 		{
-			using DataTable resultTable = await task.ConfigureAwait(false);
+			using TResult resultTable = await task.ConfigureAwait(false);
 			if (resultTable != null)
 			{
 				await using DataTableReader reader = resultTable.CreateDataReader();
@@ -1123,15 +679,16 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill a <see cref="DataTable"/> asynchronously.
+	/// Populates a <see cref="DataTable"/> from the awaited result of a Task, accepting either a nullable (Task<DataTable?>) or non-nullable (Task<DataTable>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be DataTable or DataTable? — never specify this explicitly.</typeparam>
 	/// <param name="dt">DataTable to insert data into.</param>
 	/// <param name="task">Async task that returns a <see cref="DataTable"/> object to insert into <paramref name="dt"/>.</param>
-	public static async Task ObjectFill(this DataTable dt, Func<Task<DataTable>> task)
+	public static async Task ObjectFill<TResult>(this DataTable dt, Func<Task<TResult>> task) where TResult : DataTable?
 	{
 		try
 		{
-			using DataTable resultTable = await task().ConfigureAwait(false);
+			using TResult resultTable = await task().ConfigureAwait(false);
 			if (resultTable != null)
 			{
 				await using DataTableReader reader = resultTable.CreateDataReader();
@@ -1148,13 +705,14 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill a <see cref="DataTable"/> asynchronously.
+	/// Populates a <see cref="DataTable"/> from the awaited result of a Task, accepting either a nullable (Task<DataTable?>) or non-nullable (Task<DataTable>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be DataTable or DataTable? — never specify this explicitly.</typeparam>
 	/// <param name="dt">DataTable to insert data into.</param>
 	/// <param name="task"><see cref="Func{TResult}"/> that creates and returns the task to run that returns a DataTable object to insert into <paramref name="dt"/>.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill(this DataTable dt, Func<Task<DataTable>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
+	public static async Task ObjectFill<TResult>(this DataTable dt, Func<Task<TResult>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default) where TResult : DataTable?
 	{
 		try
 		{
@@ -1162,7 +720,7 @@ public static class Async
 			{
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
-			using DataTable resultTable = await task().ConfigureAwait(false);
+			using TResult resultTable = await task().ConfigureAwait(false);
 			if (resultTable != null)
 			{
 				await using DataTableReader reader = resultTable.CreateDataReader();
@@ -1183,15 +741,16 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="MemoryStream"/> variable asynchronously.
+	/// Populates a <see cref="MemoryStream"/> from the awaited result of a Task, accepting either a nullable (Task<MemoryStream?>) or non-nullable (Task<MemoryStream>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be MemoryStream or MemoryStream? — never specify this explicitly.</typeparam>
 	/// <param name="ms">MemoryStream to insert data into.</param>
 	/// <param name="task">Async task that returns a <see cref="MemoryStream"/> object to insert into <paramref name="ms"/>.</param>
-	public static async Task ObjectFill(this MemoryStream ms, Task<MemoryStream> task)
+	public static async Task ObjectFill<TResult>(this MemoryStream ms, Task<TResult> task) where TResult : MemoryStream?
 	{
 		try
 		{
-			await using MemoryStream resultObject = await task.ConfigureAwait(false);
+			await using TResult resultObject = await task.ConfigureAwait(false);
 #pragma warning disable S3998 // Threads should not lock on objects with weak identity
 			lock (ms)
 			{
@@ -1206,15 +765,16 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="MemoryStream"/> variable asynchronously.
+	/// Populates a <see cref="MemoryStream"/> from the awaited result of a Task, accepting either a nullable (Task<MemoryStream?>) or non-nullable (Task<MemoryStream>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be MemoryStream or MemoryStream? — never specify this explicitly.</typeparam>
 	/// <param name="ms">MemoryStream to insert data into.</param>
 	/// <param name="task">Async task that returns a <see cref="MemoryStream"/> object to insert into <paramref name="ms"/>.</param>
-	public static async Task ObjectFill(this MemoryStream ms, Func<Task<MemoryStream>> task)
+	public static async Task ObjectFill<TResult>(this MemoryStream ms, Func<Task<TResult>> task) where TResult : MemoryStream?
 	{
 		try
 		{
-			await using MemoryStream resultObject = await task().ConfigureAwait(false);
+			await using TResult resultObject = await task().ConfigureAwait(false);
 #pragma warning disable S3998 // Threads should not lock on objects with weak identity
 			lock (ms)
 			{
@@ -1229,13 +789,14 @@ public static class Async
 	}
 
 	/// <summary>
-	/// Task to fill <see cref="MemoryStream"/> variable asynchronously.
+	/// Populates a <see cref="MemoryStream"/> from the awaited result of a Task, accepting either a nullable (Task<MemoryStream?>) or non-nullable (Task<MemoryStream>) task without triggering CS8620 at the call site.
 	/// </summary>
+	/// <typeparam name="TResult">Inferred from the caller's task; must be MemoryStream or MemoryStream? — never specify this explicitly.</typeparam>
 	/// <param name="ms">MemoryStream to insert data into.</param>
 	/// <param name="task"><see cref="Func{TResult}"/> that creates and returns the task to run and returns a <see cref="MemoryStream"/> object to insert into <paramref name="ms"/>.</param>
 	/// <param name="semaphore">Semaphore to limit number of concurrent operations.</param>
 	/// <param name="cancellationToken">Optional: Cancellation token for this operation.</param>
-	public static async Task ObjectFill(this MemoryStream ms, Func<Task<MemoryStream>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default)
+	public static async Task ObjectFill<TResult>(this MemoryStream ms, Func<Task<TResult>> task, SemaphoreSlim semaphore, CancellationToken cancellationToken = default) where TResult : MemoryStream?
 	{
 		try
 		{
@@ -1243,7 +804,7 @@ public static class Async
 			{
 				await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 			}
-			await using MemoryStream resultObject = await task().ConfigureAwait(false);
+			await using TResult resultObject = await task().ConfigureAwait(false);
 #pragma warning disable S3998 // Threads should not lock on objects with weak identity
 			lock (ms)
 			{

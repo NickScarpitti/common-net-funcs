@@ -142,24 +142,41 @@ public sealed class AsyncTests
 	[InlineData("ConcurrentBag", null, 1)]
 	public async Task ObjectFill_WithCollections_ShouldHandleVariousResults(string collectionType, string? taskResult, int expectedCount)
 	{
-		// Arrange
-		dynamic collection = collectionType switch
+		// Act & Assert
+		// NOTE: Uses statically-typed calls per collection type rather than `dynamic` dispatch, since the
+		// C# runtime binder does not exclude generic-constraint-violating overload candidates the same way
+		// the compiler does for static calls, which can otherwise produce spurious ambiguous/binder errors.
+		switch (collectionType)
 		{
-			"List" => new List<string>(),
-			"HashSet" => new HashSet<string>(),
-			"ConcurrentBag" => new ConcurrentBag<string>(),
-			_ => throw new ArgumentException("Invalid collection type")
-		};
-
-		// Act
-		Task<string?> task = Task.FromResult(taskResult);
-		await Async.ObjectFill(collection, task);
-
-		// Assert
-		((IEnumerable<string>)collection).Count().ShouldBe(expectedCount);
-		if (expectedCount > 0)
-		{
-			((IEnumerable<string?>)collection).Contains(taskResult).ShouldBeTrue();
+			case "List":
+				IList<string?> list = new List<string?>();
+				await list.ObjectFill(Task.FromResult(taskResult));
+				list.Count.ShouldBe(expectedCount);
+				if (expectedCount > 0)
+				{
+					list.Contains(taskResult).ShouldBeTrue();
+				}
+				break;
+			case "HashSet":
+				HashSet<string?> hashSet = [];
+				await hashSet.ObjectFill(Task.FromResult(taskResult));
+				hashSet.Count.ShouldBe(expectedCount);
+				if (expectedCount > 0)
+				{
+					hashSet.Contains(taskResult).ShouldBeTrue();
+				}
+				break;
+			case "ConcurrentBag":
+				ConcurrentBag<string?> bag = [];
+				await bag.ObjectFill(Task.FromResult(taskResult));
+				bag.Count.ShouldBe(expectedCount);
+				if (expectedCount > 0)
+				{
+					bag.Contains(taskResult).ShouldBeTrue();
+				}
+				break;
+			default:
+				throw new ArgumentException("Invalid collection type");
 		}
 	}
 
@@ -169,21 +186,31 @@ public sealed class AsyncTests
 	[InlineData("ConcurrentBag")]
 	public async Task ObjectFill_WithCollections_WhenTaskThrowsException_ShouldNotAdd(string collectionType)
 	{
-		// Arrange
-		dynamic collection = collectionType switch
+		// Act & Assert
+		// NOTE: Uses statically-typed calls per collection type rather than `dynamic` dispatch; see comment above.
+		switch (collectionType)
 		{
-			"List" => new List<string>(),
-			"HashSet" => new HashSet<string>(),
-			"ConcurrentBag" => new ConcurrentBag<string>(),
-			_ => throw new ArgumentException("Invalid collection type")
-		};
-
-		// Act
-		Task<string> task = Task.FromException<string>(new InvalidOperationException());
-
-		// Assert
-		await Should.NotThrowAsync(async () => await Async.ObjectFill(collection, task));
-		((IEnumerable<string>)collection).Count().ShouldBe(0);
+			case "List":
+				IList<string?> list = new List<string?>();
+				Task<string?> listTask = Task.FromException<string?>(new InvalidOperationException());
+				await Should.NotThrowAsync(async () => await list.ObjectFill(listTask));
+				list.Count.ShouldBe(0);
+				break;
+			case "HashSet":
+				HashSet<string?> hashSet = [];
+				Task<string?> hashSetTask = Task.FromException<string?>(new InvalidOperationException());
+				await Should.NotThrowAsync(async () => await hashSet.ObjectFill(hashSetTask));
+				hashSet.Count.ShouldBe(0);
+				break;
+			case "ConcurrentBag":
+				ConcurrentBag<string?> bag = [];
+				Task<string?> bagTask = Task.FromException<string?>(new InvalidOperationException());
+				await Should.NotThrowAsync(async () => await bag.ObjectFill(bagTask));
+				bag.Count.ShouldBe(0);
+				break;
+			default:
+				throw new ArgumentException("Invalid collection type");
+		}
 	}
 
 	#endregion
@@ -454,14 +481,6 @@ public sealed class AsyncTests
 	public async Task ObjectFill_WithFuncAndSemaphore_Collections_ShouldWork(string collectionType, string? taskResult, int expectedCount)
 	{
 		// Arrange
-		dynamic collection = collectionType switch
-		{
-			"List" => new List<string?>(),
-			"HashSet" => new HashSet<string?>(),
-			"ConcurrentBag" => new ConcurrentBag<string?>(),
-			_ => throw new ArgumentException("Invalid collection type")
-		};
-
 		Task<string?> func()
 		{
 			return Task.FromResult(taskResult);
@@ -469,11 +488,29 @@ public sealed class AsyncTests
 
 		using SemaphoreSlim semaphore = new(1, 1);
 
-		// Act
-		await Async.ObjectFill(collection, (Func<Task<string?>>)func, semaphore);
-
-		// Assert
-		((IEnumerable<string?>)collection).Count().ShouldBe(expectedCount);
+		// Act & Assert
+		// NOTE: Uses statically-typed calls per collection type rather than `dynamic` dispatch; see comment
+		// on ObjectFill_WithCollections_ShouldHandleVariousResults.
+		switch (collectionType)
+		{
+			case "List":
+				IList<string?> list = [];
+				await list.ObjectFill(func, semaphore, Current.CancellationToken);
+				list.Count.ShouldBe(expectedCount);
+				break;
+			case "HashSet":
+				HashSet<string?> hashSet = [];
+				await hashSet.ObjectFill(func, semaphore, Current.CancellationToken);
+				hashSet.Count.ShouldBe(expectedCount);
+				break;
+			case "ConcurrentBag":
+				ConcurrentBag<string?> bag = [];
+				await bag.ObjectFill(func, semaphore, Current.CancellationToken);
+				bag.Count.ShouldBe(expectedCount);
+				break;
+			default:
+				throw new ArgumentException("Invalid collection type");
+		}
 	}
 
 	#endregion

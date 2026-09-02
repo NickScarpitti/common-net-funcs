@@ -9,6 +9,8 @@ public sealed class ReinforcedTypingsFluentConfigTests
 
 	private const string CollectionsRoot = "ReinforcedTypings.Tests.TestModels";
 
+	private const string MultiAttributeRoot = "ReinforcedTypings.Tests.TestModels.MultiAttribute";
+
 	#region TsConst - basic export modes
 
 	[Fact]
@@ -375,6 +377,69 @@ public sealed class ReinforcedTypingsFluentConfigTests
 		string content = RtTestHarness.ReadGenerated(outDir, "Collections/BasicCollectionsAll.ts");
 
 		content.ShouldContain("names: ['a', 'b', 'c'] as string[],");
+	}
+
+	#endregion
+
+	#region Interop with vanilla RT export attributes ([TsInterface]/[TsClass])
+
+	[Fact]
+	public void Configure_TsConstAndTsInterfaceAutoI_WritesToDistinctConstantsFileName()
+	{
+		string outDir = RtTestHarness.RunConfigure(ctx =>
+		{
+			ctx.Global.UseModules = true;
+			ctx.Global.WriteWarningComment = false;
+			ctx.Global.RootNamespace = MultiAttributeRoot;
+		});
+
+		// RT's own [TsInterface] export (AutoI = true) would independently write "IAutoIInterfaceWithConsts.ts"
+		// after Configure() returns, so our hand-written output must not collide with either that or the
+		// plain "AutoIInterfaceWithConsts.ts" name RT could use for other attribute shapes.
+		string content = RtTestHarness.ReadGenerated(outDir, "AutoIInterfaceWithConstsConstants.ts");
+		content.ShouldContain("export const AutoIInterfaceWithConsts = {");
+		content.ShouldContain("Greeting: 'hello',");
+
+		RtTestHarness.GeneratedFileExists(outDir, "AutoIInterfaceWithConsts.ts").ShouldBeFalse();
+	}
+
+	[Fact]
+	public void Configure_TsCollectionAndTsInterfacePlain_WritesToDistinctConstantsFileName()
+	{
+		string outDir = RtTestHarness.RunConfigure(ctx =>
+		{
+			ctx.Global.UseModules = true;
+			ctx.Global.WriteWarningComment = false;
+			ctx.Global.RootNamespace = MultiAttributeRoot;
+		});
+
+		// [TsInterface(AutoI = false)] makes RT's own generated file name exactly "PlainInterfaceWithCollections.ts"
+		// - the same name our TsCollection generator would otherwise use - so this is a genuine collision
+		// that the distinct "*Constants.ts" naming must avoid.
+		string content = RtTestHarness.ReadGenerated(outDir, "PlainInterfaceWithCollectionsConstants.ts");
+		content.ShouldContain("export const PlainInterfaceWithCollectionsCollections = {");
+		content.ShouldContain("Tags: ['a', 'b'] as string[],");
+
+		RtTestHarness.GeneratedFileExists(outDir, "PlainInterfaceWithCollections.ts").ShouldBeFalse();
+	}
+
+	[Fact]
+	public void Configure_TsConstAndTsCollectionAndTsClass_CombinesBothSectionsInDistinctConstantsFileName()
+	{
+		string outDir = RtTestHarness.RunConfigure(ctx =>
+		{
+			ctx.Global.UseModules = true;
+			ctx.Global.WriteWarningComment = false;
+			ctx.Global.RootNamespace = MultiAttributeRoot;
+		});
+
+		string content = RtTestHarness.ReadGenerated(outDir, "ClassWithConstsAndCollectionsConstants.ts");
+		content.ShouldContain("export const ClassWithConstsAndCollections = {");
+		content.ShouldContain("Greeting: 'hi',");
+		content.ShouldContain("export const ClassWithConstsAndCollectionsCollections = {");
+		content.ShouldContain("Numbers: [1, 2, 3] as number[],");
+
+		RtTestHarness.GeneratedFileExists(outDir, "ClassWithConstsAndCollections.ts").ShouldBeFalse();
 	}
 
 	#endregion

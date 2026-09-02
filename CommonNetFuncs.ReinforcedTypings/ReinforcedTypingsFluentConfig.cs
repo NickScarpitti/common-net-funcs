@@ -28,6 +28,13 @@ namespace CommonNetFuncs.ReinforcedTypings;
 /// Collection element types that are themselves exported via [TsInterface]/[TsClass]/[TsEnum]
 /// use their real generated type (imported from the sibling generated file); everything else
 /// falls back to <c>any</c>.</item>
+/// <item>A type decorated with both [TsConst] and [TsCollection] gets a single combined file
+/// containing both sections, rather than one export overwriting the other's file.</item>
+/// <item>A type also decorated with a vanilla RT export attribute ([TsInterface]/[TsClass]/[TsEnum])
+/// gets its TsConst/TsCollection output written to "{TypeName}Constants.ts" instead of the usual
+/// "{TypeName}.ts", since RT's own attribute-driven generation independently writes to that path
+/// (for [TsInterface(AutoI = false)]/[TsClass]/[TsEnum]) after this configuration method returns and
+/// would otherwise silently overwrite it.</item>
 /// </list>
 /// Referenced via RtConfigurationMethod in Reinforced.Typings.settings.xml. Types are discovered
 /// from <see cref="ExportContext.SourceAssemblies"/> and output is written to whichever directory
@@ -84,55 +91,64 @@ public static class ReinforcedTypingsFluentConfig
 		// hand-written const/collection output matches the same conventions RT itself would use.
 		GlobalParameters global = builder.Context.Global;
 
-		// ── TsConst generation ───────────────────────────────────────────
-		Type[] constTypes = allTypes
-			.Where(t => t.GetCustomAttribute<TsConstAttribute>() != null)
-			.ToArray();
+		// ── TsConst / TsCollection generation ─────────────────────────────────
+		// A type may carry both attributes at once - generate a single combined file per type (const
+		// section followed by collections section) instead of writing each independently, which would
+		// otherwise overwrite the other's output since they'd resolve to the same file path.
+		HashSet<Type> constTypes = allTypes.Where(t => t.GetCustomAttribute<TsConstAttribute>() != null).ToHashSet();
+		HashSet<Type> collectionTypes = allTypes.Where(t => t.GetCustomAttribute<TsCollectionAttribute>() != null).ToHashSet();
 
-		if (constTypes.Length > 0 && outputDir != null)
+		if (outputDir != null)
 		{
-			foreach (Type constType in constTypes)
+			foreach (Type type in constTypes.Union(collectionTypes).ToArray())
 			{
-				TsConstAttribute attr = constType.GetCustomAttribute<TsConstAttribute>()!;
-				string tsContent = GenerateTsConst(constType, attr.Mode, global);
-				string filePath = ResolveTypeFilePath(constType, outputDir, global);
-				File.WriteAllText(filePath, tsContent);
-			}
-		}
+				TsConstAttribute? constAttr = type.GetCustomAttribute<TsConstAttribute>();
+				TsCollectionAttribute? collectionAttr = type.GetCustomAttribute<TsCollectionAttribute>();
 
-		// ── TsCollection generation ───────────────────────────────────────────
-		Type[] collectionTypes = allTypes
-			.Where(t => t.GetCustomAttribute<TsCollectionAttribute>() != null)
-			.ToArray();
-
-		if (collectionTypes.Length > 0 && outputDir != null)
-		{
-			foreach (Type collectionType in collectionTypes)
-			{
-				TsCollectionAttribute attr = collectionType.GetCustomAttribute<TsCollectionAttribute>()!;
-				string tsContent = GenerateTsCollection(collectionType, attr.Mode, global);
+				string tsContent = GenerateTsConstAndCollectionFile(type, constAttr, collectionAttr, global);
 				if (string.IsNullOrEmpty(tsContent))
 				{
-					continue; // No eligible collection fields found on this type.
+					continue; // No eligible const fields and no eligible collection fields found on this type.
 				}
 
-				string filePath = ResolveTypeFilePath(collectionType, outputDir, global);
+				string filePath = ResolveTypeFilePath(type, outputDir, global);
 				File.WriteAllText(filePath, tsContent);
 			}
 		}
 	}
 
 	/// <summary>
-	/// Generates an <c>as const</c> TypeScript object literal for every eligible field on
-	/// <paramref name="type"/>, regardless of field type. Values are serialized via
-	/// <see cref="SerializeTsValue"/>, which supports scalars, enums, <c>Guid</c>/date types,
-	/// nested arrays/collections, and class/record instances (as nested object literals).
-	/// Honors <paramref name="global"/>'s <c>WriteWarningComment</c>, <c>TabSymbol</c>, <c>NewLine</c>,
-	/// <c>CamelCaseForProperties</c>, <c>UseModules</c>/<c>RootNamespace</c> (see
-	/// <see cref="ResolveTsNamespace"/>), and <c>ExportPureTypings</c> settings.
+	/// Generates the combined TypeScript file content for <paramref name="type"/>, covering its
+	/// <c>[TsConst]</c> section (via <see cref="GenerateTsConstBody"/>, when <paramref name="constAttr"/>
+	/// is non-null) and its <c>[TsCollection]</c> section (via <see cref="GenerateTsCollectionBody"/>,
+	/// when <paramref name="collectionAttr"/> is non-null) in a single file, so a type decorated with
+	/// both attributes gets both sections instead of one overwriting the other's file. The warning
+	/// comment, any cross-reference <c>import type</c> statements, and namespace wrapping are emitted
+	/// once, shared by both sections. Returns an empty string when neither section produced any output
+	/// (e.g. a [TsCollection] type with no eligible collection fields).
 	/// </summary>
-	private static string GenerateTsConst(Type type, TsConstExportMode mode, GlobalParameters global)
+	private static string GenerateTsConstAndCollectionFile(Type type, TsConstAttribute? constAttr, TsCollectionAttribute? collectionAttr, GlobalParameters global)
 	{
+		// When UseModules is false, a top-level `export`/`import` would turn this file into an ES
+		// module, which can break global-namespace-style consumers. Mirror RT's own "internal module"
+		// (TS namespace) convention instead: `export` then only appears *inside* the namespace block
+		// (required for member visibility), never at the top level; types with no namespace fall back
+		// to a bare global `const` (no `export` at all).
+		string? tsNamespace = global.UseModules ? null : ResolveTsNamespace(type, global);
+		bool wrapInNamespace = tsNamespace != null;
+		string indent = wrapInNamespace ? global.TabSymbol : string.Empty;
+		bool needsExport = global.UseModules || wrapInNamespace;
+
+		string constBody = constAttr != null ? GenerateTsConstBody(type, constAttr.Mode, global, indent, needsExport, wrapInNamespace) : string.Empty;
+		(string collectionBody, SortedDictionary<string, string> imports) = collectionAttr != null
+			? GenerateTsCollectionBody(type, collectionAttr.Mode, global, indent, needsExport, wrapInNamespace)
+			: (string.Empty, new SortedDictionary<string, string>(StringComparer.Ordinal));
+
+		if ((constBody.Length == 0) && (collectionBody.Length == 0))
+		{
+			return string.Empty;
+		}
+
 		StringBuilder sb = new();
 		void Line(string text = "") => sb.Append(text).Append(global.NewLine);
 
@@ -143,15 +159,56 @@ public static class ReinforcedTypingsFluentConfig
 			Line();
 		}
 
-		// When UseModules is false, a top-level `export`/`import` would turn this file into an ES
-		// module, which can break global-namespace-style consumers. Mirror RT's own "internal module"
-		// (TS namespace) convention instead: `export` then only appears *inside* the namespace block
-		// (required for member visibility), never at the top level; types with no namespace fall back
-		// to a bare global `const` (no `export` at all).
-		string? tsNamespace = global.UseModules ? null : ResolveTsNamespace(type, global);
-		bool wrapInNamespace = tsNamespace != null;
-		string indent = wrapInNamespace ? global.TabSymbol : string.Empty;
-		bool needsExport = global.UseModules || wrapInNamespace;
+		foreach (KeyValuePair<string, string> import in imports)
+		{
+			Line($"import type {{ {import.Value} }} from '{import.Key}';");
+		}
+
+		if (imports.Count > 0)
+		{
+			Line();
+		}
+
+		if (wrapInNamespace)
+		{
+			Line($"{(global.ExportPureTypings ? "declare namespace" : "namespace")} {tsNamespace} {{");
+		}
+
+		if (constBody.Length > 0)
+		{
+			sb.Append(constBody);
+		}
+
+		if ((constBody.Length > 0) && (collectionBody.Length > 0))
+		{
+			Line();
+		}
+
+		if (collectionBody.Length > 0)
+		{
+			sb.Append(collectionBody);
+		}
+
+		if (wrapInNamespace)
+		{
+			Line("}");
+		}
+
+		return sb.ToString();
+	}
+
+	/// <summary>
+	/// Generates the <c>[TsConst]</c> body (an <c>as const</c> object literal, or an ambient shape
+	/// declaration when <c>ExportPureTypings</c> is set) for every eligible field on <paramref name="type"/>,
+	/// regardless of field type, for embedding into the file produced by
+	/// <see cref="GenerateTsConstAndCollectionFile"/>. Values are serialized via
+	/// <see cref="SerializeTsValue"/>, which supports scalars, enums, <c>Guid</c>/date types,
+	/// nested arrays/collections, and class/record instances (as nested object literals).
+	/// </summary>
+	private static string GenerateTsConstBody(Type type, TsConstExportMode mode, GlobalParameters global, string indent, bool needsExport, bool wrapInNamespace)
+	{
+		StringBuilder sb = new();
+		void Line(string text = "") => sb.Append(text).Append(global.NewLine);
 
 		List<(string PropName, object? Value, Type FieldType)> fields = [];
 		foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.Static))
@@ -168,11 +225,6 @@ public static class ReinforcedTypingsFluentConfig
 			}
 
 			fields.Add((ToPropertyName(field.Name, global), field.GetValue(null), field.FieldType));
-		}
-
-		if (wrapInNamespace)
-		{
-			Line($"{(global.ExportPureTypings ? "declare namespace" : "namespace")} {tsNamespace} {{");
 		}
 
 		if (global.ExportPureTypings)
@@ -202,11 +254,6 @@ public static class ReinforcedTypingsFluentConfig
 			Line();
 			Line($"{indent}{typeKeyword} {type.Name}Key = keyof typeof {type.Name};");
 			Line($"{indent}{typeKeyword} {type.Name}Value = (typeof {type.Name})[{type.Name}Key];");
-		}
-
-		if (wrapInNamespace)
-		{
-			Line("}");
 		}
 
 		return sb.ToString();
@@ -241,18 +288,21 @@ public static class ReinforcedTypingsFluentConfig
 	};
 
 	/// <summary>
-	/// Generates an <c>as const</c> TypeScript array-literal collections object for every eligible
-	/// field on <paramref name="type"/>. Honors the same <paramref name="global"/> settings as
-	/// <see cref="GenerateTsConst"/> (<c>WriteWarningComment</c>, <c>TabSymbol</c>, <c>NewLine</c>,
-	/// <c>CamelCaseForProperties</c>, <c>UseModules</c>, <c>ExportPureTypings</c>), plus how
-	/// cross-references to <c>[TsInterface]</c>/<c>[TsClass]</c>/<c>[TsEnum]</c> element types are
-	/// addressed: an <c>import type</c> (with a namespace-aware relative path, see
-	/// <see cref="GetImportSpecifier"/>) when <c>UseModules</c> is <c>true</c>, or a fully
-	/// namespace-qualified reference (see <see cref="QualifyTsName"/>) when it is <c>false</c>
-	/// (since there is no module system to import from in that case).
+	/// Generates the <c>[TsCollection]</c> body (an <c>as const</c> array-literal collections object,
+	/// or an ambient shape declaration when <c>ExportPureTypings</c> is set) for every eligible field on
+	/// <paramref name="type"/>, for embedding into the file produced by
+	/// <see cref="GenerateTsConstAndCollectionFile"/>. Returns an empty <c>Body</c> when no eligible
+	/// collection fields were found. Also returns the <c>import type</c> specifiers (import specifier ->
+	/// imported type name) needed for any cross-referenced <c>[TsInterface]</c>/<c>[TsClass]</c>/
+	/// <c>[TsEnum]</c> element types when <c>UseModules</c> is <c>true</c> (with a namespace-aware
+	/// relative path, see <see cref="GetImportSpecifier"/>); when <c>UseModules</c> is <c>false</c>,
+	/// such references are instead fully namespace-qualified inline (see <see cref="QualifyTsName"/>),
+	/// since there is no module system to import from in that case.
 	/// </summary>
-	private static string GenerateTsCollection(Type type, TsCollectionExportMode mode, GlobalParameters global)
+	private static (string Body, SortedDictionary<string, string> Imports) GenerateTsCollectionBody(Type type, TsCollectionExportMode mode, GlobalParameters global, string indent, bool needsExport, bool wrapInNamespace)
 	{
+		SortedDictionary<string, string> imports = new(StringComparer.Ordinal); // import specifier -> imported type name
+
 		// ── Discover eligible collection fields ────────────────────────────────
 		List<(FieldInfo Field, Type ElementType)> collectionFields = [];
 
@@ -280,7 +330,7 @@ public static class ReinforcedTypingsFluentConfig
 
 		if (collectionFields.Count == 0)
 		{
-			return string.Empty;
+			return (string.Empty, imports);
 		}
 
 		// ── Resolve the TS type + optional cross-reference for every field's element type ──
@@ -297,17 +347,11 @@ public static class ReinforcedTypingsFluentConfig
 			}
 		}
 
-		string? tsNamespace = global.UseModules ? null : ResolveTsNamespace(type, global);
-		bool wrapInNamespace = tsNamespace != null;
-		string indent = wrapInNamespace ? global.TabSymbol : string.Empty;
-		bool needsExport = global.UseModules || wrapInNamespace;
-
 		// Under ES modules, referenced types are brought into scope via `import type` (using a
 		// namespace-aware relative path so it still resolves when files are nested into
 		// namespace-mirroring subdirectories). Without a module system there is nothing to import,
 		// so referenced types are addressed via their fully namespace-qualified name instead.
 		Dictionary<FieldInfo, string> fieldCastTypes = [];
-		SortedDictionary<string, string> imports = new(StringComparer.Ordinal); // import specifier -> imported type name
 
 		foreach ((FieldInfo field, Type elementType) in collectionFields)
 		{
@@ -329,31 +373,9 @@ public static class ReinforcedTypingsFluentConfig
 			}
 		}
 
-		// ── Emit the file ───────────────────────────────────────────────────────
+		// ── Emit the body ───────────────────────────────────────────────────────
 		StringBuilder sb = new();
 		void Line(string text = "") => sb.Append(text).Append(global.NewLine);
-
-		if (global.WriteWarningComment)
-		{
-			Line("//     This code was generated by a Reinforced.Typings tool.");
-			Line("//     Changes to this file may cause incorrect behavior and will be lost if the code is regenerated.");
-			Line();
-		}
-
-		foreach (KeyValuePair<string, string> import in imports)
-		{
-			Line($"import type {{ {import.Value} }} from '{import.Key}';");
-		}
-
-		if (imports.Count > 0)
-		{
-			Line();
-		}
-
-		if (wrapInNamespace)
-		{
-			Line($"{(global.ExportPureTypings ? "declare namespace" : "namespace")} {tsNamespace} {{");
-		}
 
 		if (global.ExportPureTypings)
 		{
@@ -385,12 +407,7 @@ public static class ReinforcedTypingsFluentConfig
 			Line($"{indent}{typeKeyword} {type.Name}CollectionsValue = (typeof {type.Name}Collections)[{type.Name}CollectionsKey];");
 		}
 
-		if (wrapInNamespace)
-		{
-			Line("}");
-		}
-
-		return sb.ToString();
+		return (sb.ToString(), imports);
 	}
 
 	/// <summary>
@@ -640,6 +657,12 @@ public static class ReinforcedTypingsFluentConfig
 	/// <summary>
 	/// Resolves the absolute file path for <paramref name="type"/>'s generated const/collection file,
 	/// creating any namespace-mirroring subdirectory (see <see cref="GetRelativeDir"/>) as needed.
+	/// Uses a distinct "{TypeName}Constants.ts" filename (instead of the usual "{TypeName}.ts") when
+	/// <paramref name="type"/> also carries a vanilla RT export attribute (see
+	/// <see cref="HasVanillaRtExportAttribute"/>), since RT's own attribute-driven code generation runs
+	/// after <see cref="Configure"/> returns and would otherwise silently overwrite this file - verified
+	/// to actually happen for <c>[TsInterface(AutoI = false)]</c>/<c>[TsClass]</c>/<c>[TsEnum]</c>, which
+	/// all resolve to that exact same "{TypeName}.ts" path in hierarchical export mode.
 	/// </summary>
 	private static string ResolveTypeFilePath(Type type, string outputDir, GlobalParameters global)
 	{
@@ -649,8 +672,22 @@ public static class ReinforcedTypingsFluentConfig
 			: Path.Combine(outputDir, relativeDir.Replace('/', Path.DirectorySeparatorChar));
 
 		Directory.CreateDirectory(dir);
-		return Path.Combine(dir, $"{type.Name}.ts");
+		string fileName = HasVanillaRtExportAttribute(type) ? $"{type.Name}Constants.ts" : $"{type.Name}.ts";
+		return Path.Combine(dir, fileName);
 	}
+
+	/// <summary>
+	/// Whether <paramref name="type"/> is also exported by Reinforced.Typings' own attribute-based
+	/// pipeline (<c>[TsInterface]</c>/<c>[TsClass]</c>/<c>[TsEnum]</c>), which writes its own generated
+	/// file independently of - and after - this class's <see cref="Configure"/> method. Since RT's own
+	/// naming isn't reliably predictable from here (e.g. it depends on <c>TsInterfaceAttribute.AutoI</c>),
+	/// any of these attributes is treated as a potential collision with the default "{TypeName}.ts"
+	/// naming convention used for hand-written TsConst/TsCollection output (see <see cref="ResolveTypeFilePath"/>).
+	/// </summary>
+	private static bool HasVanillaRtExportAttribute(Type type) =>
+		(type.GetCustomAttribute<TsInterfaceAttribute>() != null) ||
+		(type.GetCustomAttribute<TsClassAttribute>() != null) ||
+		(type.GetCustomAttribute<TsEnumAttribute>() != null);
 
 	/// <summary>
 	/// Computes the relative ES module import specifier (e.g. <c>./Foo</c> or <c>../Bar/Foo</c>)

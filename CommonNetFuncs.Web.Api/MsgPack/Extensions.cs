@@ -1,11 +1,32 @@
 ﻿using MessagePack;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CommonNetFuncs.Web.Api.MsgPack;
 
 public static class Extensions
 {
+	/// <summary>
+	/// Registers the DateTime, DateTimeOffset, and TimeSpan JSON converters with ASP.NET Core's
+	/// JSON serialization options. Call this in <c>Program.cs</c> during service configuration
+	/// when using <see cref="MsgPackSerializerConfig.DateTimesAsStrings"/> to ensure consistent
+	/// serialization behavior between MsgPack and JSON.
+	/// </summary>
+	/// <param name="services">The service collection to configure.</param>
+	/// <returns>The service collection for chaining.</returns>
+	public static IServiceCollection AddMsgPackDateTimeJsonConverters(this IServiceCollection services)
+	{
+		services.Configure<JsonOptions>(options =>
+		{
+			options.SerializerOptions.Converters.Add(DateTimeUtcJsonConverter.Instance);
+			options.SerializerOptions.Converters.Add(TimeSpanJsonConverter.Instance);
+			options.SerializerOptions.Converters.Add(DateTimeOffsetJsonConverter.Instance);
+		});
+		return services;
+	}
+
 	/// <summary>
 	/// Adds <see cref="MsgPackRequestMiddleware"/> to the pipeline.
 	/// Call this before <c>app.MapControllers()</c> / <c>app.MapGroup()</c> so the

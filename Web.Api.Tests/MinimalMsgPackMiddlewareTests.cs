@@ -504,19 +504,19 @@ public sealed class MsgPackDateTimeJsonConvertersExtensionTests
 		try
 		{
 			HttpClient client = app.GetTestClient();
-			
+
 			// Create a test payload with a DateTime
-			var payload = new TestPayloadWithDateTime 
-			{ 
+			TestPayloadWithDateTime payload = new()
+			{
 				Name = "test",
 				CreatedAt = new DateTime(2026, 4, 14, 12, 0, 0, DateTimeKind.Utc)
 			};
-			
+
 			string json = System.Text.Json.JsonSerializer.Serialize(
-				payload, 
+				payload,
 				MsgPackSerializerConfig.GetJsonSerializerOptionsWithDateTimeConverters()
 			);
-			
+
 			using HttpRequestMessage request = new(HttpMethod.Post, "/test")
 			{
 				Content = new StringContent(json, Encoding.UTF8, "application/json")

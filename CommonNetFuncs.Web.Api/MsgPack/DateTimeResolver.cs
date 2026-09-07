@@ -150,7 +150,7 @@ public static class MsgPackSerializerConfig
 	/// <summary>
 	/// Provides a pre-configured <see cref="JsonSerializerOptions"/> with converters for DateTime, DateTimeOffset,
 	/// and TimeSpan that match the behavior of <see cref="DateTimesAsStrings"/>.
-	/// 
+	///
 	/// Use this when deserializing JSON that was created from MessagePack using <see cref="DateTimesAsStrings"/>,
 	/// or when you need JSON serialization behavior consistent with the MessagePack formatters.
 	/// </summary>

@@ -6,10 +6,12 @@ using MessagePack;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using static Xunit.TestContext;
 
 namespace Web.Api.Tests;
@@ -461,4 +463,90 @@ public sealed class DirectMsgPackResultTests
 		response.StatusCode.ShouldBe(HttpStatusCode.Created);
 		response.Content.Headers.ContentType?.MediaType.ShouldBe(MsgPackMimeType);
 	}
+}
+
+// ---------------------------------------------------------------------------
+// AddMsgPackDateTimeJsonConverters Extension
+// ---------------------------------------------------------------------------
+
+public sealed class MsgPackDateTimeJsonConvertersExtensionTests
+{
+	[Fact]
+	public void AddMsgPackDateTimeJsonConverters_RegistersConvertersInServiceCollection()
+	{
+		// Arrange
+		IServiceCollection services = new ServiceCollection();
+
+		// Act
+		services.AddMsgPackDateTimeJsonConverters();
+		IServiceProvider provider = services.BuildServiceProvider();
+		var jsonOptions = provider.GetRequiredService<IConfigureOptions<JsonOptions>>();
+
+		// Assert
+		jsonOptions.ShouldNotBeNull();
+	}
+
+	[Fact]
+	public async Task AddMsgPackDateTimeJsonConverters_EnablesDateTimeConversion()
+	{
+		// Verify that when registered, DateTime values serialize/deserialize correctly
+		WebApplicationBuilder builder = WebApplication.CreateBuilder();
+		builder.Logging.ClearProviders();
+		builder.WebHost.UseTestServer();
+		builder.Services.AddMsgPackDateTimeJsonConverters();
+
+		await using WebApplication app = builder.Build();
+
+		app.MapPost("/test", (TestPayloadWithDateTime dto) => Results.Ok(dto));
+
+		await app.StartAsync();
+
+		try
+		{
+			HttpClient client = app.GetTestClient();
+
+			// Create a test payload with a DateTime
+			TestPayloadWithDateTime payload = new()
+			{
+				Name = "test",
+				CreatedAt = new DateTime(2026, 4, 14, 12, 0, 0, DateTimeKind.Utc)
+			};
+
+			string json = System.Text.Json.JsonSerializer.Serialize(
+				payload,
+				MsgPackSerializerConfig.GetJsonSerializerOptionsWithDateTimeConverters()
+			);
+
+			using HttpRequestMessage request = new(HttpMethod.Post, "/test")
+			{
+				Content = new StringContent(json, Encoding.UTF8, "application/json")
+			};
+
+			using HttpResponseMessage response = await client.SendAsync(request, Current.CancellationToken);
+			response.StatusCode.ShouldBe(HttpStatusCode.OK);
+		}
+		finally
+		{
+			await app.StopAsync();
+		}
+	}
+
+	[Fact]
+	public void AddMsgPackDateTimeJsonConverters_ReturnsServiceCollectionForChaining()
+	{
+		IServiceCollection services = new ServiceCollection();
+		IServiceCollection result = services.AddMsgPackDateTimeJsonConverters();
+		result.ShouldBeSameAs(services);
+	}
+}
+
+// Test payload with DateTime for converter testing
+[MessagePackObject]
+public sealed class TestPayloadWithDateTime
+{
+	[Key(0)]
+	public string Name { get; set; } = string.Empty;
+
+	[Key(1)]
+	public DateTime CreatedAt { get; set; }
 }

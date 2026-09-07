@@ -29,6 +29,36 @@ public sealed class DateTimeUtcJsonConverter : JsonConverter<DateTime>
 	}
 }
 
+/// <summary>
+/// Serializes TimeSpan as a string in the constant ("c") format, e.g. "01:30:00" for 1 hour 30 minutes.
+/// This matches the MessagePack formatter behavior and is more human-readable.
+/// </summary>
+public sealed class TimeSpanJsonConverter : JsonConverter<TimeSpan>
+{
+	public static readonly TimeSpanJsonConverter Instance = new();
+
+	public override TimeSpan Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		=> TimeSpan.Parse(reader.GetString()!, CultureInfo.InvariantCulture);
+
+	public override void Write(Utf8JsonWriter writer, TimeSpan value, JsonSerializerOptions options)
+		=> writer.WriteStringValue(value.ToString("c", CultureInfo.InvariantCulture));
+}
+
+/// <summary>
+/// Serializes DateTimeOffset as an ISO 8601 string in JSON.
+/// This matches the MessagePack formatter behavior and ensures consistent round-trip serialization.
+/// </summary>
+public sealed class DateTimeOffsetJsonConverter : JsonConverter<DateTimeOffset>
+{
+	public static readonly DateTimeOffsetJsonConverter Instance = new();
+
+	public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		=> DateTimeOffset.Parse(reader.GetString()!, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+
+	public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
+		=> writer.WriteStringValue(value.ToString("O", CultureInfo.InvariantCulture));
+}
+
 
 /// <summary>
 /// Serializes DateTime as an ISO 8601 string instead of the MessagePack Timestamp
@@ -116,4 +146,24 @@ public static class MsgPackSerializerConfig
 		MessagePackSerializerOptions.Standard
 			.WithSecurity(MessagePackSecurity.UntrustedData)
 			.WithResolver(CompositeResolver.Create(DateTimeStringResolver.Instance, StandardResolver.Instance));
+
+	/// <summary>
+	/// Provides a pre-configured <see cref="JsonSerializerOptions"/> with converters for DateTime, DateTimeOffset,
+	/// and TimeSpan that match the behavior of <see cref="DateTimesAsStrings"/>.
+	///
+	/// Use this when deserializing JSON that was created from MessagePack using <see cref="DateTimesAsStrings"/>,
+	/// or when you need JSON serialization behavior consistent with the MessagePack formatters.
+	/// </summary>
+	public static JsonSerializerOptions GetJsonSerializerOptionsWithDateTimeConverters()
+	{
+		return new JsonSerializerOptions
+		{
+			Converters =
+			{
+				DateTimeUtcJsonConverter.Instance,
+				TimeSpanJsonConverter.Instance,
+				DateTimeOffsetJsonConverter.Instance
+			}
+		};
+	}
 }

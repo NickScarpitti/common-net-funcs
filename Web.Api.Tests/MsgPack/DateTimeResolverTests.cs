@@ -297,4 +297,245 @@ public sealed class MsgPackSerializerConfigTests
 		string raw = MessagePackSerializer.Deserialize<string>(bytes, MessagePackSerializerOptions.Standard, Current.CancellationToken);
 		raw.ShouldContain("2026-04-14");
 	}
+
+	[Fact]
+	public void GetJsonSerializerOptionsWithDateTimeConverters_IncludesDateTimeConverter()
+	{
+		var options = MsgPackSerializerConfig.GetJsonSerializerOptionsWithDateTimeConverters();
+		options.ShouldNotBeNull();
+		options.Converters.ShouldContain(c => c is DateTimeUtcJsonConverter);
+	}
+
+	[Fact]
+	public void GetJsonSerializerOptionsWithDateTimeConverters_IncludesTimeSpanConverter()
+	{
+		var options = MsgPackSerializerConfig.GetJsonSerializerOptionsWithDateTimeConverters();
+		options.Converters.ShouldContain(c => c is TimeSpanJsonConverter);
+	}
+
+	[Fact]
+	public void GetJsonSerializerOptionsWithDateTimeConverters_IncludesDateTimeOffsetConverter()
+	{
+		var options = MsgPackSerializerConfig.GetJsonSerializerOptionsWithDateTimeConverters();
+		options.Converters.ShouldContain(c => c is DateTimeOffsetJsonConverter);
+	}
+
+	[Fact]
+	public void GetJsonSerializerOptionsWithDateTimeConverters_CanRoundTripAllTypes()
+	{
+		var options = MsgPackSerializerConfig.GetJsonSerializerOptionsWithDateTimeConverters();
+
+		// DateTime
+		var dt = new DateTime(2026, 4, 14, 12, 0, 0, DateTimeKind.Utc);
+		string dtJson = JsonSerializer.Serialize(dt, options);
+		var dtResult = JsonSerializer.Deserialize<DateTime>(dtJson, options);
+		dtResult.ShouldBe(dt);
+
+		// TimeSpan
+		var ts = new TimeSpan(2, 30, 45);
+		string tsJson = JsonSerializer.Serialize(ts, options);
+		var tsResult = JsonSerializer.Deserialize<TimeSpan>(tsJson, options);
+		tsResult.ShouldBe(ts);
+
+		// DateTimeOffset
+		var dto = new DateTimeOffset(2026, 4, 14, 12, 0, 0, TimeSpan.FromHours(5));
+		string dtoJson = JsonSerializer.Serialize(dto, options);
+		var dtoResult = JsonSerializer.Deserialize<DateTimeOffset>(dtoJson, options);
+		dtoResult.ShouldBe(dto);
+	}
+}
+
+public sealed class TimeSpanJsonConverterTests
+{
+	private static readonly JsonSerializerOptions Options = new() { Converters = { TimeSpanJsonConverter.Instance } };
+
+	// -----------------------------------------------------------------------
+	// Write
+	// -----------------------------------------------------------------------
+
+	[Theory]
+	[InlineData(1, 30, 0, "\"01:30:00\"")]
+	[InlineData(0, 0, 0, "\"00:00:00\"")]
+	[InlineData(23, 59, 59, "\"23:59:59\"")]
+	public void Write_EmitsConstantFormat(int hours, int minutes, int seconds, string expected)
+	{
+		TimeSpan value = new(hours, minutes, seconds);
+		string json = JsonSerializer.Serialize(value, Options);
+		json.ShouldBe(expected);
+	}
+
+	[Fact]
+	public void Write_NegativeTimeSpan_EmitsNegativeFormat()
+	{
+		TimeSpan value = new(-1, 0, 0);
+		string json = JsonSerializer.Serialize(value, Options);
+		json.ShouldBe("\"-01:00:00\"");
+	}
+
+	[Fact]
+	public void Write_ZeroTimeSpan_EmitsZeros()
+	{
+		TimeSpan value = TimeSpan.Zero;
+		string json = JsonSerializer.Serialize(value, Options);
+		json.ShouldBe("\"00:00:00\"");
+	}
+
+	// -----------------------------------------------------------------------
+	// Read
+	// -----------------------------------------------------------------------
+
+	[Theory]
+	[InlineData("\"01:30:00\"", 1, 30, 0)]
+	[InlineData("\"00:00:00\"", 0, 0, 0)]
+	[InlineData("\"23:59:59\"", 23, 59, 59)]
+	public void Read_ConstantFormatString_ReturnsCorrectTimeSpan(string json, int expectedHours, int expectedMinutes, int expectedSeconds)
+	{
+		TimeSpan result = JsonSerializer.Deserialize<TimeSpan>(json, Options);
+		result.Hours.ShouldBe(expectedHours);
+		result.Minutes.ShouldBe(expectedMinutes);
+		result.Seconds.ShouldBe(expectedSeconds);
+	}
+
+	[Fact]
+	public void Read_NegativeFormat_ReturnsNegativeTimeSpan()
+	{
+		const string json = "\"-01:00:00\"";
+		TimeSpan result = JsonSerializer.Deserialize<TimeSpan>(json, Options);
+		result.ShouldBe(new TimeSpan(-1, 0, 0));
+	}
+
+	// -----------------------------------------------------------------------
+	// RoundTrip
+	// -----------------------------------------------------------------------
+
+	[Fact]
+	public void RoundTrip_PreservesValue()
+	{
+		TimeSpan original = new(2, 45, 10);
+		string json = JsonSerializer.Serialize(original, Options);
+		TimeSpan result = JsonSerializer.Deserialize<TimeSpan>(json, Options);
+		result.ShouldBe(original);
+	}
+
+	[Fact]
+	public void RoundTrip_NegativeTimeSpan_PreservesValue()
+	{
+		TimeSpan original = new(-5, -30, -15);
+		string json = JsonSerializer.Serialize(original, Options);
+		TimeSpan result = JsonSerializer.Deserialize<TimeSpan>(json, Options);
+		result.ShouldBe(original);
+	}
+
+	[Fact]
+	public void Instance_IsSingleton()
+	{
+		TimeSpanJsonConverter.Instance.ShouldBeSameAs(TimeSpanJsonConverter.Instance);
+	}
+}
+
+public sealed class DateTimeOffsetJsonConverterTests
+{
+	private static readonly JsonSerializerOptions Options = new() { Converters = { DateTimeOffsetJsonConverter.Instance } };
+
+	// -----------------------------------------------------------------------
+	// Write
+	// -----------------------------------------------------------------------
+
+	[Fact]
+	public void Write_ZeroOffset_EmitsIso8601WithZeroOffset()
+	{
+		DateTimeOffset value = new(2026, 4, 14, 12, 0, 0, TimeSpan.Zero);
+		string json = JsonSerializer.Serialize(value, Options);
+		json.ShouldContain("2026-04-14");
+		json.ShouldContain("12:00:00");
+		json.ShouldContain("00:00"); // Offset portion
+	}
+
+	[Fact]
+	public void Write_PositiveOffset_EmitsPositiveOffset()
+	{
+		DateTimeOffset value = new(2026, 4, 14, 12, 0, 0, TimeSpan.FromHours(5));
+		string json = JsonSerializer.Serialize(value, Options);
+		json.ShouldContain("2026-04-14");
+		json.ShouldContain("12:00:00");
+		json.ShouldContain("05:00"); // Offset portion
+	}
+
+	[Fact]
+	public void Write_NegativeOffset_EmitsNegativeOffset()
+	{
+		DateTimeOffset value = new(2026, 1, 1, 0, 0, 0, TimeSpan.FromHours(-8));
+		string json = JsonSerializer.Serialize(value, Options);
+		json.ShouldContain("2026-01-01T00:00:00");
+		json.ShouldContain("-08:00");
+	}
+
+	// -----------------------------------------------------------------------
+	// Read
+	// -----------------------------------------------------------------------
+
+	[Fact]
+	public void Read_Iso8601WithOffset_ReturnsCorrectDateTimeOffset()
+	{
+		const string json = "\"2026-04-14T12:00:00+05:00\"";
+		DateTimeOffset result = JsonSerializer.Deserialize<DateTimeOffset>(json, Options);
+		result.Year.ShouldBe(2026);
+		result.Month.ShouldBe(4);
+		result.Day.ShouldBe(14);
+		result.Hour.ShouldBe(12);
+		result.Offset.ShouldBe(TimeSpan.FromHours(5));
+	}
+
+	[Fact]
+	public void Read_Iso8601WithZeroOffset_ReturnsCorrectDateTimeOffset()
+	{
+		const string json = "\"2026-04-14T12:00:00+00:00\"";
+		DateTimeOffset result = JsonSerializer.Deserialize<DateTimeOffset>(json, Options);
+		result.Offset.ShouldBe(TimeSpan.Zero);
+	}
+
+	[Fact]
+	public void Read_Iso8601WithZSuffix_ReturnsUtcOffset()
+	{
+		const string json = "\"2026-04-14T12:00:00Z\"";
+		DateTimeOffset result = JsonSerializer.Deserialize<DateTimeOffset>(json, Options);
+		result.Offset.ShouldBe(TimeSpan.Zero);
+	}
+
+	// -----------------------------------------------------------------------
+	// RoundTrip
+	// -----------------------------------------------------------------------
+
+	[Fact]
+	public void RoundTrip_PositiveOffset_PreservesValue()
+	{
+		DateTimeOffset original = new(2026, 4, 14, 12, 0, 0, TimeSpan.FromHours(5));
+		string json = JsonSerializer.Serialize(original, Options);
+		DateTimeOffset result = JsonSerializer.Deserialize<DateTimeOffset>(json, Options);
+		result.ShouldBe(original);
+	}
+
+	[Fact]
+	public void RoundTrip_NegativeOffset_PreservesValue()
+	{
+		DateTimeOffset original = new(2026, 1, 1, 0, 0, 0, TimeSpan.FromHours(-8));
+		string json = JsonSerializer.Serialize(original, Options);
+		DateTimeOffset result = JsonSerializer.Deserialize<DateTimeOffset>(json, Options);
+		result.ShouldBe(original);
+	}
+
+	[Fact]
+	public void RoundTrip_ZeroOffset_PreservesValue()
+	{
+		DateTimeOffset original = new(2026, 4, 14, 12, 0, 0, TimeSpan.Zero);
+		string json = JsonSerializer.Serialize(original, Options);
+		DateTimeOffset result = JsonSerializer.Deserialize<DateTimeOffset>(json, Options);
+		result.ShouldBe(original);
+	}
+
+	[Fact]
+	public void Instance_IsSingleton()
+	{
+		DateTimeOffsetJsonConverter.Instance.ShouldBeSameAs(DateTimeOffsetJsonConverter.Instance);
+	}
 }

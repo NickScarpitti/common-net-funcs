@@ -1124,6 +1124,102 @@ public class AwsS3HelpersStaticTests
 		result.ShouldBeTrue();
 	}
 
+	[Fact]
+	public async Task UploadS3File_Should_Upload_Without_Compression_When_Source_Stream_Is_Not_A_MemoryStream()
+	{
+		// Arrange - regression test: compressSteam = false must not require the source stream to be a MemoryStream (e.g. IFormFile.OpenReadStream() is not one)
+		string tempFile = Path.GetTempFileName();
+		try
+		{
+			await File.WriteAllBytesAsync(tempFile, new byte[5 * 1024], Current.CancellationToken);
+			await using FileStream fileData = new(tempFile, FileMode.Open, FileAccess.Read);
+			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
+
+			A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._)).ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
+			A.CallTo(() => _s3Client.PutObjectAsync(A<PutObjectRequest>._, A<CancellationToken>._)).Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
+
+			// Act
+			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, AwsS3HelpersStatic.MultipartThreshold, false, cancellationToken: Current.CancellationToken);
+
+			// Assert
+			result.ShouldBeTrue();
+		}
+		finally
+		{
+			if (File.Exists(tempFile))
+			{
+				File.Delete(tempFile);
+			}
+		}
+	}
+
+	[Fact]
+	public async Task UploadS3File_Should_Set_ContentEncoding_Header_When_Compressed()
+	{
+		// Arrange - regression test: compressSteam = true must tag the object with Content-Encoding so consumers know to decompress it
+		await using MemoryStream fileData = new(new byte[5 * 1024]); // 5KB
+		ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
+		PutObjectRequest? capturedRequest = null;
+
+		A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._)).ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
+		A.CallTo(() => _s3Client.PutObjectAsync(A<PutObjectRequest>._, A<CancellationToken>._))
+			.Invokes((PutObjectRequest request, CancellationToken _) => capturedRequest = request)
+			.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
+
+		// Act
+		bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, AwsS3HelpersStatic.MultipartThreshold, true,
+			ECompressionType.Gzip, cancellationToken: Current.CancellationToken);
+
+		// Assert
+		result.ShouldBeTrue();
+		capturedRequest.ShouldNotBeNull();
+		capturedRequest.Headers["Content-Encoding"].ShouldBe("gzip");
+	}
+
+	[Fact]
+	public async Task UploadS3File_Should_Leave_InputStream_Fully_Readable_From_Start()
+	{
+		// Arrange - regression test: measuring Content-Length must not consume uploadStream's position, or PutObjectAsync would read 0 bytes from it
+		byte[] expectedBytes = [.. Enumerable.Range(0, 5 * 1024).Select(i => (byte)i)];
+		string tempFile = Path.GetTempFileName();
+		try
+		{
+			await File.WriteAllBytesAsync(tempFile, expectedBytes, Current.CancellationToken);
+			await using FileStream fileData = new(tempFile, FileMode.Open, FileAccess.Read);
+			ConcurrentDictionary<string, bool> validatedBuckets = CreateValidatedBucketsCache();
+			PutObjectRequest? capturedRequest = null;
+			byte[]? actualBytes = null;
+
+			A.CallTo(() => _s3Client.GetObjectMetadataAsync(A<GetObjectMetadataRequest>._, A<CancellationToken>._)).ThrowsAsync(new AmazonS3Exception("Not found") { StatusCode = HttpStatusCode.NotFound });
+			A.CallTo(() => _s3Client.PutObjectAsync(A<PutObjectRequest>._, A<CancellationToken>._))
+				.Invokes((PutObjectRequest request, CancellationToken _) =>
+				{
+					capturedRequest = request;
+					// Must read the stream here, before the method disposes it once PutObjectAsync returns.
+					using MemoryStream buffer = new();
+					request.InputStream.CopyTo(buffer);
+					actualBytes = buffer.ToArray();
+				})
+				.Returns(new PutObjectResponse { HttpStatusCode = HttpStatusCode.OK });
+
+			// Act
+			bool result = await _s3Client.UploadS3File(TestBucketName, TestFileName, fileData, validatedBuckets, AwsS3HelpersStatic.MultipartThreshold, false, cancellationToken: Current.CancellationToken);
+
+			// Assert
+			result.ShouldBeTrue();
+			capturedRequest.ShouldNotBeNull();
+			capturedRequest.Headers["Content-Length"].ShouldBe(expectedBytes.Length.ToString());
+			actualBytes.ShouldBe(expectedBytes);
+		}
+		finally
+		{
+			if (File.Exists(tempFile))
+			{
+				File.Delete(tempFile);
+			}
+		}
+	}
+
 	#endregion
 
 	#region MultipartThreshold Tests

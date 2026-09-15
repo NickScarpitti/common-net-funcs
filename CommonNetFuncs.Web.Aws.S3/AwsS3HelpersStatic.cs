@@ -85,12 +85,14 @@ public static class AwsS3HelpersStatic
 
 				if (fileData.Length < thresholdForMultiPartUpload)
 				{
-					await using MemoryStream uploadStream = (MemoryStream)(compressSteam ? new MemoryStream() : decompressedStream);
+					// Use the Stream base type here (not MemoryStream) since decompressedStream isn't guaranteed to be a MemoryStream (e.g. IFormFile.OpenReadStream()).
+					await using Stream uploadStream = compressSteam ? new MemoryStream() : decompressedStream;
 					string? contentEncoding = null;
 
 					if (compressSteam)
 					{
 						await decompressedStream.CompressStreamAsync(uploadStream, compressionType, CompressionLevel.Optimal, cancellationToken).ConfigureAwait(false);
+						contentEncoding = compressionType.ToString().ToLowerInvariant(); // Tag the object so consumers know to decompress it - otherwise it's stored as unreadable compressed bytes.
 					}
 					else if (currentCompression != ECompressionType.None)
 					{
@@ -111,9 +113,13 @@ public static class AwsS3HelpersStatic
 						request.Headers["Content-Encoding"] = contentEncoding;
 					}
 
-					await using MemoryStream lengthStream = new();
-					await uploadStream.CopyToAsync(lengthStream, cancellationToken).ConfigureAwait(false);
-					request.Headers["Content-Length"] = lengthStream.Length.ToString();
+					// Read the length directly from the stream instead of copying it into a throwaway buffer - copying would
+					// leave uploadStream's position at EOF, so PutObjectAsync would read 0 bytes from it afterward.
+					if (uploadStream.CanSeek)
+					{
+						uploadStream.Position = 0;
+						request.Headers["Content-Length"] = uploadStream.Length.ToString();
+					}
 
 					if (logDebug)
 					{

@@ -35,6 +35,9 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\CommonNetFuncs.Sql.Common\CommonNetFuncs.Sql.Common.csproj" />
+		<ProjectReference Include="..\CommonNetFuncs.Sql.SqlServer\CommonNetFuncs.Sql.SqlServer.csproj" />
+		<!-- CommonNetFuncs.Sql.PostgreSql only targets net10.0, so it can only be referenced from the net10.0 leg of this test project -->
+		<ProjectReference Include="..\CommonNetFuncs.Sql.PostgreSql\CommonNetFuncs.Sql.PostgreSql.csproj" Condition="'$(TargetFramework)' == 'net10.0'" />
 	</ItemGroup>
 
 	<ItemGroup>

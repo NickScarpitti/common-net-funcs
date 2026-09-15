@@ -50,6 +50,7 @@
 		<PackageVersion Include="NLog" Version="6.2.0" />
 		<PackageVersion Include="NLog.Extensions.Logging" Version="6.2.0" />
 		<PackageVersion Include="Npgsql" Version="10.0.3" />
+		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
 		<PackageVersion Include="NPOI" Version="2.8.0" />
 		<PackageVersion Include="NSubstitute" Version="6.2.0" />
 		<!-- netstandard2.1 polyfills, only referenced when targeting netstandard2.1 -->

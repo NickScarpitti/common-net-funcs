@@ -3532,6 +3532,97 @@ public sealed class StringsTests
 		// Assert
 		result.ShouldBe(expected);
 	}
+
+	[Fact]
+	public void JoinStringsAsWrittenList_NullCollection_ReturnsNull()
+	{
+		// Arrange
+		IEnumerable<string>? strings = null;
+
+		// Act
+		string? result = strings.JoinStringsAsWrittenList();
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	public void JoinStringsAsWrittenList_EmptyCollection_ReturnsNull()
+	{
+		// Arrange
+		List<string> strings = [];
+
+		// Act
+		string? result = strings.JoinStringsAsWrittenList();
+
+		// Assert
+		result.ShouldBeNull();
+	}
+
+	[Fact]
+	public void JoinStringsAsWrittenList_SingleItem_ReturnsItemUnchanged()
+	{
+		// Arrange
+		List<string> strings = ["Apple"];
+
+		// Act
+		string? result = strings.JoinStringsAsWrittenList();
+
+		// Assert
+		result.ShouldBe("Apple");
+	}
+
+	[Fact]
+	public void JoinStringsAsWrittenList_TwoItems_JoinsWithAnd()
+	{
+		// Arrange
+		List<string> strings = ["Apple", "Banana"];
+
+		// Act
+		string? result = strings.JoinStringsAsWrittenList();
+
+		// Assert
+		result.ShouldBe("Apple and Banana");
+	}
+
+	[Fact]
+	public void JoinStringsAsWrittenList_ThreeItems_JoinsWithCommasAndAnd()
+	{
+		// Arrange
+		List<string> strings = ["Apple", "Banana", "Cherry"];
+
+		// Act
+		string? result = strings.JoinStringsAsWrittenList();
+
+		// Assert
+		result.ShouldBe("Apple, Banana, and Cherry");
+	}
+
+	[Fact]
+	public void JoinStringsAsWrittenList_MoreThanThreeItems_JoinsWithCommasAndAnd()
+	{
+		// Arrange
+		List<string> strings = ["Apple", "Banana", "Cherry", "Date"];
+
+		// Act
+		string? result = strings.JoinStringsAsWrittenList();
+
+		// Assert
+		result.ShouldBe("Apple, Banana, Cherry, and Date");
+	}
+
+	[Fact]
+	public void JoinStringsAsWrittenList_NonListEnumerable_JoinsCorrectly()
+	{
+		// Arrange
+		IEnumerable<string> strings = Enumerable.Range(1, 3).Select(x => $"Item{x}");
+
+		// Act
+		string? result = strings.JoinStringsAsWrittenList();
+
+		// Assert
+		result.ShouldBe("Item1, Item2, and Item3");
+	}
 }
 
 	#endregion

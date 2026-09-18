@@ -3215,4 +3215,30 @@ public static partial class Strings
 	{
 		return input.Replace(Environment.NewLine, " ").Replace("\n", " ").Replace("\r", " ");
 	}
+
+	public static string? JoinStringsAsWrittenList(this IEnumerable<string>? strings)
+	{
+		if (strings == null)
+		{
+			return null;
+		}
+
+		string[] list = strings.ToArray();
+		if (list.Length == 0)
+		{
+			return null;
+		}
+
+		if (list.Length == 1)
+		{
+			return list[0];
+		}
+
+		if (list.Length == 2)
+		{
+			return $"{list[0]} and {list[1]}";
+		}
+
+		return string.Join(", ", list.Take(list.Length - 1)) + $", and {list.Last()}";
+	}
 }

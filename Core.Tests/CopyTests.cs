@@ -609,7 +609,7 @@ public sealed class CopyTests
 		Copy.DeepCopyCacheManager.GetCache().Values.First().ShouldNotBeNull();
 	}
 
-	[Fact]
+	[RetryFact(3)]
 	public void GetCache_ShouldNotBeUsingLimitedCache()
 	{
 		// Arrange

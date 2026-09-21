@@ -3216,6 +3216,12 @@ public static partial class Strings
 		return input.Replace(Environment.NewLine, " ").Replace("\n", " ").Replace("\r", " ");
 	}
 
+
+	/// <summary>
+	/// Joins a collection of strings into a human-readable list, using commas and "and" before the last item.
+	/// </summary>
+	/// <param name="strings">The collection of strings to join. Can be null or empty.</param>
+	/// <returns>A human-readable list of strings, or null if the input is null or empty.</returns>
 	public static string? JoinStringsAsWrittenList(this IEnumerable<string>? strings)
 	{
 		if (strings == null)
@@ -3239,6 +3245,6 @@ public static partial class Strings
 			return $"{list[0]} and {list[1]}";
 		}
 
-		return string.Join(", ", list.Take(list.Length - 1)) + $", and {list.Last()}";
+		return string.Join(", ", list.Take(list.Length - 1)) + $", and {list[^1]}";
 	}
 }

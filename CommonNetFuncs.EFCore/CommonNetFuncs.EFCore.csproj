@@ -92,10 +92,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\CommonNetFuncs.Core\CommonNetFuncs.Core.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<None Include="README.md">
 			<PackagePath>\</PackagePath>
 			<Pack>True</Pack>

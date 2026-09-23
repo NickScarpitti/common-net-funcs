@@ -185,6 +185,40 @@ public sealed class DebugTests
 		result.ShouldContain("-- ==== Command ====");
 	}
 
+	[Fact]
+	public void RenderQueryAsScript_WithPostgreSqlDialect_InlinesListContainsAsArrayLiteral()
+	{
+		using DebugTestDbContext context = CreateContext(o => o.UseNpgsql(PostgreSqlConnectionString));
+		List<string> names = ["a", "b", "c"];
+
+		IQueryable<DebugTestEntity> query = context.Entities.Where(e => names.Contains(e.Name));
+
+		string result = query.RenderQueryAsScript(SqlDialect.PostgreSql);
+
+		string commandText = result[(result.IndexOf("-- ==== Command ====", StringComparison.Ordinal))..];
+		commandText.ShouldContain("ARRAY['a', 'b', 'c']");
+		commandText.ShouldNotContain("@names");
+	}
+
+	[Fact]
+	public void RenderQueryAsScript_WithPostgreSqlDialect_KeepsNumericArrayElementsQuoted()
+	{
+		using DebugTestDbContext context = CreateContext(o => o.UseNpgsql(PostgreSqlConnectionString));
+		List<int> values = [1, 2, 3];
+
+		IQueryable<DebugTestEntity> query = context.Entities.Where(e => values.Contains(e.Value));
+
+		string result = query.RenderQueryAsScript(SqlDialect.PostgreSql);
+
+		string commandText = result[(result.IndexOf("-- ==== Command ====", StringComparison.Ordinal))..];
+
+		// Npgsql always quotes array elements as strings in its debug comment regardless of the underlying element
+		// type, so they must stay quoted text literals rather than being unquoted as numbers - otherwise a
+		// "col::text LIKE ANY(ARRAY[...])" comparison elsewhere in the query would compare text against an int[].
+		commandText.ShouldContain("ARRAY['1', '2', '3']");
+		commandText.ShouldNotContain("ARRAY[1, 2, 3]");
+	}
+
 	private static DebugTestDbContext CreateContext(Action<DbContextOptionsBuilder<DebugTestDbContext>> configure)
 	{
 		DbContextOptionsBuilder<DebugTestDbContext> builder = new();

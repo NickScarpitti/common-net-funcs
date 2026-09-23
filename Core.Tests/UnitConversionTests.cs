@@ -209,11 +209,11 @@ public sealed class UnitConversionTests
 	}
 
 	[Theory]
-	[InlineData(1024L, "1 KB")]
-	[InlineData(1048576L, "1 MB")]
-	[InlineData(1073741824L, "1 GB")]
-	[InlineData(1099511627776L, "1 TB")]
-	[InlineData(-1024L, "-1 KB")]
+	[InlineData(1024L, "1 KiB")]
+	[InlineData(1048576L, "1 MiB")]
+	[InlineData(1073741824L, "1 GiB")]
+	[InlineData(1099511627776L, "1 TiB")]
+	[InlineData(-1024L, "-1 KiB")]
 	[InlineData(0L, "0 B")]
 	public void GetFileSizeFromBytesWithUnits_Long_FormatsCorrectly(long bytes, string expected)
 	{
@@ -226,7 +226,7 @@ public sealed class UnitConversionTests
 
 	[Theory]
 	[InlineData(null, "-0")]
-	[InlineData(1024L, "1 KB")]
+	[InlineData(1024L, "1 KiB")]
 	[InlineData(0L, "0 B")]
 	public void GetFileSizeFromBytesWithUnits_NullableLong_FormatsCorrectly(long? bytes, string expected)
 	{
@@ -238,9 +238,9 @@ public sealed class UnitConversionTests
 	}
 
 	[Theory]
-	[InlineData(1024, "1 KB")]
-	[InlineData(1048576, "1 MB")]
-	[InlineData(-1024, "-1 KB")]
+	[InlineData(1024, "1 KiB")]
+	[InlineData(1048576, "1 MiB")]
+	[InlineData(-1024, "-1 KiB")]
 	[InlineData(0, "0 B")]
 	public void GetFileSizeFromBytesWithUnits_Int_FormatsCorrectly(int bytes, string expected)
 	{
@@ -253,7 +253,7 @@ public sealed class UnitConversionTests
 
 	[Theory]
 	[InlineData(null, "-0")]
-	[InlineData(1024, "1 KB")]
+	[InlineData(1024, "1 KiB")]
 	[InlineData(0, "0 B")]
 	public void GetFileSizeFromBytesWithUnits_NullableInt_FormatsCorrectly(int? bytes, string expected)
 	{
@@ -615,6 +615,195 @@ public sealed class UnitConversionTests
 	{
 		decimal result = miles.MilesToMeters();
 		result.ShouldBe(expectedMeters, 0.01m);
+	}
+
+	[Theory]
+	[InlineData(500L, "500 b")]
+	[InlineData(1000L, "1 kb")]
+	[InlineData(1500L, "1.5 kb")]
+	[InlineData(1000000L, "1 Mb")]
+	[InlineData(1500000L, "1.5 Mb")]
+	[InlineData(1000000000L, "1 Gb")]
+	[InlineData(1500000000L, "1.5 Gb")]
+	[InlineData(1000000000000L, "1 Tb")]
+	[InlineData(1500000000000L, "1.5 Tb")]
+	[InlineData(0L, "0 b")]
+	[InlineData(-1000L, "-1 kb")]
+	[InlineData(-1500L, "-1.5 kb")]
+	public void GetFileSizeFromBitsWithUnits_Long_FormatsCorrectly(long bits, string expected)
+	{
+		// Act
+		string result = bits.GetFileSizeFromBitsWithUnits();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(500L, 0, "500 b")]
+	[InlineData(1500L, 0, "2 kb")]
+	[InlineData(1500L, 2, "1.5 kb")]
+	[InlineData(1500000L, 3, "1.5 Mb")]
+	[InlineData(1500000L, 0, "2 Mb")]
+	[InlineData(999L, 1, "999 b")]
+	[InlineData(1999L, 0, "2 kb")]
+	public void GetFileSizeFromBitsWithUnits_Long_WithDecimalPlaces_FormatsCorrectly(long bits, int decimalPlaces, string expected)
+	{
+		// Act
+		string result = bits.GetFileSizeFromBitsWithUnits(decimalPlaces);
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(500, "500 b")]
+	[InlineData(1000, "1 kb")]
+	[InlineData(1500, "1.5 kb")]
+	[InlineData(1000000, "1 Mb")]
+	[InlineData(1500000, "1.5 Mb")]
+	[InlineData(0, "0 b")]
+	[InlineData(-1000, "-1 kb")]
+	[InlineData(-1500, "-1.5 kb")]
+	public void GetFileSizeFromBitsWithUnits_Int_FormatsCorrectly(int bits, string expected)
+	{
+		// Act
+		string result = bits.GetFileSizeFromBitsWithUnits();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(500, 0, "500 b")]
+	[InlineData(1500, 0, "2 kb")]
+	[InlineData(1500, 2, "1.5 kb")]
+	[InlineData(1500000, 3, "1.5 Mb")]
+	[InlineData(1500000, 0, "2 Mb")]
+	[InlineData(999, 1, "999 b")]
+	[InlineData(1999, 0, "2 kb")]
+	public void GetFileSizeFromBitsWithUnits_Int_WithDecimalPlaces_FormatsCorrectly(int bits, int decimalPlaces, string expected)
+	{
+		// Act
+		string result = bits.GetFileSizeFromBitsWithUnits(decimalPlaces);
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(null, "-0")]
+	[InlineData(500L, "500 b")]
+	[InlineData(1000L, "1 kb")]
+	[InlineData(1500L, "1.5 kb")]
+	[InlineData(1000000L, "1 Mb")]
+	[InlineData(0L, "0 b")]
+	[InlineData(-1000L, "-1 kb")]
+	public void GetFileSizeFromBitsWithUnits_NullableLong_FormatsCorrectly(long? bits, string expected)
+	{
+		// Act
+		string result = bits.GetFileSizeFromBitsWithUnits();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(null, 1, "-0")]
+	[InlineData(500L, 1, "500 b")]
+	[InlineData(1500L, 0, "2 kb")]
+	[InlineData(1500L, 2, "1.5 kb")]
+	[InlineData(1000000L, 1, "1 Mb")]
+	[InlineData(0L, 1, "0 b")]
+	[InlineData(-1000L, 1, "-1 kb")]
+	public void GetFileSizeFromBitsWithUnits_NullableLong_WithDecimalPlaces_FormatsCorrectly(long? bits, int decimalPlaces, string expected)
+	{
+		// Act
+		string result = bits.GetFileSizeFromBitsWithUnits(decimalPlaces);
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(null, "-0")]
+	[InlineData(500, "500 b")]
+	[InlineData(1000, "1 kb")]
+	[InlineData(1500, "1.5 kb")]
+	[InlineData(1000000, "1 Mb")]
+	[InlineData(0, "0 b")]
+	[InlineData(-1000, "-1 kb")]
+	public void GetFileSizeFromBitsWithUnits_NullableInt_FormatsCorrectly(int? bits, string expected)
+	{
+		// Act
+		string result = bits.GetFileSizeFromBitsWithUnits();
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Theory]
+	[InlineData(null, 1, "-0")]
+	[InlineData(500, 1, "500 b")]
+	[InlineData(1500, 0, "2 kb")]
+	[InlineData(1500, 2, "1.5 kb")]
+	[InlineData(1000000, 1, "1 Mb")]
+	[InlineData(0, 1, "0 b")]
+	[InlineData(-1000, 1, "-1 kb")]
+	public void GetFileSizeFromBitsWithUnits_NullableInt_WithDecimalPlaces_FormatsCorrectly(int? bits, int decimalPlaces, string expected)
+	{
+		// Act
+		string result = bits.GetFileSizeFromBitsWithUnits(decimalPlaces);
+
+		// Assert
+		result.ShouldBe(expected);
+	}
+
+	[Fact]
+	public void GetFileSizeFromBitsWithUnits_LargeNumbers_FormatsCorrectly()
+	{
+		// Test Petabit
+		string resultPb = 1000000000000000L.GetFileSizeFromBitsWithUnits();
+		resultPb.ShouldBe("1 Pb");
+
+		// Test Exabit
+		string resultEb = 1000000000000000000L.GetFileSizeFromBitsWithUnits();
+		resultEb.ShouldBe("1 Eb");
+	}
+
+	[Fact]
+	public void GetFileSizeFromBitsWithUnits_NegativeLargeNumbers_FormatsCorrectly()
+	{
+		// Test negative Petabit
+		string resultPb = (-1000000000000000L).GetFileSizeFromBitsWithUnits();
+		resultPb.ShouldBe("-1 Pb");
+
+		// Test negative Megabit
+		string resultMb = (-5000000L).GetFileSizeFromBitsWithUnits();
+		resultMb.ShouldBe("-5 Mb");
+	}
+
+	[Fact]
+	public void GetFileSizeFromBitsWithUnits_NegativeDecimalPlaces_TreatsAsZero()
+	{
+		// When decimalPlaces < 0, it should be treated as 0
+		string result = 1500L.GetFileSizeFromBitsWithUnits(-1);
+		result.ShouldBe("2 kb");
+	}
+
+	[Theory]
+	[InlineData(999L, "999 b")]
+	[InlineData(999999L, "1000 kb")]  // 999999/1000 = 999.999 rounds to 1000
+	[InlineData(500000L, "500 kb")]
+	[InlineData(500000000L, "500 Mb")]
+	[InlineData(500000000000L, "500 Gb")]
+	public void GetFileSizeFromBitsWithUnits_EdgeCases_FormatsCorrectly(long bits, string expected)
+	{
+		// Act
+		string result = bits.GetFileSizeFromBitsWithUnits();
+
+		// Assert
+		result.ShouldBe(expected);
 	}
 }
 #endif

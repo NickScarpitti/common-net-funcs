@@ -65,8 +65,8 @@ public class ExcelExportBenchmarks
 			IsActive = i % 2 == 0,
 			IsEnabled = i % 3 != 0,
 			CreatedDate = DateTime.Now.AddDays(-i),
-			UpdatedDate = DateTime.Now.AddDays(-i / 2),
-			ProcessedDate = DateTime.Now.AddDays(-i / 4),
+			UpdatedDate = DateTime.Now.AddDays(-i / 2d),
+			ProcessedDate = DateTime.Now.AddDays(-i / 4d),
 			Field01 = $"F01_{i}",
 			Field02 = $"F02_{i}",
 			Field03 = $"F03_{i}",
@@ -177,7 +177,7 @@ public class ExcelExportBenchmarks
 	// so that the baseline is not affected by any changes made to Export.cs.
 	// -----------------------------------------------------------------------
 
-	private static bool OriginalExportFromTable<T>(SpreadsheetDocument document, Worksheet worksheet, IEnumerable<T> data,
+	private static void OriginalExportFromTable<T>(SpreadsheetDocument document, Worksheet worksheet, IEnumerable<T> data,
 			bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
 	{
 		if (data?.Any() == true)
@@ -185,7 +185,7 @@ public class ExcelExportBenchmarks
 			SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
 			if (sheetData == null)
 			{
-				return false;
+				return;
 			}
 
 			uint headerStyleId = document.GetStandardCellStyle(EStyle.Header, wrapText: wrapText);
@@ -229,10 +229,9 @@ public class ExcelExportBenchmarks
 			worksheet.AutoFitColumns();
 		}
 		document.ClearStandardFormatCache();
-		return true;
 	}
 
-	private static bool OriginalExportFromTable(SpreadsheetDocument document, Worksheet worksheet, DataTable data,
+	private static void OriginalExportFromTable(SpreadsheetDocument document, Worksheet worksheet, DataTable data,
 			bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false)
 	{
 		if (data?.Rows.Count > 0)
@@ -240,7 +239,7 @@ public class ExcelExportBenchmarks
 			SheetData? sheetData = worksheet.GetFirstChild<SheetData>();
 			if (sheetData == null)
 			{
-				return false;
+				return;
 			}
 
 			uint headerStyleId = document.GetStandardCellStyle(EStyle.Header, wrapText: wrapText);
@@ -291,6 +290,5 @@ public class ExcelExportBenchmarks
 
 			worksheet.AutoFitColumns();
 		}
-		return true;
 	}
 }

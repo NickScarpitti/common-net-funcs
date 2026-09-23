@@ -334,6 +334,9 @@ public static class UnitConversion
 		return Round(tb * 1024m, decimalPlaces, MidpointRounding.AwayFromZero);
 	}
 
+	private static readonly string[] ByteUnits = new string[] { "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
+	private static readonly string[] BitUnits = new string[] { "b", "kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb" };
+
 	/// <summary>
 	/// Returns a human readable string representation of the number of bytes
 	/// </summary>
@@ -343,15 +346,19 @@ public static class UnitConversion
 	{
 		long bytes = Abs(long.CreateChecked(inputBytes));
 		long longInput = long.CreateChecked(inputBytes);
+
+		if (bytes == 0)
+		{
+			return "0 B";
+		}
+
+		const int k = 1024;
+		int dm = decimalPlaces < 0 ? 0 : decimalPlaces;
+
+		int i = (int)Floor(Log(bytes) / Log(k));
+
 		long multiplier = bytes > longInput ? -1L : 1L;
-		return bytes >= 1024 ?
-			bytes.BytesToKb(decimalPlaces) >= 1024 ? bytes.BytesToMb(decimalPlaces) >= 1024 ?
-				bytes.BytesToGb(decimalPlaces) >= 1024 ?
-								$"{bytes.BytesToTb(decimalPlaces) * multiplier} TB" :
-							$"{bytes.BytesToGb(decimalPlaces) * multiplier} GB" :
-						$"{bytes.BytesToMb(decimalPlaces) * multiplier} MB" :
-					$"{bytes.BytesToKb(decimalPlaces) * multiplier} KB" :
-				$"{bytes * multiplier} B";
+		return $"{Round(multiplier * bytes / Pow(k, i), dm)} {ByteUnits[i]}";
 	}
 
 	/// <summary>
@@ -366,6 +373,44 @@ public static class UnitConversion
 			return "-0";
 		}
 		return nullBytes.Value.GetFileSizeFromBytesWithUnits(decimalPlaces);
+	}
+
+	/// <summary>
+	/// Returns a human readable string representation of the number of bits
+	/// </summary>
+	/// <param name="inputBytes">Number of bits to be converted</param>
+	/// <returns>Human readable string representation of the number of bits</returns>
+	public static string GetFileSizeFromBitsWithUnits<TNumber>(this TNumber inputBytes, int decimalPlaces = 1) where TNumber : IBinaryInteger<TNumber>
+	{
+		long bits = Abs(long.CreateChecked(inputBytes));
+		long longInput = long.CreateChecked(inputBytes);
+
+		if (bits == 0)
+		{
+			return "0 b";
+		}
+
+		const int k = 1000;
+		int dm = decimalPlaces < 0 ? 0 : decimalPlaces;
+
+		int i = (int)Floor(Log(bits) / Log(k));
+
+		long multiplier = bits > longInput ? -1L : 1L;
+		return $"{Round(multiplier * bits / Pow(k, i), dm)} {BitUnits[i]}";
+	}
+
+	/// <summary>
+	/// Returns a human readable string representation of the number of bits
+	/// </summary>
+	/// <param name="nullBytes">Number of bits to be converted</param>
+	/// <returns>Human readable string representation of the number of bits</returns>
+	public static string GetFileSizeFromBitsWithUnits<TNumber>(this TNumber? nullBytes, int decimalPlaces = 1) where TNumber : struct, IBinaryInteger<TNumber>
+	{
+		if (nullBytes == null)
+		{
+			return "-0";
+		}
+		return nullBytes.Value.GetFileSizeFromBitsWithUnits(decimalPlaces);
 	}
 
 	/// <summary>

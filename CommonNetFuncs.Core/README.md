@@ -226,6 +226,7 @@ This lightweight project contains helper methods for several common functions re
       - [GbToTb](#gbtotb)
       - [TbToGb](#tbtogb)
       - [GetFileSizeFromBytesWithUnits](#getfilesizefrombyteswithunits)
+      - [GetFileSizeFromBitsWithUnits](#getfilesizefrombitswitunits)
       - [MetersToMiles](#meterstomiles)
       - [MilesToMeters](#milestometers)
   - [Validation](#validation)
@@ -2683,17 +2684,33 @@ decimal gb = 1m.TbToGb(1); // 1024.0
 
 #### GetFileSizeFromBytesWithUnits
 
-Returns a human-readable string representation of the number of bytes, with units.
+Returns a human-readable string representation of the number of bytes, with binary units. Supports long, int, and nullable variants.
 
 ```cs
-string size1 = 1024L.GetFileSizeFromBytesWithUnits(); // "1 KB"
-string size2 = 1048576L.GetFileSizeFromBytesWithUnits(); // "1 MB"
-string size3 = 1073741824L.GetFileSizeFromBytesWithUnits(); // "1 GB"
-string size4 = 1099511627776L.GetFileSizeFromBytesWithUnits(); // "1 TB"
+string size1 = 1024L.GetFileSizeFromBytesWithUnits(); // "1 KiB"
+string size2 = 1048576L.GetFileSizeFromBytesWithUnits(); // "1 MiB"
+string size3 = 1073741824L.GetFileSizeFromBytesWithUnits(); // "1 GiB"
+string size4 = 1099511627776L.GetFileSizeFromBytesWithUnits(); // "1 TiB"
 string size5 = 0L.GetFileSizeFromBytesWithUnits(); // "0 B"
 string size6 = ((long?)null).GetFileSizeFromBytesWithUnits(); // "-0"
-string size7 = 1024.GetFileSizeFromBytesWithUnits(); // "1 KB"
-string size8 = ((int?)null).GetFileSizeFromBytesWithUnits(); // "-0"
+string size7 = 1024.GetFileSizeFromBytesWithUnits(2); // "1.00 KiB" (with 2 decimal places)
+string size8 = 1048576L.GetFileSizeFromBytesWithUnits(1); // "1.0 MiB" (with 1 decimal place)
+```
+
+#### GetFileSizeFromBitsWithUnits
+
+Returns a human-readable string representation of the number of bits, with decimal units. Supports long, int, and nullable variants.
+
+```cs
+string size1 = 1000L.GetFileSizeFromBitsWithUnits(); // "1 kb"
+string size2 = 1000000L.GetFileSizeFromBitsWithUnits(); // "1 Mb"
+string size3 = 1000000000L.GetFileSizeFromBitsWithUnits(); // "1 Gb"
+string size4 = 1000000000000L.GetFileSizeFromBitsWithUnits(); // "1 Tb"
+string size5 = 0L.GetFileSizeFromBitsWithUnits(); // "0 b"
+string size6 = ((long?)null).GetFileSizeFromBitsWithUnits(); // "-0"
+string size7 = 1500L.GetFileSizeFromBitsWithUnits(1); // "1.5 kb" (with 1 decimal place)
+string size8 = 1500000L.GetFileSizeFromBitsWithUnits(2); // "1.50 Mb" (with 2 decimal places)
+string size9 = (-1000L).GetFileSizeFromBitsWithUnits(); // "-1 kb" (handles negative values)
 ```
 
 #### MetersToMiles

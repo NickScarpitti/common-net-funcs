@@ -197,6 +197,38 @@ public sealed class TimeSpanAsStringFormatterTests
 	}
 }
 
+public sealed class DateOnlyAsStringFormatterTests
+{
+	private static readonly MessagePackSerializerOptions Options = MsgPackSerializerConfig.DateTimesAsStrings;
+
+	[Theory]
+	[InlineData(2026, 4, 14, "2026-04-14")]
+	[InlineData(2025, 1, 1, "2025-01-01")]
+	[InlineData(2026, 12, 31, "2026-12-31")]
+	public void Serialize_EmitsCorrectFormat(int year, int month, int day, string expected)
+	{
+		DateOnly value = new(year, month, day);
+		byte[] bytes = MessagePackSerializer.Serialize(value, Options, Current.CancellationToken);
+		string raw = MessagePackSerializer.Deserialize<string>(bytes, MessagePackSerializerOptions.Standard, Current.CancellationToken);
+		raw.ShouldBe(expected);
+	}
+
+	[Fact]
+	public void RoundTrip_PreservesValue()
+	{
+		DateOnly original = new(2026, 4, 14);
+		byte[] bytes = MessagePackSerializer.Serialize(original, Options, Current.CancellationToken);
+		DateOnly result = MessagePackSerializer.Deserialize<DateOnly>(bytes, Options, Current.CancellationToken);
+		result.ShouldBe(original);
+	}
+
+	[Fact]
+	public void Instance_IsSingleton()
+	{
+		DateOnlyAsStringFormatter.Instance.ShouldBeSameAs(DateOnlyAsStringFormatter.Instance);
+	}
+}
+
 public sealed class DateTimeOffsetAsStringFormatterTests
 {
 	private static readonly MessagePackSerializerOptions Options = MsgPackSerializerConfig.DateTimesAsStrings;
@@ -257,6 +289,13 @@ public sealed class DateTimeStringResolverTests
 	{
 		IMessagePackFormatter<TimeSpan>? formatter = DateTimeStringResolver.Instance.GetFormatter<TimeSpan>();
 		formatter.ShouldBeOfType<TimeSpanAsStringFormatter>();
+	}
+
+	[Fact]
+	public void GetFormatter_DateOnly_ReturnsDateOnlyAsStringFormatter()
+	{
+		IMessagePackFormatter<DateOnly>? formatter = DateTimeStringResolver.Instance.GetFormatter<DateOnly>();
+		formatter.ShouldBeOfType<DateOnlyAsStringFormatter>();
 	}
 
 	[Fact]

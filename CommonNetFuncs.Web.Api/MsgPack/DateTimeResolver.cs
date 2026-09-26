@@ -115,14 +115,28 @@ public sealed class DateTimeStringResolver : IFormatterResolver
 
 	public IMessagePackFormatter<T>? GetFormatter<T>()
 	{
-		return Type.GetTypeCode(typeof(T)) switch
+		// Use static generic caching to evaluate the formatter resolution only once per type.
+		// This eliminates the overhead of Type.GetTypeCode() calls on every invocation.
+		return CachedFormatter<T>.Value;
+	}
+
+	// Static generic class ensures the switch is evaluated only once per type at class initialization.
+	// Subsequent calls simply return the cached reference, providing optimal performance for this hot path.
+	private static class CachedFormatter<T>
+	{
+		public static readonly IMessagePackFormatter<T>? Value = GetFormatterInternal();
+
+		private static IMessagePackFormatter<T>? GetFormatterInternal()
 		{
-			TypeCode.DateTime => (IMessagePackFormatter<T>)(object)DateTimeAsStringFormatter.Instance,
-			TypeCode.Object when typeof(T) == typeof(DateTimeOffset) => (IMessagePackFormatter<T>)(object)DateTimeOffsetAsStringFormatter.Instance,
-			TypeCode.Object when typeof(T) == typeof(TimeSpan) => (IMessagePackFormatter<T>)(object)TimeSpanAsStringFormatter.Instance,
-			TypeCode.Object when typeof(T) == typeof(DateOnly) => (IMessagePackFormatter<T>)(object)DateOnlyAsStringFormatter.Instance,
-			_ => null,
-		};
+			return Type.GetTypeCode(typeof(T)) switch
+			{
+				TypeCode.DateTime => (IMessagePackFormatter<T>)(object)DateTimeAsStringFormatter.Instance,
+				TypeCode.Object when typeof(T) == typeof(DateTimeOffset) => (IMessagePackFormatter<T>)(object)DateTimeOffsetAsStringFormatter.Instance,
+				TypeCode.Object when typeof(T) == typeof(TimeSpan) => (IMessagePackFormatter<T>)(object)TimeSpanAsStringFormatter.Instance,
+				TypeCode.Object when typeof(T) == typeof(DateOnly) => (IMessagePackFormatter<T>)(object)DateOnlyAsStringFormatter.Instance,
+				_ => null,
+			};
+		}
 	}
 }
 

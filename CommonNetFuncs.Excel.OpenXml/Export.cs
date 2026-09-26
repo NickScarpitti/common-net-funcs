@@ -462,6 +462,436 @@ public static class Export
 		}
 	}
 
+	// ─────────────────────────── SAX streaming exports ───────────────────────────
+
+	/// <summary>
+	/// Streams a list of objects to <paramref name="outputStream"/> as an xlsx file using the OpenXML SAX engine.
+	/// Unlike <see cref="GenericExcelExport{T}"/>, this never builds an in-memory DOM, so memory stays constant regardless of how many rows are written.
+	/// Column widths are estimated from header text only.
+	/// </summary>
+	public static async Task GenericExcelExportAsync<T>(this IEnumerable<T> dataList, Stream outputStream, bool createTable = false,
+		string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false,
+		CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			using SpreadsheetDocument document = SpreadsheetDocument.Create(outputStream, SpreadsheetDocumentType.Workbook, true);
+			document.CompressionOption = CompressionOption.Normal;
+			WorkbookPart workbookPart = document.InitializeExcelFile();
+			WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+			await ExportFromTableSaxCoreAsync<T>(document, worksheetPart, dataList, null, createTable, tableName, skipColumnNames, wrapText, cancellationToken);
+			RegisterSaxSheet(workbookPart, worksheetPart, sheetName);
+			workbookPart.Workbook!.Save();
+		}
+		catch (OperationCanceledException)
+		{
+			throw new TaskCanceledException($"{nameof(Export)}.{nameof(GenericExcelExportAsync)} was canceled");
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(GenericExcelExportAsync));
+		}
+	}
+
+	/// <summary>
+	/// Streams data from an <see cref="IAsyncEnumerable{T}"/> source (e.g. EF Core <c>AsAsyncEnumerable()</c>) to
+	/// <paramref name="outputStream"/> as an xlsx file using the OpenXML SAX engine.
+	/// Rows are written directly from the async source without ever buffering a list in RAM.
+	/// /// Column widths are estimated from header text only.
+	/// </summary>
+	public static async Task GenericExcelExportAsync<T>(this IAsyncEnumerable<T> dataList, Stream outputStream, bool createTable = false,
+		string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false,
+		CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			using SpreadsheetDocument document = SpreadsheetDocument.Create(outputStream, SpreadsheetDocumentType.Workbook, true);
+			document.CompressionOption = CompressionOption.Normal;
+			WorkbookPart workbookPart = document.InitializeExcelFile();
+			WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+			await ExportFromTableSaxCoreAsync<T>(document, worksheetPart, null, dataList, createTable, tableName, skipColumnNames, wrapText, cancellationToken);
+			RegisterSaxSheet(workbookPart, worksheetPart, sheetName);
+			workbookPart.Workbook!.Save();
+		}
+		catch (OperationCanceledException)
+		{
+			throw new TaskCanceledException($"{nameof(Export)}.{nameof(GenericExcelExportAsync)} was canceled");
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(GenericExcelExportAsync));
+		}
+	}
+
+	/// <summary>
+	/// Streams a <see cref="DataTable"/> to <paramref name="outputStream"/> as an xlsx file using the OpenXML SAX engine.
+	/// Column widths are estimated from header text only.
+	/// </summary>
+	public static async Task GenericExcelExportAsync(this DataTable datatable, Stream outputStream, bool createTable = false,
+		string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false,
+		CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			using SpreadsheetDocument document = SpreadsheetDocument.Create(outputStream, SpreadsheetDocumentType.Workbook, true);
+			document.CompressionOption = CompressionOption.Normal;
+			WorkbookPart workbookPart = document.InitializeExcelFile();
+			WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+			await ExportFromTableSaxAsync(document, worksheetPart, datatable, createTable, tableName, skipColumnNames, wrapText, cancellationToken);
+			RegisterSaxSheet(workbookPart, worksheetPart, sheetName);
+			workbookPart.Workbook!.Save();
+		}
+		catch (OperationCanceledException)
+		{
+			throw new TaskCanceledException($"{nameof(Export)}.{nameof(GenericExcelExportAsync)} was canceled");
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(GenericExcelExportAsync));
+		}
+	}
+
+	/// <summary>
+	/// Writes <paramref name="data"/> into <paramref name="worksheetPart"/> using the OpenXML SAX engine.
+	/// The caller is responsible for registering the sheet in the workbook after this call.
+	/// </summary>
+	public static async Task ExportFromTableSaxAsync<T>(SpreadsheetDocument document, WorksheetPart worksheetPart, IEnumerable<T> data,
+		bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false,
+		CancellationToken cancellationToken = default)
+	{
+		await ExportFromTableSaxCoreAsync<T>(document, worksheetPart, data, null, createTable, tableName, skipColumnNames, wrapText, cancellationToken);
+	}
+
+	/// <summary>
+	/// Writes data from an <see cref="IAsyncEnumerable{T}"/> source into <paramref name="worksheetPart"/> using the OpenXML SAX engine.
+	/// The caller is responsible for registering the sheet in the workbook after this call.
+	/// </summary>
+	public static async Task ExportFromTableSaxAsync<T>(SpreadsheetDocument document, WorksheetPart worksheetPart, IAsyncEnumerable<T> data,
+		bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false,
+		CancellationToken cancellationToken = default)
+	{
+		await ExportFromTableSaxCoreAsync<T>(document, worksheetPart, null, data, createTable, tableName, skipColumnNames, wrapText, cancellationToken);
+	}
+
+	/// <summary>
+	/// Writes a <see cref="DataTable"/> into <paramref name="worksheetPart"/> using the OpenXML SAX engine.
+	/// The caller is responsible for registering the sheet in the workbook after this call.
+	/// </summary>
+	public static Task ExportFromTableSaxAsync(SpreadsheetDocument document, WorksheetPart worksheetPart, DataTable data,
+		bool createTable = false, string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false,
+		CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			if (data?.Rows.Count > 0)
+			{
+				uint headerStyleId = document.GetStandardCellStyle(EStyle.Header, wrapText: wrapText);
+				uint bodyStyleId = document.GetStandardCellStyle(EStyle.Body, wrapText: wrapText);
+
+				int totalCols = data.Columns.Count;
+				string[] colLetters = new string[totalCols];
+				for (int i = 0; i < totalCols; i++)
+					colLetters[i] = CellReference.NumberToColumnName((uint)(i + 1));
+
+				HashSet<int> skipColumnIndices = [];
+				for (int i = 0; i < totalCols; i++)
+				{
+					if (skipColumnNames?.Contains(data.Columns[i].ColumnName, StringComparer.InvariantCultureIgnoreCase) == true)
+						skipColumnIndices.Add(i);
+				}
+
+				// Pre-add table definition part before opening the SAX writer so the relationship ID is known
+				TableDefinitionPart? tableDefPart = null;
+				string? tableRId = null;
+				if (createTable)
+				{
+					tableDefPart = worksheetPart.AddNewPart<TableDefinitionPart>();
+					tableRId = worksheetPart.GetIdOfPart(tableDefPart);
+				}
+
+				uint y = 1;
+				using (OpenXmlWriter writer = OpenXmlWriter.Create(worksheetPart))
+				{
+					writer.WriteStartElement(new Worksheet());
+
+					// <cols> must precede <sheetData> per ECMA-376; widths estimated from header text only
+					writer.WriteStartElement(new Columns());
+					for (int i = 0; i < totalCols; i++)
+					{
+						if (skipColumnIndices.Contains(i)) continue;
+						double w = CalculateWidth(data.Columns[i].ColumnName, headerStyleId);
+						if (w > 0)
+							writer.WriteElement(new Column { Min = (uint)(i + 1), Max = (uint)(i + 1), Width = Math.Min(w, 100), CustomWidth = true });
+					}
+					writer.WriteEndElement(); // Columns
+
+					writer.WriteStartElement(new SheetData());
+
+					// Header row
+					writer.WriteStartElement(new Row { RowIndex = y });
+					for (int i = 0; i < totalCols; i++)
+					{
+						if (skipColumnIndices.Contains(i)) continue;
+						WriteSaxInlineStringCell(writer, colLetters[i] + y, data.Columns[i].ColumnName, headerStyleId);
+					}
+					writer.WriteEndElement(); // Row
+					y++;
+
+					// Data rows
+					foreach (DataRow row in data.Rows)
+					{
+						cancellationToken.ThrowIfCancellationRequested();
+						writer.WriteStartElement(new Row { RowIndex = y });
+						object?[] items = row.ItemArray;
+						for (int i = 0; i < items.Length; i++)
+						{
+							if (skipColumnIndices.Contains(i)) continue;
+							WriteSaxInlineStringCell(writer, colLetters[i] + y, items[i]?.ToString() ?? string.Empty, bodyStyleId);
+						}
+						writer.WriteEndElement(); // Row
+						y++;
+					}
+
+					writer.WriteEndElement(); // SheetData
+
+					string rangeRef = $"{new CellReference(1u, 1u)}:{new CellReference((uint)totalCols, y - 1)}";
+					if (createTable && tableRId != null)
+					{
+						writer.WriteStartElement(new TableParts { Count = 1 });
+						writer.WriteElement(new TablePart { Id = tableRId });
+						writer.WriteEndElement(); // TableParts
+					}
+					else
+					{
+						writer.WriteElement(new AutoFilter { Reference = rangeRef });
+					}
+
+					writer.WriteEndElement(); // Worksheet
+				}
+
+				// Populate the table definition after the SAX writer is flushed
+				if (createTable && tableDefPart != null)
+				{
+					uint visibleCount = (uint)(totalCols - skipColumnIndices.Count);
+					TableColumns tableColumns = new() { Count = visibleCount };
+					uint colId = 1;
+					for (int i = 0; i < totalCols; i++)
+					{
+						if (skipColumnIndices.Contains(i)) continue;
+						tableColumns.Append(new TableColumn { Id = colId++, Name = data.Columns[i].ColumnName });
+					}
+					string tableRef = $"{new CellReference(1u, 1u)}:{new CellReference((uint)totalCols, y - 1)}";
+					tableDefPart.Table = new Table
+					{
+						Id = 1,
+						Name = tableName,
+						DisplayName = tableName,
+						Reference = tableRef,
+						TotalsRowShown = false,
+						HeaderRowCount = 1,
+						InsertRow = false,
+						InsertRowShift = false,
+						Published = false,
+						AutoFilter = new AutoFilter { Reference = tableRef },
+						TableColumns = tableColumns,
+						TableStyleInfo = new TableStyleInfo
+						{
+							Name = ETableStyle.TableStyleMedium1.ToString(),
+							ShowFirstColumn = false,
+							ShowLastColumn = false,
+							ShowRowStripes = true,
+							ShowColumnStripes = false
+						}
+					};
+				}
+			}
+		}
+		catch (OperationCanceledException)
+		{
+			throw;
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(ExportFromTableSaxAsync));
+		}
+		return Task.CompletedTask;
+	}
+
+	/// <summary>
+	/// Core SAX writer shared by both the sync (<see cref="IEnumerable{T}"/>) and async (<see cref="IAsyncEnumerable{T}"/>) generic overloads.
+	/// Writes the worksheet XML directly to <paramref name="worksheetPart"/> stream without building a DOM.
+	/// </summary>
+	private static async Task ExportFromTableSaxCoreAsync<T>(SpreadsheetDocument document, WorksheetPart worksheetPart,
+		IEnumerable<T>? syncData, IAsyncEnumerable<T>? asyncData,
+		bool createTable, string tableName, List<string>? skipColumnNames, bool wrapText, CancellationToken cancellationToken)
+	{
+		try
+		{
+			uint headerStyleId = document.GetStandardCellStyle(EStyle.Header, wrapText: wrapText);
+			uint bodyStyleId = document.GetStandardCellStyle(EStyle.Body, wrapText: wrapText);
+
+			PropertyInfo[] properties = GetOrAddPropertiesFromReflectionCache(typeof(T))
+				.Where(x => (skipColumnNames == null) || (skipColumnNames.Count == 0) || !skipColumnNames.Contains(x.Name, StringComparer.InvariantCultureIgnoreCase))
+				.ToArray();
+			int colCount = properties.Length;
+
+			string[] colLetters = new string[colCount];
+			for (int i = 0; i < colCount; i++)
+				colLetters[i] = CellReference.NumberToColumnName((uint)(i + 1));
+
+			// Pre-add the table definition part now to obtain its relationship ID before the SAX writer is opened
+			TableDefinitionPart? tableDefPart = null;
+			string? tableRId = null;
+			if (createTable && colCount > 0)
+			{
+				tableDefPart = worksheetPart.AddNewPart<TableDefinitionPart>();
+				tableRId = worksheetPart.GetIdOfPart(tableDefPart);
+			}
+
+			uint y = 1;
+			using (OpenXmlWriter writer = OpenXmlWriter.Create(worksheetPart))
+			{
+				writer.WriteStartElement(new Worksheet());
+
+				// <cols> must precede <sheetData> per ECMA-376; widths estimated from header text only in SAX streaming mode
+				if (colCount > 0)
+				{
+					writer.WriteStartElement(new Columns());
+					for (int i = 0; i < colCount; i++)
+					{
+						double w = CalculateWidth(properties[i].Name, headerStyleId);
+						if (w > 0)
+							writer.WriteElement(new Column { Min = (uint)(i + 1), Max = (uint)(i + 1), Width = Math.Min(w, 100), CustomWidth = true });
+					}
+					writer.WriteEndElement(); // Columns
+				}
+
+				writer.WriteStartElement(new SheetData());
+
+				if (colCount > 0)
+				{
+					// Header row
+					writer.WriteStartElement(new Row { RowIndex = y });
+					for (int i = 0; i < colCount; i++)
+						WriteSaxInlineStringCell(writer, colLetters[i] + y, properties[i].Name, headerStyleId);
+					writer.WriteEndElement(); // Row
+					y++;
+
+					// Data rows
+					if (asyncData != null)
+					{
+						await foreach (T item in asyncData.WithCancellation(cancellationToken))
+						{
+							if (item.ToNString().IsNullOrEmpty()) continue;
+							writer.WriteStartElement(new Row { RowIndex = y });
+							for (int i = 0; i < colCount; i++)
+								WriteSaxInlineStringCell(writer, colLetters[i] + y, properties[i].GetValue(item)?.ToString() ?? string.Empty, bodyStyleId);
+							writer.WriteEndElement(); // Row
+							y++;
+						}
+					}
+					else if (syncData != null)
+					{
+						foreach (T item in syncData.Where(x => !x.ToNString().IsNullOrEmpty()))
+						{
+							cancellationToken.ThrowIfCancellationRequested();
+							writer.WriteStartElement(new Row { RowIndex = y });
+							for (int i = 0; i < colCount; i++)
+								WriteSaxInlineStringCell(writer, colLetters[i] + y, properties[i].GetValue(item)?.ToString() ?? string.Empty, bodyStyleId);
+							writer.WriteEndElement(); // Row
+							y++;
+						}
+					}
+				}
+
+				writer.WriteEndElement(); // SheetData
+
+				if (colCount > 0)
+				{
+					string rangeRef = $"{new CellReference(1u, 1u)}:{new CellReference((uint)colCount, y - 1)}";
+					if (createTable && tableRId != null)
+					{
+						writer.WriteStartElement(new TableParts { Count = 1 });
+						writer.WriteElement(new TablePart { Id = tableRId });
+						writer.WriteEndElement(); // TableParts
+					}
+					else
+					{
+						writer.WriteElement(new AutoFilter { Reference = rangeRef });
+					}
+				}
+
+				writer.WriteEndElement(); // Worksheet
+			}
+
+			// Populate the table definition after the SAX writer is flushed and the worksheet XML is final
+			if (createTable && tableDefPart != null && colCount > 0)
+			{
+				TableColumns tableColumns = new() { Count = (uint)colCount };
+				for (int i = 0; i < colCount; i++)
+					tableColumns.Append(new TableColumn { Id = (uint)i + 1, Name = properties[i].Name });
+
+				string tableRef = $"{new CellReference(1u, 1u)}:{new CellReference((uint)colCount, y - 1)}";
+				tableDefPart.Table = new Table
+				{
+					Id = 1,
+					Name = tableName,
+					DisplayName = tableName,
+					Reference = tableRef,
+					TotalsRowShown = false,
+					HeaderRowCount = 1,
+					InsertRow = false,
+					InsertRowShift = false,
+					Published = false,
+					AutoFilter = new AutoFilter { Reference = tableRef },
+					TableColumns = tableColumns,
+					TableStyleInfo = new TableStyleInfo
+					{
+						Name = ETableStyle.TableStyleMedium1.ToString(),
+						ShowFirstColumn = false,
+						ShowLastColumn = false,
+						ShowRowStripes = true,
+						ShowColumnStripes = false
+					}
+				};
+			}
+		}
+		catch (OperationCanceledException)
+		{
+			throw;
+		}
+		catch (Exception ex)
+		{
+			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(ExportFromTableSaxCoreAsync));
+		}
+	}
+
+	/// <summary>
+	/// Registers <paramref name="worksheetPart"/> as a new sheet entry in the workbook.
+	/// </summary>
+	private static void RegisterSaxSheet(WorkbookPart workbookPart, WorksheetPart worksheetPart, string sheetName)
+	{
+		Sheets sheets = workbookPart.Workbook!.GetFirstChild<Sheets>() ?? workbookPart.Workbook!.AppendChild(new Sheets());
+		string partId = workbookPart.GetIdOfPart(worksheetPart);
+		uint sheetId = sheets.Elements<Sheet>().Any()
+			? (sheets.Elements<Sheet>().Max(x => x.SheetId?.Value) + 1) ?? ((uint)sheets.Elements<Sheet>().Count() + 1)
+			: 1u;
+		sheets.Append(new Sheet { Id = partId, SheetId = sheetId, Name = sheetName });
+	}
+
+	/// <summary>
+	/// Writes a single inline-string cell via the SAX writer. Uses <see cref="CellValues.InlineString"/> to avoid
+	/// shared-string table allocations, keeping memory overhead at O(1) per cell.
+	/// </summary>
+	private static void WriteSaxInlineStringCell(OpenXmlWriter writer, string cellRef, string text, uint styleId)
+	{
+		writer.WriteStartElement(new Cell { CellReference = cellRef, StyleIndex = styleId, DataType = CellValues.InlineString });
+		writer.WriteStartElement(new InlineString());
+		writer.WriteElement(new Text(text));
+		writer.WriteEndElement(); // InlineString
+		writer.WriteEndElement(); // Cell
+	}
+
 	/// <summary>
 	/// Returns the shared-string index for <paramref name="text"/>, adding it to both the
 	/// in-memory dictionary cache and the XML table if it is not already present.

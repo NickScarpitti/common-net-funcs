@@ -1,5 +1,8 @@
-﻿using System.Data;
+﻿using System.Collections.Concurrent;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using CommonNetFuncs.Core;
@@ -7,6 +10,7 @@ using CommonNetFuncs.Excel.Common;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using FastExpressionCompiler;
 using SkiaSharp;
 using ZLinq;
 using static CommonNetFuncs.Core.ExceptionLocation;
@@ -45,7 +49,7 @@ public static partial class Common
 		workbookPart.Workbook ??= new();
 
 		// Ensure that sheets collection exists in the workbook
-		if(workbookPart.Workbook.GetFirstChild<Sheets>() == null)
+		if (workbookPart.Workbook.GetFirstChild<Sheets>() == null)
 		{
 			workbookPart.Workbook.AppendChild(new Sheets());
 		}
@@ -3379,6 +3383,248 @@ public static partial class Common
 		return new CellReference(table.Reference!.Value!.Split(':')[0]);
 	}
 
+	// Caches the ordered property array and the header-name→property map for ReadExcelFileToEnumerable.
+	private sealed class ExcelTypeInfo
+	{
+		public PropertyInfo[] Ordered { get; }
+		public Dictionary<string, PropertyInfo> ByColumnName { get; }
+
+		public ExcelTypeInfo(Type type)
+		{
+			Ordered = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanWrite).ToArray();
+			ByColumnName = new(StringComparer.OrdinalIgnoreCase);
+			foreach (PropertyInfo p in Ordered)
+			{
+				ByColumnName.TryAdd(p.Name, p);
+			}
+			
+			// Attribute names are written second so [ExcelColumn] takes priority over property name.
+			foreach (PropertyInfo p in Ordered)
+			{
+				string? attrName = p.GetCustomAttribute<ExcelColumnAttribute>()?.Name;
+				if (attrName != null)
+				{
+					ByColumnName[attrName] = p;
+				}
+			}
+		}
+	}
+
+	private static readonly ConcurrentDictionary<Type, ExcelTypeInfo> ExcelTypeInfoCache = new();
+	// Compiled expression-tree setter per property — avoids PropertyInfo.SetValue reflection on every cell.
+	private static readonly ConcurrentDictionary<PropertyInfo, Action<object, object?>> ExcelSetterCache = new();
+
+	private static Action<object, object?> BuildSetter(PropertyInfo property)
+	{
+		ParameterExpression objParam = Expression.Parameter(typeof(object), "obj");
+		ParameterExpression valueParam = Expression.Parameter(typeof(object), "value");
+		BinaryExpression assign = Expression.Assign(Expression.Property(Expression.Convert(objParam, property.DeclaringType!), property), Expression.Convert(valueParam, property.PropertyType));
+		return Expression.Lambda<Action<object, object?>>(assign, objParam, valueParam).CompileFast();
+	}
+
+	private static void SetExcelPropertyValue<T>(T obj, PropertyInfo property, string value)
+	{
+		Type targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+		try
+		{
+			object? result = ConvertExcelCellValue(value, targetType);
+			if (result != null || Nullable.GetUnderlyingType(property.PropertyType) != null)
+			{
+				ExcelSetterCache.GetOrAdd(property, BuildSetter)(obj!, result);
+			}
+		}
+		catch
+		{
+			// Non-convertible values are silently skipped; the property retains its default value
+		}
+	}
+
+	private static object? ConvertExcelCellValue(string value, Type targetType)
+	{
+		// Enums must be handled before GetTypeCode because GetTypeCode returns the underlying TypeCode (e.g. Int32), which would match the wrong arm.
+		if (targetType.IsEnum)
+		{
+			return Enum.TryParse(targetType, value, ignoreCase: true, out object? val) ? val : null;
+		}
+
+		return Type.GetTypeCode(targetType) switch
+		{
+			TypeCode.String => value,
+			TypeCode.Boolean => bool.TryParse(value, out bool val) ? val : value == "1",
+			TypeCode.Byte => byte.TryParse(value, out byte val) ? val : null,
+			TypeCode.Int16 => short.TryParse(value, out short val) ? val : null,
+			TypeCode.Int32 => int.TryParse(value, out int val) ? val : null,
+			TypeCode.Int64 => long.TryParse(value, out long val) ? val : null,
+			TypeCode.Single => float.TryParse(value, out float val) ? val : null,
+			TypeCode.Double => double.TryParse(value, out double val) ? val : null,
+			TypeCode.Decimal => decimal.TryParse(value, out decimal val) ? val : null,
+			TypeCode.DateTime => DateTime.TryParse(value, out DateTime val) ? val : null,
+			_ when targetType == typeof(DateOnly) => DateOnly.TryParse(value, out DateOnly val) ? val : null,
+			_ when targetType == typeof(TimeOnly) => TimeOnly.TryParse(value, out TimeOnly val) ? val : null,
+			_ when targetType == typeof(DateTimeOffset) => DateTimeOffset.TryParse(value, out DateTimeOffset val) ? val : null,
+			_ when targetType == typeof(TimeSpan) => TimeSpan.TryParse(value, out TimeSpan val) ? val : null,
+			_ when targetType == typeof(Guid) => Guid.TryParse(value, out Guid val) ? val : null,
+			_ => Convert.ChangeType(value, targetType)
+		};
+	}
+
+	/// <summary>
+	/// Reads tabular Excel data from a stream and yields one <typeparamref name="T"/> per data row using SAX-style streaming so only one row is held in memory at a time.
+	/// Column headers are matched to <typeparamref name="T"/> properties by name (case-insensitive) or <see cref="ExcelColumnAttribute"/>; when <paramref name="hasHeaders"/> is <see langword="false"/> properties are mapped positionally left-to-right.
+	/// </summary>
+	/// <param name="fileStream">Stream of the Excel file to read.</param>
+	/// <param name="hasHeaders">Whether the first row contains column headers used to map to properties. Defaults to <see langword="true"/>.</param>
+	/// <param name="sheetName">Sheet to read from; uses the first sheet when <see langword="null"/>.</param>
+	/// <param name="startCellReference">Top-left cell of the data range (including the header row when present). Defaults to A1.</param>
+	/// <param name="endCellReference">Bottom-right cell of the data range. Reads until the first fully empty row when <see langword="null"/>.</param>
+	public static IEnumerable<T> ReadExcelFileToEnumerable<T>(this Stream fileStream, bool hasHeaders = true, string? sheetName = null,
+		string? startCellReference = null, string? endCellReference = null) where T : new()
+	{
+		fileStream.Position = 0;
+		using SpreadsheetDocument document = SpreadsheetDocument.Open(fileStream, false);
+		WorkbookPart? workbookPart = document.WorkbookPart;
+		Sheet? sheet = document.GetSheetByName(sheetName);
+		if (sheet == null || workbookPart == null)
+		{
+			yield break;
+		}
+
+		WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
+		SharedStringTablePart? sharedStringPart = workbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+		IReadOnlyDictionary<int, string>? sharedStringIndex = sharedStringPart?.BuildSharedStringIndex();
+
+		CellReference startCell = new(startCellReference ?? "A1");
+		CellReference? endCell = endCellReference != null ? new(endCellReference) : null;
+
+		ExcelTypeInfo typeInfo = ExcelTypeInfoCache.GetOrAdd(typeof(T), static t => new ExcelTypeInfo(t));
+
+		Dictionary<uint, PropertyInfo> columnPropertyMap = [];
+		bool headerRowProcessed = !hasHeaders;
+		bool positionalMappingBuilt = false;
+
+		using OpenXmlReader reader = OpenXmlReader.Create(worksheetPart);
+		while (reader.Read())
+		{
+			if (reader.ElementType != typeof(Row) || !reader.IsStartElement)
+			{
+				continue;
+			}
+
+			Row row = (Row)reader.LoadCurrentElement()!;
+			uint rowIndex = row.RowIndex?.Value ?? 0;
+
+			if (rowIndex < startCell.RowIndex)
+			{
+				continue;
+			}
+			if (endCell != null && rowIndex > endCell.RowIndex)
+			{
+				break;
+			}
+
+			if (!headerRowProcessed)
+			{
+				foreach (Cell cell in row.Elements<Cell>())
+				{
+					if (cell.CellReference == null)
+					{
+						continue;
+					}
+					CellReference cellRef = new(cell.CellReference!);
+					if (cellRef.ColumnIndex < startCell.ColumnIndex)
+					{
+						continue;
+					}
+					if (endCell != null && cellRef.ColumnIndex > endCell.ColumnIndex)
+					{
+						break;
+					}
+
+					string header = cell.GetCellValue(sharedStringIndex);
+					if (typeInfo.ByColumnName.TryGetValue(header, out PropertyInfo? prop))
+						columnPropertyMap[cellRef.ColumnIndex] = prop;
+				}
+				headerRowProcessed = true;
+				continue;
+			}
+
+			if (!hasHeaders && !positionalMappingBuilt)
+			{
+				uint colIdx = startCell.ColumnIndex;
+				foreach (PropertyInfo prop in typeInfo.Ordered)
+				{
+					columnPropertyMap[colIdx++] = prop;
+				}
+				positionalMappingBuilt = true;
+			}
+
+			T item = new();
+			bool rowHasData = false;
+
+			foreach (Cell cell in row.Elements<Cell>())
+			{
+				if (cell.CellReference == null)
+				{
+					continue;
+				}
+
+				CellReference cellRef = new(cell.CellReference!);
+				if (cellRef.ColumnIndex < startCell.ColumnIndex)
+				{
+					continue;
+				}
+
+				if (endCell != null && cellRef.ColumnIndex > endCell.ColumnIndex)
+				{
+					break;
+				}
+
+				if (!columnPropertyMap.TryGetValue(cellRef.ColumnIndex, out PropertyInfo? prop))
+				{
+					continue;
+				}
+
+				string cellValue = cell.GetCellValue(sharedStringIndex);
+				if (!string.IsNullOrWhiteSpace(cellValue))
+				{
+					rowHasData = true;
+					SetExcelPropertyValue(item, prop, cellValue);
+				}
+			}
+
+			if (!rowHasData && endCell == null)
+			{
+				break;
+			}
+			if (rowHasData)
+			{
+				yield return item;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Asynchronously reads tabular Excel data from a stream and yields one <typeparamref name="T"/> per data row.
+	/// SAX parsing is offloaded to the thread pool so the caller's synchronization context is not blocked during file reading.
+	/// </summary>
+	/// <param name="fileStream">Stream of the Excel file to read.</param>
+	/// <param name="hasHeaders">Whether the first row contains column headers. Defaults to <see langword="true"/>.</param>
+	/// <param name="sheetName">Sheet to read from; uses the first sheet when <see langword="null"/>.</param>
+	/// <param name="startCellReference">Top-left cell of the data range. Defaults to A1.</param>
+	/// <param name="endCellReference">Bottom-right cell of the data range. Reads until the first fully empty row when <see langword="null"/>.</param>
+	/// <param name="cancellationToken">Token to cancel enumeration between rows.</param>
+	public static async IAsyncEnumerable<T> ReadExcelFileToAsyncEnumerable<T>(this Stream fileStream, bool hasHeaders = true, string? sheetName = null,
+		string? startCellReference = null, string? endCellReference = null,
+		[EnumeratorCancellation] CancellationToken cancellationToken = default) where T : new()
+	{
+		await Task.Yield();
+		foreach (T item in fileStream.ReadExcelFileToEnumerable<T>(hasHeaders, sheetName, startCellReference, endCellReference))
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			yield return item;
+		}
+	}
+
 	// Helper classes to deal with cell references more easily
 	public partial class CellReference
 	{
@@ -3474,4 +3720,13 @@ public static partial class Common
 			return new string(chars[(pos + 1)..]);
 		}
 	}
+}
+
+/// <summary>
+/// Maps an Excel column header to a property when the header name differs from the property name.
+/// </summary>
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class ExcelColumnAttribute(string name) : Attribute
+{
+	public string Name { get; } = name;
 }

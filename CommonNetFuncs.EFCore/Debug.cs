@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
@@ -49,19 +49,34 @@ public static partial class Debug
 		List<(string Name, string Literal)> parameters = [];
 
 		int commandStartIndex = 0;
-		foreach (string line in lines)
+		while (commandStartIndex < lines.Length)
 		{
-			Match match = ParameterCommentLineRegex().Match(line);
-			if (!match.Success)
+			string entry = lines[commandStartIndex];
+			int linesConsumed = 1;
+			if (!entry.StartsWith("-- ", StringComparison.Ordinal))
 			{
 				break; // Npgsql's parameter comments always precede the command text as a contiguous block
+			}
+
+			Match match = ParameterCommentLineRegex().Match(entry);
+			// A parameter value containing line breaks spans multiple lines; keep appending until the entry is complete
+			while (!match.Success && commandStartIndex + linesConsumed < lines.Length && !lines[commandStartIndex + linesConsumed].StartsWith("-- ", StringComparison.Ordinal))
+			{
+				entry += "\n" + lines[commandStartIndex + linesConsumed];
+				linesConsumed++;
+				match = ParameterCommentLineRegex().Match(entry);
+			}
+
+			if (!match.Success)
+			{
+				break;
 			}
 
 			string? dbType = match.Groups["dbType"].Success ? match.Groups["dbType"].Value : null;
 			string literal = match.Groups["array"].Success ? FormatPostgreSqlArrayLiteral(match.Groups["array"].Value) :
 				match.Groups["null"].Success ? "NULL" : FormatPostgreSqlLiteral(match.Groups["value"].Value, dbType);
 			parameters.Add((match.Groups["name"].Value, literal));
-			commandStartIndex++;
+			commandStartIndex += linesConsumed;
 		}
 
 		string commandText = string.Join('\n', lines.Skip(commandStartIndex)).TrimStart('\n');
@@ -109,6 +124,11 @@ public static partial class Debug
 			}
 		}
 
+		if (string.Equals(dbType, "Date", StringComparison.Ordinal) && DateTime.TryParse(rawValue, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
+		{
+			return $"'{date:yyyy-MM-dd}'::date";
+		}
+
 		return rawValue switch
 		{
 			"True" => "TRUE",
@@ -127,9 +147,9 @@ public static partial class Debug
 			return "ARRAY[NULL::text]"; // Element type is unknown for an empty array; a single untyped NULL keeps the literal valid.
 		}
 
-		MatchCollection elementMatches = ArrayElementRegex().Matches(inner);
-		IEnumerable<string> elements = elementMatches.Count > 0 ?
-			elementMatches.Select(elementMatch => FormatPostgreSqlArrayElementLiteral(elementMatch.Groups[1].Value)) :
+		// Npgsql does not escape apostrophes inside elements, so split on the "', '" separators rather than matching quote pairs.
+		IEnumerable<string> elements = inner.Length >= 2 && inner[0] == '\'' && inner[^1] == '\'' ?
+			inner[1..^1].Split("', '").Select(FormatPostgreSqlArrayElementLiteral) :
 			inner.Split(',', StringSplitOptions.TrimEntries).Select(FormatPostgreSqlArrayElementLiteral);
 
 		return $"ARRAY[{string.Join(", ", elements)}]";
@@ -150,12 +170,8 @@ public static partial class Debug
 	/// parameters (e.g. "-- @name='value' (DbType = X)") but not for positional raw-SQL parameters (e.g. "-- p0='value'",
 	/// "-- p1={ 'a', 'b' } (DbType = X)", or "-- p2=NULL (DbType = X)").
 	/// </summary>
-	[GeneratedRegex(@"^-- @?(?<name>\w+)=(?:'(?<value>.*)'|(?<array>\{.*\})|(?<null>NULL))(?: \(Nullable = \w+\))?(?: \(DbType = (?<dbType>\w+)\))?$")]
+	[GeneratedRegex(@"^-- @?(?<name>\w+)=(?:'(?<value>.*)'|(?<array>\{.*\})|(?<null>NULL))(?: \(Nullable = \w+\))?(?: \(DbType = (?<dbType>\w+)\))?$", RegexOptions.Singleline)]
 	private static partial Regex ParameterCommentLineRegex();
-
-	/// <summary>Matches a single quoted element within an array-parameter comment value, e.g. the "'175'" in "{ '175', '176' }".</summary>
-	[GeneratedRegex(@"'((?:[^']|'')*)'")]
-	private static partial Regex ArrayElementRegex();
 
 	[GeneratedRegex(@"[+-]\d{2}:\d{2}$")]
 	private static partial Regex TimeZoneOffsetSuffixRegex();

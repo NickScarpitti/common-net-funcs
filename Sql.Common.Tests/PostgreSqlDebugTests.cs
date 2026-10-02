@@ -224,5 +224,86 @@ public sealed class PostgreSqlDebugTests
 		nameIndex.ShouldBeGreaterThan(idIndex);
 		result.ShouldContain("SELECT * FROM test_table WHERE id = 1 AND name = 'Test'");
 	}
+
+	[Fact]
+	public void RenderCommandAsScript_ShouldInlineStringArrayParameter_AsArrayLiteral()
+	{
+		using NpgsqlCommand cmd = new("SELECT * FROM t WHERE name = ANY(@names)");
+		cmd.Parameters.Add(new NpgsqlParameter("names", NpgsqlDbType.Array | NpgsqlDbType.Text) { Value = new[] { "it's", "a,b" } });
+
+		string result = PostgreSqlDebug.RenderCommandAsScript(cmd);
+
+		result.ShouldContain("SELECT * FROM t WHERE name = ANY(ARRAY['it''s', 'a,b'])");
+		result.ShouldNotContain("System.String[]");
+	}
+
+	[Fact]
+	public void RenderCommandAsScript_ShouldNotNestArrayLiteral_WhenSqlWrapsPlaceholderInArray()
+	{
+		using NpgsqlCommand cmd = new("SELECT * FROM t WHERE id::text LIKE ANY(ARRAY[@ids])");
+		cmd.Parameters.Add(new NpgsqlParameter("ids", NpgsqlDbType.Array | NpgsqlDbType.Integer) { Value = new[] { 1, 2 } });
+
+		string result = PostgreSqlDebug.RenderCommandAsScript(cmd);
+
+		result.ShouldContain("LIKE ANY(ARRAY[1, 2])");
+		result.ShouldNotContain("ARRAY[ARRAY");
+	}
+
+	[Fact]
+	public void RenderCommandAsScript_ShouldInlineEmptyArray_AsEmptyArrayLiteral()
+	{
+		using NpgsqlCommand cmd = new("SELECT * FROM t WHERE name = ANY(@names)");
+		cmd.Parameters.Add(new NpgsqlParameter("names", NpgsqlDbType.Array | NpgsqlDbType.Text) { Value = Array.Empty<string>() });
+
+		string result = PostgreSqlDebug.RenderCommandAsScript(cmd);
+
+		result.ShouldContain("ANY('{}')");
+	}
+
+	[Fact]
+	public void RenderCommandAsScript_ShouldFormatDateOnly_AsIsoDate()
+	{
+		using NpgsqlCommand cmd = new("SELECT * FROM t WHERE d = @d");
+		cmd.Parameters.Add(new NpgsqlParameter("d", NpgsqlDbType.Date) { Value = new DateOnly(2024, 1, 2) });
+
+		string result = PostgreSqlDebug.RenderCommandAsScript(cmd);
+
+		result.ShouldContain("d = '2024-01-02'::date");
+	}
+
+	[Fact]
+	public void RenderCommandAsScript_ShouldFormatEnum_AsUnderlyingNumber()
+	{
+		using NpgsqlCommand cmd = new("SELECT * FROM t WHERE k = @k");
+		cmd.Parameters.Add(new NpgsqlParameter("k", NpgsqlDbType.Integer) { Value = DayOfWeek.Friday });
+
+		string result = PostgreSqlDebug.RenderCommandAsScript(cmd);
+
+		result.ShouldContain("k = 5");
+	}
+
+	[Fact]
+	public void RenderCommandAsScript_ShouldPreserveMultilineValue_AndSubsequentParameters()
+	{
+		using NpgsqlCommand cmd = new("SELECT * FROM t WHERE a = @a AND b = @b");
+		cmd.Parameters.Add(new NpgsqlParameter("a", NpgsqlDbType.Text) { Value = "line1\nline2" });
+		cmd.Parameters.Add(new NpgsqlParameter("b", NpgsqlDbType.Integer) { Value = 9 });
+
+		string result = PostgreSqlDebug.RenderCommandAsScript(cmd);
+
+		result.ShouldContain("a = 'line1\nline2' AND b = 9");
+	}
+
+	[Fact]
+	public void RenderCommandAsScript_ShouldNotResubstitute_PlaceholderTextInsideValue()
+	{
+		using NpgsqlCommand cmd = new("SELECT * FROM t WHERE a = @a AND b = @b");
+		cmd.Parameters.Add(new NpgsqlParameter("a", NpgsqlDbType.Text) { Value = "@b" });
+		cmd.Parameters.Add(new NpgsqlParameter("b", NpgsqlDbType.Integer) { Value = 9 });
+
+		string result = PostgreSqlDebug.RenderCommandAsScript(cmd);
+
+		result.ShouldContain("a = '@b' AND b = 9");
+	}
 }
 #endif

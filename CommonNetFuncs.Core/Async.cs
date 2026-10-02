@@ -513,7 +513,7 @@ public static class Async
 			TResult resultObject = await task.ConfigureAwait(false);
 			if (resultObject != null && obj != null)
 			{
-				obj.AddRangeParallel(resultObject);
+				obj.AddRange(resultObject);
 			}
 		}
 		catch (Exception ex)
@@ -536,7 +536,7 @@ public static class Async
 			TResult resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null && obj != null)
 			{
-				obj.AddRangeParallel(resultObject);
+				obj.AddRange(resultObject);
 			}
 		}
 		catch (Exception ex)
@@ -565,7 +565,7 @@ public static class Async
 			TResult resultObject = await task().ConfigureAwait(false);
 			if (resultObject != null && obj != null)
 			{
-				obj.AddRangeParallel(resultObject, cancellationToken: cancellationToken);
+				obj.AddRange(resultObject, cancellationToken);
 			}
 		}
 		catch (Exception ex)

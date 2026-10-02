@@ -8,7 +8,7 @@ using NpgsqlTypes;
 namespace CommonNetFuncs.Sql.PostgreSql;
 
 #if NET5_0_OR_GREATER
-public static class Debug
+public static partial class Debug
 {
 	/// <summary>
 	/// Renders a <see cref="DbCommand"/> as a self-contained SQL script that can be pasted directly into
@@ -25,6 +25,8 @@ public static class Debug
 		if (cmd.Parameters.Count > 0)
 		{
 			script.AppendLine("-- ==== Parameters (inlined as literals in the command below) ====");
+			Dictionary<string, string> literalsByName = new(StringComparer.Ordinal);
+			Dictionary<int, string> literalsByOrdinal = [];
 			int ordinal = 0;
 			foreach (DbParameter p in cmd.Parameters)
 			{
@@ -33,10 +35,16 @@ public static class Debug
 				string label = !string.IsNullOrEmpty(name) ? $"@{name}" : $"${ordinal + 1}";
 				script.AppendLine($"-- {label} [{GetPostgreSqlTypeName(p)}] = {literal}");
 
-				commandText = SubstituteParameter(commandText, name, ordinal, literal);
+				if (!string.IsNullOrEmpty(name))
+				{
+					literalsByName[name] = literal;
+				}
+				literalsByOrdinal[ordinal + 1] = literal;
 				ordinal++;
 			}
 			script.AppendLine();
+
+			commandText = SubstituteParameters(commandText, literalsByName, literalsByOrdinal);
 		}
 
 		script.AppendLine("-- ==== Command ====");
@@ -45,18 +53,37 @@ public static class Debug
 		return script.ToString();
 	}
 
-	private static string SubstituteParameter(string commandText, string name, int ordinal, string literal)
+	/// <summary>
+	/// Replaces every placeholder in a single pass, so text inside an already-inlined value (e.g. a string containing "@name2") is never re-substituted.
+	/// An explicit "ARRAY[@param]" wrapper around an array parameter is replaced as a whole so the array literal isn't nested inside another ARRAY[...].
+	/// </summary>
+	private static string SubstituteParameters(string commandText, Dictionary<string, string> literalsByName, Dictionary<int, string> literalsByOrdinal)
 	{
-		string result = commandText;
-		if (!string.IsNullOrEmpty(name))
+		return PlaceholderRegex().Replace(commandText, match =>
 		{
-			result = Regex.Replace(result, $@"[@:]{Regex.Escape(name)}(?!\w)", literal.Replace("$", "$$"));
-		}
+			bool isWrapped = match.Groups["wrapped"].Success;
+			string? literal = null;
+			if (match.Groups["name"].Success)
+			{
+				literalsByName.TryGetValue(match.Groups["name"].Value, out literal);
+			}
+			else if (int.TryParse(match.Groups["ordinal"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out int position))
+			{
+				literalsByOrdinal.TryGetValue(position, out literal);
+			}
 
-		result = Regex.Replace(result, $@"\${ordinal + 1}(?!\d)", literal.Replace("$", "$$"));
+			if (literal == null)
+			{
+				return match.Value;
+			}
 
-		return result;
+			return isWrapped && !literal.StartsWith("ARRAY[", StringComparison.Ordinal) && !literal.StartsWith("'{", StringComparison.Ordinal) ?
+				$"ARRAY[{literal}]" : literal;
+		});
 	}
+
+	[GeneratedRegex(@"(?<wrapped>ARRAY\s*\[\s*)?(?:(?<![:\w])[@:](?<name>\w+)(?!\w)|\$(?<ordinal>\d+)(?!\d))(?(wrapped)\s*\])", RegexOptions.IgnoreCase)]
+	private static partial Regex PlaceholderRegex();
 
 	private static string GetPostgreSqlTypeName(DbParameter parameter)
 	{
@@ -64,6 +91,7 @@ public static class Debug
 
 		return npgsqlDbType switch
 		{
+			_ when npgsqlDbType.HasFlag(NpgsqlDbType.Array) => $"{(npgsqlDbType & ~NpgsqlDbType.Array).ToString().ToLowerInvariant()}[]",
 			NpgsqlDbType.Varchar or NpgsqlDbType.Char => $"{npgsqlDbType.ToString().ToLowerInvariant()}({(parameter.Size <= 0 ? "unbounded" : parameter.Size.ToString(CultureInfo.InvariantCulture))})",
 			NpgsqlDbType.Numeric => $"numeric({(parameter.Precision == 0 ? 18 : parameter.Precision)},{parameter.Scale})",
 			_ => npgsqlDbType.ToString().ToLowerInvariant()
@@ -83,6 +111,10 @@ public static class Debug
 		DateTimeOffset => NpgsqlDbType.TimestampTz,
 		Guid => NpgsqlDbType.Uuid,
 		byte[] => NpgsqlDbType.Bytea,
+		DateOnly => NpgsqlDbType.Date,
+		TimeOnly => NpgsqlDbType.Time,
+		TimeSpan => NpgsqlDbType.Interval,
+		System.Collections.IEnumerable and not string => NpgsqlDbType.Array | NpgsqlDbType.Text,
 		_ => NpgsqlDbType.Varchar
 	};
 
@@ -99,11 +131,27 @@ public static class Debug
 			bool b => b ? "TRUE" : "FALSE",
 			DateTime dt => $"'{dt:yyyy-MM-dd HH:mm:ss.ffffff}'::timestamp",
 			DateTimeOffset dto => $"'{dto:yyyy-MM-dd HH:mm:ss.ffffffzzz}'::timestamptz",
+			DateOnly d => $"'{d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}'::date",
+			TimeOnly t => $"'{t.ToString("HH:mm:ss.ffffff", CultureInfo.InvariantCulture)}'::time",
+			TimeSpan ts => $"'{ts.ToString("c", CultureInfo.InvariantCulture)}'::interval",
+			Enum e => Convert.ToString(Convert.ChangeType(e, e.GetTypeCode(), CultureInfo.InvariantCulture), CultureInfo.InvariantCulture)!,
 			Guid g => $"'{g}'::uuid",
 			byte[] bytes => $"'\\x{Convert.ToHexString(bytes).ToLowerInvariant()}'::bytea",
 			decimal or double or float or long or int or short or byte => Convert.ToString(value, CultureInfo.InvariantCulture)!,
-			_ => $"'{value.ToString()?.Replace("'", "''")}'"
+			System.Collections.IEnumerable items => FormatArrayLiteral(items),
+			_ => $"'{Convert.ToString(value, CultureInfo.InvariantCulture)?.Replace("'", "''")}'"
 		};
+	}
+
+	private static string FormatArrayLiteral(System.Collections.IEnumerable items)
+	{
+		List<string> elements = [];
+		foreach (object? item in items)
+		{
+			elements.Add(FormatSqlLiteral(item));
+		}
+
+		return elements.Count == 0 ? "'{}'" : $"ARRAY[{string.Join(", ", elements)}]";
 	}
 }
 #endif

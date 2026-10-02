@@ -219,6 +219,29 @@ public sealed class DebugTests
 		commandText.ShouldNotContain("ARRAY[1, 2, 3]");
 	}
 
+	[Fact]
+	public void RenderQueryAsScript_WithPostgreSqlDialect_InlinesFromSqlInterpolatedParameters()
+	{
+		using DebugTestDbContext context = CreateContext(o => o.UseNpgsql(PostgreSqlConnectionString));
+		string[] ids = ["1", "2"];
+		List<string> names = ["a", "b"];
+		string? nul = null;
+		DateOnly? d = new DateOnly(2024, 1, 2);
+		string empty = string.Empty;		string[] emptyArr = [];
+		bool f = false;
+		List<string> weird = ["it's", "a,b", "100%"];
+		string? multi = "line1\nline2";
+		int? n = 5;
+		FormattableString sql = $"""
+			SELECT * FROM "Entities" WHERE ({nul}::text IS NULL OR "Name" LIKE ANY(ARRAY[{ids}])) AND ({d}::text IS NULL) AND ({n}::text IS NULL OR "Value" = {n}) AND "Name" = ANY(ARRAY[{names.ToArray()}]) AND "Id" = {Microsoft.EntityFrameworkCore.EntityState.Added} AND {empty} = {f} AND x = ANY(ARRAY[{emptyArr}]) AND y = ANY(ARRAY[{weird.ToArray()}]) AND {multi} = 1 AND {d} BETWEEN {d} AND {d}
+			""";
+		string result = context.Entities.FromSqlInterpolated(sql).AsNoTracking().RenderQueryAsScript(SqlDialect.PostgreSql);
+
+		result[result.IndexOf("-- ==== Command ====", StringComparison.Ordinal)..].ShouldNotContain("@p");
+		result.ShouldContain("ARRAY['it''s', 'a,b', '100%']");
+		result.ShouldContain("'2024-01-02'::date");
+	}
+
 	private static DebugTestDbContext CreateContext(Action<DbContextOptionsBuilder<DebugTestDbContext>> configure)
 	{
 		DbContextOptionsBuilder<DebugTestDbContext> builder = new();

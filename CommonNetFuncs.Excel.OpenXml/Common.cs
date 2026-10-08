@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -33,6 +35,8 @@ public static partial class Common
 	// Pre-computed style-id sets used by CalculateWidth — static to avoid a new HashSet allocation on every call
 	private static readonly HashSet<uint> NumberStyleIds = [5, 6, 7, 8];
 	private static readonly HashSet<uint> BoldStyleIds = [1, 2, 3, 4, 6, 7, 8];
+
+	private const string DefaultDateFormat = "MM/dd/yyyy";
 
 	private const string WorksheetNotPartOfWorkbookError = "Worksheet is not part of a workbook.";
 
@@ -82,7 +86,8 @@ public static partial class Common
 
 		// Add a blank WorksheetPart
 		WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
-		worksheetPart.Worksheet = new Worksheet(new SheetData());
+		worksheetPart.Worksheet = new Worksheet();
+		worksheetPart.Worksheet.AppendChild(new SheetData());
 
 		Sheets sheets = workbookPart.Workbook.GetFirstChild<Sheets>() ?? workbookPart.Workbook.AppendChild(new Sheets());
 		string worksheetPartId = workbookPart.GetIdOfPart(worksheetPart);
@@ -102,7 +107,7 @@ public static partial class Common
 			Name = sheetName ?? ("Sheet" + sheetId)
 		};
 
-		sheets.Append(sheet);
+		sheets.AppendChild(sheet);
 		return sheetId;
 	}
 
@@ -296,17 +301,17 @@ public static partial class Common
 				if (nextRow != null)
 					sheetData!.InsertBefore(row, nextRow);
 				else
-					sheetData?.Append(row);
+					sheetData?.AppendChild(row);
 			}
 			Cell? cell = row.GetCell(targetColIndex);
 			if (cell == null)
 			{
 				cell = new Cell() { CellReference = new CellReference(targetColIndex, targetRowIndex).ToString() };
-				Cell? nextCell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference != null && new CellReference(c.CellReference!).ColumnIndex > targetColIndex);
+				Cell? nextCell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference?.Value is { } cellRefText && new CellReference(cellRefText).ColumnIndex > targetColIndex);
 				if (nextCell != null)
 					row.InsertBefore(cell, nextCell);
 				else
-					row.Append(cell);
+					row.AppendChild(cell);
 			}
 			return cell;
 		}
@@ -348,10 +353,10 @@ public static partial class Common
 	/// <returns>The offset Cell, or null if not found</returns>
 	public static Cell? GetCellOffset(this Cell startCell, int colOffset = 0, int rowOffset = 0)
 	{
-		if ((startCell.Parent is Row row) && (row.Parent is SheetData) && (startCell.CellReference != null))
+		if ((startCell.Parent is Row row) && (row.Parent is SheetData) && (startCell.CellReference?.Value is { } startCellRefText))
 		{
 			Worksheet worksheet = startCell.GetWorksheetFromCell();
-			CellReference startCellReference = new(startCell.CellReference!);
+			CellReference startCellReference = new(startCellRefText);
 			return worksheet.GetCellFromCoordinates(((int)startCellReference.ColumnIndex) + colOffset, ((int)startCellReference.RowIndex) + rowOffset);
 		}
 		return null;
@@ -385,14 +390,14 @@ public static partial class Common
 				}
 				else
 				{
-					sheetData?.Append(row);
+					sheetData?.AppendChild(row);
 				}
 			}
 			Cell? cell = row.GetCell(targetColIndex);
 			if (cell == null)
 			{
 				cell = new() { CellReference = new CellReference(targetColIndex, targetRowIndex).ToString() };
-				Cell? nextCell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference != null && new CellReference(c.CellReference!).ColumnIndex > targetColIndex);
+				Cell? nextCell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference?.Value is { } cellRefText && new CellReference(cellRefText).ColumnIndex > targetColIndex);
 				if (nextCell != null)
 				{
 					// Ensure ordering of cells within the row is maintained when adding a new cell
@@ -400,7 +405,7 @@ public static partial class Common
 				}
 				else
 				{
-					row.Append(cell);
+					row.AppendChild(cell);
 				}
 			}
 			return cell;
@@ -501,7 +506,7 @@ public static partial class Common
 				{
 					WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!);
 					Cell? cell = worksheetPart.Worksheet?.GetCellFromReference(cellReference, colOffset, rowOffset);
-					return (cell?.CellReference != null) ? new(cell.CellReference!) : null;
+					return (cell?.CellReference?.Value is { } cellRefText) ? new(cellRefText) : null;
 				}
 			}
 			return null;
@@ -647,7 +652,7 @@ public static partial class Common
 			stylesheet.AddChild(new Borders());
 			borders = stylesheet.Elements<Borders>().First();
 			Border defaultBorder = new(new LeftBorder(), new RightBorder(), new TopBorder(), new BottomBorder());
-			borders.Append(defaultBorder);
+			borders.AppendChild(defaultBorder);
 #pragma warning disable S2971 // LINQ expressions should be simplified
 			borders.Count = (uint)borders.Count();
 #pragma warning restore S2971 // LINQ expressions should be simplified
@@ -682,10 +687,9 @@ public static partial class Common
 					PatternType = PatternValues.Gray125
 				}
 			};
-			fills.Append(defaultFill1);
-			fills.Append(defaultFill2);
+			fills.AppendChild(defaultFill1);
+			fills.AppendChild(defaultFill2);
 
-			// fills.Append(defaultFill3);
 #pragma warning disable S2971 // LINQ expressions should be simplified
 			fills.Count = (uint)fills.Count();
 #pragma warning restore S2971 // LINQ expressions should be simplified
@@ -714,7 +718,7 @@ public static partial class Common
 				FontFamilyNumbering = new() { Val = 2 },
 				FontScheme = new() { Val = FontSchemeValues.Minor }
 			};
-			fonts.Append(defaultFont);
+			fonts.AppendChild(defaultFont);
 #pragma warning disable S2971 // LINQ expressions should be simplified
 			fonts.Count = (uint)fonts.Count();
 #pragma warning restore S2971 // LINQ expressions should be simplified
@@ -742,7 +746,7 @@ public static partial class Common
 				FillId = 0,
 				BorderId = 0
 			};
-			cellFormats.Append(defaultCellFormat);
+			cellFormats.AppendChild(defaultCellFormat);
 #pragma warning disable S2971 // LINQ expressions should be simplified
 			cellFormats.Count = (uint)cellFormats.Count();
 #pragma warning restore S2971 // LINQ expressions should be simplified
@@ -790,10 +794,10 @@ public static partial class Common
 
 				if (!elementCache.TryGetValue($"{ep}_border", out uint hBorder))
 				{
-					border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
-						new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
-					borders.Append(border);
-					hBorder = ((uint)borders.Count()) - 1;
+					border = new(new LeftBorder { Color = new Color() { Auto = true }, Style = BorderStyleValues.Thin }, new RightBorder { Color = new Color() { Auto = true }, Style = BorderStyleValues.Thin },
+						new TopBorder { Color = new Color() { Auto = true }, Style = BorderStyleValues.Thin }, new BottomBorder { Color = new Color() { Auto = true }, Style = BorderStyleValues.Thin });
+					borders.AppendChild(border);
+					hBorder = ((uint)borders.ChildElements.Count) - 1;
 					elementCache[$"{ep}_border"] = hBorder;
 				}
 				cellFormat.BorderId = hBorder;
@@ -812,8 +816,8 @@ public static partial class Common
 							}
 						},
 					};
-					fills.Append(fill);
-					hFill = ((uint)fills.Count()) - 1;
+					fills.AppendChild(fill);
+					hFill = ((uint)fills.ChildElements.Count) - 1;
 					elementCache[$"{ep}_fill"] = hFill;
 				}
 				cellFormat.FillId = hFill;
@@ -834,10 +838,10 @@ public static partial class Common
 
 				if (!elementCache.TryGetValue($"{ep}_border", out uint hBorder2))
 				{
-					border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
-						new TopBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Medium }, new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
-					borders.Append(border);
-					hBorder2 = ((uint)borders.Count()) - 1;
+					border = new(new LeftBorder { Color = new Color() { Auto = true }, Style = BorderStyleValues.Thin }, new RightBorder { Color = new Color() { Auto = true }, Style = BorderStyleValues.Thin },
+						new TopBorder { Color = new Color() { Auto = true }, Style = BorderStyleValues.Medium }, new BottomBorder { Color = new Color() { Auto = true }, Style = BorderStyleValues.Thin });
+					borders.AppendChild(border);
+					hBorder2 = ((uint)borders.ChildElements.Count) - 1;
 					elementCache[$"{ep}_border"] = hBorder2;
 				}
 				cellFormat.BorderId = hBorder2;
@@ -856,8 +860,8 @@ public static partial class Common
 							}
 						},
 					};
-					fills.Append(fill);
-					hFill2 = ((uint)fills.Count()) - 1;
+					fills.AppendChild(fill);
+					hFill2 = ((uint)fills.ChildElements.Count) - 1;
 					elementCache[$"{ep}_fill"] = hFill2;
 				}
 				cellFormat.FillId = hFill2;
@@ -878,10 +882,10 @@ public static partial class Common
 
 				if (!elementCache.TryGetValue($"{ep}_border", out uint bBorder))
 				{
-					border = new(new LeftBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin }, new RightBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin },
-						new BottomBorder(new Color() { Auto = true }) { Style = BorderStyleValues.Thin });
-					borders.Append(border);
-					bBorder = ((uint)borders.Count()) - 1;
+					border = new(new LeftBorder { Color = new Color() { Auto = true }, Style = BorderStyleValues.Thin }, new RightBorder { Color = new Color() { Auto = true }, Style = BorderStyleValues.Thin },
+						new BottomBorder { Color = new Color() { Auto = true }, Style = BorderStyleValues.Thin });
+					borders.AppendChild(border);
+					bBorder = ((uint)borders.ChildElements.Count) - 1;
 					elementCache[$"{ep}_border"] = bBorder;
 				}
 				cellFormat.BorderId = bBorder;
@@ -911,8 +915,8 @@ public static partial class Common
 							}
 						},
 					};
-					fills.Append(fill);
-					eFill = ((uint)fills.Count()) - 1;
+					fills.AppendChild(fill);
+					eFill = ((uint)fills.ChildElements.Count) - 1;
 					elementCache[$"{ep}_fill"] = eFill;
 				}
 				cellFormat.FillId = eFill;
@@ -933,8 +937,8 @@ public static partial class Common
 							}
 						},
 					};
-					fills.Append(fill);
-					blFill = ((uint)fills.Count()) - 1;
+					fills.AppendChild(fill);
+					blFill = ((uint)fills.ChildElements.Count) - 1;
 					elementCache[$"{ep}_fill"] = blFill;
 				}
 				cellFormat.FillId = blFill;
@@ -963,8 +967,8 @@ public static partial class Common
 							}
 						},
 					};
-					fills.Append(fill);
-					wFill = ((uint)fills.Count()) - 1;
+					fills.AppendChild(fill);
+					wFill = ((uint)fills.ChildElements.Count) - 1;
 					elementCache[$"{ep}_fill"] = wFill;
 				}
 				cellFormat.FillId = wFill;
@@ -1000,7 +1004,7 @@ public static partial class Common
 
 		// Check if an identical CellFormat already exists
 		CellFormats cellFormats = stylesheet.GetCellFormats()!;
-		for (uint i = 0; i < (uint)cellFormats.Count(); i++)
+		for (uint i = 0; i < (uint)cellFormats.ChildElements.Count; i++)
 		{
 			if (CellFormatsAreEqual(cellFormat, cellFormats.Elements<CellFormat>().ElementAt((int)i)))
 			{
@@ -1010,19 +1014,18 @@ public static partial class Common
 		}
 
 		// If no matching format found, add the new one
-		// cellFormat.FormatId = (uint)cellFormats.Count() - 1;
-		cellFormats.Append(cellFormat);
-		uint newFormatId = ((uint)cellFormats.Count()) - 1;
+		cellFormats.AppendChild(cellFormat);
+		uint newFormatId = ((uint)cellFormats.ChildElements.Count) - 1;
 
 		lock (formatCacheLock)
 		{
 			formatCache[formatKey] = newFormatId;
 		}
 
-		fonts.Count = (uint)fonts.Count();
-		fills.Count = (uint)fills.Count();
-		borders.Count = (uint)borders.Count();
-		cellFormats.Count = (uint)cellFormats.Count();
+		fonts.Count = (uint)fonts.ChildElements.Count;
+		fills.Count = (uint)fills.ChildElements.Count;
+		borders.Count = (uint)borders.ChildElements.Count;
+		cellFormats.Count = (uint)cellFormats.ChildElements.Count;
 
 		return newFormatId;
 	}
@@ -1055,9 +1058,9 @@ public static partial class Common
 				font.FontName = new() { Val = nameof(EFontName.Calibri) };
 				break;
 		}
-		fonts.Append(font);
-		fonts.Count = (uint)fonts.Count();
-		return ((uint)fonts.Count()) - 1;
+		fonts.AppendChild(font);
+		fonts.Count = (uint)fonts.ChildElements.Count;
+		return ((uint)fonts.ChildElements.Count) - 1;
 	}
 
 	/// <summary>
@@ -1203,7 +1206,7 @@ public static partial class Common
 			stylesheet.AddChild(new CellFormats());
 			cellFormats = stylesheet.Elements<CellFormats>().First();
 		}
-		cellFormats.Append(cellFormat);
+		cellFormats.AppendChild(cellFormat);
 #pragma warning disable S2971 // LINQ expressions should be simplified
 		cellFormats.Count = (uint)cellFormats.Count();
 		uint newFormatId = ((uint)cellFormats.Count()) - 1;
@@ -1238,9 +1241,9 @@ public static partial class Common
 			stylesheet.AddChild(new Fonts());
 			fonts = stylesheet.Elements<Fonts>().First();
 		}
-		fonts.Append(font);
-		fonts.Count = (uint)fonts.Count();
-		uint newFontId = ((uint)fonts.Count()) - 1;
+		fonts.AppendChild(font);
+		fonts.Count = (uint)fonts.ChildElements.Count;
+		uint newFontId = ((uint)fonts.ChildElements.Count) - 1;
 		cache.FontCache[fontHash] = newFontId;
 		return newFontId;
 	}
@@ -1271,9 +1274,9 @@ public static partial class Common
 			stylesheet.AddChild(new Fills());
 			fills = stylesheet.Elements<Fills>().First();
 		}
-		fills.Append(fill);
-		fills.Count = (uint)fills.Count();
-		uint newFillId = ((uint)fills.Count()) - 1;
+		fills.AppendChild(fill);
+		fills.Count = (uint)fills.ChildElements.Count;
+		uint newFillId = ((uint)fills.ChildElements.Count) - 1;
 		cache.FillCache[fillHash] = newFillId;
 		return newFillId;
 	}
@@ -1304,9 +1307,9 @@ public static partial class Common
 			stylesheet.AddChild(new Borders());
 			borders = stylesheet.Elements<Borders>().First();
 		}
-		borders.Append(border);
-		borders.Count = (uint)borders.Count();
-		uint newBorderId = ((uint)borders.Count()) - 1;
+		borders.AppendChild(border);
+		borders.Count = (uint)borders.ChildElements.Count;
+		uint newBorderId = ((uint)borders.ChildElements.Count) - 1;
 		cache.BorderCache[borderHash] = newBorderId;
 		return newBorderId;
 	}
@@ -1355,7 +1358,7 @@ public static partial class Common
 			if (row == null)
 			{
 				row = new Row { RowIndex = rowIndex };
-				sheetData!.Append(row);
+				sheetData!.AppendChild(row);
 			}
 
 			// Check if the cell exists, create if not
@@ -1506,7 +1509,7 @@ public static partial class Common
 		// The text does not exist in the part. Create the SharedStringItem and return its index.
 		// NOTE: Save() is intentionally NOT called here — saving after every single insertion causes O(n²) XML serialization for bulk operations.
 		// The caller must call SharedStringTable.Save() (or SpreadsheetDocument.Save()) once all insertions are done.
-		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text(text)));
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem { Text = new Text(text) });
 
 		return i;
 	}
@@ -1538,7 +1541,7 @@ public static partial class Common
 		}
 
 		int newIndex = shareStringTableCache.Count;
-		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text(text)));
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem { Text = new Text(text) });
 		shareStringTableCache[text] = newIndex; // Update Cache with the new index for future lookups
 		return newIndex;
 	}
@@ -1579,18 +1582,18 @@ public static partial class Common
 			bool showRowStripes = true, bool showColStripes = false)
 	{
 		TableDefinitionPart tableDefinitionPart = worksheet.WorksheetPart!.AddNewPart<TableDefinitionPart>();
-		string rId = worksheet.WorksheetPart!.GetIdOfPart(tableDefinitionPart);
+		string rId = worksheet.WorksheetPart.GetIdOfPart(tableDefinitionPart);
 
 		// Check if TableParts element exists, if not create it
 		TableParts? tableParts = worksheet.Elements<TableParts>().FirstOrDefault();
 		if (tableParts == null)
 		{
 			tableParts = new TableParts();
-			worksheet.Append(tableParts);
+			worksheet.AppendChild(tableParts);
 		}
 
 		TablePart tablePart = new() { Id = rId };
-		tableParts.Append(tablePart);
+		tableParts.AppendChild(tablePart);
 #pragma warning disable S2971 // LINQ expressions should be simplified
 		tableParts.Count = (uint)tableParts.Count();
 #pragma warning restore S2971 // LINQ expressions should be simplified
@@ -1603,7 +1606,7 @@ public static partial class Common
 			string cellValue = headerCell.GetCellValue();
 			string columnName = cellValue ?? $"Column{i + 1}";
 
-			tableColumns.Append(new TableColumn { Id = i + 1, Name = columnName });
+			tableColumns.AppendChild(new TableColumn { Id = i + 1, Name = columnName });
 		}
 
 		string tableRef = $"{new CellReference(startCol, startRow)}:{new CellReference(endColumn, endRow)}";
@@ -1641,7 +1644,7 @@ public static partial class Common
 	/// <param name="endColumn">Last column of auto filtered range</param>
 	public static void SetAutoFilter(this Worksheet worksheet, uint startRow, uint startColumn, uint endRow, uint endColumn)
 	{
-		worksheet.Append(new AutoFilter() { Reference = $"{new CellReference(startColumn, startRow)}:{new CellReference(endColumn, endRow)}" });
+		worksheet.AppendChild(new AutoFilter() { Reference = $"{new CellReference(startColumn, startRow)}:{new CellReference(endColumn, endRow)}" });
 	}
 
 	/// <summary>
@@ -1775,12 +1778,13 @@ public static partial class Common
 		int rangeHeightPx = GetRangeHeightInPx(worksheetPart, mergedCellArea);
 		decimal rangeAspect = ((decimal)rangeWidthPx) / rangeHeightPx;
 
-		decimal scale = (rangeAspect < imgAspect) ? ((rangeWidthPx - 3m) / imgWidthPx) : ((rangeHeightPx - 3m) / imgHeightPx);
+		const decimal paddingPx = 8m; // Total padding per axis so the image clears the cell borders
+		decimal scale = (rangeAspect < imgAspect) ? ((rangeWidthPx - paddingPx) / imgWidthPx) : ((rangeHeightPx - paddingPx) / imgHeightPx);
 
 		int resizeWidth = (int)Internal.MathCompat.Round(imgWidthPx * scale, 0);
 		int resizeHeight = (int)Internal.MathCompat.Round(imgHeightPx * scale, 0);
 		int xMargin = (int)Internal.MathCompat.Round((rangeWidthPx - resizeWidth) * 9525 / 2.0m, 0);
-		int yMargin = (int)Internal.MathCompat.Round((rangeHeightPx - resizeHeight) * 9525 * 1.75m / 2.0m, 0);
+		int yMargin = (int)Internal.MathCompat.Round((rangeHeightPx - resizeHeight) * 9525 / 2.0m, 0);
 
 		ImagePart imagePart = drawingsPart.AddImagePart(ImagePartType.Png);
 		using (MemoryStream stream = new(imageData))
@@ -1804,7 +1808,7 @@ public static partial class Common
 			drawingsPart.WorksheetDrawing = new Xdr.WorksheetDrawing();
 
 			Drawing drawing = new() { Id = worksheetPart.GetIdOfPart(drawingsPart) };
-			worksheetPart.Worksheet?.Append(drawing);
+			worksheetPart.Worksheet?.AppendChild(drawing);
 		}
 
 		return worksheetPart.DrawingsPart;
@@ -1850,17 +1854,84 @@ public static partial class Common
 		// Read the sheet-level default column width from sheetFormatPr; fall back to the OOXML default of 8.43
 		double defaultColWidthChars = worksheet?.GetFirstChild<SheetFormatProperties>()?.DefaultColumnWidth ?? 8.43;
 
-		double totalWidthChars = 0;
+		int maxDigitWidthPx = GetMaxDigitWidthPx(worksheetPart);
+		int totalWidthPx = 0;
 		for (uint colIndex = range.start.ColumnIndex; colIndex <= range.end.ColumnIndex; colIndex++)
 		{
-			// Look up an existing <col> entry without creating one — creating cols here would add
-			// width-less <col> elements that Excel treats as zero-width (hidden columns).
-			Column? column = columns?.Elements<Column>().FirstOrDefault(c => colIndex >= (c.Min?.Value ?? 0) && colIndex <= (c.Max?.Value ?? 0));
-			double columnWidthChars = (column?.Width?.HasValue == true) ? column.Width!.Value : defaultColWidthChars;
-			totalWidthChars += columnWidthChars;
+			totalWidthPx += GetColumnWidthInPx(columns, defaultColWidthChars, colIndex, maxDigitWidthPx);
 		}
 
-		return (int)Internal.MathCompat.Round(totalWidthChars * 7, 0);
+		return totalWidthPx;
+	}
+
+	/// <summary>
+	/// Get the width of a single column in pixels
+	/// </summary>
+	private static int GetColumnWidthInPx(Columns? columns, double defaultColWidthChars, uint colIndex, int maxDigitWidthPx)
+	{
+		// Look up an existing <col> entry without creating one — creating cols here would add
+		// width-less <col> elements that Excel treats as zero-width (hidden columns).
+		Column? column = columns?.Elements<Column>().FirstOrDefault(c => colIndex >= (c.Min?.Value ?? 0) && colIndex <= (c.Max?.Value ?? 0));
+		if (column?.Hidden?.Value == true)
+		{
+			return 0;
+		}
+
+		double columnWidthChars = (column?.Width?.HasValue == true) ? column.Width.Value : defaultColWidthChars;
+		// Excel's column width to pixel conversion, which depends on the max digit width of the workbook's default (Normal) font
+		return (int)Math.Truncate(((256 * columnWidthChars) + Math.Truncate(128d / maxDigitWidthPx)) / 256 * maxDigitWidthPx);
+	}
+
+	/// <summary>
+	/// Get the max digit width in pixels of the workbook's default font, which Excel uses as the unit for column widths.
+	/// Starts from an estimate based on the default font, then prefers the nearest value that is consistent with the
+	/// widths Excel stored in the sheet (stored width = Truncate(pixels / maxDigitWidth * 256) / 256).
+	/// </summary>
+	/// <param name="worksheetPart">WorksheetPart belonging to the workbook to measure</param>
+	/// <returns>Max digit width in pixels (7 for Calibri 11 / Arial 10 or if the default font can't be determined)</returns>
+	private static int GetMaxDigitWidthPx(WorksheetPart worksheetPart)
+	{
+		int estimate = EstimateMaxDigitWidthPx(worksheetPart);
+
+		List<double> storedWidths = [.. worksheetPart.Worksheet?.Elements<Columns>().FirstOrDefault()?.Elements<Column>()
+			.Where(c => c.Hidden?.Value != true && c.Width?.HasValue == true && c.Width.Value > 0).Select(c => c.Width!.Value).Distinct().Take(20) ?? []];
+
+		if (storedWidths.Count > 0)
+		{
+			return Enumerable.Range(3, 12).OrderBy(x => Math.Abs(x - estimate)).ThenBy(x => x).FirstOrDefault(candidate => storedWidths.All(width =>
+				{
+					double pixels = width * candidate;
+					return Math.Ceiling(pixels - 1e-6) - pixels < (candidate / 256d) + 1e-3;
+				}));
+		}
+
+		return estimate;
+	}
+
+	private static int EstimateMaxDigitWidthPx(WorksheetPart worksheetPart)
+	{
+		const int fallbackWidthPx = 7;
+		Font? font = worksheetPart.GetParentParts().OfType<WorkbookPart>().FirstOrDefault()?.WorkbookStylesPart?.Stylesheet?.Fonts?.Elements<Font>().FirstOrDefault();
+		double? fontSizePt = font?.FontSize?.Val?.Value;
+		if (font == null || fontSizePt is null or <= 0)
+		{
+			return fallbackWidthPx;
+		}
+
+		// Approximate width of the widest digit as a fraction of the font's em size
+		double digitEmRatio = font.FontName?.Val?.Value?.ToLowerInvariant() switch
+		{
+			"arial" or "helvetica" => 0.556,
+			"arial narrow" => 0.456,
+			"times new roman" => 0.5,
+			"verdana" => 0.636,
+			"tahoma" => 0.546,
+			"segoe ui" => 0.55,
+			"courier new" or "consolas" => 0.6,
+			_ => 0.507 // Calibri
+		};
+
+		return Math.Max(1, (int)Math.Round(fontSizePt.Value * 96 / 72 * digitEmRatio, MidpointRounding.AwayFromZero));
 	}
 
 	/// <summary>
@@ -1882,7 +1953,7 @@ public static partial class Common
 			Row? row = worksheet?.GetRow(rowIndex);
 			// Do not create missing rows here — appending rows mutates the sheet and can produce out-of-order row
 			// elements, which corrupts the sheet XML. Fall back to the sheet default row height instead.
-			double rowHeight = row?.Height?.HasValue == true ? row.Height!.Value : defaultRowHeightPt;
+			double rowHeight = row?.Height?.HasValue == true ? row.Height.Value : defaultRowHeightPt;
 			totalHeight += (int)(rowHeight * 12700 / 9525); // Convert to EMUs (1 point = 12700 EMUs), then to pixels (1 pixel = 9525 EMUs)
 		}
 
@@ -1895,52 +1966,87 @@ public static partial class Common
 	/// <param name="drawingsPart">DrawingsPart of the Excel file to insert an image into</param>
 	/// <param name="relationshipId">The relationship ID for the image</param>
 	/// <param name="fromCell">CellReference for top left corner of range</param>
-	/// <param name="toCell">CellReference for bottom right corner of range</param>
-	/// <param name="xMargin">Margin at the right and left of the image</param>
-	/// <param name="yMargin">Margin at the top and bottom of the image</param>
-	/// <param name="width">Width of the image</param>
-	/// <param name="height">Height of the image</param>
+	/// <param name="toCell">CellReference for bottom right corner of range (unused: the image is sized by <paramref name="width"/> and <paramref name="height"/> so its aspect ratio never depends on cell sizes)</param>
+	/// <param name="xMargin">Distance in EMUs from the left edge of the range to the left edge of the image</param>
+	/// <param name="yMargin">Distance in EMUs from the top edge of the range to the top edge of the image</param>
+	/// <param name="width">Width of the image in pixels</param>
+	/// <param name="height">Height of the image in pixels</param>
 	public static void AddImageToWorksheet(DrawingsPart drawingsPart, string relationshipId, CellReference fromCell, CellReference toCell, int xMargin, int yMargin, int width, int height)
 	{
 		Xdr.WorksheetDrawing? worksheetDrawing = drawingsPart.WorksheetDrawing;
 
 		uint imageId = 1;
-		if (worksheetDrawing?.Elements<Xdr.TwoCellAnchor>().Any() == true)
+		if (worksheetDrawing?.Descendants<Xdr.NonVisualDrawingProperties>().Any() == true)
 		{
-			imageId = worksheetDrawing.Elements<Xdr.TwoCellAnchor>().AsValueEnumerable().Where(x => x != null)
-				.Max(x => uint.Parse((x.Elements<Xdr.Picture>().FirstOrDefault()?.NonVisualPictureProperties?.NonVisualDrawingProperties?.Id ?? '0')!)) + 1;
+			imageId = worksheetDrawing.Descendants<Xdr.NonVisualDrawingProperties>().Max(x => x.Id?.Value ?? 0) + 1;
 		}
 
-		Xdr.TwoCellAnchor anchor = new()
+		// The offset of a marker is relative to its own cell, so walk across the spanned columns/rows to find the cell the image actually starts in
+		WorksheetPart? worksheetPart = drawingsPart.GetParentParts().OfType<WorksheetPart>().FirstOrDefault();
+		(uint startCol, long colOffsetEmu) = (fromCell.ColumnIndex, xMargin);
+		(uint startRow, long rowOffsetEmu) = (fromCell.RowIndex, yMargin);
+		if (worksheetPart != null)
+		{
+			Columns? columns = worksheetPart.Worksheet?.Elements<Columns>().FirstOrDefault();
+			double defaultColWidthChars = worksheetPart.Worksheet?.GetFirstChild<SheetFormatProperties>()?.DefaultColumnWidth ?? 8.43;
+			int maxDigitWidthPx = GetMaxDigitWidthPx(worksheetPart);
+			while (startCol < 16384)
+			{
+				long colEmu = GetColumnWidthInPx(columns, defaultColWidthChars, startCol, maxDigitWidthPx) * 9525L;
+				if (colOffsetEmu < colEmu || colEmu == 0)
+				{
+					break;
+				}
+
+				colOffsetEmu -= colEmu;
+				startCol++;
+			}
+
+			Worksheet? worksheet = worksheetPart.Worksheet;
+			double defaultRowHeightPt = worksheet?.GetFirstChild<SheetFormatProperties>()?.DefaultRowHeight ?? 14.2;
+			while (startRow < 1048576)
+			{
+				Row? row = worksheet?.GetRow(startRow);
+				double rowHeightPt = row?.Height?.HasValue == true ? row.Height.Value : defaultRowHeightPt;
+				long rowEmu = (int)(rowHeightPt * 12700 / 9525) * 9525L;
+				if (rowOffsetEmu < rowEmu || rowEmu == 0)
+				{
+					break;
+				}
+
+				rowOffsetEmu -= rowEmu;
+				startRow++;
+			}
+		}
+
+		long widthEmu = width * 9525L;
+		long heightEmu = height * 9525L;
+
+		// A one cell anchor with an explicit extent keeps the picture's aspect ratio regardless of how Excel measures the cells
+		Xdr.OneCellAnchor anchor = new()
 		{
 			FromMarker = new Xdr.FromMarker
 			{
-				ColumnId = new Xdr.ColumnId { Text = (fromCell.ColumnIndex - 1).ToString() },
-				RowId = new Xdr.RowId { Text = (fromCell.RowIndex - 1).ToString() },
-				ColumnOffset = new Xdr.ColumnOffset { Text = xMargin.ToString() },
-				RowOffset = new Xdr.RowOffset { Text = yMargin.ToString() }
+				ColumnId = new Xdr.ColumnId { Text = (startCol - 1).ToString() },
+				ColumnOffset = new Xdr.ColumnOffset { Text = colOffsetEmu.ToString() },
+				RowId = new Xdr.RowId { Text = (startRow - 1).ToString() },
+				RowOffset = new Xdr.RowOffset { Text = rowOffsetEmu.ToString() }
 			},
 
-			ToMarker = new Xdr.ToMarker
-			{
-				ColumnId = new Xdr.ColumnId { Text = toCell.ColumnIndex.ToString() },
-				RowId = new Xdr.RowId { Text = toCell.RowIndex.ToString() },
-				ColumnOffset = new Xdr.ColumnOffset { Text = (-xMargin).ToString() },
-				RowOffset = new Xdr.RowOffset { Text = (-yMargin).ToString() }
-			}
+			Extent = new Xdr.Extent { Cx = widthEmu, Cy = heightEmu }
 		};
 
 		Xdr.Picture picture = new();
 		Xdr.NonVisualPictureProperties nvPicPr = new
 			(
 				new Xdr.NonVisualDrawingProperties { Id = imageId, Name = $"Picture {imageId}" },
-				new Xdr.NonVisualPictureDrawingProperties(new Dwg.PictureLocks { NoChangeAspect = true })
+				new Xdr.NonVisualPictureDrawingProperties { PictureLocks = new Dwg.PictureLocks { NoChangeAspect = true } }
 			);
 
 		Xdr.BlipFill blipFill = new
 			(
 				new Dwg.Blip { Embed = relationshipId },
-				new Dwg.Stretch(new Dwg.FillRectangle())
+				new Dwg.Stretch { FillRectangle = new Dwg.FillRectangle() }
 			);
 
 		Xdr.ShapeProperties spPr = new
@@ -1948,15 +2054,15 @@ public static partial class Common
 				new Dwg.Transform2D
 					(
 						new Dwg.Offset { X = 0, Y = 0 },
-						new Dwg.Extents { Cx = width, Cy = height }
+						new Dwg.Extents { Cx = widthEmu, Cy = heightEmu }
 					),
 				new Dwg.PresetGeometry { Preset = Dwg.ShapeTypeValues.Rectangle });
 
 		picture.Append(nvPicPr, blipFill, spPr);
-		anchor.Append(picture);
-		anchor.Append(new Xdr.ClientData());
+		anchor.AppendChild(picture);
+		anchor.AppendChild(new Xdr.ClientData());
 
-		worksheetDrawing?.Append(anchor);
+		worksheetDrawing?.AppendChild(anchor);
 	}
 
 	/// <summary>
@@ -2084,7 +2190,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 
 		return cell?.GetCellValue() ?? string.Empty;
 	}
@@ -2103,7 +2209,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		return cell?.GetCellValue(sharedStringIndex) ?? string.Empty;
 	}
 
@@ -2444,7 +2550,7 @@ public static partial class Common
 					continue;
 				}
 
-				CellReference cellRef = new(cell.CellReference!.Value!);
+				CellReference cellRef = new(cell.CellReference.Value);
 				uint columnIndex = cellRef.ColumnIndex - 1;
 
 				// Calculate the width needed for this cell using the pre-built index
@@ -2473,7 +2579,7 @@ public static partial class Common
 				CustomWidth = true
 			};
 
-			columns.Append(col);
+			columns.AppendChild(col);
 		}
 	}
 
@@ -2495,7 +2601,7 @@ public static partial class Common
 			if (sheetData != null)
 				worksheet.InsertBefore(columns, sheetData);
 			else
-				worksheet.Append(columns);
+				worksheet.AppendChild(columns);
 		}
 		return columns;
 	}
@@ -2654,7 +2760,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellStringValue(cell, value);
 	}
 
@@ -2699,7 +2805,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellStringValue(cell, value);
 	}
 
@@ -2744,7 +2850,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellStringValue(cell, value);
 	}
 
@@ -2789,7 +2895,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellStringValue(cell, value);
 	}
 
@@ -2834,7 +2940,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellStringValue(cell, value);
 	}
 
@@ -2867,7 +2973,7 @@ public static partial class Common
 	/// <param name="cell">The cell to modify.</param>
 	/// <param name="value">The date value to set.</param>
 	/// <param name="dateFormat">The format string for the date. Defaults to "MM/dd/yyyy".</param>
-	public static void SetCellStringValue(this Cell? cell, DateOnly value, string? dateFormat = "MM/dd/yyyy") => SetCellStringValue(cell, value.ToString(dateFormat ?? "MM/dd/yyyy"));
+	public static void SetCellStringValue(this Cell? cell, DateOnly value, string? dateFormat = DefaultDateFormat) => SetCellStringValue(cell, value.ToString(dateFormat ?? DefaultDateFormat));
 
 	/// <summary>
 	/// Sets the string value of a cell at the specified row and column position to a formatted date string.
@@ -2877,11 +2983,11 @@ public static partial class Common
 	/// <param name="col">The column index of the cell.</param>
 	/// <param name="value">The date value to set.</param>
 	/// <param name="dateFormat">The format string for the date. Defaults to "MM/dd/yyyy".</param>
-	public static void SetCellStringValue(this SheetData sheetData, uint row, uint col, DateOnly value, string? dateFormat = "MM/dd/yyyy")
+	public static void SetCellStringValue(this SheetData sheetData, uint row, uint col, DateOnly value, string? dateFormat = DefaultDateFormat)
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellStringValue(cell, value, dateFormat);
 	}
 
@@ -2892,7 +2998,7 @@ public static partial class Common
 	/// <param name="cellReference">The cell reference specifying the target location.</param>
 	/// <param name="value">The date value to set.</param>
 	/// <param name="dateFormat">The format string for the date. Defaults to "MM/dd/yyyy".</param>
-	public static void SetCellStringValue(this SheetData sheetData, CellReference cellReference, DateOnly value, string? dateFormat = "MM/dd/yyyy")
+	public static void SetCellStringValue(this SheetData sheetData, CellReference cellReference, DateOnly value, string? dateFormat = DefaultDateFormat)
 	{
 		SetCellStringValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value, dateFormat);
 	}
@@ -2904,7 +3010,7 @@ public static partial class Common
 	/// <param name="cellReference">The cell reference specifying the location of the cell.</param>
 	/// <param name="value">The date value to set.</param>
 	/// <param name="dateFormat">The date format string to use for formatting the date. Defaults to "MM/dd/yyyy" if not specified.</param>
-	public static void SetCellStringValue(this Worksheet worksheet, CellReference cellReference, DateOnly value, string? dateFormat = "MM/dd/yyyy")
+	public static void SetCellStringValue(this Worksheet worksheet, CellReference cellReference, DateOnly value, string? dateFormat = DefaultDateFormat)
 	{
 		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
 		SetCellStringValue(cell, value, dateFormat);
@@ -2927,11 +3033,11 @@ public static partial class Common
 	/// <param name="col">The column index of the cell.</param>
 	/// <param name="value">The date value to set.</param>
 	/// <param name="dateFormat">The format string for the date. Defaults to "MM/dd/yyyy".</param>
-	public static void SetCellStringValue(this SheetData sheetData, uint row, uint col, DateTime value, string? dateFormat = "MM/dd/yyyy")
+	public static void SetCellStringValue(this SheetData sheetData, uint row, uint col, DateTime value, string? dateFormat = DefaultDateFormat)
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellStringValue(cell, value, dateFormat);
 	}
 
@@ -2942,7 +3048,7 @@ public static partial class Common
 	/// <param name="cellReference">The cell reference specifying the target location.</param>
 	/// <param name="value">The date value to set.</param>
 	/// <param name="dateFormat">The format string for the date. Defaults to "MM/dd/yyyy".</param>
-	public static void SetCellStringValue(this SheetData sheetData, CellReference cellReference, DateTime value, string? dateFormat = "MM/dd/yyyy")
+	public static void SetCellStringValue(this SheetData sheetData, CellReference cellReference, DateTime value, string? dateFormat = DefaultDateFormat)
 	{
 		SetCellStringValue(sheetData, cellReference.RowIndex, cellReference.ColumnIndex, value, dateFormat);
 	}
@@ -2954,7 +3060,7 @@ public static partial class Common
 	/// <param name="cellReference">The cell reference specifying the location of the cell.</param>
 	/// <param name="value">The date value to set.</param>
 	/// <param name="dateFormat">The date format string to use for formatting the date. Defaults to "MM/dd/yyyy" if not specified.</param>
-	public static void SetCellStringValue(this Worksheet worksheet, CellReference cellReference, DateTime value, string? dateFormat = "MM/dd/yyyy")
+	public static void SetCellStringValue(this Worksheet worksheet, CellReference cellReference, DateTime value, string? dateFormat = DefaultDateFormat)
 	{
 		Cell? cell = worksheet.GetCellFromCoordinates((int)cellReference.ColumnIndex, (int)cellReference.RowIndex);
 		SetCellStringValue(cell, value, dateFormat);
@@ -2984,7 +3090,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellDateValue(cell, value);
 	}
 
@@ -3034,7 +3140,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellDateValue(cell, value);
 	}
 
@@ -3084,7 +3190,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellNumericValue(cell, value);
 	}
 
@@ -3134,7 +3240,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellNumericValue(cell, value);
 	}
 
@@ -3184,7 +3290,7 @@ public static partial class Common
 	{
 		CellReference cellRef = new(col, row);
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(x => (x.RowIndex != null) && (x.RowIndex == row))?
-			.Elements<Cell>().FirstOrDefault(x => (x.CellReference != null) && string.Equals(new CellReference(x.CellReference!).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
+			.Elements<Cell>().FirstOrDefault(x => (x.CellReference?.Value is { } cellRefText) && string.Equals(new CellReference(cellRefText).ToString(), cellRef.ToString(), StringComparison.OrdinalIgnoreCase));
 		SetCellNumericValue(cell, value);
 	}
 
@@ -3397,7 +3503,7 @@ public static partial class Common
 			{
 				ByColumnName.TryAdd(p.Name, p);
 			}
-			
+
 			// Attribute names are written second so [ExcelColumn] takes priority over property name.
 			foreach (PropertyInfo p in Ordered)
 			{
@@ -3458,11 +3564,11 @@ public static partial class Common
 			TypeCode.Single => float.TryParse(value, out float val) ? val : null,
 			TypeCode.Double => double.TryParse(value, out double val) ? val : null,
 			TypeCode.Decimal => decimal.TryParse(value, out decimal val) ? val : null,
-			TypeCode.DateTime => DateTime.TryParse(value, out DateTime val) ? val : null,
-			_ when targetType == typeof(DateOnly) => DateOnly.TryParse(value, out DateOnly val) ? val : null,
-			_ when targetType == typeof(TimeOnly) => TimeOnly.TryParse(value, out TimeOnly val) ? val : null,
-			_ when targetType == typeof(DateTimeOffset) => DateTimeOffset.TryParse(value, out DateTimeOffset val) ? val : null,
-			_ when targetType == typeof(TimeSpan) => TimeSpan.TryParse(value, out TimeSpan val) ? val : null,
+			TypeCode.DateTime => DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime val) ? val : null,
+			_ when targetType == typeof(DateOnly) => DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly val) ? val : null,
+			_ when targetType == typeof(TimeOnly) => TimeOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out TimeOnly val) ? val : null,
+			_ when targetType == typeof(DateTimeOffset) => DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTimeOffset val) ? val : null,
+			_ when targetType == typeof(TimeSpan) => TimeSpan.TryParse(value, CultureInfo.InvariantCulture, out TimeSpan val) ? val : null,
 			_ when targetType == typeof(Guid) => Guid.TryParse(value, out Guid val) ? val : null,
 			_ => Convert.ChangeType(value, targetType)
 		};
@@ -3526,11 +3632,11 @@ public static partial class Common
 			{
 				foreach (Cell cell in row.Elements<Cell>())
 				{
-					if (cell.CellReference == null)
+					if (cell.CellReference?.Value is not { } cellRefText)
 					{
 						continue;
 					}
-					CellReference cellRef = new(cell.CellReference!);
+					CellReference cellRef = new(cellRefText);
 					if (cellRef.ColumnIndex < startCell.ColumnIndex)
 					{
 						continue;
@@ -3563,12 +3669,12 @@ public static partial class Common
 
 			foreach (Cell cell in row.Elements<Cell>())
 			{
-				if (cell.CellReference == null)
+				if (cell.CellReference?.Value is not { } cellRefText)
 				{
 					continue;
 				}
 
-				CellReference cellRef = new(cell.CellReference!);
+				CellReference cellRef = new(cellRefText);
 				if (cellRef.ColumnIndex < startCell.ColumnIndex)
 				{
 					continue;
@@ -3697,7 +3803,7 @@ public static partial class Common
 				number *= 26;
 				number += (uint)(columnName[i] - 'A' + 1);
 			}
-			return number;// - 1;
+			return number;
 		}
 
 		/// <summary>

@@ -39,6 +39,13 @@ public sealed class CommonTests : IDisposable
 		Dispose(false);
 	}
 
+	private static void SetDefinedName(SpreadsheetDocument document, string name, string reference)
+	{
+		DefinedNames definedNames = new();
+		definedNames.AppendChild(new DefinedName { Name = name, Text = reference });
+		document.WorkbookPart!.Workbook!.DefinedNames = definedNames;
+	}
+
 	[RetryFact(3)]
 	public void InitializeExcelFile_ShouldCreateNewSheet()
 	{
@@ -52,7 +59,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		sheetId.ShouldBeGreaterThan(0u);
 		document.WorkbookPart.ShouldNotBeNull();
-		document.WorkbookPart!.Workbook!.Sheets?.Count().ShouldBe(1);
+		document.WorkbookPart.Workbook!.Sheets?.Count().ShouldBe(1);
 	}
 
 	[RetryFact(3)]
@@ -71,7 +78,7 @@ public sealed class CommonTests : IDisposable
 		workbookPart.Workbook.ShouldNotBeNull();
 		Sheets? sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
 		sheets.ShouldNotBeNull();
-		sheets!.Elements<Sheet>().ShouldBeEmpty();
+		sheets.Elements<Sheet>().ShouldBeEmpty();
 	}
 
 	[RetryFact(3)]
@@ -104,7 +111,7 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		workbookPart.Workbook.ShouldNotBeNull();
-		workbookPart.Workbook!.GetFirstChild<Sheets>().ShouldNotBeNull();
+		workbookPart.Workbook.GetFirstChild<Sheets>().ShouldNotBeNull();
 	}
 
 	[RetryFact(3)]
@@ -120,7 +127,7 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		workbookPart.Workbook!.Elements<Sheets>().ShouldHaveSingleItem();
-		Sheet sheet = workbookPart.Workbook!.Descendants<Sheet>().ShouldHaveSingleItem();
+		Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().ShouldHaveSingleItem();
 		sheet.SheetId!.Value.ShouldBe(existingSheetId);
 		sheet.Name!.Value.ShouldBe("Existing Sheet");
 	}
@@ -345,7 +352,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Columns? columns = worksheet.Elements<Columns>().FirstOrDefault();
 		columns.ShouldNotBeNull();
-		columns!.Elements<Column>().Count().ShouldBeGreaterThan(0);
+		columns.Elements<Column>().Count().ShouldBeGreaterThan(0);
 	}
 
 	[RetryFact(3)]
@@ -548,8 +555,8 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
 		cell.ShouldNotBeNull();
-		cell!.CellFormula.ShouldNotBeNull();
-		cell.CellFormula!.Text.ShouldBe("SUM(A2:A10)");
+		cell.CellFormula.ShouldNotBeNull();
+		cell.CellFormula.Text.ShouldBe("SUM(A2:A10)");
 	}
 
 	[RetryFact(3)]
@@ -586,7 +593,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		AutoFilter? autoFilter = worksheet.Elements<AutoFilter>().FirstOrDefault();
 		autoFilter.ShouldNotBeNull();
-		autoFilter!.Reference!.Value.ShouldBe("A1:E10");
+		autoFilter.Reference!.Value.ShouldBe("A1:E10");
 	}
 
 	[RetryFact(3)]
@@ -602,10 +609,8 @@ public sealed class CommonTests : IDisposable
 		// Create a merged cell range
 		MergeCells mergeCells = new();
 
-#pragma warning disable S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
-		worksheet.Append(mergeCells);
-		mergeCells.Append(new MergeCell { Reference = "A1:B2" });
-#pragma warning restore S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
+		worksheet.AppendChild(mergeCells);
+		mergeCells.AppendChild(new MergeCell { Reference = "A1:B2" });
 
 		CellReference cellInMerge = new("A1");
 		CellReference cellNotInMerge = new("C3");
@@ -814,9 +819,7 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
-#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook!.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
-#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
+		SetDefinedName(document, cellName, "Test Sheet!A1");
 
 		// Act
 		Cell? cell = document.GetCellFromName(cellName);
@@ -834,9 +837,7 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
-#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook!.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
-#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
+		SetDefinedName(document, cellName, "Test Sheet!A1");
 
 		// Act
 		CellReference? cellRef = document.GetCellReferenceFromName(cellName);
@@ -909,9 +910,7 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
-#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook!.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
-#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
+		SetDefinedName(document, cellName, "Test Sheet!A1");
 
 		byte[] imageData = File.ReadAllBytes("TestData/test.png");
 
@@ -921,7 +920,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		WorksheetPart worksheetPart = document.WorkbookPart!.WorksheetParts.First();
 		worksheetPart.DrawingsPart.ShouldNotBeNull();
-		worksheetPart.DrawingsPart!.ImageParts.Count().ShouldBe(1);
+		worksheetPart.DrawingsPart.ImageParts.Count().ShouldBe(1);
 	}
 
 	[RetryFact(3)]
@@ -932,9 +931,7 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
-#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook!.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
-#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
+		SetDefinedName(document, cellName, "Test Sheet!A1");
 		List<byte[]> imageData = [File.ReadAllBytes("TestData/test.png")];
 		List<string> cellNames = [cellName];
 
@@ -944,7 +941,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		WorksheetPart worksheetPart = document.WorkbookPart!.WorksheetParts.First();
 		worksheetPart.DrawingsPart.ShouldNotBeNull();
-		worksheetPart.DrawingsPart!.ImageParts.Count().ShouldBe(1);
+		worksheetPart.DrawingsPart.ImageParts.Count().ShouldBe(1);
 	}
 
 	[RetryTheory(3)]
@@ -1119,9 +1116,7 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
-#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook!.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
-#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
+		SetDefinedName(document, cellName, "Test Sheet!A1");
 
 		// Act
 		Cell? cell = document.WorkbookPart!.GetCellFromName(cellName);
@@ -1139,9 +1134,7 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
-#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook!.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
-#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
+		SetDefinedName(document, cellName, "Test Sheet!A1");
 
 		// Act
 		Cell? cell = document.GetCellFromName(cellName, 1, 1);
@@ -1174,9 +1167,7 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
-#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook!.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!B2" });
-#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
+		SetDefinedName(document, cellName, "Test Sheet!B2");
 
 		// Act
 		CellReference? cellRef = document.WorkbookPart!.GetCellReferenceFromName(cellName);
@@ -1194,9 +1185,7 @@ public sealed class CommonTests : IDisposable
 		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
 		document.CreateNewSheet("Test Sheet");
 		const string cellName = "TestName";
-#pragma warning disable S3220 // Method calls should not resolve ambiguously to overloads with "params"
-		document.WorkbookPart!.Workbook!.DefinedNames = new DefinedNames(new DefinedName { Name = cellName, Text = "Test Sheet!A1" });
-#pragma warning restore S3220 // Method calls should not resolve ambiguously to overloads with "params"
+		SetDefinedName(document, cellName, "Test Sheet!A1");
 
 		// Act
 		CellReference? cellRef = document.GetCellReferenceFromName(cellName, 2, 3);
@@ -1333,7 +1322,36 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		WorksheetPart worksheetPart = document.WorkbookPart!.WorksheetParts.First();
 		worksheetPart.DrawingsPart.ShouldNotBeNull();
-		worksheetPart.DrawingsPart!.ImageParts.Count().ShouldBe(1);
+		worksheetPart.DrawingsPart.ImageParts.Count().ShouldBe(1);
+	}
+
+	[RetryFact(3)]
+	public void AddImage_ShouldPreserveAspectRatioAndFitWithinRange()
+	{
+		// Arrange
+		using MemoryStream memoryStream = new();
+		using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook);
+		document.CreateNewSheet("Test Sheet");
+		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
+		worksheet.InsertCell(1, 1); // Ensure cells exist
+		document.Save();
+		byte[] imageData = File.ReadAllBytes("TestData/test.png");
+		SkiaSharp.SKImageInfo bounds = SkiaSharp.SKBitmap.DecodeBounds(imageData);
+
+		CellReference firstCell = new("A1");
+		CellReference lastCell = new("I10");
+
+		// Act
+		document.AddImage(imageData, (firstCell, lastCell));
+
+		// Assert
+		WorksheetPart worksheetPart = document.WorkbookPart!.WorksheetParts.First();
+		DocumentFormat.OpenXml.Drawing.Spreadsheet.OneCellAnchor anchor = worksheetPart.DrawingsPart!.WorksheetDrawing!.Elements<DocumentFormat.OpenXml.Drawing.Spreadsheet.OneCellAnchor>().Single();
+		long cx = anchor.Extent!.Cx!.Value;
+		long cy = anchor.Extent.Cy!.Value;
+		((double)cx / cy).ShouldBe((double)bounds.Width / bounds.Height, 0.02);
+		(cx / 9525).ShouldBeLessThanOrEqualTo(GetRangeWidthInPx(worksheetPart, (firstCell, lastCell)));
+		(cy / 9525).ShouldBeLessThanOrEqualTo(GetRangeHeightInPx(worksheetPart, (firstCell, lastCell)));
 	}
 
 	[RetryFact(3)]
@@ -1361,7 +1379,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		WorksheetPart worksheetPart = document.WorkbookPart!.WorksheetParts.First();
 		worksheetPart.DrawingsPart.ShouldNotBeNull();
-		worksheetPart.DrawingsPart!.ImageParts.Count().ShouldBe(2);
+		worksheetPart.DrawingsPart.ImageParts.Count().ShouldBe(2);
 	}
 
 	[RetryFact(3)]
@@ -1910,8 +1928,8 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(2, 3);
 		cell.ShouldNotBeNull();
-		cell!.CellFormula.ShouldNotBeNull();
-		cell.CellFormula!.Text.ShouldBe("SUM(A1:A10)");
+		cell.CellFormula.ShouldNotBeNull();
+		cell.CellFormula.Text.ShouldBe("SUM(A1:A10)");
 	}
 
 	[RetryFact(3)]
@@ -1929,7 +1947,7 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		cell.ShouldNotBeNull();
-		cell!.CellReference!.Value.ShouldBe("C4");
+		cell.CellReference!.Value.ShouldBe("C4");
 		cell.StyleIndex!.Value.ShouldBe(5u);
 	}
 
@@ -2249,14 +2267,12 @@ public sealed class CommonTests : IDisposable
 
 		// Create a table with invalid range
 		TableDefinitionPart tableDefinitionPart = worksheet.WorksheetPart!.AddNewPart<TableDefinitionPart>();
-		string rId = worksheet.WorksheetPart!.GetIdOfPart(tableDefinitionPart);
+		string rId = worksheet.WorksheetPart.GetIdOfPart(tableDefinitionPart);
 
 		TableParts tableParts = new();
 
-#pragma warning disable S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'.
-		worksheet.Append(tableParts);
-		tableParts.Append(new TablePart() { Id = rId });
-#pragma warning restore S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'.
+		worksheet.AppendChild(tableParts);
+		tableParts.AppendChild(new TablePart() { Id = rId });
 
 		tableParts.Count = 1;
 
@@ -2330,14 +2346,14 @@ public sealed class CommonTests : IDisposable
 
 		// Create initial cell
 		Cell? firstCell = sheetData.InsertCell(1, 1);
-		firstCell!.CellValue = new CellValue("Original");
+		firstCell.CellValue = new CellValue("Original");
 
 		// Act - Try to insert at same location
 		Cell? secondCell = sheetData.InsertCell(1, 1);
 
 		// Assert
 		secondCell.ShouldBe(firstCell);
-		secondCell!.CellValue!.Text.ShouldBe("Original");
+		secondCell.CellValue!.Text.ShouldBe("Original");
 	}
 
 	[RetryFact(3)]
@@ -2376,7 +2392,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		TableParts? tableParts = worksheet.Elements<TableParts>().FirstOrDefault();
 		tableParts.ShouldNotBeNull();
-		tableParts!.Count!.Value.ShouldBe(2u);
+		tableParts.Count!.Value.ShouldBe(2u);
 	}
 
 	[RetryFact(3)]
@@ -2400,9 +2416,9 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Table? table = document.WorkbookPart!.FindTable("TestTable");
 		table.ShouldNotBeNull();
-		TableColumns? tableColumns = table!.TableColumns;
+		TableColumns? tableColumns = table.TableColumns;
 		tableColumns.ShouldNotBeNull();
-		tableColumns!.Elements<TableColumn>().Count().ShouldBe(2);
+		tableColumns.Elements<TableColumn>().Count().ShouldBe(2);
 		tableColumns.Elements<TableColumn>().First().Name!.Value.ShouldBe("CustomHeader1");
 		tableColumns.Elements<TableColumn>().Last().Name!.Value.ShouldBe("CustomHeader2");
 	}
@@ -2427,8 +2443,8 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Table? table = document.WorkbookPart!.FindTable("TestTable");
 		table.ShouldNotBeNull();
-		table!.TableStyleInfo.ShouldNotBeNull();
-		table.TableStyleInfo!.Name!.Value.ShouldBe(style.ToString());
+		table.TableStyleInfo.ShouldNotBeNull();
+		table.TableStyleInfo.Name!.Value.ShouldBe(style.ToString());
 		table.TableStyleInfo.ShowRowStripes!.Value.ShouldBeFalse();
 		table.TableStyleInfo.ShowColumnStripes!.Value.ShouldBeTrue();
 	}
@@ -2569,9 +2585,9 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Columns? columns = worksheet.Elements<Columns>().FirstOrDefault();
 		columns.ShouldNotBeNull();
-		Column? column = columns!.Elements<Column>().FirstOrDefault();
+		Column? column = columns.Elements<Column>().FirstOrDefault();
 		column.ShouldNotBeNull();
-		column!.Width!.Value.ShouldBeLessThanOrEqualTo(50);
+		column.Width!.Value.ShouldBeLessThanOrEqualTo(50);
 	}
 
 	[RetryFact(3)]
@@ -2587,11 +2603,9 @@ public sealed class CommonTests : IDisposable
 		// Create a cell without CellReference
 		Row row = new() { RowIndex = 1 };
 
-#pragma warning disable S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'.
-		sheetData.Append(row);
+		sheetData.AppendChild(row);
 		Cell cellWithoutRef = new();
-		row.Append(cellWithoutRef);
-#pragma warning restore S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'.
+		row.AppendChild(cellWithoutRef);
 
 		// Act
 		worksheet.AutoFitColumns();
@@ -2768,10 +2782,8 @@ public sealed class CommonTests : IDisposable
 		DefinedNames definedNames = new();
 		DefinedName definedName = new("InvalidFormat") { Name = "BadName" };
 
-#pragma warning disable S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
-		definedNames.Append(definedName);
-		document.WorkbookPart!.Workbook!.Append(definedNames);
-#pragma warning restore S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
+		definedNames.AppendChild(definedName);
+		document.WorkbookPart!.Workbook!.AppendChild(definedNames);
 
 		// Act
 		Cell? cell = document.GetCellFromName("BadName");
@@ -2792,13 +2804,11 @@ public sealed class CommonTests : IDisposable
 		DefinedNames definedNames = new();
 		DefinedName definedName = new("'NonExistent'!A1") { Name = "InvalidRef" };
 
-#pragma warning disable S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
-		definedNames.Append(definedName);
-		document.WorkbookPart!.Workbook!.Append(definedNames);
-#pragma warning restore S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
+		definedNames.AppendChild(definedName);
+		document.WorkbookPart!.Workbook!.AppendChild(definedNames);
 
 		// Act
-		Cell? cell = document.WorkbookPart!.GetCellFromName("InvalidRef");
+		Cell? cell = document.WorkbookPart.GetCellFromName("InvalidRef");
 
 		// Assert
 		cell.ShouldBeNull();
@@ -2816,10 +2826,8 @@ public sealed class CommonTests : IDisposable
 		DefinedNames definedNames = new();
 		DefinedName definedName = new("InvalidFormat") { Name = "BadName" };
 
-#pragma warning disable S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
-		definedNames.Append(definedName);
-		document.WorkbookPart!.Workbook!.Append(definedNames);
-#pragma warning restore S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
+		definedNames.AppendChild(definedName);
+		document.WorkbookPart!.Workbook!.AppendChild(definedNames);
 
 		// Act
 		CellReference? cellRef = document.GetCellReferenceFromName("BadName");
@@ -2840,13 +2848,11 @@ public sealed class CommonTests : IDisposable
 		DefinedNames definedNames = new();
 		DefinedName definedName = new("'NonExistent'!A1") { Name = "InvalidRef" };
 
-#pragma warning disable S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
-		definedNames.Append(definedName);
-		document.WorkbookPart!.Workbook!.Append(definedNames);
-#pragma warning restore S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
+		definedNames.AppendChild(definedName);
+		document.WorkbookPart!.Workbook!.AppendChild(definedNames);
 
 		// Act
-		CellReference? cellRef = document.WorkbookPart!.GetCellReferenceFromName("InvalidRef");
+		CellReference? cellRef = document.WorkbookPart.GetCellReferenceFromName("InvalidRef");
 
 		// Assert
 		cellRef.ShouldBeNull();
@@ -3036,7 +3042,7 @@ public sealed class CommonTests : IDisposable
 		styleId.ShouldNotBeNull();
 		Stylesheet? stylesheet = document.GetStylesheet();
 		CellFormats? cellFormats = stylesheet?.GetCellFormats();
-		CellFormat? cellFormat = cellFormats?.Elements<CellFormat>().ElementAt((int)styleId!.Value);
+		CellFormat? cellFormat = cellFormats?.Elements<CellFormat>().ElementAt((int)styleId.Value);
 		cellFormat?.Alignment?.Horizontal?.Value.ShouldBe(HorizontalAlignmentValues.Left);
 		cellFormat?.Alignment?.WrapText?.Value.ShouldBeTrue();
 	}
@@ -3055,7 +3061,7 @@ public sealed class CommonTests : IDisposable
 		styleId.ShouldNotBeNull();
 		Stylesheet? stylesheet = document.GetStylesheet();
 		CellFormats? cellFormats = stylesheet?.GetCellFormats();
-		CellFormat? cellFormat = cellFormats?.Elements<CellFormat>().ElementAt((int)styleId!.Value);
+		CellFormat? cellFormat = cellFormats?.Elements<CellFormat>().ElementAt((int)styleId.Value);
 		cellFormat?.Protection?.Locked?.Value.ShouldBeTrue();
 		cellFormat?.ApplyProtection?.Value.ShouldBeTrue();
 	}
@@ -3078,7 +3084,7 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		cell.ShouldNotBeNull();
-		cell!.CellReference!.Value.ShouldBe("B1");
+		cell.CellReference!.Value.ShouldBe("B1");
 		sheetData.Elements<Row>().Count().ShouldBe(1); // Only one row
 	}
 
@@ -3262,7 +3268,7 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		column.ShouldNotBeNull();
-		column!.Min!.Value.ShouldBe(3u);
+		column.Min!.Value.ShouldBe(3u);
 		column.Max!.Value.ShouldBe(3u);
 		column.Width!.Value.ShouldBe(15.5);
 		column.CustomWidth!.Value.ShouldBeTrue();
@@ -3305,7 +3311,7 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		column.ShouldNotBeNull();
-		column!.Width.ShouldBeNull();
+		column.Width.ShouldBeNull();
 		column.CustomWidth.ShouldBeNull();
 	}
 
@@ -3362,7 +3368,7 @@ public sealed class CommonTests : IDisposable
 		fontId.ShouldBeGreaterThanOrEqualTo(0u);
 		Fonts? fonts = stylesheet.GetFonts();
 		fonts.ShouldNotBeNull();
-		fonts!.Elements<Font>().Count().ShouldBeGreaterThan(0);
+		fonts.Elements<Font>().Count().ShouldBeGreaterThan(0);
 	}
 
 	// ========== GetHashCode Coverage ==========
@@ -3488,8 +3494,8 @@ public sealed class CommonTests : IDisposable
 		CellFormats cellFormats = stylesheet.GetCellFormats()!;
 		CellFormat? format = cellFormats.Elements<CellFormat>().ElementAtOrDefault((int)formatId);
 		format.ShouldNotBeNull();
-		format!.Alignment.ShouldNotBeNull();
-		format.Alignment!.WrapText?.Value.ShouldBeTrue();
+		format.Alignment.ShouldNotBeNull();
+		format.Alignment.WrapText?.Value.ShouldBeTrue();
 	}
 
 	[RetryFact(3)]
@@ -3628,9 +3634,7 @@ public sealed class CommonTests : IDisposable
 			Text = "InvalidFormat" // Missing '!' separator
 		};
 
-#pragma warning disable S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
-		workbook?.DefinedNames?.Append(definedName);
-#pragma warning restore S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
+		workbook?.DefinedNames?.AppendChild(definedName);
 
 		// Act - Try to get cell from malformed name
 		Cell? cell = document.GetCellFromName("InvalidName");
@@ -3656,9 +3660,7 @@ public sealed class CommonTests : IDisposable
 			Text = "NoExclamation" // Will cause exception when splitting by '!'
 		};
 
-#pragma warning disable S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
-		workbook?.DefinedNames?.Append(definedName);
-#pragma warning restore S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
+		workbook?.DefinedNames?.AppendChild(definedName);
 
 		// Act
 		Cell? cell = document.WorkbookPart.GetCellFromName("BadFormat");
@@ -3683,9 +3685,7 @@ public sealed class CommonTests : IDisposable
 			Name = "BadRef",
 			Text = "InvalidCellRef!" // Format will cause parsing issues
 		};
-#pragma warning disable S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
-		workbook?.DefinedNames?.Append(definedName);
-#pragma warning restore S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
+		workbook?.DefinedNames?.AppendChild(definedName);
 
 		// Act
 		CellReference? cellRef = document.GetCellReferenceFromName("BadRef");
@@ -3711,9 +3711,7 @@ public sealed class CommonTests : IDisposable
 			Text = "MissingSheetSeparator"
 		};
 
-#pragma warning disable S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
-		workbook?.DefinedNames?.Append(definedName);
-#pragma warning restore S3220 // Review this call, which partially matches an overload without 'params'. The partial match is 'void OpenXmlElement.Append(IEnumerable<OpenXmlElement> newChildren)'
+		workbook?.DefinedNames?.AppendChild(definedName);
 
 		// Act
 		CellReference? cellRef = document.WorkbookPart.GetCellReferenceFromName("BadName");
@@ -3782,18 +3780,17 @@ public sealed class CommonTests : IDisposable
 			};
 
 			// Add table columns
-#pragma warning disable S3220 // Partially matching overload
 			TableColumns tableColumns = new() { Count = 3 };
-			tableColumns.Append(new TableColumn { Id = 1, Name = "Name" });
-			tableColumns.Append(new TableColumn { Id = 2, Name = "Age" });
-			tableColumns.Append(new TableColumn { Id = 3, Name = "City" });
-			table.Append(tableColumns);
+			tableColumns.AppendChild(new TableColumn { Id = 1, Name = "Name" });
+			tableColumns.AppendChild(new TableColumn { Id = 2, Name = "Age" });
+			tableColumns.AppendChild(new TableColumn { Id = 3, Name = "City" });
+			table.AppendChild(tableColumns);
 
 			// Add AutoFilter
-			table.Append(new AutoFilter { Reference = "A1:C3" });
+			table.AppendChild(new AutoFilter { Reference = "A1:C3" });
 
 			// Add table style
-			table.Append(new TableStyleInfo
+			table.AppendChild(new TableStyleInfo
 			{
 				Name = "TableStyleMedium2",
 				ShowFirstColumn = false,
@@ -3806,9 +3803,8 @@ public sealed class CommonTests : IDisposable
 
 			// Add TableParts to worksheet
 			TableParts tableParts = new() { Count = 1 };
-			tableParts.Append(new TablePart { Id = worksheetPart.GetIdOfPart(tableDefinitionPart) });
-			worksheet.Append(tableParts);
-#pragma warning restore S3220 // Partially matching overload
+			tableParts.AppendChild(new TablePart { Id = worksheetPart.GetIdOfPart(tableDefinitionPart) });
+			worksheet.AppendChild(tableParts);
 			document.Save();
 		}
 
@@ -3862,17 +3858,15 @@ public sealed class CommonTests : IDisposable
 
 			TableColumns tableColumns = new() { Count = 1 };
 
-#pragma warning disable S3220 // Partially matching overload
-			tableColumns.Append(new TableColumn { Id = 1, Name = "Column1" });
-			table.Append(tableColumns);
-			table.Append(new AutoFilter { Reference = "A1:A2" });
+			tableColumns.AppendChild(new TableColumn { Id = 1, Name = "Column1" });
+			table.AppendChild(tableColumns);
+			table.AppendChild(new AutoFilter { Reference = "A1:A2" });
 
 			tableDefinitionPart.Table = table;
 
 			TableParts tableParts = new() { Count = 1 };
-			tableParts.Append(new TablePart { Id = worksheetPart.GetIdOfPart(tableDefinitionPart) });
-			worksheet.Append(tableParts);
-#pragma warning restore S3220 // Partially matching overload
+			tableParts.AppendChild(new TablePart { Id = worksheetPart.GetIdOfPart(tableDefinitionPart) });
+			worksheet.AppendChild(tableParts);
 			document.Save();
 		}
 
@@ -3910,7 +3904,7 @@ public sealed class CommonTests : IDisposable
 		tableDefinitionPart.Table = table;
 
 		// Act
-		Table? foundTable = document.WorkbookPart!.FindTable("MyTable");
+		Table? foundTable = document.WorkbookPart.FindTable("MyTable");
 
 		// Assert
 		foundTable.ShouldNotBeNull();
@@ -3939,7 +3933,7 @@ public sealed class CommonTests : IDisposable
 		tableDefinitionPart.Table = table;
 
 		// Act
-		Table? foundTable = document.WorkbookPart!.FindTable(null);
+		Table? foundTable = document.WorkbookPart.FindTable(null);
 
 		// Assert
 		foundTable.ShouldNotBeNull();
@@ -4063,7 +4057,7 @@ public sealed class CommonTests : IDisposable
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
 			.Elements<Cell>().FirstOrDefault();
 		cell.ShouldNotBeNull();
-		cell!.CellValue!.Text.ShouldBe("True");
+		cell.CellValue!.Text.ShouldBe("True");
 	}
 
 	[RetryFact(3)]
@@ -4101,7 +4095,7 @@ public sealed class CommonTests : IDisposable
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 3u)?
 			.Elements<Cell>().FirstOrDefault();
 		cell.ShouldNotBeNull();
-		cell!.CellValue!.Text.ShouldBe("False");
+		cell.CellValue!.Text.ShouldBe("False");
 	}
 
 	// --- SetCellStringValue(Worksheet, CellReference, bool) ---
@@ -4123,7 +4117,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
 		cell.ShouldNotBeNull();
-		cell!.CellValue!.Text.ShouldBe("True");
+		cell.CellValue!.Text.ShouldBe("True");
 	}
 
 	[RetryFact(3)]
@@ -4159,7 +4153,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
 		cell.ShouldNotBeNull();
-		cell!.CellValue!.Text.ShouldBe("hello");
+		cell.CellValue!.Text.ShouldBe("hello");
 	}
 
 	// --- SetCellStringValue(Cell?, int) ---
@@ -4220,7 +4214,7 @@ public sealed class CommonTests : IDisposable
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1u)?
 			.Elements<Cell>().FirstOrDefault();
 		cell.ShouldNotBeNull();
-		cell!.CellValue!.Text.ShouldBe("99");
+		cell.CellValue!.Text.ShouldBe("99");
 	}
 
 	[RetryFact(3)]
@@ -4258,7 +4252,7 @@ public sealed class CommonTests : IDisposable
 		Cell? cell = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 3u)?
 			.Elements<Cell>().FirstOrDefault();
 		cell.ShouldNotBeNull();
-		cell!.CellValue!.Text.ShouldBe("55");
+		cell.CellValue!.Text.ShouldBe("55");
 	}
 
 	// --- SetCellStringValue(Worksheet, CellReference, int) ---
@@ -4280,7 +4274,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
 		cell.ShouldNotBeNull();
-		cell!.CellValue!.Text.ShouldBe("7");
+		cell.CellValue!.Text.ShouldBe("7");
 	}
 
 	[RetryFact(3)]
@@ -4812,7 +4806,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
 		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
-		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
 		// Act
 		cell.SetCellStringValue(dt);
@@ -4831,7 +4825,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
 		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
-		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
 		// Act
 		cell.SetCellStringValue(dt, "yyyy-MM-dd");
@@ -4850,7 +4844,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
 		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
-		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
 		// Act
 		cell.SetCellStringValue(dt, null);
@@ -4864,7 +4858,7 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		Cell? cell = null;
-		DateTime dt = new(2024, 6, 15);
+		DateTime dt = new(2024, 6, 15, 0, 0, 0, DateTimeKind.Unspecified);
 
 		// Act & Assert
 		Should.NotThrow(() => cell.SetCellStringValue(dt));
@@ -4882,7 +4876,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
 		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
 		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
-		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
 		// Act
 		sheetData.SetCellStringValue(1u, 1u, dt);
@@ -4903,7 +4897,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
 		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
 		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
-		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
 		// Act
 		sheetData.SetCellStringValue(1u, 1u, dt, "yyyy-MM-dd");
@@ -4923,7 +4917,7 @@ public sealed class CommonTests : IDisposable
 		document.CreateNewSheet("Test Sheet");
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
 		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
-		DateTime dt = new(2024, 6, 15);
+		DateTime dt = new(2024, 6, 15, 0, 0, 0, DateTimeKind.Unspecified);
 
 		// Act & Assert
 		Should.NotThrow(() => sheetData.SetCellStringValue(5u, 5u, dt));
@@ -4942,7 +4936,7 @@ public sealed class CommonTests : IDisposable
 		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
 		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
 		CellReference cellRef = new(1u, 1u);
-		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
 		// Act
 		sheetData.SetCellStringValue(cellRef, dt);
@@ -4964,7 +4958,7 @@ public sealed class CommonTests : IDisposable
 		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
 		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
 		CellReference cellRef = new(1u, 1u);
-		DateTime dt = new(2024, 6, 15);
+		DateTime dt = new(2024, 6, 15, 0, 0, 0, DateTimeKind.Unspecified);
 
 		// Act
 		sheetData.SetCellStringValue(cellRef, dt, null);
@@ -4987,7 +4981,7 @@ public sealed class CommonTests : IDisposable
 		CellReference cellRef = new(5u, 5u);
 
 		// Act & Assert
-		Should.NotThrow(() => sheetData.SetCellStringValue(cellRef, new DateTime(2024, 1, 1)));
+		Should.NotThrow(() => sheetData.SetCellStringValue(cellRef, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified)));
 	}
 
 	// --- SetCellStringValue(Worksheet, CellReference, DateTime) ---
@@ -5002,7 +4996,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
 		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
 		CellReference cellRef = new(1u, 1u);
-		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
 		// Act
 		worksheet.SetCellStringValue(cellRef, dt);
@@ -5022,7 +5016,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
 		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
 		CellReference cellRef = new(1u, 1u);
-		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
 		// Act
 		worksheet.SetCellStringValue(cellRef, dt, "yyyy-MM-dd");
@@ -5042,7 +5036,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test Sheet")!;
 		worksheet.InsertCellValue(1, 1, new CellValue("old"), CellValues.String);
 		CellReference cellRef = new(1u, 1u);
-		DateTime dt = new(2024, 6, 15, 10, 30, 0);
+		DateTime dt = new(2024, 6, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
 		// Act
 		worksheet.SetCellStringValue(cellRef, dt, null);
@@ -5063,7 +5057,7 @@ public sealed class CommonTests : IDisposable
 		CellReference cellRef = new(5u, 5u);
 
 		// Act & Assert
-		Should.NotThrow(() => worksheet.SetCellStringValue(cellRef, new DateTime(2024, 1, 1)));
+		Should.NotThrow(() => worksheet.SetCellStringValue(cellRef, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified)));
 	}
 
 	// ---- SetCellDateValue(Cell?, DateOnly) ----
@@ -5110,7 +5104,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+		cell.DataType!.Value.ShouldBe(CellValues.Date);
 	}
 
 	[RetryFact(3)]
@@ -5148,7 +5142,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 2);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+		cell.DataType!.Value.ShouldBe(CellValues.Date);
 	}
 
 	// ---- SetCellDateValue(Worksheet, CellReference, DateOnly) ----
@@ -5171,7 +5165,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 3);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+		cell.DataType!.Value.ShouldBe(CellValues.Date);
 	}
 
 	[RetryFact(3)]
@@ -5194,7 +5188,7 @@ public sealed class CommonTests : IDisposable
 	public void SetCellDateValue_Cell_DateTime_NullCell_ShouldNotThrow()
 	{
 		Cell? cell = null;
-		Should.NotThrow(() => cell.SetCellDateValue(new DateTime(2024, 6, 15)));
+		Should.NotThrow(() => cell.SetCellDateValue(new DateTime(2024, 6, 15, 0, 0, 0, DateTimeKind.Unspecified)));
 	}
 
 	[RetryFact(3)]
@@ -5202,7 +5196,7 @@ public sealed class CommonTests : IDisposable
 	{
 		// Arrange
 		Cell cell = new();
-		DateTime dt = new(2024, 6, 15, 12, 0, 0);
+		DateTime dt = new(2024, 6, 15, 12, 0, 0, DateTimeKind.Unspecified);
 
 		// Act
 		cell.SetCellDateValue(dt);
@@ -5224,7 +5218,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test")!;
 		worksheet.InsertCell(1, 1);
 		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
-		DateTime dt = new(2024, 6, 15, 8, 30, 0);
+		DateTime dt = new(2024, 6, 15, 8, 30, 0, DateTimeKind.Unspecified);
 
 		// Act
 		sheetData.SetCellDateValue(1u, 1u, dt);
@@ -5232,7 +5226,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+		cell.DataType!.Value.ShouldBe(CellValues.Date);
 	}
 
 	[RetryFact(3)]
@@ -5246,7 +5240,7 @@ public sealed class CommonTests : IDisposable
 		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
 
 		// Act & Assert
-		Should.NotThrow(() => sheetData.SetCellDateValue(99u, 99u, new DateTime(2024, 1, 1)));
+		Should.NotThrow(() => sheetData.SetCellDateValue(99u, 99u, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified)));
 	}
 
 	// ---- SetCellDateValue(SheetData, CellReference, DateTime) ----
@@ -5262,7 +5256,7 @@ public sealed class CommonTests : IDisposable
 		worksheet.InsertCell(1, 2);
 		SheetData sheetData = worksheet.GetFirstChild<SheetData>()!;
 		CellReference cellRef = new(1u, 2u);
-		DateTime dt = new(2023, 12, 25);
+		DateTime dt = new(2023, 12, 25, 0, 0, 0, DateTimeKind.Unspecified);
 
 		// Act
 		sheetData.SetCellDateValue(cellRef, dt);
@@ -5270,7 +5264,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 2);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+		cell.DataType!.Value.ShouldBe(CellValues.Date);
 	}
 
 	// ---- SetCellDateValue(Worksheet, CellReference, DateTime) ----
@@ -5285,7 +5279,7 @@ public sealed class CommonTests : IDisposable
 		Worksheet worksheet = document.GetWorksheetByName("Test")!;
 		worksheet.InsertCell(1, 3);
 		CellReference cellRef = new(1u, 3u);
-		DateTime dt = new(2024, 1, 1);
+		DateTime dt = new(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
 		// Act
 		worksheet.SetCellDateValue(cellRef, dt);
@@ -5293,7 +5287,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 3);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Date);
+		cell.DataType!.Value.ShouldBe(CellValues.Date);
 	}
 
 	[RetryFact(3)]
@@ -5307,7 +5301,7 @@ public sealed class CommonTests : IDisposable
 		CellReference cellRef = new(99u, 99u);
 
 		// Act & Assert
-		Should.NotThrow(() => worksheet.SetCellDateValue(cellRef, new DateTime(2024, 1, 1)));
+		Should.NotThrow(() => worksheet.SetCellDateValue(cellRef, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Unspecified)));
 	}
 
 	// ---- SetCellNumericValue(SheetData, uint, uint, int) ----
@@ -5329,7 +5323,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+		cell.DataType!.Value.ShouldBe(CellValues.Number);
 		cell.CellValue!.Text.ShouldBe("42");
 	}
 
@@ -5367,7 +5361,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(2, 3);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+		cell.DataType!.Value.ShouldBe(CellValues.Number);
 		cell.CellValue!.Text.ShouldBe("99");
 	}
 
@@ -5406,7 +5400,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
 		cell.ShouldNotBeNull();
-		cell!.CellValue!.Text.ShouldBe("77");
+		cell.CellValue!.Text.ShouldBe("77");
 		cell.DataType!.Value.ShouldBe(CellValues.Number);
 	}
 
@@ -5443,7 +5437,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 2);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+		cell.DataType!.Value.ShouldBe(CellValues.Number);
 	}
 
 	[RetryFact(3)]
@@ -5480,7 +5474,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(2, 3);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+		cell.DataType!.Value.ShouldBe(CellValues.Number);
 	}
 
 	// --- SetCellStringValue(SheetData, uint row, uint col, string?) ---
@@ -5502,7 +5496,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
 		cell.ShouldNotBeNull();
-		cell!.CellValue!.Text.ShouldBe("hello");
+		cell.CellValue!.Text.ShouldBe("hello");
 	}
 
 	[RetryFact(3)]
@@ -5554,7 +5548,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 2);
 		cell.ShouldNotBeNull();
-		cell!.CellValue!.Text.ShouldBe("world");
+		cell.CellValue!.Text.ShouldBe("world");
 	}
 
 	[RetryFact(3)]
@@ -5591,7 +5585,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+		cell.DataType!.Value.ShouldBe(CellValues.Number);
 	}
 
 	[RetryFact(3)]
@@ -5627,7 +5621,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(1, 1);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+		cell.DataType!.Value.ShouldBe(CellValues.Number);
 	}
 
 	[RetryFact(3)]
@@ -5664,7 +5658,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? cell = worksheet.GetCellFromCoordinates(2, 1);
 		cell.ShouldNotBeNull();
-		cell!.DataType!.Value.ShouldBe(CellValues.Number);
+		cell.DataType!.Value.ShouldBe(CellValues.Number);
 	}
 
 	[RetryFact(3)]
@@ -5704,7 +5698,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		Cell? resultCell = worksheet.GetCellFromCoordinates(1, 1);
 		resultCell.ShouldNotBeNull();
-		resultCell!.CellValue?.Text.ShouldNotBeNull();
+		resultCell.CellValue?.Text.ShouldNotBeNull();
 	}
 
 	[RetryFact(3)]
@@ -5734,8 +5728,8 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		document.WorkbookPart!.Workbook!.CalculationProperties.ShouldNotBeNull();
-		document.WorkbookPart.Workbook.CalculationProperties!.ForceFullCalculation!.Value.ShouldBeTrue();
-		document.WorkbookPart.Workbook.CalculationProperties!.FullCalculationOnLoad!.Value.ShouldBeTrue();
+		document.WorkbookPart.Workbook.CalculationProperties.ForceFullCalculation!.Value.ShouldBeTrue();
+		document.WorkbookPart.Workbook.CalculationProperties.FullCalculationOnLoad!.Value.ShouldBeTrue();
 	}
 
 	[RetryFact(3)]
@@ -5752,8 +5746,8 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		workbookPart.Workbook!.CalculationProperties.ShouldNotBeNull();
-		workbookPart.Workbook!.CalculationProperties!.ForceFullCalculation!.Value.ShouldBeTrue();
-		workbookPart.Workbook!.CalculationProperties!.FullCalculationOnLoad!.Value.ShouldBeTrue();
+		workbookPart.Workbook.CalculationProperties.ForceFullCalculation!.Value.ShouldBeTrue();
+		workbookPart.Workbook.CalculationProperties.FullCalculationOnLoad!.Value.ShouldBeTrue();
 	}
 
 	[RetryFact(3)]
@@ -5772,8 +5766,8 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		workbook.CalculationProperties.ShouldNotBeNull();
-		workbook.CalculationProperties!.ForceFullCalculation!.Value.ShouldBeTrue();
-		workbook.CalculationProperties!.FullCalculationOnLoad!.Value.ShouldBeTrue();
+		workbook.CalculationProperties.ForceFullCalculation!.Value.ShouldBeTrue();
+		workbook.CalculationProperties.FullCalculationOnLoad!.Value.ShouldBeTrue();
 	}
 
 	[RetryFact(3)]
@@ -5792,7 +5786,7 @@ public sealed class CommonTests : IDisposable
 
 		// Assert
 		workbook.CalculationProperties!.ForceFullCalculation!.Value.ShouldBeTrue();
-		workbook.CalculationProperties!.FullCalculationOnLoad!.Value.ShouldBeTrue();
+		workbook.CalculationProperties.FullCalculationOnLoad!.Value.ShouldBeTrue();
 	}
 
 	[RetryFact(3)]
@@ -5854,7 +5848,7 @@ public sealed class CommonTests : IDisposable
 			// Assert
 			using SpreadsheetDocument reopened = SpreadsheetDocument.Open(memoryStream, false);
 			reopened.WorkbookPart.ShouldNotBeNull();
-			reopened.WorkbookPart!.Workbook.ShouldNotBeNull();
+			reopened.WorkbookPart.Workbook.ShouldNotBeNull();
 			memoryStream.Dispose();
 		}
 		finally
@@ -5880,7 +5874,7 @@ public sealed class CommonTests : IDisposable
 			// Assert
 			memoryStream.Position.ShouldBe(0);
 			memoryStream.Length.ShouldBeGreaterThan(0);
-			memoryStream.Dispose();
+			await memoryStream.DisposeAsync();
 		}
 		finally
 		{
@@ -5905,8 +5899,8 @@ public sealed class CommonTests : IDisposable
 			// Assert
 			using SpreadsheetDocument reopened = SpreadsheetDocument.Open(memoryStream, false);
 			reopened.WorkbookPart.ShouldNotBeNull();
-			reopened.WorkbookPart!.Workbook.ShouldNotBeNull();
-			memoryStream.Dispose();
+			reopened.WorkbookPart.Workbook.ShouldNotBeNull();
+			await memoryStream.DisposeAsync();
 		}
 		finally
 		{
@@ -5982,7 +5976,7 @@ public sealed class CommonTests : IDisposable
 
 			// Assert
 			(document.GetCustomFormatCache() == null).ShouldBe(clearCachedStyles);
-			memoryStream.Dispose();
+			await memoryStream.DisposeAsync();
 		}
 		finally
 		{
@@ -6005,10 +5999,10 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		DataValidations? dataValidations = worksheet.GetFirstChild<DataValidations>();
 		dataValidations.ShouldNotBeNull();
-		dataValidations!.Count!.Value.ShouldBe(1u);
+		dataValidations.Count!.Value.ShouldBe(1u);
 		DataValidation? dataValidation = dataValidations.Elements<DataValidation>().FirstOrDefault();
 		dataValidation.ShouldNotBeNull();
-		dataValidation!.Type!.Value.ShouldBe(DataValidationValues.List);
+		dataValidation.Type!.Value.ShouldBe(DataValidationValues.List);
 		dataValidation.ShowErrorMessage!.Value.ShouldBeTrue();
 		dataValidation.AllowBlank!.Value.ShouldBeTrue();
 		dataValidation.Formula1!.Text.ShouldBe("\"Option1,Option2,Option3\"");
@@ -6032,7 +6026,7 @@ public sealed class CommonTests : IDisposable
 		// Assert
 		DataValidations? dataValidations = worksheet.GetFirstChild<DataValidations>();
 		dataValidations.ShouldNotBeNull();
-		dataValidations!.Count!.Value.ShouldBe(2u);
+		dataValidations.Count!.Value.ShouldBe(2u);
 		dataValidations.Elements<DataValidation>().Count().ShouldBe(2);
 	}
 
@@ -6258,7 +6252,7 @@ public sealed class CommonTests : IDisposable
 	[Fact]
 	public void OpenXml_GetStringValue_WithInlineString_ReturnsInnerText()
 	{
-		Cell cell = new() { DataType = CellValues.InlineString, InlineString = new InlineString(new Text("inline value")) };
+		Cell cell = new() { DataType = CellValues.InlineString, InlineString = new InlineString { Text = new Text("inline value") } };
 		cell.GetStringValue().ShouldBe("inline value");
 	}
 
@@ -6296,7 +6290,7 @@ public sealed class CommonTests : IDisposable
 		// Add shared string table
 		SharedStringTablePart sharedStringTablePart = workbookPart.AddNewPart<SharedStringTablePart>();
 		sharedStringTablePart.SharedStringTable = new SharedStringTable();
-		sharedStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("SharedValue")));
+		sharedStringTablePart.SharedStringTable.AppendChild(new SharedStringItem { Text = new Text("SharedValue") });
 		sharedStringTablePart.SharedStringTable.Save();
 
 		// Add worksheet
@@ -6306,7 +6300,8 @@ public sealed class CommonTests : IDisposable
 		Cell cell = new() { CellReference = "A1", DataType = CellValues.SharedString, CellValue = new CellValue("0") };
 		row.AppendChild(cell);
 		sheetData.AppendChild(row);
-		worksheetPart.Worksheet = new Worksheet(sheetData);
+		worksheetPart.Worksheet = new Worksheet();
+		worksheetPart.Worksheet.AppendChild(sheetData);
 		worksheetPart.Worksheet.Save();
 
 		Sheets sheets = workbookPart.Workbook.AppendChild(new Sheets());
@@ -6331,9 +6326,9 @@ public sealed class CommonTests : IDisposable
 		wbp.Workbook = new Workbook();
 		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
 		shareStringTablePart.SharedStringTable = new SharedStringTable();
-		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("Alpha")));
-		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("Beta")));
-		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("Gamma")));
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem { Text = new Text("Alpha") });
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem { Text = new Text("Beta") });
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem { Text = new Text("Gamma") });
 
 		// Act
 		IReadOnlyDictionary<int, string> index = shareStringTablePart.BuildSharedStringIndex();
@@ -6373,7 +6368,7 @@ public sealed class CommonTests : IDisposable
 		wbp.Workbook = new Workbook();
 		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
 		shareStringTablePart.SharedStringTable = new SharedStringTable();
-		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("TestValue")));
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem { Text = new Text("TestValue") });
 
 		Cell cell = new()
 		{
@@ -6435,7 +6430,7 @@ public sealed class CommonTests : IDisposable
 		wbp.Workbook = new Workbook();
 		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
 		shareStringTablePart.SharedStringTable = new SharedStringTable();
-		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("CellText")));
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem { Text = new Text("CellText") });
 
 		SheetData sheetData = new();
 		Row row = new() { RowIndex = 1 };
@@ -6467,7 +6462,7 @@ public sealed class CommonTests : IDisposable
 		wbp.Workbook = new Workbook();
 		SharedStringTablePart shareStringTablePart = wbp.AddNewPart<SharedStringTablePart>();
 		shareStringTablePart.SharedStringTable = new SharedStringTable();
-		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem(new Text("StringVal")));
+		shareStringTablePart.SharedStringTable.AppendChild(new SharedStringItem { Text = new Text("StringVal") });
 
 		Cell cell = new()
 		{
@@ -6521,7 +6516,7 @@ public sealed class CommonTests : IDisposable
 
 		SharedStringTablePart? shareStringTablePart = wbp.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
 		shareStringTablePart.ShouldNotBeNull();
-		shareStringTablePart!.SharedStringTable!.Elements<SharedStringItem>().Count().ShouldBe(2); // no duplicate inserted
+		shareStringTablePart.SharedStringTable!.Elements<SharedStringItem>().Count().ShouldBe(2); // no duplicate inserted
 	}
 
 	[RetryFact(3)]
@@ -6544,7 +6539,7 @@ public sealed class CommonTests : IDisposable
 		shareStringTablePart.ShouldNotBeNull();
 
 		// Save once at the end (as callers are expected to do)
-		shareStringTablePart!.SharedStringTable!.Save();
+		shareStringTablePart.SharedStringTable!.Save();
 		document.Save();
 
 		// Assert the table contains all 100 items
@@ -6610,14 +6605,14 @@ public sealed class CommonTests : IDisposable
 		// Add row 3 first
 		Row row3 = new() { RowIndex = 3 };
 		row3.AppendChild(new Cell { CellReference = "A3", CellValue = new CellValue("R3C1") });
-		sd.Append(row3);
+		sd.AppendChild(row3);
 
 		// Act — requesting row 1 should insert a new row before row 3
 		Cell? cell = ws.GetCellFromReference("A1");
 
 		// Assert
 		cell.ShouldNotBeNull();
-		cell!.CellReference?.Value.ShouldBe("A1");
+		cell.CellReference?.Value.ShouldBe("A1");
 		// The rows should appear in order: row1, row3
 		List<uint> rowIndices = sd.Elements<Row>().Select(r => r.RowIndex!.Value).ToList();
 		rowIndices.ShouldBe([1u, 3u]);
@@ -6636,7 +6631,7 @@ public sealed class CommonTests : IDisposable
 
 		Row row = new() { RowIndex = 1 };
 		row.AppendChild(new Cell { CellReference = "C1", CellValue = new CellValue("ColC") });
-		sd.Append(row);
+		sd.AppendChild(row);
 
 		// Act — A1 must be inserted before C1
 		Cell? cell = ws.GetCellFromReference("A1");
@@ -6660,7 +6655,7 @@ public sealed class CommonTests : IDisposable
 
 		Row row = new() { RowIndex = 2 };
 		row.AppendChild(new Cell { CellReference = "D2", CellValue = new CellValue("ColD") });
-		sd.Append(row);
+		sd.AppendChild(row);
 
 		// Act — request col 2 (B), row 2 — must be inserted before col 4 (D)
 		Cell? cell = ws.GetCellFromCoordinates(2, 2);
@@ -6712,7 +6707,7 @@ public sealed class CommonTests : IDisposable
 		// Pre-populate: add row 1 with only cell B1
 		Row row = new() { RowIndex = 1 };
 		row.AppendChild(new Cell { CellReference = "B1" });
-		sd.Append(row);
+		sd.AppendChild(row);
 
 		// Act — InsertCell at column 1 (A), row 1
 		Cell? newCell = sd.InsertCell(1, 1);
@@ -6736,7 +6731,8 @@ public sealed class CommonTests : IDisposable
 		wbp.Workbook = new Workbook();
 		WorksheetPart wsp = wbp.AddNewPart<WorksheetPart>();
 		SheetData sd = new();
-		wsp.Worksheet = new Worksheet(sd);
+		wsp.Worksheet = new Worksheet();
+		wsp.Worksheet.AppendChild(sd);
 		Sheets sheets = wbp.Workbook.AppendChild(new Sheets());
 		sheets.AppendChild(new Sheet { Id = wbp.GetIdOfPart(wsp), SheetId = 1, Name = "Sheet1" });
 
@@ -6747,12 +6743,12 @@ public sealed class CommonTests : IDisposable
 		Cell? cell = sd.Elements<Row>().FirstOrDefault(r => r.RowIndex?.Value == 1)?
 			.Elements<Cell>().FirstOrDefault(c => c.CellReference?.Value == "A1");
 		cell.ShouldNotBeNull();
-		cell!.DataType?.Value.ShouldBe(CellValues.SharedString);
+		cell.DataType?.Value.ShouldBe(CellValues.SharedString);
 		// The CellValue should be a numeric index into the shared string table
 		int idx = int.Parse(cell.CellValue!.Text);
 		SharedStringTablePart? shareStringTablePart = wbp.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
 		shareStringTablePart.ShouldNotBeNull();
-		shareStringTablePart!.SharedStringTable!.Elements<SharedStringItem>().ElementAt(idx).InnerText.ShouldBe("HelloShared");
+		shareStringTablePart.SharedStringTable!.Elements<SharedStringItem>().ElementAt(idx).InnerText.ShouldBe("HelloShared");
 	}
 
 	[RetryFact(3)]
@@ -6822,7 +6818,7 @@ public sealed class CommonTests : IDisposable
 			.Elements<Cell>().FirstOrDefault();
 		cell.ShouldNotBeNull();
 
-		double width = cell!.CalculateWidth();
+		double width = cell.CalculateWidth();
 
 		width.ShouldBeGreaterThan(0);
 		// CalculateWidth("Hello") == CalculateWidth("Hello", null)

@@ -19,6 +19,8 @@ public static class Export
 {
 	private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+	const string CurrentMethodMessage = "{Class}.{Method} Error";
+
 	/// <summary>
 	/// Convert a list of data objects into a MemoryStream containing en excel file with a tabular representation of the data
 	/// </summary>
@@ -36,7 +38,6 @@ public static class Export
 
 			using SpreadsheetDocument document = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook, true);
 			document.CompressionOption = CompressionOption.Normal;
-			//document.CompressionOption = CompressionOption.Maximum;
 			uint newSheetId = document.InitializeExcelFile(sheetName);
 			Worksheet? worksheet = document.GetWorksheetById(newSheetId);
 
@@ -53,7 +54,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(GenericExcelExport));
+			logger.Error(ex, CurrentMethodMessage, nameof(Export), nameof(GenericExcelExport));
 		}
 
 		return new();
@@ -90,7 +91,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(GenericExcelExport));
+			logger.Error(ex, CurrentMethodMessage, nameof(Export), nameof(GenericExcelExport));
 		}
 
 		return new();
@@ -163,10 +164,6 @@ public static class Export
 				{
 					success = ExportFromTable(document, worksheet, (DataTable)data, createTable, tableName, skipColumnNames, wrapText);
 				}
-				// else
-				// {
-				// 	throw new ArgumentException("Invalid type for data parameter. Parameter must be either an IEnumerable or DataTable class", nameof(data));
-				// }
 			}
 		}
 		catch (Exception ex)
@@ -469,9 +466,8 @@ public static class Export
 	/// Unlike <see cref="GenericExcelExport{T}"/>, this never builds an in-memory DOM, so memory stays constant regardless of how many rows are written.
 	/// Column widths are estimated from header text only.
 	/// </summary>
-	public static async Task GenericExcelExportAsync<T>(this IEnumerable<T> dataList, Stream outputStream, bool createTable = false,
-		string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false,
-		CancellationToken cancellationToken = default)
+	public static async Task GenericExcelExportAsync<T>(this IEnumerable<T> dataList, Stream outputStream, bool createTable = false, string sheetName = "Data",
+		string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
 	{
 		try
 		{
@@ -489,7 +485,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(GenericExcelExportAsync));
+			logger.Error(ex, CurrentMethodMessage, nameof(Export), nameof(GenericExcelExportAsync));
 		}
 	}
 
@@ -499,9 +495,8 @@ public static class Export
 	/// Rows are written directly from the async source without ever buffering a list in RAM.
 	/// /// Column widths are estimated from header text only.
 	/// </summary>
-	public static async Task GenericExcelExportAsync<T>(this IAsyncEnumerable<T> dataList, Stream outputStream, bool createTable = false,
-		string sheetName = "Data", string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false,
-		CancellationToken cancellationToken = default)
+	public static async Task GenericExcelExportAsync<T>(this IAsyncEnumerable<T> dataList, Stream outputStream, bool createTable = false, string sheetName = "Data",
+		string tableName = "Data", List<string>? skipColumnNames = null, bool wrapText = false, CancellationToken cancellationToken = default)
 	{
 		try
 		{
@@ -519,7 +514,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(GenericExcelExportAsync));
+			logger.Error(ex, CurrentMethodMessage, nameof(Export), nameof(GenericExcelExportAsync));
 		}
 	}
 
@@ -547,7 +542,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(GenericExcelExportAsync));
+			logger.Error(ex, CurrentMethodMessage, nameof(Export), nameof(GenericExcelExportAsync));
 		}
 	}
 
@@ -712,7 +707,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(ExportFromTableSaxAsync));
+			logger.Error(ex, CurrentMethodMessage, nameof(Export), nameof(ExportFromTableSaxAsync));
 		}
 		return Task.CompletedTask;
 	}
@@ -862,7 +857,7 @@ public static class Export
 		}
 		catch (Exception ex)
 		{
-			logger.Error(ex, "{Class}.{Method} Error", nameof(Export), nameof(ExportFromTableSaxCoreAsync));
+			logger.Error(ex, CurrentMethodMessage, nameof(Export), nameof(ExportFromTableSaxCoreAsync));
 		}
 	}
 

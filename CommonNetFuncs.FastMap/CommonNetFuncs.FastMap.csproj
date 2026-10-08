@@ -15,10 +15,8 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/NickScarpitti/common-net-funcs.git</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/NickScarpitti/common-net-funcs/tree/main/$(AssemblyName)</PackageProjectUrl>
-		<!--<GeneratePackageOnBuild>True</GeneratePackageOnBuild>-->
 		<IncludeSymbols>True</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<!--<DebugType>embedded</DebugType>-->
 		<Description>
       A fast method to copy one type of object to another based on property names using expression trees with no setup code required for the classes being mapped.
 		</Description>
@@ -28,7 +26,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<Version>4.3.7</Version>
+		<Version>4.3.8</Version>
 		<MinVerTagPrefix>fastmap-</MinVerTagPrefix>
 		<MinVerIgnoreHeight>true</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
